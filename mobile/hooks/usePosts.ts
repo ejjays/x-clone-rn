@@ -1,9 +1,15 @@
+// mobile/hooks/usePosts.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient, postApi } from "../utils/api";
+import { useEffect } from "react";
+import { socket } from "../utils/socket";
+import { Post } from "@/types";
 
 export const usePosts = (username?: string) => {
   const api = useApiClient();
   const queryClient = useQueryClient();
+
+  const queryKey = username ? ["userPosts", username] : ["posts"];
 
   const {
     data: postsData,
@@ -11,10 +17,26 @@ export const usePosts = (username?: string) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: username ? ["userPosts", username] : ["posts"],
-    queryFn: () => (username ? postApi.getUserPosts(api, username) : postApi.getPosts(api)),
+    queryKey,
+    queryFn: () =>
+      username ? postApi.getUserPosts(api, username) : postApi.getPosts(api),
     select: (response) => response.data.posts,
   });
+
+  useEffect(() => {
+    // Listen for new posts
+    socket.on("newPost", (newPost: Post) => {
+      // Update the cache directly
+      queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
+        return oldData ? [newPost, ...oldData] : [newPost];
+      });
+    });
+
+    // Clean up the socket listener when the component unmounts
+    return () => {
+      socket.off("newPost");
+    };
+  }, [queryClient, queryKey]);
 
   const likePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.likePost(api, postId),
