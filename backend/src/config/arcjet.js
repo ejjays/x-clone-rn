@@ -11,7 +11,7 @@ export const aj = arcjet({
 
     // bot detection - block all bots except search engines
     detectBot({
-      mode: "LIVE",
+      mode: "DRY_RUN",
       allow: [
         "CATEGORY:SEARCH_ENGINE",
         // allow legitimate search engine bots
