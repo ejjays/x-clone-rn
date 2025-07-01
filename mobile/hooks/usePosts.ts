@@ -40,29 +40,28 @@ export const usePosts = (username?: string) => {
 
     const handlePostLiked = (updatedPost: Post) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        return oldData
-          ? oldData.map((post) =>
-              post._id === updatedPost._id ? updatedPost : post
-            )
-          : [];
+        // Return an empty array if oldData is undefined
+        if (!oldData) return [];
+        return oldData.map((post) =>
+          post._id === updatedPost._id ? updatedPost : post
+        );
       });
     };
 
     const handleNewComment = (updatedPost: Post) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        return oldData
-          ? oldData.map((post) =>
-              post._id === updatedPost._id ? updatedPost : post
-            )
-          : [];
+        // Return an empty array if oldData is undefined
+        if (!oldData) return [];
+        return oldData.map((post) =>
+          post._id === updatedPost._id ? updatedPost : post
+        );
       });
     };
 
     const handlePostDeleted = (deletedPostId: string) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        return oldData
-          ? oldData.filter((post) => post._id !== deletedPostId)
-          : [];
+        if (!oldData) return [];
+        return oldData.filter((post) => post._id !== deletedPostId);
       });
     };
 
