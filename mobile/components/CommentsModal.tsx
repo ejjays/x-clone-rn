@@ -12,11 +12,11 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { Modalize } from "react-native-modalize";
+import { Modalize } from "react--native-modalize";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CommentCard from "./CommentCard";
 
-const MODAL_HEIGHT = Dimensions.get("window").height * 0.95;
+const MODAL_HEIGHT = Dimensions.get("window").height * 0.96;
 
 interface CommentsModalProps {
   selectedPost: Post | null;
@@ -25,7 +25,7 @@ interface CommentsModalProps {
 const CommentsModal = forwardRef<Modalize, CommentsModalProps>(
   ({ selectedPost }, ref) => {
     const modalizeRef = useRef<Modalize>(null);
-    const { bottom } = useSafeAreaInsets();
+    const { top, bottom } = useSafeAreaInsets();
     const { commentText, setCommentText, createComment, isCreatingComment } =
       useComments();
     const { currentUser } = useCurrentUser();
@@ -33,29 +33,24 @@ const CommentsModal = forwardRef<Modalize, CommentsModalProps>(
     useImperativeHandle(ref, () => modalizeRef.current as Modalize);
 
     const renderHeader = () => (
-      <View className="flex-row items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-2xl">
-        <View className="w-6" />
-        <Text className="text-lg font-bold text-center">Comments</Text>
-        <TouchableOpacity
-          onPress={() => modalizeRef.current?.close()}
-          className="p-1"
-        >
-          <Feather name="x" size={24} color="black" />
-        </TouchableOpacity>
+      <View className="items-center justify-center p-4 bg-white rounded-t-2xl">
+        <View className="w-12 h-1.5 bg-gray-300 rounded-full" />
       </View>
     );
 
     return (
       <Modalize
         ref={modalizeRef}
-        modalHeight={MODAL_HEIGHT}
-        handlePosition="inside"
-        withHandle={false}
-        modalStyle={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
+        modalStyle={{
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          backgroundColor: "#F0F2F5",
+        }}
+        adjustToContentHeight={false}
         HeaderComponent={renderHeader}
         FooterComponent={
           <View
-            className="p-4 bg-white border-t border-gray-200"
+            className="p-4 bg-white"
             style={{ paddingBottom: bottom || 16 }}
           >
             <View className="flex-row items-center space-x-3">
@@ -96,14 +91,18 @@ const CommentsModal = forwardRef<Modalize, CommentsModalProps>(
           renderItem: ({ item }) => <CommentCard comment={item} />,
           keyExtractor: (item) => item._id,
           showsVerticalScrollIndicator: false,
-          contentContainerStyle: { padding: 16 },
+          contentContainerStyle: { padding: 16, paddingTop: 0 },
           ListEmptyComponent: (
             <View className="items-center justify-center py-10">
               <Text className="text-gray-500">No comments yet.</Text>
-              <Text className="text-gray-400 text-sm">Be the first to comment!</Text>
+              <Text className="text-gray-400 text-sm">
+                Be the first to comment!
+              </Text>
             </View>
           ),
         }}
+        modalTopOffset={top + 10}
+        withHandle={false}
       />
     );
   }
