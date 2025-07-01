@@ -1,7 +1,8 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import { Redirect, withLayoutContext, useRouterState } from "expo-router";
+import { useNavigationState } from "@react-navigation/native";
+import { Redirect, withLayoutContext } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,9 +11,11 @@ export const MaterialTopTabs = withLayoutContext(Navigator);
 
 const TabsLayout = () => {
   const { isSignedIn } = useAuth();
-  const routerState = useRouterState();
+  const navigationState = useNavigationState((state) => state);
 
-  const isHomeScreen = routerState.routeNames[routerState.index] === "index";
+  const isHomeScreen = navigationState
+    ? navigationState.routeNames[navigationState.index] === "index"
+    : true;
 
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
@@ -35,7 +38,7 @@ const TabsLayout = () => {
         </View>
       )}
 
-      {/* Top Tab Navigator - NOW BELOW THE HEADER */}
+      {/* Top Tab Navigator */}
       <MaterialTopTabs
         screenOptions={{
           tabBarActiveTintColor: "#1877F2",
@@ -46,8 +49,8 @@ const TabsLayout = () => {
           },
           tabBarStyle: {
             backgroundColor: "#fff",
-            elevation: 0, // Remove shadow on Android
-            shadowOpacity: 0, // Remove shadow on iOS
+            elevation: 0,
+            shadowOpacity: 0,
             borderBottomWidth: 1,
             borderBottomColor: "#E5E5E5",
           },
@@ -56,35 +59,45 @@ const TabsLayout = () => {
         <MaterialTopTabs.Screen
           name="index"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="home" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
         <MaterialTopTabs.Screen
           name="search"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="users" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="users" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
         <MaterialTopTabs.Screen
           name="notifications"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="bell" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="bell" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
         <MaterialTopTabs.Screen
           name="messages"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="tv" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="tv" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
         <MaterialTopTabs.Screen
           name="profile"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="menu" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="menu" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
