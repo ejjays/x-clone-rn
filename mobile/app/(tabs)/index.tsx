@@ -35,14 +35,14 @@ const HomeScreen = () => {
       </View>
 
       {/* Subtle Divider */}
-      <View className="h-2 bg-gray-200" />
+      <View className="h-1.5 bg-gray-200" />
 
       <View className="bg-white">
         <Stories />
       </View>
 
       {/* Subtle Divider */}
-      <View className="h-2 bg-gray-200" />
+      <View className="h-1.5 bg-gray-200" />
 
       <PostsList />
     </ScrollView>
