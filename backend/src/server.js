@@ -1,74 +1,65 @@
-// backend/src/server.js
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { clerkMiddleware } from "@clerk/express";
-import http from "http";
-import { Server } from "socket.io";
+import mongoose from "mongoose";
+import Pusher from "pusher"; // Import Pusher
 
-import userRoutes from "./routes/user.route.js";
-import postRoutes from "./routes/post.route.js";
-import commentRoutes from "./routes/comment.route.js";
-import notificationRoutes from "./routes/notification.route.js";
-
-import { ENV } from "./config/env.js";
-import { connectDB } from "./config/db.js";
-import { arcjetMiddleware } from "./middleware/arcjet.middleware.js";
+import authRoutes from "./routes/auth.routes.js";
+import postRoutes from "./routes/post.routes.js";
+import commentRoutes from "./routes/comment.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+const port = process.env.PORT || 8080;
+
+// Initialize Pusher
+const pusher = new Pusher({
+  appId: process.env.PUSHER_APP_ID,
+  key: process.env.PUSHER_KEY,
+  secret: process.env.PUSHER_SECRET,
+  cluster: process.env.PUSHER_CLUSTER,
+  useTLS: true,
 });
 
-app.use(cors());
-app.use(express.json());
-
+// Middleware to attach pusher to each request
 app.use((req, res, next) => {
-  req.io = io;
+  req.pusher = pusher;
   next();
 });
 
-app.use(clerkMiddleware());
-app.use(arcjetMiddleware);
+app.use(express.json());
+app.use(cors({ origin: "*" }));
 
-app.get("/", (req, res) => res.send("Hello from server"));
-
-app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
+// New endpoint for Pusher presence channel authentication
+app.post("/pusher/auth", (req, res) => {
+  const socketId = req.body.socket_id;
+  const channel = req.body.channel_name;
+  // This is a basic example, in a real app you'd check if the user is logged in
+  const presanceData = {
+    user_id: new mongoose.Types.ObjectId().toString(), // Use a real user ID here
+    user_info: {
+      // Add any user info you want other clients to see
+    },
+  };
+  const authResponse = pusher.authorizeChannel(socketId, channel, presanceData);
+  res.send(authResponse);
 });
 
-app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({ error: err.message || "Internal server error" });
-});
-
-const startServer = async () => {
-  try {
-    await connectDB();
-    
-    // This now allows the server to start in any environment
-    const PORT = ENV.PORT || 5001;
-    server.listen(PORT, () => {
-      console.log(`Server is up and running on PORT: ${PORT}`);
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Server is running on port: ${port}`);
     });
-
-  } catch (error) {
-    console.error("Failed to start server:", error.message);
+  })
+  .catch((err) => {
+    console.log(err);
     process.exit(1);
-  }
-};
-
-startServer();
-
-export default server;
+  });

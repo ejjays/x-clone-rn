@@ -104,23 +104,20 @@ export const createPost = asyncHandler(async (req, res) => {
     }
   }
 
-  // Create the raw post
   const newPost = await Post.create({
     user: user._id,
     content: content || "",
     image: imageUrl,
   });
 
-  // Populate the post with user details
   const populatedPost = await Post.findById(newPost._id).populate(
     "user",
     "username firstName lastName profilePicture"
   );
 
-  // Emit real‐time event to ALL connected clients
-  req.io.emit("newPost", populatedPost);
+  // Trigger Pusher event
+  await req.pusher.trigger("posts-channel", "new-post", populatedPost);
 
-  // Respond with the populated post
   res.status(201).json({ post: populatedPost });
 });
 
@@ -156,7 +153,6 @@ export const likePost = asyncHandler(async (req, res) => {
     }
   }
 
-  // Fetch the updated post to emit with the event
   const updatedPost = await Post.findById(postId)
     .populate("user", "username firstName lastName profilePicture")
     .populate({
@@ -166,8 +162,9 @@ export const likePost = asyncHandler(async (req, res) => {
         select: "username firstName lastName profilePicture",
       },
     });
-
-  req.io.emit("postLiked", updatedPost);
+      
+  // Trigger Pusher event
+  await req.pusher.trigger("posts-channel", "post-liked", updatedPost);
 
   res.status(200).json({
     message: isLiked ? "Post unliked successfully" : "Post liked successfully",
@@ -194,7 +191,8 @@ export const deletePost = asyncHandler(async (req, res) => {
   await Comment.deleteMany({ post: postId });
   await Post.findByIdAndDelete(postId);
 
-  req.io.emit("postDeleted", postId);
+  // Trigger Pusher event
+  await req.pusher.trigger("posts-channel", "post-deleted", postId);
 
   res.status(200).json({ message: "Post deleted successfully" });
 });

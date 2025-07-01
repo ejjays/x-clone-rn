@@ -35,12 +35,10 @@ export const createComment = asyncHandler(async (req, res) => {
     content,
   });
 
-  // link the comment to the post
   await Post.findByIdAndUpdate(postId, {
     $push: { comments: comment._id },
   });
 
-  // create notification if not commenting on own post
   if (post.user.toString() !== user._id.toString()) {
     await Notification.create({
       from: user._id,
@@ -61,8 +59,8 @@ export const createComment = asyncHandler(async (req, res) => {
       },
     });
 
-  req.io.emit("newComment", updatedPost);
-
+  // Trigger Pusher event
+  await req.pusher.trigger("posts-channel", "new-comment", updatedPost);
 
   res.status(201).json({ comment });
 });
@@ -82,12 +80,10 @@ export const deleteComment = asyncHandler(async (req, res) => {
     return res.status(403).json({ error: "You can only delete your own comments" });
   }
 
-  // remove comment from post
   await Post.findByIdAndUpdate(comment.post, {
     $pull: { comments: commentId },
   });
 
-  // delete the comment
   await Comment.findByIdAndDelete(commentId);
 
   res.status(200).json({ message: "Comment deleted successfully" });
