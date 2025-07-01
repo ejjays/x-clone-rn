@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { Modalize } from "react--native-modalize";
+import { Modalize } from "react-native-modalize";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CommentCard from "./CommentCard";
 
