@@ -1,8 +1,8 @@
+// mobile/app/(tabs)/_layout.tsx
 import { useAuth } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import { useNavigationState } from "@react-navigation/native";
-import { Redirect, withLayoutContext } from "expo-router";
+import { Redirect, useSegments, withLayoutContext } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -11,11 +11,9 @@ export const MaterialTopTabs = withLayoutContext(Navigator);
 
 const TabsLayout = () => {
   const { isSignedIn } = useAuth();
-  const navigationState = useNavigationState((state) => state);
+  const segments = useSegments();
 
-  const isHomeScreen = navigationState
-    ? navigationState.routeNames[navigationState.index] === "index"
-    : true;
+  const isHomeScreen = segments.length === 1 && segments[0] === "(tabs)";
 
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
