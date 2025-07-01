@@ -2,24 +2,50 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import { Redirect, useSegments, withLayoutContext } from "expo-router";
+import { useNavigationState } from "@react-navigation/native";
+import { Redirect, withLayoutContext } from "expo-router";
+import { useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
 
+const HEADER_HEIGHT = 60;
+
 const TabsLayout = () => {
   const { isSignedIn } = useAuth();
-  const segments = useSegments();
+  const navigationState = useNavigationState((state) => state);
+  const headerHeight = useSharedValue(HEADER_HEIGHT);
 
-  const isHomeScreen = segments.length === 1 && segments[0] === "(tabs)";
+  const isHomeScreen = navigationState
+    ? navigationState.routes[navigationState.index].name === "index"
+    : true;
+
+  useEffect(() => {
+    headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, {
+      duration: 250,
+    });
+  }, [isHomeScreen, headerHeight]);
+
+  const animatedHeaderStyle = useAnimatedStyle(() => {
+    return {
+      height: headerHeight.value,
+      opacity: headerHeight.value / HEADER_HEIGHT,
+      overflow: "hidden",
+    };
+  });
 
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {isHomeScreen && (
+      <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 py-2 bg-white">
           <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
           <View className="flex-row space-x-2">
@@ -34,7 +60,7 @@ const TabsLayout = () => {
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      </Animated.View>
 
       {/* Top Tab Navigator */}
       <MaterialTopTabs
