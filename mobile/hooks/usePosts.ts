@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient, postApi } from "../utils/api";
 import { useEffect } from "react";
-import { getPusher } from "../utils/pusher"; // Corrected import
+import { getPusher } from "../utils/pusher";
 import { Post } from "@/types";
 
 export const usePosts = (username?: string) => {
@@ -24,7 +24,6 @@ export const usePosts = (username?: string) => {
 
   useEffect(() => {
     const pusher = getPusher();
-
     if (!pusher) {
       console.warn("Pusher has not been initialized yet.");
       return;
@@ -34,24 +33,19 @@ export const usePosts = (username?: string) => {
 
     const handleNewPost = (newPost: Post) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        return oldData ? [newPost, ...oldData] : [newPost];
+        // Defensively check if oldData is an array
+        const currentPosts = Array.isArray(oldData) ? oldData : [];
+        // Prevent adding duplicates if the post already exists
+        if (currentPosts.some((p) => p._id === newPost._id)) {
+          return currentPosts;
+        }
+        return [newPost, ...currentPosts];
       });
     };
 
-    const handlePostLiked = (updatedPost: Post) => {
+    const handlePostUpdate = (updatedPost: Post) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        // Return an empty array if oldData is undefined
-        if (!oldData) return [];
-        return oldData.map((post) =>
-          post._id === updatedPost._id ? updatedPost : post
-        );
-      });
-    };
-
-    const handleNewComment = (updatedPost: Post) => {
-      queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        // Return an empty array if oldData is undefined
-        if (!oldData) return [];
+        if (!Array.isArray(oldData)) return [];
         return oldData.map((post) =>
           post._id === updatedPost._id ? updatedPost : post
         );
@@ -60,17 +54,16 @@ export const usePosts = (username?: string) => {
 
     const handlePostDeleted = (deletedPostId: string) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        if (!oldData) return [];
+        if (!Array.isArray(oldData)) return [];
         return oldData.filter((post) => post._id !== deletedPostId);
       });
     };
 
     channel.bind("new-post", handleNewPost);
-    channel.bind("post-liked", handlePostLiked);
-    channel.bind("new-comment", handleNewComment);
+    channel.bind("post-liked", handlePostUpdate);
+    channel.bind("new-comment", handlePostUpdate);
     channel.bind("post-deleted", handlePostDeleted);
 
-    // This is for the presence channel to see who is online
     const presenceChannel = pusher.subscribe("presence-global");
 
     presenceChannel.bind("pusher:subscription_succeeded", (members: any) => {
