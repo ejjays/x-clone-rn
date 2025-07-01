@@ -56,13 +56,15 @@ export const useCreatePost = () => {
 
     if (permissionResult.status !== "granted") {
       const source = useCamera ? "camera" : "photo library";
-      Alert.alert("Permission needed", `Please grant permission to access your ${source}`);
+      Alert.alert(
+        "Permission needed",
+        `Please grant permission to access your ${source}`
+      );
       return;
     }
 
     const pickerOptions = {
       allowsEditing: true,
-      aspect: [16, 9] as [number, number],
       quality: 0.8,
     };
 
@@ -70,15 +72,20 @@ export const useCreatePost = () => {
       ? await ImagePicker.launchCameraAsync(pickerOptions)
       : await ImagePicker.launchImageLibraryAsync({
           ...pickerOptions,
-          mediaTypes: ["images"],
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
         });
 
-    if (!result.canceled) setSelectedImage(result.assets[0].uri);
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
   };
 
   const createPost = () => {
     if (!content.trim() && !selectedImage) {
-      Alert.alert("Empty Post", "Please write something or add an image before posting!");
+      Alert.alert(
+        "Empty Post",
+        "Please write something or add an image before posting!"
+      );
       return;
     }
 
@@ -86,7 +93,9 @@ export const useCreatePost = () => {
       content: content.trim(),
     };
 
-    if (selectedImage) postData.imageUri = selectedImage;
+    if (selectedImage) {
+      postData.imageUri = selectedImage;
+    }
 
     createPostMutation.mutate(postData);
   };

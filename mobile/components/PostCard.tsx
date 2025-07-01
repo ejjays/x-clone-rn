@@ -76,16 +76,6 @@ const PostCard = ({
       <View className="flex-row justify-around py-2 border-t border-gray-100 mt-2">
         <TouchableOpacity
           className="flex-row items-center space-x-2"
-          onPress={() => onComment(post)}
-        >
-          <Feather name="message-circle" size={22} color="#657786" />
-          <Text className="text-gray-500 font-medium">
-            {formatNumber(post.comments?.length || 0)} Comment
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-row items-center space-x-2"
           onPress={() => onLike(post._id)}
         >
           {isLiked ? (
@@ -99,6 +89,16 @@ const PostCard = ({
             }`}
           >
             {formatNumber(post.likes?.length || 0)} Like
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-row items-center space-x-2"
+          onPress={() => onComment(post)}
+        >
+          <Feather name="message-circle" size={22} color="#657786" />
+          <Text className="text-gray-500 font-medium">
+            {formatNumber(post.comments?.length || 0)} Comment
           </Text>
         </TouchableOpacity>
 
