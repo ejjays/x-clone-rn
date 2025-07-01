@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import Pusher from "pusher";
-import { ClerkExpressWithAuth } from "@clerk/express";
+import { ClerkExpressRequireAuth } from "@clerk/express"; // Corrected import name
 
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
@@ -31,38 +31,33 @@ app.use((req, res, next) => {
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Use Clerk middleware
-app.use(ClerkExpressWithAuth());
-
 app.get("/", (req, res) => {
   res.send("Server is running!");
 });
 
-app.use("/api/users", userRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/comments", commentRoutes);
-app.use("/api/notifications", notificationRoutes);
-
 // New endpoint for Pusher presence channel authentication
-app.post("/api/pusher/auth", (req, res) => {
+// This must come BEFORE Clerk authentication
+app.post("/api/pusher/auth", ClerkExpressRequireAuth(), (req, res) => {
   const socketId = req.body.socket_id;
   const channel = req.body.channel_name;
-  
-  // For presence channels, you must be authenticated
-  if (!req.auth.userId) {
-    return res.status(403).send("Forbidden");
-  }
 
   const presanceData = {
     user_id: req.auth.userId, // Use the actual user ID from Clerk
     user_info: {
-      // You can add any other user info you want here
+      // You can add other user info here
     },
   };
 
   const authResponse = pusher.authorizeChannel(socketId, channel, presanceData);
   res.send(authResponse);
 });
+
+
+// All routes below this will be protected by Clerk
+app.use("/api/users", ClerkExpressRequireAuth(), userRoutes);
+app.use("/api/posts", ClerkExpressRequireAuth(), postRoutes);
+app.use("/api/comments", ClerkExpressRequireAuth(), commentRoutes);
+app.use("/api/notifications", ClerkExpressRequireAuth(), notificationRoutes);
 
 mongoose
   .connect(process.env.MONGODB_URI)
