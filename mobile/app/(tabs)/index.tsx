@@ -5,14 +5,7 @@ import { usePosts } from "@/hooks/usePosts";
 import { useUserSync } from "@/hooks/useUserSync";
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
-import {
-  RefreshControl,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const HomeScreen = () => {
   const [isRefetching, setIsRefetching] = useState(false);
@@ -27,16 +20,19 @@ const HomeScreen = () => {
   useUserSync();
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-gray-200">
       {/* Header */}
-      <View className="flex-row justify-between items-center px-4 py-2 bg-white border-b border-gray-200">
-        <Text className="text-2xl font-bold text-blue-600">facebook</Text>
+      <View className="flex-row justify-between items-center px-4 py-2 bg-white">
+        <Text className="text-3xl font-bold text-blue-600">facebook</Text>
         <View className="flex-row space-x-2">
-          <TouchableOpacity className="bg-gray-200 p-2 rounded-full">
-            <Feather name="search" size={20} color="#000" />
+          <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
+            <Feather name="plus" size={22} color="#000" />
           </TouchableOpacity>
-          <TouchableOpacity className="bg-gray-200 p-2 rounded-full">
-            <Feather name="message-circle" size={20} color="#000" />
+          <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
+            <Feather name="search" size={22} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
+            <Feather name="message-circle" size={22} color="#000" />
           </TouchableOpacity>
         </View>
       </View>
@@ -44,7 +40,6 @@ const HomeScreen = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 80 }}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -53,12 +48,17 @@ const HomeScreen = () => {
           />
         }
       >
-        <PostComposer />
-        <Stories />
-        <View className="mt-2" />
+        <View className="bg-white">
+          <PostComposer />
+        </View>
+        <View className="h-2.5 bg-gray-200" />
+        <View className="bg-white">
+          <Stories />
+        </View>
+        <View className="h-2.5 bg-gray-200" />
         <PostsList />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 export default HomeScreen;

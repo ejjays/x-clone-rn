@@ -45,7 +45,7 @@ const Stories = () => {
         contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
       >
         {/* Create Story Card */}
-        <TouchableOpacity className="w-28 h-48 rounded-lg overflow-hidden border border-gray-200">
+        <TouchableOpacity className="w-28 h-48 rounded-xl overflow-hidden border border-gray-200">
           <Image
             source={{ uri: user?.imageUrl }}
             className="w-full h-32"
@@ -64,9 +64,9 @@ const Stories = () => {
         {/* Mock Stories */}
         {MOCK_STORIES.map((story) => (
           <TouchableOpacity
-            key={story.id}
-            className="w-28 h-48 rounded-lg overflow-hidden"
-          >
+             key={story.id}
+             className="w-28 h-48 rounded-xl overflow-hidden"
+             >
             <Image
               source={{ uri: story.storyImage }}
               className="w-full h-full"

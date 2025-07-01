@@ -1,69 +1,84 @@
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, withLayoutContext } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@clerk/clerk-expo";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const { Navigator } = createMaterialTopTabNavigator();
+export const MaterialTopTabs = withLayoutContext(Navigator);
 
 const TabsLayout = () => {
-  const insets = useSafeAreaInsets();
-
   const { isSignedIn } = useAuth();
+  const insets = useSafeAreaInsets();
 
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
   return (
-    <Tabs
+    <MaterialTopTabs
       screenOptions={{
-        tabBarActiveTintColor: "#1DA1F2",
+        tabBarActiveTintColor: "#1877F2", // Facebook Blue
         tabBarInactiveTintColor: "#657786",
+        tabBarIndicatorStyle: {
+          backgroundColor: "#1877F2",
+          height: 3,
+        },
         tabBarStyle: {
           backgroundColor: "#fff",
-          borderTopWidth: 1,
-          borderTopColor: "#E1E8ED",
-          height: 50 + insets.bottom,
-          paddingTop: 8,
+          paddingTop: insets.top, // Adjust for device notch
         },
-        headerShown: false,
       }}
     >
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="index"
         options={{
-          title: "",
-          tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
+          title: "Home",
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name="home" size={24} color={color} />
+          ),
+          tabBarShowLabel: false,
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="search"
         options={{
-          title: "",
-
-          tabBarIcon: ({ color, size }) => <Feather name="search" size={size} color={color} />,
+          title: "Search",
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name="search" size={24} color={color} />
+          ),
+          tabBarShowLabel: false,
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="notifications"
         options={{
-          title: "",
-
-          tabBarIcon: ({ color, size }) => <Feather name="bell" size={size} color={color} />,
+          title: "Notifications",
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name="bell" size={24} color={color} />
+          ),
+          tabBarShowLabel: false,
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="messages"
         options={{
-          title: "",
-
-          tabBarIcon: ({ color, size }) => <Feather name="mail" size={size} color={color} />,
+          title: "Messages",
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name="message-circle" size={24} color={color} />
+          ),
+          tabBarShowLabel: false,
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="profile"
         options={{
-          title: "",
-          tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name="user" size={24} color={color} />
+          ),
+          tabBarShowLabel: false,
         }}
       />
-    </Tabs>
+    </MaterialTopTabs>
   );
 };
 export default TabsLayout;
