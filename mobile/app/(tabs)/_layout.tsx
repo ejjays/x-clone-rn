@@ -2,8 +2,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import { useNavigationState } from "@react-navigation/native";
-import { Redirect, withLayoutContext } from "expo-router";
+import { Redirect, usePathname, withLayoutContext } from "expo-router";
 import { useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, {
@@ -16,28 +15,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
 
-const HEADER_HEIGHT = 60;
+const HEADER_HEIGHT = 60; // A fixed height for our header
 
 const TabsLayout = () => {
   const { isSignedIn } = useAuth();
-  const navigationState = useNavigationState((state) => state);
+  const pathname = usePathname();
   const headerHeight = useSharedValue(HEADER_HEIGHT);
 
-  const isHomeScreen = navigationState
-    ? navigationState.routes[navigationState.index].name === "index"
-    : true;
+  // The root path for our tabs layout is '/', which corresponds to the index.tsx file.
+  const isHomeScreen = pathname === "/";
 
+  // This effect runs when we switch tabs, triggering the animation.
   useEffect(() => {
     headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, {
-      duration: 250,
+      duration: 200,
     });
   }, [isHomeScreen, headerHeight]);
 
+  // This style will be applied to the header, animating its height and opacity.
   const animatedHeaderStyle = useAnimatedStyle(() => {
     return {
       height: headerHeight.value,
       opacity: headerHeight.value / HEADER_HEIGHT,
-      overflow: "hidden",
+      overflow: "hidden", // This is crucial to hide the content when height is 0
     };
   });
 
@@ -46,7 +46,7 @@ const TabsLayout = () => {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <Animated.View style={animatedHeaderStyle}>
-        <View className="flex-row justify-between items-center px-4 py-2 bg-white">
+        <View className="flex-row justify-between items-center px-4 h-full">
           <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
           <View className="flex-row space-x-2">
             <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
