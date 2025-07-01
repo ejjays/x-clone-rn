@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import Pusher from "pusher";
+// import Pusher from "pusher";
 import { clerkMiddleware, getAuth } from "@clerk/express";
 
 import postRoutes from "./routes/post.route.js";
@@ -16,19 +16,19 @@ const port = process.env.PORT || 8080;
 // --- Middlewares ---
 
 // Initialize Pusher
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID,
-  key: process.env.PUSHER_KEY,
-  secret: process.env.PUSHER_SECRET,
-  cluster: process.env.PUSHER_CLUSTER,
-  useTLS: true,
-});
+// const pusher = new Pusher({
+//   appId: process.env.PUSHER_APP_ID,
+//   key: process.env.PUSHER_KEY,
+//   secret: process.env.PUSHER_SECRET,
+//   cluster: process.env.PUSHER_CLUSTER,
+//   useTLS: true,
+// });
 
 // Attach Pusher to each request so it's available in your routes
-app.use((req, res, next) => {
-  req.pusher = pusher;
-  next();
-});
+// app.use((req, res, next) => {
+//   req.pusher = pusher;
+//   next();
+// });
 
 app.use(cors({ origin: "*" }));
 app.use(express.json());

@@ -116,7 +116,7 @@ export const createPost = asyncHandler(async (req, res) => {
   );
 
   // Trigger Pusher event
-  await req.pusher.trigger("posts-channel", "new-post", populatedPost);
+  // await req.pusher.trigger("posts-channel", "new-post", populatedPost);
 
   res.status(201).json({ post: populatedPost });
 });
@@ -164,7 +164,7 @@ export const likePost = asyncHandler(async (req, res) => {
     });
       
   // Trigger Pusher event
-  await req.pusher.trigger("posts-channel", "post-liked", updatedPost);
+  // await req.pusher.trigger("posts-channel", "post-liked", updatedPost);
 
   res.status(200).json({
     message: isLiked ? "Post unliked successfully" : "Post liked successfully",
@@ -192,7 +192,7 @@ export const deletePost = asyncHandler(async (req, res) => {
   await Post.findByIdAndDelete(postId);
 
   // Trigger Pusher event
-  await req.pusher.trigger("posts-channel", "post-deleted", postId);
+  // await req.pusher.trigger("posts-channel", "post-deleted", postId);
 
   res.status(200).json({ message: "Post deleted successfully" });
 });

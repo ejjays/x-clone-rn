@@ -5,7 +5,7 @@ import "../global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { initializePusher } from "../utils/pusher";
+// import { initializePusher } from "../utils/pusher";
 
 const queryClient = new QueryClient();
 
@@ -13,9 +13,9 @@ const InitialLayout = () => {
   const { getToken, isSignedIn } = useAuth();
 
   useEffect(() => {
-    if (isSignedIn) {
-      initializePusher(getToken);
-    }
+    // if (isSignedIn) {
+    //   initializePusher(getToken);
+    // }
   }, [isSignedIn, getToken]);
 
   return (

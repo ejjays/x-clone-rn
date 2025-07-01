@@ -60,7 +60,7 @@ export const createComment = asyncHandler(async (req, res) => {
     });
 
   // Trigger Pusher event
-  await req.pusher.trigger("posts-channel", "new-comment", updatedPost);
+  // await req.pusher.trigger("posts-channel", "new-comment", updatedPost);
 
   res.status(201).json({ comment });
 });

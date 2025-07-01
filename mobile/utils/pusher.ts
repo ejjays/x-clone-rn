@@ -4,7 +4,7 @@ import { PUSHER_KEY, PUSHER_CLUSTER, API_URL } from '@/utils/constants';
 let pusher: Pusher | null = null;
 
 // Enable pusher logging - don't include this in production
-Pusher.logToConsole = true;
+// Pusher.logToConsole = true;
 
 export const initializePusher = async (getToken: () => Promise<string | null>) => {
   if (pusher) return pusher; // Return existing instance if already initialized
