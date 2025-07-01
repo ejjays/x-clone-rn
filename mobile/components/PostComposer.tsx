@@ -11,7 +11,7 @@ const PostComposer = () => {
         source={{ uri: user?.imageUrl }}
         className="w-10 h-10 rounded-full mr-3"
       />
-      <View className="flex-1 bg-gray-100 rounded-full px-4 py-2">
+      <View className="flex-1 bg-gray-100 rounded-full px-4 py-1.5">
         <TextInput
           placeholder="What's on your mind?"
           placeholderTextColor="#657786"

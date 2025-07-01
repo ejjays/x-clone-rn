@@ -17,7 +17,7 @@ const TabsLayout = () => {
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* Custom Header */}
       <View className="flex-row justify-between items-center px-4 py-2">
-        <Text className="text-5xl font-bold text-blue-600">pcmi</Text>
+        <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
         <View className="flex-row space-x-2">
           <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
             <Feather name="plus" size={22} color="#000" />
