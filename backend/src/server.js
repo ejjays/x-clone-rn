@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import Pusher from "pusher";
-import { clerkMiddleware, getAuth } from "@clerk/express"; // Correct Clerk import
+import { clerkMiddleware, getAuth } from "@clerk/express";
 
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
@@ -24,7 +24,7 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
-// Attach Pusher to each request
+// Attach Pusher to each request so it's available in your routes
 app.use((req, res, next) => {
   req.pusher = pusher;
   next();
@@ -32,9 +32,6 @@ app.use((req, res, next) => {
 
 app.use(cors({ origin: "*" }));
 app.use(express.json());
-
-// Use the general clerkMiddleware for all routes.
-// This will attach the auth object to the request if the user is authenticated.
 app.use(clerkMiddleware());
 
 
@@ -44,34 +41,40 @@ app.get("/", (req, res) => {
   res.send("Server is running!");
 });
 
-// Pusher authentication endpoint
+// Pusher authentication endpoint for private/presence channels
 app.post("/api/pusher/auth", (req, res) => {
   const auth = getAuth(req);
-  // User MUST be authenticated for presence channels
-  if (!auth.userId) {
-    return res.status(403).send("Forbidden: User not authenticated");
-  }
-
   const socketId = req.body.socket_id;
   const channel = req.body.channel_name;
 
-  const presanceData = {
-    user_id: auth.userId,
-    user_info: { 
-        // You could add username, etc. here later if you want
-     },
-  };
+  // For presence channels, user MUST be authenticated
+  if (channel.startsWith('presence-')) {
+    if (!auth.userId) {
+      return res.status(403).send("Forbidden: User not authenticated");
+    }
 
-  try {
-    const authResponse = pusher.authorizeChannel(socketId, channel, presanceData);
+    const presenceData = { // Corrected typo: presenceData
+      user_id: auth.userId,
+      user_info: {
+        // You could add other user details here if needed
+      },
+    };
+
+    try {
+      const authResponse = pusher.authorizeChannel(socketId, channel, presenceData);
+      res.send(authResponse);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error authorizing Pusher channel");
+    }
+  } else {
+    // For public channels, just authorize
+    const authResponse = pusher.authorizeChannel(socketId, channel);
     res.send(authResponse);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error authorizing Pusher channel");
   }
 });
 
-
+// Your API routes
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
@@ -84,7 +87,7 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     app.listen(port, () => {
-      console.log(`Server is running on port: ${port}`);
+      console.log(`🚀 Server is running on port: ${port}`);
     });
   })
   .catch((err) => {

@@ -29,80 +29,72 @@ export const usePosts = (username?: string) => {
       return;
     }
 
-    const channel = pusher.subscribe("posts-channel");
-
+    // --- Define Handlers ---
     const handleNewPost = (newPost: Post) => {
-      queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        // Defensively check if oldData is an array
-        const currentPosts = Array.isArray(oldData) ? oldData : [];
-        // Prevent adding duplicates if the post already exists
-        if (currentPosts.some((p) => p._id === newPost._id)) {
-          return currentPosts;
-        }
-        return [newPost, ...currentPosts];
-      });
-    };
-
-    const handlePostUpdate = (updatedPost: Post) => {
-      queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        if (!Array.isArray(oldData)) return [];
-        return oldData.map((post) =>
-          post._id === updatedPost._id ? updatedPost : post
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        // Add new post and prevent duplicates
+        const posts = [newPost, ...(oldData || [])];
+        return posts.filter(
+          (post, index, self) => index === self.findIndex((p) => p._id === post._id)
         );
       });
     };
 
-    const handlePostDeleted = (deletedPostId: string) => {
-      queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
-        if (!Array.isArray(oldData)) return [];
-        return oldData.filter((post) => post._id !== deletedPostId);
-      });
+    const handlePostUpdate = (updatedPost: Post) => {
+      queryClient.setQueryData(queryKey, (oldData: any) =>
+        (oldData || []).map((post: Post) =>
+          post._id === updatedPost._id ? updatedPost : post
+        )
+      );
     };
 
+    const handlePostDeleted = (deletedPostId: string) => {
+      queryClient.setQueryData(queryKey, (oldData: any) =>
+        (oldData || []).filter((post: Post) => post._id !== deletedPostId)
+      );
+    };
+
+    // --- Bind Events ---
+    const channel = pusher.subscribe("posts-channel");
     channel.bind("new-post", handleNewPost);
     channel.bind("post-liked", handlePostUpdate);
     channel.bind("new-comment", handlePostUpdate);
     channel.bind("post-deleted", handlePostDeleted);
 
     const presenceChannel = pusher.subscribe("presence-global");
-
     presenceChannel.bind("pusher:subscription_succeeded", (members: any) => {
-      console.log("Online users:", Object.keys(members.members));
+      console.log("Successfully subscribed to presence channel! Online users:", Object.keys(members.members));
     });
-
     presenceChannel.bind("pusher:member_added", (member: any) => {
       console.log("User online:", member.id);
     });
-
     presenceChannel.bind("pusher:member_removed", (member: any) => {
       console.log("User offline:", member.id);
     });
+     presenceChannel.bind("pusher:subscription_error", (error: any) => {
+      console.error("Presence channel auth failed:", error);
+    });
 
+
+    // --- Cleanup on Unmount ---
     return () => {
-      if (pusher) {
-        pusher.unsubscribe("posts-channel");
-        pusher.unsubscribe("presence-global");
-      }
+      channel.unbind_all(); // Important: remove all bindings
+      pusher.unsubscribe("posts-channel");
+      pusher.unsubscribe("presence-global");
     };
-  }, [queryClient, queryKey]);
+  }, []); // 👈 The empty array is the key to fixing the re-rendering loop!
 
+  // --- Mutations and Helpers ---
   const likePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.likePost(api, postId),
-    onSuccess: () => {
-      // No need to invalidate, Pusher handles the update!
-    },
   });
 
   const deletePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.deletePost(api, postId),
-    onSuccess: () => {
-      // No need to invalidate, Pusher handles the update!
-    },
   });
 
   const checkIsLiked = (postLikes: string[], currentUser: any) => {
-    const isLiked = currentUser && postLikes.includes(currentUser._id);
-    return isLiked;
+    return currentUser && postLikes.includes(currentUser._id);
   };
 
   return {
