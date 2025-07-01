@@ -7,7 +7,6 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  Text,
   ActivityIndicator,
 } from "react-native";
 
@@ -15,7 +14,7 @@ const PostComposer = () => {
   const { user } = useUser();
   const [isTextInputFocused, setIsTextInputFocused] = useState(false);
 
-  // Re-introducing the hook that handles all post creation logic
+  // --- We are bringing back the hook that contains all our logic ---
   const {
     content,
     setContent,
@@ -25,15 +24,17 @@ const PostComposer = () => {
     removeImage,
     createPost,
   } = useCreatePost();
+  // ----------------------------------------------------------------
 
+  // A wrapper function to handle the post creation and reset focus
   const handleCreatePost = () => {
     createPost();
-    setIsTextInputFocused(false); // Reset focus after posting
+    setIsTextInputFocused(false);
   };
 
   return (
     <View className="p-4 bg-white">
-      <View className="flex-row items-center border-b border-gray-200 pb-4">
+      <View className="flex-row items-center">
         <Image
           source={{ uri: user?.imageUrl }}
           className="w-10 h-10 rounded-full mr-3"
@@ -43,17 +44,20 @@ const PostComposer = () => {
             placeholder="What's on your mind?"
             placeholderTextColor="#657786"
             className="text-base"
+            // --- Connecting the TextInput to our hook's state ---
             value={content}
             onChangeText={setContent}
             onFocus={() => setIsTextInputFocused(true)}
-            onBlur={() => setIsTextInputFocused(false)}
+            // We don't use onBlur, so focus stays until post is sent or user taps away
             multiline
           />
         </View>
 
-        {/* This is the conditional icon */}
+        {/* --- This is our new, intelligent button --- */}
         <TouchableOpacity
           className="ml-4"
+          // If the input is focused, the button calls 'handleCreatePost'.
+          // Otherwise, it calls 'pickImageFromGallery'.
           onPress={isTextInputFocused ? handleCreatePost : pickImageFromGallery}
           disabled={isCreating}
         >
@@ -69,9 +73,9 @@ const PostComposer = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Display selected image if it exists */}
+      {/* --- Restoring the image preview section --- */}
       {selectedImage && (
-        <View className="mt-3 relative">
+        <View className="mt-4 relative">
           <Image
             source={{ uri: selectedImage }}
             className="w-full h-48 rounded-lg"
