@@ -2,7 +2,6 @@ import { useAuth } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { Redirect, withLayoutContext } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { Navigator } = createMaterialTopTabNavigator();
@@ -15,23 +14,7 @@ const TabsLayout = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {/* Custom Header */}
-      <View className="flex-row justify-between items-center px-4 py-2">
-        <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
-        <View className="flex-row space-x-2">
-          <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-            <Feather name="plus" size={22} color="#000" />
-          </TouchableOpacity>
-          <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-            <Feather name="search" size={22} color="#000" />
-          </TouchableOpacity>
-          <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-            <Feather name="message-circle" size={22} color="#000" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Top Tab Navigator - NOW BELOW THE HEADER */}
+      {/* The custom header is removed from here */}
       <MaterialTopTabs
         screenOptions={{
           tabBarActiveTintColor: "#1877F2",
