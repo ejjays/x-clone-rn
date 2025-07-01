@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient, postApi } from "../utils/api";
 import { useEffect } from "react";
-import { pusher } from "../utils/pusher"; // Import pusher
+import { getPusher } from "../utils/pusher"; // Corrected import
 import { Post } from "@/types";
 
 export const usePosts = (username?: string) => {
@@ -23,7 +23,14 @@ export const usePosts = (username?: string) => {
   });
 
   useEffect(() => {
-    const channel = pusher.subscribe('posts-channel');
+    const pusher = getPusher();
+
+    if (!pusher) {
+      console.warn("Pusher has not been initialized yet.");
+      return;
+    }
+
+    const channel = pusher.subscribe("posts-channel");
 
     const handleNewPost = (newPost: Post) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
@@ -59,30 +66,31 @@ export const usePosts = (username?: string) => {
       });
     };
 
-    channel.bind('new-post', handleNewPost);
-    channel.bind('post-liked', handlePostLiked);
-    channel.bind('new-comment', handleNewComment);
-    channel.bind('post-deleted', handlePostDeleted);
+    channel.bind("new-post", handleNewPost);
+    channel.bind("post-liked", handlePostLiked);
+    channel.bind("new-comment", handleNewComment);
+    channel.bind("post-deleted", handlePostDeleted);
 
     // This is for the presence channel to see who is online
-    const presenceChannel = pusher.subscribe('presence-global');
+    const presenceChannel = pusher.subscribe("presence-global");
 
-    presenceChannel.bind('pusher:subscription_succeeded', (members: any) => {
-        console.log('Online users:', Object.keys(members.members));
+    presenceChannel.bind("pusher:subscription_succeeded", (members: any) => {
+      console.log("Online users:", Object.keys(members.members));
     });
 
-    presenceChannel.bind('pusher:member_added', (member: any) => {
-        console.log('User online:', member.id);
+    presenceChannel.bind("pusher:member_added", (member: any) => {
+      console.log("User online:", member.id);
     });
 
-    presenceChannel.bind('pusher:member_removed', (member: any) => {
-        console.log('User offline:', member.id);
+    presenceChannel.bind("pusher:member_removed", (member: any) => {
+      console.log("User offline:", member.id);
     });
-
 
     return () => {
-      pusher.unsubscribe('posts-channel');
-      pusher.unsubscribe('presence-global');
+      if (pusher) {
+        pusher.unsubscribe("posts-channel");
+        pusher.unsubscribe("presence-global");
+      }
     };
   }, [queryClient, queryKey]);
 
@@ -96,7 +104,7 @@ export const usePosts = (username?: string) => {
   const deletePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.deletePost(api, postId),
     onSuccess: () => {
-       // No need to invalidate, Pusher handles the update!
+      // No need to invalidate, Pusher handles the update!
     },
   });
 
