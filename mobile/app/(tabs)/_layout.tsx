@@ -14,7 +14,6 @@ const TabsLayout = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {/* The custom header is removed from here */}
       <MaterialTopTabs
         screenOptions={{
           tabBarActiveTintColor: "#1877F2",
@@ -25,8 +24,8 @@ const TabsLayout = () => {
           },
           tabBarStyle: {
             backgroundColor: "#fff",
-            elevation: 0, // Remove shadow on Android
-            shadowOpacity: 0, // Remove shadow on iOS
+            elevation: 0,
+            shadowOpacity: 0,
             borderBottomWidth: 1,
             borderBottomColor: "#E5E5E5",
           },
@@ -35,35 +34,45 @@ const TabsLayout = () => {
         <MaterialTopTabs.Screen
           name="index"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="home" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
         <MaterialTopTabs.Screen
           name="search"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="users" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="users" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
         <MaterialTopTabs.Screen
           name="notifications"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="bell" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="bell" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
         <MaterialTopTabs.Screen
           name="messages"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="tv" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="tv" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
         <MaterialTopTabs.Screen
           name="profile"
           options={{
-            tabBarIcon: ({ color }) => <Feather name="menu" size={24} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="menu" size={24} color={color} />
+            ),
             tabBarShowLabel: false,
           }}
         />
