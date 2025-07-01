@@ -3,12 +3,18 @@ import PostsList from "@/components/PostsList";
 import Stories from "@/components/Stories";
 import { usePosts } from "@/hooks/usePosts";
 import { useUserSync } from "@/hooks/useUserSync";
-import { useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
+import { useRef, useState } from "react";
+import { Post } from "@/types";
+import { Modalize } from "react-native-modalize";
+import CommentsModal from "@/components/CommentsModal";
 
 const HomeScreen = () => {
   const [isRefetching, setIsRefetching] = useState(false);
   const { refetch: refetchPosts } = usePosts();
+
+  const commentsModalRef = useRef<Modalize>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   const handlePullToRefresh = async () => {
     setIsRefetching(true);
@@ -16,36 +22,43 @@ const HomeScreen = () => {
     setIsRefetching(false);
   };
 
+  const handleOpenComments = (post: Post) => {
+    setSelectedPost(post);
+    commentsModalRef.current?.open();
+  };
+
   useUserSync();
 
   return (
-    <ScrollView
-      className="flex-1 bg-gray-100" // Use a light gray for the main background
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={handlePullToRefresh}
-          tintColor={"#1DA1F2"}
-        />
-      }
-    >
-      <View className="bg-white">
-        <PostComposer />
-      </View>
+    <>
+      <ScrollView
+        className="flex-1 bg-gray-100"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={handlePullToRefresh}
+            tintColor={"#1DA1F2"}
+          />
+        }
+      >
+        <View className="bg-white">
+          <PostComposer />
+        </View>
 
-      {/* Subtle Divider */}
-      <View className="h-1.5 bg-gray-200" />
+        <View className="h-1.5 bg-gray-200" />
 
-      <View className="bg-white">
-        <Stories />
-      </View>
+        <View className="bg-white">
+          <Stories />
+        </View>
 
-      {/* Subtle Divider */}
-      <View className="h-1.5 bg-gray-200" />
+        <View className="h-1.5 bg-gray-200" />
 
-      <PostsList />
-    </ScrollView>
+        <PostsList onOpenComments={handleOpenComments} />
+      </ScrollView>
+
+      <CommentsModal ref={commentsModalRef} selectedPost={selectedPost} />
+    </>
   );
 };
 export default HomeScreen;

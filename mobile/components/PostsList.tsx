@@ -3,11 +3,13 @@ import { usePosts } from "@/hooks/usePosts";
 import { Post } from "@/types";
 import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
 import PostCard from "./PostCard";
-import { useRef, useState } from "react";
-import CommentsModal from "./CommentsModal";
-import { Modalize } from "react-native-modalize";
 
-const PostsList = ({ username }: { username?: string }) => {
+interface PostsListProps {
+  username?: string;
+  onOpenComments: (post: Post) => void;
+}
+
+const PostsList = ({ username, onOpenComments }: PostsListProps) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
     posts,
@@ -18,13 +20,6 @@ const PostsList = ({ username }: { username?: string }) => {
     deletePost,
     checkIsLiked,
   } = usePosts(username);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const commentsModalRef = useRef<Modalize>(null);
-
-  const openComments = (post: Post) => {
-    setSelectedPost(post);
-    commentsModalRef.current?.open();
-  };
 
   if (isUserLoading || isPostsLoading) {
     return (
@@ -65,13 +60,11 @@ const PostsList = ({ username }: { username?: string }) => {
           post={post}
           onLike={toggleLike}
           onDelete={deletePost}
-          onComment={openComments}
+          onComment={onOpenComments}
           currentUser={currentUser}
           isLiked={checkIsLiked(post.likes, currentUser)}
         />
       ))}
-
-      <CommentsModal ref={commentsModalRef} selectedPost={selectedPost} />
     </>
   );
 };
