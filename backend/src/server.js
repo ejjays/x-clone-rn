@@ -1,3 +1,4 @@
+// backend/src/server.js
 import express from "express";
 import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
@@ -17,7 +18,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all origins for simplicity
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -25,7 +26,6 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
-// Make io accessible to our routes
 app.use((req, res, next) => {
   req.io = io;
   next();
@@ -48,7 +48,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: err.message || "Internal server error" });
@@ -57,11 +56,13 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     await connectDB();
-    if (ENV.NODE_ENV !== "production") {
-      server.listen(ENV.PORT, () =>
-        console.log("Server is up and running on PORT:", ENV.PORT)
-      );
-    }
+    
+    // This now allows the server to start in any environment
+    const PORT = ENV.PORT || 5001;
+    server.listen(PORT, () => {
+      console.log(`Server is up and running on PORT: ${PORT}`);
+    });
+
   } catch (error) {
     console.error("Failed to start server:", error.message);
     process.exit(1);
@@ -70,4 +71,4 @@ const startServer = async () => {
 
 startServer();
 
-export default server; 
+export default server;
