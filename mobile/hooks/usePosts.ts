@@ -24,37 +24,64 @@ export const usePosts = (username?: string) => {
   });
 
   useEffect(() => {
-    // Listen for new posts
-    socket.on("newPost", (newPost: Post) => {
-      // Update the cache directly
+    const handleNewPost = (newPost: Post) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
         return oldData ? [newPost, ...oldData] : [newPost];
       });
-    });
+    };
 
-    // Clean up the socket listener when the component unmounts
+    const handlePostLiked = (updatedPost: Post) => {
+      queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
+        return oldData
+          ? oldData.map((post) =>
+              post._id === updatedPost._id ? updatedPost : post
+            )
+          : [];
+      });
+    };
+
+    const handleNewComment = (updatedPost: Post) => {
+      queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
+        return oldData
+          ? oldData.map((post) =>
+              post._id === updatedPost._id ? updatedPost : post
+            )
+          : [];
+      });
+    };
+
+    const handlePostDeleted = (deletedPostId: string) => {
+      queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
+        return oldData
+          ? oldData.filter((post) => post._id !== deletedPostId)
+          : [];
+      });
+    };
+
+    socket.on("newPost", handleNewPost);
+    socket.on("postLiked", handlePostLiked);
+    socket.on("newComment", handleNewComment);
+    socket.on("postDeleted", handlePostDeleted);
+
     return () => {
-      socket.off("newPost");
+      socket.off("newPost", handleNewPost);
+      socket.off("postLiked", handlePostLiked);
+      socket.off("newComment", handleNewComment);
+      socket.off("postDeleted", handlePostDeleted);
     };
   }, [queryClient, queryKey]);
 
   const likePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.likePost(api, postId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      if (username) {
-        queryClient.invalidateQueries({ queryKey: ["userPosts", username] });
-      }
+      // We don't need to invalidate queries anymore, as the cache is updated via sockets
     },
   });
 
   const deletePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.deletePost(api, postId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      if (username) {
-        queryClient.invalidateQueries({ queryKey: ["userPosts", username] });
-      }
+      // We don't need to invalidate queries anymore, as the cache is updated via sockets
     },
   });
 

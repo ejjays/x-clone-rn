@@ -51,6 +51,19 @@ export const createComment = asyncHandler(async (req, res) => {
     });
   }
 
+  const updatedPost = await Post.findById(postId)
+    .populate("user", "username firstName lastName profilePicture")
+    .populate({
+      path: "comments",
+      populate: {
+        path: "user",
+        select: "username firstName lastName profilePicture",
+      },
+    });
+
+  req.io.emit("newComment", updatedPost);
+
+
   res.status(201).json({ comment });
 });
 

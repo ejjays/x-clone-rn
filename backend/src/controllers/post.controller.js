@@ -129,7 +129,7 @@ export const likePost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
 
   const user = await User.findOne({ clerkId: userId });
-  const post = await Post.findById(postId);
+  let post = await Post.findById(postId);
 
   if (!user || !post) {
     return res.status(404).json({ error: "User or post not found" });
@@ -156,6 +156,19 @@ export const likePost = asyncHandler(async (req, res) => {
     }
   }
 
+  // Fetch the updated post to emit with the event
+  const updatedPost = await Post.findById(postId)
+    .populate("user", "username firstName lastName profilePicture")
+    .populate({
+      path: "comments",
+      populate: {
+        path: "user",
+        select: "username firstName lastName profilePicture",
+      },
+    });
+
+  req.io.emit("postLiked", updatedPost);
+
   res.status(200).json({
     message: isLiked ? "Post unliked successfully" : "Post liked successfully",
   });
@@ -180,6 +193,8 @@ export const deletePost = asyncHandler(async (req, res) => {
 
   await Comment.deleteMany({ post: postId });
   await Post.findByIdAndDelete(postId);
+
+  req.io.emit("postDeleted", postId);
 
   res.status(200).json({ message: "Post deleted successfully" });
 });
