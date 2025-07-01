@@ -8,6 +8,7 @@ export const usePosts = (username?: string) => {
   const api = useApiClient();
   const queryClient = useQueryClient();
 
+  // This queryKey is stable and will not cause re-renders on its own.
   const queryKey = username ? ["userPosts", username] : ["posts"];
 
   const {
@@ -22,6 +23,7 @@ export const usePosts = (username?: string) => {
     select: (response) => response.data.posts,
   });
 
+  // This useEffect will now run ONLY ONCE, creating a stable Pusher connection.
   useEffect(() => {
     const pusher = getPusher();
     if (!pusher) {
@@ -29,64 +31,69 @@ export const usePosts = (username?: string) => {
       return;
     }
 
-    // --- Define Handlers ---
+    const channel = pusher.subscribe("posts-channel");
+    const presenceChannel = pusher.subscribe("presence-global");
+
+    // --- Robust Cache Handlers ---
+
+    // Handles new posts
     const handleNewPost = (newPost: Post) => {
       queryClient.setQueryData(queryKey, (oldData: any) => {
-        // Add new post and prevent duplicates
-        const posts = [newPost, ...(oldData || [])];
-        return posts.filter(
+        // Ensure oldData is an array before trying to spread it.
+        const posts = Array.isArray(oldData) ? oldData : [];
+        // Add the new post and filter out any potential duplicates.
+        return [newPost, ...posts].filter(
           (post, index, self) => index === self.findIndex((p) => p._id === post._id)
         );
       });
     };
 
+    // Handles updates (likes, new comments)
     const handlePostUpdate = (updatedPost: Post) => {
-      queryClient.setQueryData(queryKey, (oldData: any) =>
-        (oldData || []).map((post: Post) =>
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        // Ensure oldData is an array before mapping.
+        if (!Array.isArray(oldData)) return [];
+        return oldData.map((post: Post) =>
           post._id === updatedPost._id ? updatedPost : post
-        )
-      );
+        );
+      });
     };
 
+    // Handles post deletion
     const handlePostDeleted = (deletedPostId: string) => {
-      queryClient.setQueryData(queryKey, (oldData: any) =>
-        (oldData || []).filter((post: Post) => post._id !== deletedPostId)
-      );
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        // Ensure oldData is an array before filtering.
+        if (!Array.isArray(oldData)) return [];
+        return oldData.filter((post: Post) => post._id !== deletedPostId);
+      });
     };
 
-    // --- Bind Events ---
-    const channel = pusher.subscribe("posts-channel");
+
+    // --- Bind Events to Handlers ---
     channel.bind("new-post", handleNewPost);
     channel.bind("post-liked", handlePostUpdate);
     channel.bind("new-comment", handlePostUpdate);
     channel.bind("post-deleted", handlePostDeleted);
-
-    const presenceChannel = pusher.subscribe("presence-global");
-    presenceChannel.bind("pusher:subscription_succeeded", (members: any) => {
-      console.log("Successfully subscribed to presence channel! Online users:", Object.keys(members.members));
-    });
-    presenceChannel.bind("pusher:member_added", (member: any) => {
-      console.log("User online:", member.id);
-    });
-    presenceChannel.bind("pusher:member_removed", (member: any) => {
-      console.log("User offline:", member.id);
-    });
-     presenceChannel.bind("pusher:subscription_error", (error: any) => {
-      console.error("Presence channel auth failed:", error);
-    });
+    
+    // Optional: Log presence events for debugging
+    presenceChannel.bind("pusher:subscription_succeeded", () => console.log("Presence channel subscribed!"));
+    presenceChannel.bind("pusher:subscription_error", (err: any) => console.error("Presence auth failed!", err));
 
 
     // --- Cleanup on Unmount ---
+    // This will run when the user navigates away from the screen.
     return () => {
-      channel.unbind_all(); // Important: remove all bindings
+      channel.unbind_all();
       pusher.unsubscribe("posts-channel");
       pusher.unsubscribe("presence-global");
     };
-  }, []); // 👈 The empty array is the key to fixing the re-rendering loop!
+  }, [queryClient, queryKey]); // Dependencies are stable, so this effect runs once.
 
-  // --- Mutations and Helpers ---
+  
+  // --- Mutations ---
   const likePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.likePost(api, postId),
+    // No onSuccess invalidation needed, Pusher handles the UI update!
   });
 
   const deletePostMutation = useMutation({
