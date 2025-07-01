@@ -2,13 +2,13 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import Pusher from "pusher"; // Import Pusher
+import Pusher from "pusher";
+import { ClerkExpressWithAuth } from "@clerk/express";
 
-import authRoutes from "./routes/auth.routes.js";
-import postRoutes from "./routes/post.routes.js";
-import commentRoutes from "./routes/comment.routes.js";
-import userRoutes from "./routes/user.routes.js";
-import notificationRoutes from "./routes/notification.routes.js";
+import postRoutes from "./routes/post.route.js";
+import commentRoutes from "./routes/comment.route.js";
+import userRoutes from "./routes/user.route.js";
+import notificationRoutes from "./routes/notification.route.js";
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -28,26 +28,38 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
 app.use(cors({ origin: "*" }));
+app.use(express.json());
 
-app.use("/api/auth", authRoutes);
+// Use Clerk middleware
+app.use(ClerkExpressWithAuth());
+
+app.get("/", (req, res) => {
+  res.send("Server is running!");
+});
+
+app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
-app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 // New endpoint for Pusher presence channel authentication
-app.post("/pusher/auth", (req, res) => {
+app.post("/api/pusher/auth", (req, res) => {
   const socketId = req.body.socket_id;
   const channel = req.body.channel_name;
-  // This is a basic example, in a real app you'd check if the user is logged in
+  
+  // For presence channels, you must be authenticated
+  if (!req.auth.userId) {
+    return res.status(403).send("Forbidden");
+  }
+
   const presanceData = {
-    user_id: new mongoose.Types.ObjectId().toString(), // Use a real user ID here
+    user_id: req.auth.userId, // Use the actual user ID from Clerk
     user_info: {
-      // Add any user info you want other clients to see
+      // You can add any other user info you want here
     },
   };
+
   const authResponse = pusher.authorizeChannel(socketId, channel, presanceData);
   res.send(authResponse);
 });
@@ -60,6 +72,8 @@ mongoose
     });
   })
   .catch((err) => {
-    console.log(err);
+    console.log("Error connecting to MongoDB:", err);
     process.exit(1);
   });
+
+export default app;
