@@ -1,8 +1,7 @@
-// mobile/hooks/usePosts.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient, postApi } from "../utils/api";
 import { useEffect } from "react";
-import { socket } from "../utils/socket";
+import { pusher } from "../utils/pusher"; // Import pusher
 import { Post } from "@/types";
 
 export const usePosts = (username?: string) => {
@@ -24,6 +23,8 @@ export const usePosts = (username?: string) => {
   });
 
   useEffect(() => {
+    const channel = pusher.subscribe('posts-channel');
+
     const handleNewPost = (newPost: Post) => {
       queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
         return oldData ? [newPost, ...oldData] : [newPost];
@@ -58,30 +59,44 @@ export const usePosts = (username?: string) => {
       });
     };
 
-    socket.on("newPost", handleNewPost);
-    socket.on("postLiked", handlePostLiked);
-    socket.on("newComment", handleNewComment);
-    socket.on("postDeleted", handlePostDeleted);
+    channel.bind('new-post', handleNewPost);
+    channel.bind('post-liked', handlePostLiked);
+    channel.bind('new-comment', handleNewComment);
+    channel.bind('post-deleted', handlePostDeleted);
+
+    // This is for the presence channel to see who is online
+    const presenceChannel = pusher.subscribe('presence-global');
+
+    presenceChannel.bind('pusher:subscription_succeeded', (members: any) => {
+        console.log('Online users:', Object.keys(members.members));
+    });
+
+    presenceChannel.bind('pusher:member_added', (member: any) => {
+        console.log('User online:', member.id);
+    });
+
+    presenceChannel.bind('pusher:member_removed', (member: any) => {
+        console.log('User offline:', member.id);
+    });
+
 
     return () => {
-      socket.off("newPost", handleNewPost);
-      socket.off("postLiked", handlePostLiked);
-      socket.off("newComment", handleNewComment);
-      socket.off("postDeleted", handlePostDeleted);
+      pusher.unsubscribe('posts-channel');
+      pusher.unsubscribe('presence-global');
     };
   }, [queryClient, queryKey]);
 
   const likePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.likePost(api, postId),
     onSuccess: () => {
-      // We don't need to invalidate queries anymore, as the cache is updated via sockets
+      // No need to invalidate, Pusher handles the update!
     },
   });
 
   const deletePostMutation = useMutation({
     mutationFn: (postId: string) => postApi.deletePost(api, postId),
     onSuccess: () => {
-      // We don't need to invalidate queries anymore, as the cache is updated via sockets
+       // No need to invalidate, Pusher handles the update!
     },
   });
 
