@@ -1,11 +1,17 @@
 import PostComposer from "@/components/PostComposer";
 import PostsList from "@/components/PostsList";
-import SignOutButton from "@/components/SignOutButton";
+import Stories from "@/components/Stories";
 import { usePosts } from "@/hooks/usePosts";
 import { useUserSync } from "@/hooks/useUserSync";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
+import {
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const HomeScreen = () => {
@@ -14,7 +20,6 @@ const HomeScreen = () => {
 
   const handlePullToRefresh = async () => {
     setIsRefetching(true);
-
     await refetchPosts();
     setIsRefetching(false);
   };
@@ -22,11 +27,18 @@ const HomeScreen = () => {
   useUserSync();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-100">
-        <Ionicons name="logo-twitter" size={24} color="#1DA1F2" />
-        <Text className="text-xl font-bold text-gray-900">Home</Text>
-        <SignOutButton />
+    <SafeAreaView className="flex-1 bg-gray-100">
+      {/* Header */}
+      <View className="flex-row justify-between items-center px-4 py-2 bg-white border-b border-gray-200">
+        <Text className="text-2xl font-bold text-blue-600">facebook</Text>
+        <View className="flex-row space-x-2">
+          <TouchableOpacity className="bg-gray-200 p-2 rounded-full">
+            <Feather name="search" size={20} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity className="bg-gray-200 p-2 rounded-full">
+            <Feather name="message-circle" size={20} color="#000" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -42,6 +54,8 @@ const HomeScreen = () => {
         }
       >
         <PostComposer />
+        <Stories />
+        <View className="mt-2" />
         <PostsList />
       </ScrollView>
     </SafeAreaView>
