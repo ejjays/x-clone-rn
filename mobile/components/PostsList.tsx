@@ -3,8 +3,9 @@ import { usePosts } from "@/hooks/usePosts";
 import { Post } from "@/types";
 import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
 import PostCard from "./PostCard";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import CommentsModal from "./CommentsModal";
+import { Modalize } from "react-native-modalize";
 
 const PostsList = ({ username }: { username?: string }) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
@@ -17,11 +18,13 @@ const PostsList = ({ username }: { username?: string }) => {
     deletePost,
     checkIsLiked,
   } = usePosts(username);
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const commentsModalRef = useRef<Modalize>(null);
 
-  const selectedPost = selectedPostId
-    ? posts.find((p: Post) => p._id === selectedPostId)
-    : null;
+  const openComments = (post: Post) => {
+    setSelectedPost(post);
+    commentsModalRef.current?.open();
+  };
 
   if (isUserLoading || isPostsLoading) {
     return (
@@ -62,16 +65,13 @@ const PostsList = ({ username }: { username?: string }) => {
           post={post}
           onLike={toggleLike}
           onDelete={deletePost}
-          onComment={(post: Post) => setSelectedPostId(post._id)}
+          onComment={openComments}
           currentUser={currentUser}
           isLiked={checkIsLiked(post.likes, currentUser)}
         />
       ))}
 
-      <CommentsModal
-        selectedPost={selectedPost}
-        onClose={() => setSelectedPostId(null)}
-      />
+      <CommentsModal ref={commentsModalRef} selectedPost={selectedPost} />
     </>
   );
 };

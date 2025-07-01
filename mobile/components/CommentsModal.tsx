@@ -1,146 +1,120 @@
 import { useComments } from "@/hooks/useComments";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Post } from "@/types";
+import { Feather } from "@expo/vector-icons";
+import { forwardRef } from "react";
 import {
   View,
   Text,
-  Modal,
-  TouchableOpacity,
-  ScrollView,
-  Image,
   TextInput,
   ActivityIndicator,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+  FlatList,
 } from "react-native";
+import { Modalize } from "react-native-modalize";
+import CommentCard from "./CommentCard";
+
+const MODAL_HEIGHT = Dimensions.get("window").height * 0.8;
 
 interface CommentsModalProps {
-  selectedPost: Post;
-  onClose: () => void;
+  selectedPost: Post | null;
 }
 
-const CommentsModal = ({ selectedPost, onClose }: CommentsModalProps) => {
-  const { commentText, setCommentText, createComment, isCreatingComment } = useComments();
-  const { currentUser } = useCurrentUser();
+const CommentsModal = forwardRef<Modalize, CommentsModalProps>(
+  ({ selectedPost }, ref) => {
+    const { commentText, setCommentText, createComment, isCreatingComment } =
+      useComments();
+    const { currentUser } = useCurrentUser();
 
-  const handleClose = () => {
-    onClose();
-    setCommentText("");
-  };
-
-  return (
-    <Modal visible={!!selectedPost} animationType="slide" presentationStyle="pageSheet">
-      {/* MODAL HEADER */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
-        <TouchableOpacity onPress={handleClose}>
-          <Text className="text-blue-500 text-lg">Close</Text>
-        </TouchableOpacity>
-        <Text className="text-lg font-semibold">Comments</Text>
-        <View className="w-12" />
+    const renderHeader = () => (
+      <View className="p-4 border-b border-gray-200 bg-white">
+        <Text className="text-lg font-bold text-center">Comments</Text>
       </View>
+    );
 
-      {selectedPost && (
-        <ScrollView className="flex-1">
-          {/* ORIGINAL POST */}
-          <View className="border-b border-gray-100 bg-white p-4">
-            <View className="flex-row">
-              <Image
-                source={{ uri: selectedPost.user.profilePicture }}
-                className="size-12 rounded-full mr-3"
-              />
-
-              <View className="flex-1">
-                <View className="flex-row items-center mb-1">
-                  <Text className="font-bold text-gray-900 mr-1">
+    const renderContent = () => {
+      if (!selectedPost) return null;
+      return (
+        <FlatList
+          data={selectedPost.comments}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => <CommentCard comment={item} />}
+          ListHeaderComponent={
+            <View className="p-4 border-b border-gray-200">
+              <View className="flex-row items-start space-x-3">
+                <Image
+                  source={{ uri: selectedPost.user.profilePicture }}
+                  className="size-10 rounded-full"
+                />
+                <View className="flex-1">
+                  <Text className="font-bold text-gray-900">
                     {selectedPost.user.firstName} {selectedPost.user.lastName}
                   </Text>
-                  <Text className="text-gray-500 ml-1">@{selectedPost.user.username}</Text>
-                </View>
-
-                {selectedPost.content && (
-                  <Text className="text-gray-900 text-base leading-5 mb-3">
+                  <Text className="text-gray-500 text-sm">
+                    @{selectedPost.user.username}
+                  </Text>
+                  <Text className="text-base text-gray-800 mt-2 leading-6">
                     {selectedPost.content}
                   </Text>
-                )}
-
-                {selectedPost.image && (
-                  <Image
-                    source={{ uri: selectedPost.image }}
-                    className="w-full h-48 rounded-2xl mb-3"
-                    resizeMode="cover"
-                  />
-                )}
-              </View>
-            </View>
-          </View>
-
-          {/* COMMENTS LIST */}
-          {selectedPost.comments.map((comment) => (
-            <View key={comment._id} className="border-b border-gray-100 bg-white p-4">
-              <View className="flex-row">
-                <Image
-                  source={{ uri: comment.user.profilePicture }}
-                  className="w-10 h-10 rounded-full mr-3"
-                />
-
-                <View className="flex-1">
-                  <View className="flex-row items-center mb-1">
-                    <Text className="font-bold text-gray-900 mr-1">
-                      {comment.user.firstName} {comment.user.lastName}
-                    </Text>
-                    <Text className="text-gray-500 text-sm ml-1">@{comment.user.username}</Text>
-                  </View>
-
-                  <Text className="text-gray-900 text-base leading-5 mb-2">{comment.content}</Text>
                 </View>
               </View>
             </View>
-          ))}
+          }
+          contentContainerStyle={{ padding: 16 }}
+          showsVerticalScrollIndicator={false}
+        />
+      );
+    };
 
-          {/* ADD COMMENT INPUT */}
-
-          <View className="p-4 border-t border-gray-100">
-            <View className="flex-row">
+    return (
+      <Modalize
+        ref={ref}
+        modalHeight={MODAL_HEIGHT}
+        handlePosition="inside"
+        HeaderComponent={renderHeader}
+        keyboardAvoidingBehavior="padding"
+        FooterComponent={
+          <View className="p-4 bg-white border-t border-gray-200">
+            <View className="flex-row items-center space-x-3">
               <Image
                 source={{ uri: currentUser?.profilePicture }}
-                className="size-10 rounded-full mr-3"
+                className="size-10 rounded-full"
               />
-
-              <View className="flex-1">
+              <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-4">
                 <TextInput
-                  className="border border-gray-200 rounded-lg p-3 text-base mb-3"
+                  className="flex-1 py-3 text-base"
                   placeholder="Write a comment..."
                   value={commentText}
                   onChangeText={setCommentText}
                   multiline
-                  numberOfLines={3}
-                  textAlignVertical="top"
                 />
-
                 <TouchableOpacity
-                  className={`px-4 py-2 rounded-lg self-start ${
-                    commentText.trim() ? "bg-blue-500" : "bg-gray-300"
-                  }`}
-                  onPress={() => createComment(selectedPost._id)}
+                  onPress={() => createComment(selectedPost!._id)}
                   disabled={isCreatingComment || !commentText.trim()}
                 >
                   {isCreatingComment ? (
-                    <ActivityIndicator size={"small"} color={"white"} />
+                    <ActivityIndicator size="small" color="#1877F2" />
                   ) : (
-                    <Text
-                      className={`font-semibold ${
-                        commentText.trim() ? "text-white" : "text-gray-500"
-                      }`}
-                    >
-                      Reply
-                    </Text>
+                    <Feather
+                      name="send"
+                      size={24}
+                      color={
+                        commentText.trim() ? "#1877F2" : "rgba(0,0,0,0.3)"
+                      }
+                    />
                   )}
                 </TouchableOpacity>
               </View>
             </View>
           </View>
-        </ScrollView>
-      )}
-    </Modal>
-  );
-};
+        }
+      >
+        {renderContent()}
+      </Modalize>
+    );
+  }
+);
 
 export default CommentsModal;
