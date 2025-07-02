@@ -15,6 +15,10 @@
       "autoIncrement": true,
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "${EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}",
+        "EXPO_PUBLIC_API_URL": "${EXPO_PUBLIC_API_URL}"
       }
     }
   },
