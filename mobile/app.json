@@ -40,8 +40,11 @@
       "typedRoutes": true
     },
     "extra": {
-    "router": {},
-    "eas": {}
-    }
+      "router": {},
+      "eas": {
+        "projectId": "c99bd73f-554c-4cdf-8ecd-438221db173c"
+      }
+    },
+    "owner": "ejjays"
   }
 }
