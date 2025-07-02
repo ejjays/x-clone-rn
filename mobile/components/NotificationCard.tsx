@@ -1,40 +1,72 @@
-import { Notification } from "@/types";
-import { formatDate } from "@/utils/formatters";
-import { Feather } from "@expo/vector-icons";
-import { View, Text, Alert, Image, TouchableOpacity } from "react-native";
+import type { Notification } from "@/types"
+import { Feather } from "@expo/vector-icons"
+import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
 
 interface NotificationCardProps {
-  notification: Notification;
-  onDelete: (notificationId: string) => void;
+  notification: Notification
+  onDelete: (notificationId: string) => void
 }
 
 const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => {
   const getNotificationText = () => {
-    const name = `${notification.from.firstName} ${notification.from.lastName}`;
+    const name = `${notification.from.firstName} ${notification.from.lastName}`
     switch (notification.type) {
       case "like":
-        return `${name} liked your post`;
+        return (
+          <Text className="text-gray-900 text-base leading-5">
+            <Text className="font-semibold">{name}</Text>
+            <Text> liked your post.</Text>
+          </Text>
+        )
       case "comment":
-        return `${name} commented on your post`;
+        return (
+          <Text className="text-gray-900 text-base leading-5">
+            <Text className="font-semibold">{name}</Text>
+            <Text> commented on your post: "</Text>
+            <Text className="text-gray-600">{notification.comment?.content}</Text>
+            <Text>"</Text>
+          </Text>
+        )
       case "follow":
-        return `${name} started following you`;
+        return (
+          <Text className="text-gray-900 text-base leading-5">
+            <Text className="font-semibold">{name}</Text>
+            <Text> started following you.</Text>
+          </Text>
+        )
       default:
-        return "";
+        return <Text className="text-gray-900 text-base leading-5">New notification</Text>
     }
-  };
+  }
 
   const getNotificationIcon = () => {
     switch (notification.type) {
       case "like":
-        return <Feather name="heart" size={20} color="#E0245E" />;
+        return (
+          <View className="absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full items-center justify-center border-2 border-white">
+            <Feather name="heart" size={12} color="white" />
+          </View>
+        )
       case "comment":
-        return <Feather name="message-circle" size={20} color="#1DA1F2" />;
+        return (
+          <View className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full items-center justify-center border-2 border-white">
+            <Feather name="message-circle" size={12} color="white" />
+          </View>
+        )
       case "follow":
-        return <Feather name="user-plus" size={20} color="#17BF63" />;
+        return (
+          <View className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full items-center justify-center border-2 border-white">
+            <Feather name="user-plus" size={12} color="white" />
+          </View>
+        )
       default:
-        return <Feather name="bell" size={20} color="#657786" />;
+        return (
+          <View className="absolute -bottom-1 -right-1 w-6 h-6 bg-gray-500 rounded-full items-center justify-center border-2 border-white">
+            <Feather name="bell" size={12} color="white" />
+          </View>
+        )
     }
-  };
+  }
 
   const handleDelete = () => {
     Alert.alert("Delete Notification", "Are you sure you want to delete this notification?", [
@@ -44,68 +76,68 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
         style: "destructive",
         onPress: () => onDelete(notification._id),
       },
-    ]);
-  };
+    ])
+  }
+
+  const formatNotificationDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+    const diffInDays = Math.floor(diffInHours / 24)
+
+    if (diffInHours < 1) return "Just now"
+    if (diffInHours < 24) return `${diffInHours}h`
+    if (diffInDays === 1) return "Yesterday"
+    if (diffInDays < 7) return `${diffInDays}d`
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    })
+  }
 
   return (
-    <View className="border-b border-gray-100 bg-white">
-      <View className="flex-row p-4">
+    <TouchableOpacity className="bg-white px-4 py-3 border-b border-gray-100" activeOpacity={0.7}>
+      <View className="flex-row">
+        {/* Profile Picture with Badge */}
         <View className="relative mr-3">
-          <Image
-            source={{ uri: notification.from.profilePicture }}
-            className="size-12 rounded-full"
-          />
-
-          <View className="abolute -bottom-1 -right-1 size-6 bg-white items-center justify-center">
-            {getNotificationIcon()}
-          </View>
+          <Image source={{ uri: notification.from.profilePicture }} className="w-14 h-14 rounded-full" />
+          {getNotificationIcon()}
         </View>
 
-        <View className="flex-1">
-          <View className="flex-row items-start justify-between mb-1">
-            <View className="flex-1">
-              <Text className="text-gray-900 text-base leading-5 mb-1">
-                <Text className="font-semibold">
-                  {notification.from.firstName} {notification.from.lastName}
-                </Text>
-                <Text className="text-gray-500"> @{notification.from.username}</Text>
-              </Text>
-              <Text className="text-gray-700 text-sm mb-2">{getNotificationText()}</Text>
-            </View>
+        {/* Content */}
+        <View className="flex-1 mr-3">
+          {getNotificationText()}
 
-            <TouchableOpacity className="ml-2 p-1" onPress={handleDelete}>
-              <Feather name="trash" size={16} color="#E0245E" />
-            </TouchableOpacity>
-          </View>
-
+          {/* Post Preview (if applicable) */}
           {notification.post && (
-            <View className="bg-gray-50 rounded-lg p-3 mb-2">
-              <Text className="text-gray-700 text-sm mb-1" numberOfLines={3}>
+            <View className="mt-2 p-3 bg-gray-50 rounded-lg">
+              <Text className="text-gray-700 text-sm" numberOfLines={2}>
                 {notification.post.content}
               </Text>
               {notification.post.image && (
                 <Image
                   source={{ uri: notification.post.image }}
-                  className="w-full h-32 rounded-lg mt-2"
+                  className="w-full h-24 rounded-md mt-2"
                   resizeMode="cover"
                 />
               )}
             </View>
           )}
 
-          {notification.comment && (
-            <View className="bg-blue-50 rounded-lg p-3 mb-2">
-              <Text className="text-gray-600 text-xs mb-1">Comment:</Text>
-              <Text className="text-gray-700 text-sm" numberOfLines={2}>
-                &ldquo;{notification.comment.content}&rdquo;
-              </Text>
-            </View>
-          )}
-
-          <Text className="text-gray-400 text-xs">{formatDate(notification.createdAt)}</Text>
+          {/* Timestamp */}
+          <Text className="text-gray-500 text-sm mt-1">{formatNotificationDate(notification.createdAt)}</Text>
         </View>
+
+        {/* More Options */}
+        <TouchableOpacity className="w-8 h-8 items-center justify-center" onPress={handleDelete}>
+          <Feather name="more-horizontal" size={20} color="#65676B" />
+        </TouchableOpacity>
       </View>
-    </View>
-  );
-};
-export default NotificationCard;
+    </TouchableOpacity>
+  )
+}
+
+export default NotificationCard
