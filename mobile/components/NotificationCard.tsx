@@ -13,14 +13,14 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
     switch (notification.type) {
       case "like":
         return (
-          <Text className="text-gray-900 text-base leading-5">
+          <Text className="text-gray-900 text-base leading-6">
             <Text className="font-semibold">{name}</Text>
             <Text> liked your post.</Text>
           </Text>
         )
       case "comment":
         return (
-          <Text className="text-gray-900 text-base leading-5">
+          <Text className="text-gray-900 text-base leading-6">
             <Text className="font-semibold">{name}</Text>
             <Text> commented on your post: "</Text>
             <Text className="text-gray-600">{notification.comment?.content}</Text>
@@ -29,13 +29,13 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
         )
       case "follow":
         return (
-          <Text className="text-gray-900 text-base leading-5">
+          <Text className="text-gray-900 text-base leading-6">
             <Text className="font-semibold">{name}</Text>
             <Text> started following you.</Text>
           </Text>
         )
       default:
-        return <Text className="text-gray-900 text-base leading-5">New notification</Text>
+        return <Text className="text-gray-900 text-base leading-6">New notification</Text>
     }
   }
 
@@ -43,26 +43,26 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
     switch (notification.type) {
       case "like":
         return (
-          <View className="absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full items-center justify-center border-2 border-white">
-            <Feather name="heart" size={12} color="white" />
+          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-red-500 rounded-full items-center justify-center border-2 border-white">
+            <Feather name="heart" size={14} color="white" />
           </View>
         )
       case "comment":
         return (
-          <View className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full items-center justify-center border-2 border-white">
-            <Feather name="message-circle" size={12} color="white" />
+          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-500 rounded-full items-center justify-center border-2 border-white">
+            <Feather name="message-circle" size={14} color="white" />
           </View>
         )
       case "follow":
         return (
-          <View className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full items-center justify-center border-2 border-white">
-            <Feather name="user-plus" size={12} color="white" />
+          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 rounded-full items-center justify-center border-2 border-white">
+            <Feather name="user-plus" size={14} color="white" />
           </View>
         )
       default:
         return (
-          <View className="absolute -bottom-1 -right-1 w-6 h-6 bg-gray-500 rounded-full items-center justify-center border-2 border-white">
-            <Feather name="bell" size={12} color="white" />
+          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-gray-500 rounded-full items-center justify-center border-2 border-white">
+            <Feather name="bell" size={14} color="white" />
           </View>
         )
     }
@@ -86,24 +86,44 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
     const diffInDays = Math.floor(diffInHours / 24)
 
     if (diffInHours < 1) return "Just now"
-    if (diffInHours < 24) return `${diffInHours}h`
-    if (diffInDays === 1) return "Yesterday"
-    if (diffInDays < 7) return `${diffInDays}d`
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    }
+    if (diffInDays === 1) {
+      return `Yesterday at ${date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })}`
+    }
+    if (diffInDays < 7) {
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    }
 
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
+      hour12: true,
     })
   }
 
   return (
-    <TouchableOpacity className="bg-white px-4 py-3 border-b border-gray-100" activeOpacity={0.7}>
+    <TouchableOpacity className="bg-white px-4 py-4" activeOpacity={0.7}>
       <View className="flex-row">
-        {/* Profile Picture with Badge */}
-        <View className="relative mr-3">
-          <Image source={{ uri: notification.from.profilePicture }} className="w-14 h-14 rounded-full" />
+        {/* Profile Picture with Badge - Made Bigger */}
+        <View className="relative mr-4">
+          <Image source={{ uri: notification.from.profilePicture }} className="w-16 h-16 rounded-full" />
           {getNotificationIcon()}
         </View>
 
@@ -113,27 +133,27 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
 
           {/* Post Preview (if applicable) */}
           {notification.post && (
-            <View className="mt-2 p-3 bg-gray-50 rounded-lg">
+            <View className="mt-3 p-3 bg-gray-50 rounded-lg">
               <Text className="text-gray-700 text-sm" numberOfLines={2}>
                 {notification.post.content}
               </Text>
               {notification.post.image && (
                 <Image
                   source={{ uri: notification.post.image }}
-                  className="w-full h-24 rounded-md mt-2"
+                  className="w-full h-28 rounded-md mt-2"
                   resizeMode="cover"
                 />
               )}
             </View>
           )}
 
-          {/* Timestamp */}
-          <Text className="text-gray-500 text-sm mt-1">{formatNotificationDate(notification.createdAt)}</Text>
+          {/* Timestamp with better formatting */}
+          <Text className="text-gray-500 text-sm mt-2">{formatNotificationDate(notification.createdAt)}</Text>
         </View>
 
         {/* More Options */}
-        <TouchableOpacity className="w-8 h-8 items-center justify-center" onPress={handleDelete}>
-          <Feather name="more-horizontal" size={20} color="#65676B" />
+        <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleDelete}>
+          <Feather name="more-horizontal" size={22} color="#65676B" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

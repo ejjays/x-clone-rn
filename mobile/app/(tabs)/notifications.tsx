@@ -47,8 +47,8 @@ const NotificationsScreen = () => {
   }
 
   const renderSectionHeader = (title: string) => (
-    <View className="bg-gray-50 px-4 py-2 border-b border-gray-100">
-      <Text className="text-lg font-semibold text-gray-900">{title}</Text>
+    <View className="px-4 py-3 bg-white">
+      <Text className="text-xl font-bold text-gray-900">{title}</Text>
     </View>
   )
 
@@ -69,27 +69,27 @@ const NotificationsScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {/* Facebook-style Header */}
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
-        <TouchableOpacity className="mr-4">
-          <Feather name="arrow-left" size={24} color="#1C1E21" />
+      {/* Compact Facebook-style Header */}
+      <View className="flex-row items-center px-4 py-2 bg-white">
+        <TouchableOpacity className="mr-4 p-1">
+          <Feather name="arrow-left" size={26} color="#1C1E21" />
         </TouchableOpacity>
 
         <Text className="flex-1 text-2xl font-bold text-gray-900">Notifications</Text>
 
-        <View className="flex-row space-x-3">
-          <TouchableOpacity className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center">
-            <Feather name="check" size={20} color="#1C1E21" />
+        <View className="flex-row space-x-2">
+          <TouchableOpacity className="w-9 h-9 bg-gray-200 rounded-full items-center justify-center">
+            <Feather name="check" size={18} color="#1C1E21" />
           </TouchableOpacity>
-          <TouchableOpacity className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center">
-            <Feather name="search" size={20} color="#1C1E21" />
+          <TouchableOpacity className="w-9 h-9 bg-gray-200 rounded-full items-center justify-center">
+            <Feather name="search" size={18} color="#1C1E21" />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Content */}
       <ScrollView
-        className="flex-1 bg-gray-50"
+        className="flex-1 bg-white"
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={"#1877F2"} />}
