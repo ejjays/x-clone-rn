@@ -72,7 +72,7 @@ export const useCreatePost = () => {
       ? await ImagePicker.launchCameraAsync(pickerOptions)
       : await ImagePicker.launchImageLibraryAsync({
           ...pickerOptions,
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          mediaTypes: ImagePicker.MediaType.Images,
         });
 
     if (!result.canceled) {
