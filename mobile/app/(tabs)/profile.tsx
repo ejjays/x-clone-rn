@@ -70,7 +70,7 @@ const ProfileScreens = () => {
               refetchProfile()
               refetchPosts()
             }}
-            tintColor="#1DA1F2"
+            tintColor="#1877F2"
           />
         }
       >

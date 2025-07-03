@@ -37,7 +37,7 @@ const HomeScreen = () => {
         className="flex-1 bg-gray-100"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={handlePullToRefresh} tintColor={"#1DA1F2"} />
+          <RefreshControl refreshing={isRefetching} onRefresh={handlePullToRefresh} tintColor={"#1877F2"} />
         }
       >
         <View className="bg-white">
