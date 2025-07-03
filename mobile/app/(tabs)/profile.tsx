@@ -47,14 +47,9 @@ const ProfileScreens = () => {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Header RIGHT under status bar - NO extra spacing */}
-      <View
-        className="flex-row justify-between items-center px-4 py-2 bg-white"
-        style={{
-          paddingTop: insets.top, // ONLY status bar height, NO extra padding
-        }}
-      >
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      {/* Header immediately after status bar - NO SafeAreaView wrapper */}
+      <View className="flex-row justify-between items-center px-4 py-2 bg-white">
         <TouchableOpacity
           className="w-10 h-10 items-center justify-center bg-white rounded-full"
           onPress={handleBackPress}

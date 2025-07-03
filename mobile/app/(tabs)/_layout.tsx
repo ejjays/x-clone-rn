@@ -42,6 +42,25 @@ const TabsLayout = () => {
 
   if (!isSignedIn) return <Redirect href="/(auth)" />
 
+  // COMPLETELY different layout for profile screen
+  if (isProfileScreen) {
+    return (
+      <View className="flex-1 bg-white">
+        <MaterialTopTabs
+          screenOptions={{
+            tabBarStyle: { display: "none" }, // Hide tab bar completely
+          }}
+        >
+          <MaterialTopTabs.Screen name="index" />
+          <MaterialTopTabs.Screen name="search" />
+          <MaterialTopTabs.Screen name="notifications" />
+          <MaterialTopTabs.Screen name="messages" />
+          <MaterialTopTabs.Screen name="profile" />
+        </MaterialTopTabs>
+      </View>
+    )
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <Animated.View style={animatedHeaderStyle}>
@@ -78,8 +97,6 @@ const TabsLayout = () => {
             borderBottomColor: "#E5E5E5",
             paddingTop: 0,
             marginTop: 0,
-            // Hide tab bar on profile screen
-            display: isProfileScreen ? "none" : "flex",
           },
           tabBarContentContainerStyle: {
             paddingTop: 0,
