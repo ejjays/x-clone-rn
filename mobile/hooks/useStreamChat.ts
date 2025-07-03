@@ -21,23 +21,19 @@ export const useStreamChat = () => {
       setIsConnecting(true)
 
       try {
+        console.log("🔄 Initializing Stream Chat...")
+
         // Get Stream token from backend
         const response = await api.get("/stream/token")
         const { token, user } = response.data
+
+        console.log("✅ Stream token received for user:", user.id)
 
         // Initialize Stream Chat client
         const chatClient = StreamChat.getInstance(API_KEY)
 
         // Connect user
-        await chatClient.connectUser(
-          {
-            id: user.id,
-            name: user.name,
-            image: user.image,
-            username: user.username,
-          },
-          token,
-        )
+        await chatClient.connectUser(user, token)
 
         setClient(chatClient)
         setIsConnected(true)
@@ -62,19 +58,31 @@ export const useStreamChat = () => {
   }, [isSignedIn, currentUser])
 
   const createChannel = async (otherUserId: string, otherUserName: string) => {
-    if (!client || !currentUser) return null
+    if (!client || !currentUser) {
+      console.error("❌ Client or current user not available")
+      return null
+    }
 
     try {
-      const channel = client.channel("messaging", {
-        members: [currentUser._id, otherUserId],
-        name: `${currentUser.firstName} & ${otherUserName}`,
+      console.log("🔄 Creating channel with user:", otherUserId)
+
+      // Call backend to create channel (this ensures both users exist in Stream)
+      const response = await api.post("/stream/channel", {
+        otherUserId,
+        channelName: `${currentUser.firstName} & ${otherUserName}`,
       })
 
+      const { channelId } = response.data
+      console.log("✅ Channel created via backend:", channelId)
+
+      // Get the channel from Stream
+      const channel = client.channel("messaging", channelId)
       await channel.watch()
+
       return channel
     } catch (error) {
       console.error("❌ Failed to create channel:", error)
-      return null
+      throw error
     }
   }
 
