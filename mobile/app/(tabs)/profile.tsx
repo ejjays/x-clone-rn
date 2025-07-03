@@ -64,13 +64,11 @@ const ProfileScreens = () => {
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => {
-              refetchProfile()
-              refetchPosts()
-            }}
-            tintColor="#1877F2"
+           <RefreshControl
+             refreshing={isRefetching}
+             onRefresh={handlePullToRefresh}
+             colors={["#1877F2"]} 
+              tintColor="#1877F2"  
           />
         }
       >

@@ -81,7 +81,14 @@ const SearchScreen = () => {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor="#1877F2" />}
+        refreshControl={
+           <RefreshControl
+             refreshing={isRefetching}
+             onRefresh={handlePullToRefresh}
+             colors={["#1877F2"]} 
+              tintColor="#1877F2"  
+          />
+        }
       >
         {isLoading ? (
           <View className="flex-1 items-center justify-center p-8">
