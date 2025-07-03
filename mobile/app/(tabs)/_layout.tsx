@@ -43,7 +43,7 @@ const TabsLayout = () => {
   if (!isSignedIn) return <Redirect href="/(auth)" />
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={isProfileScreen ? [] : ["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 h-full">
           <Text className="text-4xl font-bold text-blue-600">pcmi</Text>

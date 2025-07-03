@@ -10,6 +10,7 @@ import { Feather } from "@expo/vector-icons"
 import { format } from "date-fns"
 import { View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity, RefreshControl } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { router } from "expo-router"
 
 const ProfileScreens = () => {
   const { currentUser, isLoading } = useCurrentUser()
@@ -28,6 +29,14 @@ const ProfileScreens = () => {
     isUpdating,
     refetch: refetchProfile,
   } = useProfile()
+
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back()
+    } else {
+      router.push("/(tabs)/")
+    }
+  }
 
   if (isLoading) {
     return (
@@ -66,20 +75,37 @@ const ProfileScreens = () => {
             resizeMode="cover"
           />
 
-          {/* Header Overlay - Positioned absolutely over cover photo */}
+          {/* Header Overlay - Facebook style with white circular backgrounds */}
           <View
             className="absolute top-0 left-0 right-0 flex-row justify-between items-center px-4 py-2"
             style={{ paddingTop: insets.top + 8 }}
           >
-            <TouchableOpacity className="w-10 h-10 items-center justify-center bg-black/30 rounded-full">
-              <Feather name="arrow-left" size={28} color="white" />
+            <TouchableOpacity
+              className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-lg"
+              onPress={handleBackPress}
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+              }}
+            >
+              <Feather name="arrow-left" size={24} color="#1C1E21" />
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="w-10 h-10 items-center justify-center bg-black/30 rounded-full"
+              className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-lg"
               onPress={handleSignOut}
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+              }}
             >
-              <Feather name="log-out" size={24} color="white" />
+              <Feather name="search" size={20} color="#1C1E21" />
             </TouchableOpacity>
           </View>
 
