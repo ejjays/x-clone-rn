@@ -48,6 +48,23 @@ const ProfileScreens = () => {
 
   return (
     <View className="flex-1 bg-white">
+      {/* Header ABOVE the cover photo - Facebook style */}
+      <View className="flex-row justify-between items-center px-4 py-2 bg-white" style={{ paddingTop: insets.top + 8 }}>
+        <TouchableOpacity
+          className="w-10 h-10 items-center justify-center bg-white rounded-full"
+          onPress={handleBackPress}
+        >
+          <Feather name="arrow-left" size={28} color="#1C1E21" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="w-10 h-10 items-center justify-center bg-white rounded-full"
+          onPress={handleSignOut}
+        >
+          <Feather name="log-out" size={24} color="#E0245E" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
@@ -63,7 +80,7 @@ const ProfileScreens = () => {
           />
         }
       >
-        {/* Cover Photo with Header Overlay */}
+        {/* Cover Photo - NO overlay icons */}
         <View className="relative">
           <Image
             source={{
@@ -74,40 +91,6 @@ const ProfileScreens = () => {
             className="w-full h-64"
             resizeMode="cover"
           />
-
-          {/* Header Overlay - Facebook style with white circular backgrounds */}
-          <View
-            className="absolute top-0 left-0 right-0 flex-row justify-between items-center px-4 py-2"
-            style={{ paddingTop: insets.top + 8 }}
-          >
-            <TouchableOpacity
-              className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-lg"
-              onPress={handleBackPress}
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 3.84,
-                elevation: 5,
-              }}
-            >
-              <Feather name="arrow-left" size={24} color="#1C1E21" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-lg"
-              onPress={handleSignOut}
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 3.84,
-                elevation: 5,
-              }}
-            >
-              <Feather name="search" size={20} color="#1C1E21" />
-            </TouchableOpacity>
-          </View>
 
           {/* Profile Picture - Positioned over cover photo */}
           <View className="absolute -bottom-16 left-6">
