@@ -19,7 +19,6 @@ const TabsLayout = () => {
   const { isSignedIn } = useAuth()
   const pathname = usePathname()
   const headerHeight = useSharedValue(HEADER_HEIGHT)
-  const tabBarHeight = useSharedValue(50) // Height for tab bar
 
   // The root path for our tabs layout is '/', which corresponds to the index.tsx file.
   const isHomeScreen = pathname === "/"
@@ -27,16 +26,10 @@ const TabsLayout = () => {
 
   // This effect runs when we switch tabs, triggering the animation.
   useEffect(() => {
-    // Hide header on profile screen, show on home screen
     headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, {
       duration: 200,
     })
-
-    // Hide tab bar completely on profile screen
-    tabBarHeight.value = withTiming(isProfileScreen ? 0 : 50, {
-      duration: 200,
-    })
-  }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight])
+  }, [isHomeScreen, headerHeight])
 
   // This style will be applied to the header, animating its height and opacity.
   const animatedHeaderStyle = useAnimatedStyle(() => {
@@ -47,19 +40,10 @@ const TabsLayout = () => {
     }
   })
 
-  // This style will hide the tab bar on profile screen
-  const animatedTabBarStyle = useAnimatedStyle(() => {
-    return {
-      height: tabBarHeight.value,
-      opacity: tabBarHeight.value / 50,
-      overflow: "hidden",
-    }
-  })
-
   if (!isSignedIn) return <Redirect href="/(auth)" />
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={isProfileScreen ? [] : ["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 h-full">
           <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
@@ -77,8 +61,8 @@ const TabsLayout = () => {
         </View>
       </Animated.View>
 
-      {/* Top Tab Navigator - Completely hidden on profile screen */}
-      <Animated.View style={animatedTabBarStyle}>
+      {/* Top Tab Navigator - Hide ONLY on profile screen */}
+      {!isProfileScreen && (
         <MaterialTopTabs
           screenOptions={{
             tabBarActiveTintColor: "#1877F2",
@@ -137,7 +121,52 @@ const TabsLayout = () => {
             }}
           />
         </MaterialTopTabs>
-      </Animated.View>
+      )}
+
+      {/* Show profile screen when on profile route */}
+      {isProfileScreen && (
+        <MaterialTopTabs
+          screenOptions={{
+            tabBarStyle: { display: "none" }, // Hide tab bar completely
+          }}
+        >
+          <MaterialTopTabs.Screen
+            name="index"
+            options={{
+              tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
+              tabBarShowLabel: false,
+            }}
+          />
+          <MaterialTopTabs.Screen
+            name="search"
+            options={{
+              tabBarIcon: ({ color }) => <Feather name="users" size={24} color={color} />,
+              tabBarShowLabel: false,
+            }}
+          />
+          <MaterialTopTabs.Screen
+            name="notifications"
+            options={{
+              tabBarIcon: ({ color }) => <Feather name="bell" size={24} color={color} />,
+              tabBarShowLabel: false,
+            }}
+          />
+          <MaterialTopTabs.Screen
+            name="messages"
+            options={{
+              tabBarIcon: ({ color }) => <Feather name="tv" size={24} color={color} />,
+              tabBarShowLabel: false,
+            }}
+          />
+          <MaterialTopTabs.Screen
+            name="profile"
+            options={{
+              tabBarIcon: ({ color }) => <Feather name="menu" size={24} color={color} />,
+              tabBarShowLabel: false,
+            }}
+          />
+        </MaterialTopTabs>
+      )}
     </SafeAreaView>
   )
 }
