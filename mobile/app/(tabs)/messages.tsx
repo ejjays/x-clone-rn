@@ -5,12 +5,15 @@ import { useState } from "react"
 import { View, Text, TouchableOpacity, TextInput, ScrollView, Image, Modal, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import ChatScreen from "@/components/ChatScreen"
+import NewMessageScreen from "@/components/NewMessageScreen"
+import type { User } from "@/types"
 
 const MessagesScreen = () => {
   const insets = useSafeAreaInsets()
   const [searchText, setSearchText] = useState("")
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isNewMessageOpen, setIsNewMessageOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<any>(null)
 
   const { conversations, isLoading, createConversation } = useConversations()
@@ -22,10 +25,20 @@ const MessagesScreen = () => {
     setIsChatOpen(true)
   }
 
-  const startNewConversation = async (otherUserId: string, user: any) => {
-    const conversationId = await createConversation(otherUserId)
+  const startNewConversation = async (user: User) => {
+    setIsNewMessageOpen(false) // Close the new message screen first
+
+    const conversationId = await createConversation(user._id)
     if (conversationId) {
-      openConversation(conversationId.toString(), user)
+      const chatUser = {
+        name: `${user.firstName} ${user.lastName}`,
+        username: user.username,
+        avatar:
+          user.profilePicture ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`,
+        verified: false,
+      }
+      openConversation(conversationId.toString(), chatUser)
     }
   }
 
@@ -33,6 +46,14 @@ const MessagesScreen = () => {
     setIsChatOpen(false)
     setSelectedConversationId(null)
     setSelectedUser(null)
+  }
+
+  const openNewMessage = () => {
+    setIsNewMessageOpen(true)
+  }
+
+  const closeNewMessage = () => {
+    setIsNewMessageOpen(false)
   }
 
   if (isLoading) {
@@ -49,7 +70,7 @@ const MessagesScreen = () => {
       {/* HEADER */}
       <View className="flex-row items-center justify-between px-4 py-4 bg-white">
         <Text className="text-3xl font-bold text-gray-900">Messages</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={openNewMessage}>
           <Feather name="edit" size={24} color="#1DA1F2" />
         </TouchableOpacity>
       </View>
@@ -80,9 +101,12 @@ const MessagesScreen = () => {
               <Feather name="message-circle" size={32} color="#65676B" />
             </View>
             <Text className="text-xl font-semibold text-gray-900 mb-3">No conversations yet</Text>
-            <Text className="text-gray-500 text-center text-base leading-6 max-w-xs">
+            <Text className="text-gray-500 text-center text-base leading-6 max-w-xs mb-6">
               Start a conversation with someone to see it here.
             </Text>
+            <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-full" onPress={openNewMessage}>
+              <Text className="text-white font-semibold">Start a conversation</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           conversations.map((conversation) => {
@@ -131,8 +155,17 @@ const MessagesScreen = () => {
 
       {/* Quick Actions */}
       <View className="px-4 py-2 border-t border-gray-100 bg-gray-50">
-        <Text className="text-xs text-gray-500 text-center">Tap to open conversation</Text>
+        <Text className="text-xs text-gray-500 text-center">
+          {conversations.length === 0 ? "Tap the edit icon to start a conversation" : "Tap to open conversation"}
+        </Text>
       </View>
+
+      {/* New Message Modal */}
+      <Modal visible={isNewMessageOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1" style={{ paddingTop: insets.top }}>
+          <NewMessageScreen onSelectUser={startNewConversation} onClose={closeNewMessage} />
+        </View>
+      </Modal>
 
       {/* Chat Modal */}
       <Modal visible={isChatOpen} animationType="slide" presentationStyle="pageSheet">

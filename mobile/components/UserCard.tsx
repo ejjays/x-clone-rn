@@ -7,9 +7,10 @@ interface UserCardProps {
   onFollow?: (userId: string) => void
   onMessage?: (user: User) => void
   isFollowing?: boolean
+  showMessageButton?: boolean
 }
 
-const UserCard = ({ user, onFollow, onMessage, isFollowing }: UserCardProps) => {
+const UserCard = ({ user, onFollow, onMessage, isFollowing, showMessageButton = true }: UserCardProps) => {
   const handleFollow = () => {
     if (onFollow) {
       onFollow(user._id)
@@ -54,16 +55,23 @@ const UserCard = ({ user, onFollow, onMessage, isFollowing }: UserCardProps) => 
           {user.firstName} {user.lastName}
         </Text>
         <Text className="text-gray-500 text-sm">@{user.username}</Text>
+        {user.bio && (
+          <Text className="text-gray-600 text-sm mt-1" numberOfLines={2}>
+            {user.bio}
+          </Text>
+        )}
       </View>
 
       {/* Action Buttons */}
       <View className="flex-row items-center space-x-2">
-        <TouchableOpacity
-          className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center"
-          onPress={handleMessage}
-        >
-          <Feather name="message-circle" size={18} color="#1C1E21" />
-        </TouchableOpacity>
+        {showMessageButton && (
+          <TouchableOpacity
+            className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center"
+            onPress={handleMessage}
+          >
+            <Feather name="message-circle" size={18} color="white" />
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity className="w-8 h-8 items-center justify-center" onPress={handleMoreOptions}>
           <Feather name="more-horizontal" size={20} color="#65676B" />
