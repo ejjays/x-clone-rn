@@ -1,26 +1,19 @@
-import { Post, User } from "@/types";
-import { formatDate, formatNumber } from "@/utils/formatters";
-import { AntDesign, Feather } from "@expo/vector-icons";
-import { View, Text, Alert, Image, TouchableOpacity } from "react-native";
+import type { Post, User } from "@/types"
+import { formatDate, formatNumber } from "@/utils/formatters"
+import { AntDesign, Feather } from "@expo/vector-icons"
+import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
 
 interface PostCardProps {
-  post: Post;
-  onLike: (postId: string) => void;
-  onDelete: (postId: string) => void;
-  onComment: (post: Post) => void;
-  isLiked?: boolean;
-  currentUser: User;
+  post: Post
+  onLike: (postId: string) => void
+  onDelete: (postId: string) => void
+  onComment: (post: Post) => void
+  isLiked?: boolean
+  currentUser: User
 }
 
-const PostCard = ({
-  currentUser,
-  onDelete,
-  onLike,
-  post,
-  isLiked,
-  onComment,
-}: PostCardProps) => {
-  const isOwnPost = post.user._id === currentUser._id;
+const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: PostCardProps) => {
+  const isOwnPost = post.user._id === currentUser._id
 
   const handleDelete = () => {
     Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
@@ -30,24 +23,19 @@ const PostCard = ({
         style: "destructive",
         onPress: () => onDelete(post._id),
       },
-    ]);
-  };
+    ])
+  }
 
   return (
-    <View className="bg-white mb-4">
+    <View className="bg-white">
       {/* Post Header */}
       <View className="flex-row p-4 items-center">
-        <Image
-          source={{ uri: post.user.profilePicture || "" }}
-          className="w-12 h-12 rounded-full mr-3"
-        />
+        <Image source={{ uri: post.user.profilePicture || "" }} className="w-12 h-12 rounded-full mr-3" />
         <View className="flex-1">
           <Text className="font-bold text-gray-900 text-base">
             {post.user.firstName} {post.user.lastName}
           </Text>
-          <Text className="text-gray-500 text-sm">
-            {formatDate(post.createdAt)}
-          </Text>
+          <Text className="text-gray-500 text-sm">{formatDate(post.createdAt)}</Text>
         </View>
         {isOwnPost && (
           <TouchableOpacity onPress={handleDelete} className="p-2">
@@ -57,49 +45,27 @@ const PostCard = ({
       </View>
 
       {/* Post Content */}
-      {post.content && (
-        <Text className="text-gray-900 text-base leading-5 px-4 mb-3">
-          {post.content}
-        </Text>
-      )}
+      {post.content && <Text className="text-gray-900 text-base leading-5 px-4 mb-3">{post.content}</Text>}
 
       {/* Post Image */}
-      {post.image && (
-        <Image
-          source={{ uri: post.image }}
-          className="w-full h-72"
-          resizeMode="cover"
-        />
-      )}
+      {post.image && <Image source={{ uri: post.image }} className="w-full h-72" resizeMode="cover" />}
 
       {/* Post Actions */}
       <View className="flex-row justify-around py-2 border-t border-gray-100 mt-2">
-        <TouchableOpacity
-          className="flex-row items-center space-x-2"
-          onPress={() => onLike(post._id)}
-        >
+        <TouchableOpacity className="flex-row items-center space-x-2" onPress={() => onLike(post._id)}>
           {isLiked ? (
             <AntDesign name="heart" size={22} color="#E0245E" />
           ) : (
             <Feather name="heart" size={22} color="#657786" />
           )}
-          <Text
-            className={`font-medium ${
-              isLiked ? "text-red-500" : "text-gray-500"
-            }`}
-          >
+          <Text className={`font-medium ${isLiked ? "text-red-500" : "text-gray-500"}`}>
             {formatNumber(post.likes?.length || 0)} Like
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          className="flex-row items-center space-x-2"
-          onPress={() => onComment(post)}
-        >
+        <TouchableOpacity className="flex-row items-center space-x-2" onPress={() => onComment(post)}>
           <Feather name="message-circle" size={22} color="#657786" />
-          <Text className="text-gray-500 font-medium">
-            {formatNumber(post.comments?.length || 0)} Comment
-          </Text>
+          <Text className="text-gray-500 font-medium">{formatNumber(post.comments?.length || 0)} Comment</Text>
         </TouchableOpacity>
 
         <TouchableOpacity className="flex-row items-center space-x-2">
@@ -108,7 +74,7 @@ const PostCard = ({
         </TouchableOpacity>
       </View>
     </View>
-  );
-};
+  )
+}
 
 export default PostCard;
