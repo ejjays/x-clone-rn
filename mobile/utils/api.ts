@@ -1,3 +1,4 @@
+import axios, { type AxiosInstance } from "axios"
 import { useAuth } from "@clerk/clerk-expo"
 
 // 🔥 FIX THIS URL - Your current deployment doesn't exist!
