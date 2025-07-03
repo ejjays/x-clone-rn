@@ -1,6 +1,6 @@
 import { View, Text } from "react-native"
 import { useAuth } from "@clerk/clerk-expo"
-import type { Message } from "@/lib/supabase" 
+import type { Message } from "@/lib/supabase"
 
 interface MessageBubbleProps {
   message: Message
@@ -18,6 +18,13 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
       hour12: true,
     })
   }
+
+  console.log("💬 Rendering message bubble:", {
+    id: message.id,
+    text: message.text,
+    isMe,
+    userId: message.user_id,
+  })
 
   return (
     <View className={`flex-row mb-3 ${isMe ? "justify-end" : "justify-start"}`}>

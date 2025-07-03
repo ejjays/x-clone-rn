@@ -75,9 +75,13 @@ export const useMessages = (conversationId?: string) => {
         (payload) => {
           console.log("🔔 Real-time message received:", payload)
           const newMessage = payload.new as Message
+
+          // 🔥 FIX: Force UI update by creating new array reference
           setMessages((current) => {
             console.log("📝 Adding new message to current messages:", current.length)
-            return [...current, newMessage]
+            const updatedMessages = [...current, newMessage]
+            console.log("📝 Updated messages count:", updatedMessages.length)
+            return updatedMessages
           })
         },
       )
@@ -118,7 +122,11 @@ export const useMessages = (conversationId?: string) => {
         Alert.alert("Error", `Failed to send message: ${error.message}`)
       } else {
         console.log("✅ Message sent successfully:", data)
-        // Don't add to local state here, let real-time subscription handle it
+
+        // 🔥 FIX: Immediately add to local state for instant feedback
+        if (data && data[0]) {
+          setMessages((current) => [...current, data[0]])
+        }
       }
     } catch (error) {
       console.error("❌ Exception sending message:", error)

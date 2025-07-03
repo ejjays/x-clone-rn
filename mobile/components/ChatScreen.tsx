@@ -12,14 +12,15 @@ const ChatScreen = ({ conversationId }: ChatScreenProps) => {
   const { messages, isLoading, isSending, isRefreshing, sendMessage, refreshMessages } = useMessages(conversationId)
   const scrollViewRef = useRef<ScrollView>(null)
 
-  // Auto-scroll to bottom when new messages arrive
+  // 🔥 FIX: Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (messages.length > 0) {
+      console.log("📜 Scrolling to bottom, messages count:", messages.length)
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true })
       }, 100)
     }
-  }, [messages])
+  }, [messages.length]) // Changed dependency to messages.length
 
   if (isLoading) {
     return (
@@ -44,14 +45,22 @@ const ChatScreen = ({ conversationId }: ChatScreenProps) => {
             colors={["#1877F2"]}
           />
         }
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
+        onContentSizeChange={() => {
+          console.log("📜 Content size changed, scrolling to end")
+          scrollViewRef.current?.scrollToEnd({ animated: false })
+        }}
       >
         {messages.length === 0 ? (
           <View className="flex-1 items-center justify-center py-20">
             <Text className="text-gray-500 text-center text-base">No messages yet. Start the conversation!</Text>
           </View>
         ) : (
-          messages.map((message) => <MessageBubble key={message.id} message={message} />)
+          <>
+            {console.log("🎨 Rendering messages:", messages.length)}
+            {messages.map((message) => (
+              <MessageBubble key={`${message.id}-${message.created_at}`} message={message} />
+            ))}
+          </>
         )}
       </ScrollView>
       <MessageInput onSendMessage={sendMessage} isSending={isSending} />
