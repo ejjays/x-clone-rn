@@ -14,7 +14,7 @@ const { Navigator } = createMaterialTopTabNavigator()
 export const MaterialTopTabs = withLayoutContext(Navigator)
 
 const HEADER_HEIGHT = 60
-const TAB_BAR_HEIGHT = 50 // Height of the tab bar
+const TAB_BAR_HEIGHT = 50
 
 const TabsLayout = () => {
   const { isSignedIn } = useAuth()
@@ -58,6 +58,25 @@ const TabsLayout = () => {
   })
 
   if (!isSignedIn) return <Redirect href="/(auth)" />
+
+  // For profile screen, render WITHOUT SafeAreaView to reclaim ALL space
+  if (isProfileScreen) {
+    return (
+      <View className="flex-1 bg-white">
+        <MaterialTopTabs
+          screenOptions={{
+            tabBarStyle: { display: "none" },
+          }}
+        >
+          <MaterialTopTabs.Screen name="index" />
+          <MaterialTopTabs.Screen name="search" />
+          <MaterialTopTabs.Screen name="notifications" />
+          <MaterialTopTabs.Screen name="messages" />
+          <MaterialTopTabs.Screen name="profile" />
+        </MaterialTopTabs>
+      </View>
+    )
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>

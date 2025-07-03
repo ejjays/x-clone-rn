@@ -47,9 +47,9 @@ const ProfileScreens = () => {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Header RIGHT under status bar - NO padding, NO gap */}
-      <View className="flex-row justify-between items-center px-4 py-2 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      {/* Header IMMEDIATELY after status bar - ZERO gap */}
+      <View className="flex-row justify-between items-center px-4 py-1 bg-white">
         <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleBackPress}>
           <Feather name="arrow-left" size={28} color="#1C1E21" />
         </TouchableOpacity>
