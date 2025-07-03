@@ -54,7 +54,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
             isLiked={checkIsLiked(post.likes, currentUser)}
           />
           {/* Thin divider between posts, but not after the last post */}
-          {index < posts.length - 1 && <View className="h-0.5 bg-gray-200" />}
+          {index < posts.length - 1 && <View className="h-1 bg-gray-200" />}
         </View>
       ))}
     </View>
