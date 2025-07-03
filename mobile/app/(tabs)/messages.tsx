@@ -21,8 +21,9 @@ const MessagesScreen = () => {
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false)
   const [selectedChannel, setSelectedChannel] = useState(null)
   const [isChannelOpen, setIsChannelOpen] = useState(false)
+  const [isCreatingChannel, setIsCreatingChannel] = useState(false)
 
-  const { client, isConnecting, isConnected } = useStreamChat()
+  const { client, isConnecting, isConnected, createChannel } = useStreamChat()
   const { currentUser } = useCurrentUser()
 
   const openNewMessage = () => {
@@ -34,22 +35,31 @@ const MessagesScreen = () => {
   }
 
   const startNewConversation = async (user: User) => {
-    if (!client) return
+    if (!client || !currentUser) {
+      console.error("❌ Client or current user not available")
+      return
+    }
 
     setIsNewMessageOpen(false)
+    setIsCreatingChannel(true)
 
     try {
-      // Create or get existing channel
-      const channel = client.channel("messaging", {
-        members: [currentUser?._id, user._id],
-        name: `${currentUser?.firstName} & ${user.firstName}`,
-      })
+      console.log("🔄 Starting conversation with:", user.firstName, user._id)
 
-      await channel.watch()
-      setSelectedChannel(channel)
-      setIsChannelOpen(true)
+      // Use the updated createChannel function that calls the backend
+      const channel = await createChannel(user._id, user.firstName)
+
+      if (channel) {
+        setSelectedChannel(channel)
+        setIsChannelOpen(true)
+        console.log("✅ Channel created successfully!")
+      } else {
+        console.error("❌ Failed to create channel - no channel returned")
+      }
     } catch (error) {
       console.error("❌ Failed to start conversation:", error)
+    } finally {
+      setIsCreatingChannel(false)
     }
   }
 
@@ -116,6 +126,16 @@ const MessagesScreen = () => {
               )}
             />
           </View>
+
+          {/* Loading overlay for channel creation */}
+          {isCreatingChannel && (
+            <View className="absolute inset-0 bg-black/50 items-center justify-center z-50">
+              <View className="bg-white p-6 rounded-lg items-center">
+                <ActivityIndicator size="large" color="#1877F2" />
+                <Text className="text-gray-700 mt-3">Creating conversation...</Text>
+              </View>
+            </View>
+          )}
 
           {/* New Message Modal */}
           <Modal visible={isNewMessageOpen} animationType="slide" presentationStyle="pageSheet">

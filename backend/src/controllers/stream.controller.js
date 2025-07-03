@@ -89,6 +89,8 @@ export const createChannel = asyncHandler(async (req, res) => {
       username: otherUser.username,
     })
 
+    console.log(`✅ Both users upserted: ${currentUserId}, ${targetUserId}`)
+
     // Create a unique channel ID based on user IDs
     const channelId = [currentUserId, targetUserId].sort().join("-")
 

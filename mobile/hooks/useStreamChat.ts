@@ -40,6 +40,7 @@ export const useStreamChat = () => {
         console.log("✅ Stream Chat connected successfully!")
       } catch (error) {
         console.error("❌ Stream Chat connection failed:", error)
+        setIsConnected(false)
       } finally {
         setIsConnecting(false)
       }
@@ -50,6 +51,7 @@ export const useStreamChat = () => {
     // Cleanup on unmount
     return () => {
       if (client) {
+        console.log("🔄 Disconnecting Stream Chat...")
         client.disconnectUser()
         setClient(null)
         setIsConnected(false)
@@ -82,6 +84,11 @@ export const useStreamChat = () => {
       return channel
     } catch (error) {
       console.error("❌ Failed to create channel:", error)
+      console.error("❌ Error details:", {
+        status: error.response?.status,
+        message: error.response?.data?.error || error.message,
+        url: error.config?.url,
+      })
       throw error
     }
   }
