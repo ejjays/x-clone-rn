@@ -1,31 +1,21 @@
-import EditProfileModal from "@/components/EditProfileModal";
-import PostsList from "@/components/PostsList";
-import SignOutButton from "@/components/SignOutButton";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { usePosts } from "@/hooks/usePosts";
-import { useProfile } from "@/hooks/useProfile";
-import { Feather } from "@expo/vector-icons";
-import { format } from "date-fns";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  RefreshControl,
-} from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+"use client"
+
+import EditProfileModal from "@/components/EditProfileModal"
+import PostsList from "@/components/PostsList"
+import SignOutButton from "@/components/SignOutButton"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { usePosts } from "@/hooks/usePosts"
+import { useProfile } from "@/hooks/useProfile"
+import { Feather } from "@expo/vector-icons"
+import { format } from "date-fns"
+import { View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity, RefreshControl } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 const ProfileScreens = () => {
-  const { currentUser, isLoading } = useCurrentUser();
-  const insets = useSafeAreaInsets();
+  const { currentUser, isLoading } = useCurrentUser()
+  const insets = useSafeAreaInsets()
 
-  const {
-    posts: userPosts,
-    refetch: refetchPosts,
-    isLoading: isRefetching,
-  } = usePosts(currentUser?.username);
+  const { posts: userPosts, refetch: refetchPosts, isLoading: isRefetching } = usePosts(currentUser?.username)
 
   const {
     isEditModalVisible,
@@ -36,22 +26,22 @@ const ProfileScreens = () => {
     updateFormField,
     isUpdating,
     refetch: refetchProfile,
-  } = useProfile();
+  } = useProfile()
 
   if (isLoading) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#1DA1F2" />
       </View>
-    );
+    )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
+      <View className="flex-row items-center justify-between px-4 py-4 bg-white">
         <View>
-          <Text className="text-xl font-bold text-gray-900">
+          <Text className="text-3xl font-bold text-gray-900">
             {currentUser.firstName} {currentUser.lastName}
           </Text>
           <Text className="text-gray-500 text-sm">{userPosts.length} Posts</Text>
@@ -67,8 +57,8 @@ const ProfileScreens = () => {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={() => {
-              refetchProfile();
-              refetchPosts();
+              refetchProfile()
+              refetchPosts()
             }}
             tintColor="#1DA1F2"
           />
@@ -90,10 +80,7 @@ const ProfileScreens = () => {
               source={{ uri: currentUser.profilePicture }}
               className="w-32 h-32 rounded-full border-4 border-white"
             />
-            <TouchableOpacity
-              className="border border-gray-300 px-6 py-2 rounded-full"
-              onPress={openEditModal}
-            >
+            <TouchableOpacity className="border border-gray-300 px-6 py-2 rounded-full" onPress={openEditModal}>
               <Text className="font-semibold text-gray-900">Edit profile</Text>
             </TouchableOpacity>
           </View>
@@ -115,9 +102,7 @@ const ProfileScreens = () => {
 
             <View className="flex-row items-center mb-3">
               <Feather name="calendar" size={16} color="#657786" />
-              <Text className="text-gray-500 ml-2">
-                Joined {format(new Date(currentUser.createdAt), "MMMM yyyy")}
-              </Text>
+              <Text className="text-gray-500 ml-2">Joined {format(new Date(currentUser.createdAt), "MMMM yyyy")}</Text>
             </View>
 
             <View className="flex-row">
@@ -148,8 +133,8 @@ const ProfileScreens = () => {
         updateFormField={updateFormField}
         isUpdating={isUpdating}
       />
-    </SafeAreaView>
-  );
-};
+    </View>
+  )
+}
 
-export default ProfileScreens;
+export default ProfileScreens

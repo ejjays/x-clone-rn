@@ -1,6 +1,5 @@
-import { Feather } from "@expo/vector-icons";
-import { View, TextInput, ScrollView, Text, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons"
+import { View, TextInput, ScrollView, Text, TouchableOpacity } from "react-native"
 
 const TRENDING_TOPICS = [
   { topic: "#ReactNative", tweets: "125K" },
@@ -8,20 +7,16 @@ const TRENDING_TOPICS = [
   { topic: "#WebDevelopment", tweets: "234K" },
   { topic: "#AI", tweets: "567K" },
   { topic: "#TechNews", tweets: "98K" },
-];
+]
 
 const SearchScreen = () => {
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       {/* HEADER */}
-      <View className="px-4 py-3 border-b border-gray-100">
+      <View className="px-4 py-4 bg-white">
         <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3">
           <Feather name="search" size={20} color="#657786" />
-          <TextInput
-            placeholder="Search Twitter"
-            className="flex-1 ml-3 text-base"
-            placeholderTextColor="#657786"
-          />
+          <TextInput placeholder="Search Twitter" className="flex-1 ml-3 text-base" placeholderTextColor="#657786" />
         </View>
       </View>
 
@@ -37,8 +32,8 @@ const SearchScreen = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
-  );
-};
+    </View>
+  )
+}
 
-export default SearchScreen;
+export default SearchScreen

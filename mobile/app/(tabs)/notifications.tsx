@@ -47,7 +47,7 @@ const NotificationsScreen = () => {
   }
 
   const renderSectionHeader = (title: string) => (
-    <View className="px-4 pt-1 pb-3 bg-white">
+    <View className="px-4 pt-2 pb-3 bg-white">
       <Text className="text-xl font-bold text-gray-900">{title}</Text>
     </View>
   )
@@ -69,13 +69,9 @@ const NotificationsScreen = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Compact Facebook-style Header - No SafeAreaView, minimal spacing */}
-      <View className="flex-row items-center px-4 py-3 bg-white" style={{ marginTop: -8 }}>
-        <TouchableOpacity className="mr-4 p-1">
-          <Feather name="arrow-left" size={26} color="#1C1E21" />
-        </TouchableOpacity>
-
-        <Text className="flex-1 text-2xl font-bold text-gray-900">Notifications</Text>
+      {/* Facebook-style Header - No back arrow, bigger title, good spacing */}
+      <View className="flex-row items-center justify-between px-4 py-4 bg-white">
+        <Text className="text-3xl font-bold text-gray-900">Notifications</Text>
 
         <View className="flex-row space-x-2">
           <TouchableOpacity className="w-9 h-9 bg-gray-200 rounded-full items-center justify-center">
