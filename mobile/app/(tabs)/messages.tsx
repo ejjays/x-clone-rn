@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from "react-native"
 import { Image } from "expo-image"
@@ -115,6 +113,10 @@ export default function MessagesScreen() {
     }
   }
 
+  const handleNewMessage = () => {
+    router.push("/new-message")
+  }
+
   const renderChannelItem = ({ item }: { item: ChannelData }) => {
     const otherUser = getOtherUser(item.members)
     if (!otherUser) return null
@@ -177,7 +179,7 @@ export default function MessagesScreen() {
       <View className="flex-1 bg-white">
         <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
           <Text className="text-2xl font-bold text-gray-900">Messages</Text>
-          <TouchableOpacity onPress={() => router.push("/new-message")}>
+          <TouchableOpacity onPress={handleNewMessage}>
             <Ionicons name="create-outline" size={24} color="#1877F2" />
           </TouchableOpacity>
         </View>
@@ -193,7 +195,7 @@ export default function MessagesScreen() {
     <View className="flex-1 bg-white">
       <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
         <Text className="text-2xl font-bold text-gray-900">Messages</Text>
-        <TouchableOpacity onPress={() => router.push("/new-message")}>
+        <TouchableOpacity onPress={handleNewMessage}>
           <Ionicons name="create-outline" size={24} color="#1877F2" />
         </TouchableOpacity>
       </View>

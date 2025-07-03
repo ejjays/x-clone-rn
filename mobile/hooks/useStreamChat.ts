@@ -1,43 +1,50 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { StreamChat } from "stream-chat"
 import { useAuth } from "@clerk/clerk-expo"
 import { useCurrentUser } from "./useCurrentUser"
-import { useApiClient } from "@/utils/api"
+import { API_BASE_URL } from "@/utils/constants"
 
-const API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY || "YOUR_STREAM_API_KEY"
+const client = StreamChat.getInstance(process.env.EXPO_PUBLIC_STREAM_API_KEY!)
 
 export const useStreamChat = () => {
-  const [client, setClient] = useState<StreamChat | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
-  const { isSignedIn, userId } = useAuth()
+  const { getToken, userId } = useAuth()
   const { currentUser } = useCurrentUser()
-  const api = useApiClient()
 
   useEffect(() => {
-    if (!isSignedIn || !currentUser || !userId || client) return
+    if (!userId || !currentUser) return
 
-    const initializeStreamChat = async () => {
-      setIsConnecting(true)
-
+    const connectUser = async () => {
       try {
+        setIsConnecting(true)
         console.log("🔄 Initializing Stream Chat for user:", userId)
 
         // Get Stream token from backend
-        const response = await api.get("/stream/token")
-        const { token, user } = response.data
+        const token = await getToken()
+        const response = await fetch(`${API_BASE_URL}/stream/token`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-        console.log("✅ Stream token received for user:", user.id)
+        if (!response.ok) {
+          throw new Error("Failed to get Stream token")
+        }
 
-        // Initialize Stream Chat client
-        const chatClient = StreamChat.getInstance(API_KEY)
+        const { token: streamToken, user } = await response.json()
+        console.log("✅ Stream token received for user:", userId)
 
-        // Connect user
-        await chatClient.connectUser(user, token)
+        // Connect user to Stream Chat
+        await client.connectUser(
+          {
+            id: userId,
+            name: `${currentUser.firstName} ${currentUser.lastName}`,
+            image: currentUser.profilePicture || `https://getstream.io/random_png/?name=${userId}`,
+          },
+          streamToken,
+        )
 
-        setClient(chatClient)
         setIsConnected(true)
         console.log("✅ Stream Chat connected successfully!")
       } catch (error) {
@@ -48,55 +55,47 @@ export const useStreamChat = () => {
       }
     }
 
-    initializeStreamChat()
+    connectUser()
 
-    // Cleanup on unmount
     return () => {
-      if (client) {
-        console.log("🔄 Disconnecting Stream Chat...")
+      if (client.user) {
         client.disconnectUser()
-        setClient(null)
         setIsConnected(false)
       }
     }
-  }, [isSignedIn, currentUser, userId])
+  }, [userId, currentUser, getToken])
 
-  const createChannel = async (otherUserId: string, otherUserName: string) => {
-    if (!client || !currentUser || !userId) {
-      console.error("❌ Client, current user, or user ID not available")
-      return null
-    }
-
+  const createChannel = async (members: string[], channelData?: any) => {
     try {
-      console.log("🔄 Creating channel with user:", otherUserId)
+      if (!isConnected) throw new Error("Stream Chat not connected")
 
-      // Call backend to create channel (this ensures both users exist in Stream)
-      const response = await api.post("/stream/channel", {
-        otherUserId,
-        channelName: `${currentUser.firstName} & ${otherUserName}`,
+      const token = await getToken()
+      const response = await fetch(`${API_BASE_URL}/stream/channels`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          members,
+          ...channelData,
+        }),
       })
 
-      const { channelId } = response.data
-      console.log("✅ Channel created via backend:", channelId)
+      if (!response.ok) {
+        throw new Error("Failed to create channel")
+      }
 
-      // Get the channel from Stream
-      const channel = client.channel("messaging", channelId)
-      await channel.watch()
-
-      return channel
+      const { channelId } = await response.json()
+      return channelId
     } catch (error) {
       console.error("❌ Failed to create channel:", error)
-      console.error("❌ Error details:", {
-        status: error.response?.status,
-        message: error.response?.data?.error || error.message,
-        url: error.config?.url,
-      })
       throw error
     }
   }
 
   return {
-    client,
+    client: isConnected ? client : null,
     isConnecting,
     isConnected,
     createChannel,
