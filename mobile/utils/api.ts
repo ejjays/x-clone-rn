@@ -1,5 +1,3 @@
-"use client"
-
 import axios, { type AxiosInstance } from "axios"
 import { useAuth } from "@clerk/clerk-expo"
 
@@ -7,17 +5,49 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://x-clone-rn-one.
 // ! 🔥 localhost api would not work on your actual physical device
 // const API_BASE_URL = "http://localhost:5001/api";
 
+console.log("🌐 API Base URL:", API_BASE_URL)
+
 // this will basically create an authenticated api, pass the token into our headers
 export const createApiClient = (getToken: () => Promise<string | null>): AxiosInstance => {
-  const api = axios.create({ baseURL: API_BASE_URL })
+  const api = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 10000, // 10 second timeout
+  })
 
   api.interceptors.request.use(async (config) => {
-    const token = await getToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    try {
+      const token = await getToken()
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+      console.log("🔑 API Request:", {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        hasToken: !!token,
+      })
+    } catch (error) {
+      console.error("❌ Error getting auth token:", error)
     }
     return config
   })
+
+  api.interceptors.response.use(
+    (response) => {
+      console.log("✅ API Response:", {
+        status: response.status,
+        url: response.config.url,
+      })
+      return response
+    },
+    (error) => {
+      console.error("❌ API Error:", {
+        status: error.response?.status,
+        url: error.config?.url,
+        message: error.response?.data?.error || error.message,
+      })
+      return Promise.reject(error)
+    },
+  )
 
   return api
 }

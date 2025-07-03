@@ -1,5 +1,3 @@
-"use client"
-
 import EditProfileModal from "@/components/EditProfileModal"
 import PostsList from "@/components/PostsList"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
@@ -38,10 +36,30 @@ const ProfileScreens = () => {
     }
   }
 
+  // Show loading state while user data is loading
   if (isLoading) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#1DA1F2" />
+        <Text className="text-gray-500 mt-2">Loading profile...</Text>
+      </View>
+    )
+  }
+
+  // Show error state if user data failed to load
+  if (!currentUser) {
+    return (
+      <View className="flex-1 bg-white items-center justify-center px-8">
+        <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
+          <Feather name="user-x" size={32} color="#65676B" />
+        </View>
+        <Text className="text-xl font-semibold text-gray-900 mb-3">Profile not available</Text>
+        <Text className="text-gray-500 text-center text-base leading-6 mb-6">
+          We couldn't load your profile. Please check your connection and try again.
+        </Text>
+        <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-full" onPress={() => router.push("/(tabs)/")}>
+          <Text className="text-white font-semibold">Go to Home</Text>
+        </TouchableOpacity>
       </View>
     )
   }
@@ -70,7 +88,7 @@ const ProfileScreens = () => {
               refetchProfile()
               refetchPosts()
             }}
-            colors={["#1877F2"]} 
+            colors={["#1877F2"]}
             tintColor="#1877F2"
           />
         }
@@ -91,7 +109,11 @@ const ProfileScreens = () => {
           <View className="absolute -bottom-16 left-6">
             <View className="relative">
               <Image
-                source={{ uri: currentUser.profilePicture }}
+                source={{
+                  uri:
+                    currentUser.profilePicture ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.firstName + " " + currentUser.lastName)}&background=1877F2&color=fff&size=120`,
+                }}
                 className="w-32 h-32 rounded-full border-4 border-white"
               />
               {/* Camera icon for profile picture */}
@@ -134,7 +156,9 @@ const ProfileScreens = () => {
 
             <View className="flex-row items-center">
               <Feather name="calendar" size={16} color="#65676B" />
-              <Text className="text-gray-600 ml-2">Joined {format(new Date(currentUser.createdAt), "MMMM yyyy")}</Text>
+              <Text className="text-gray-600 ml-2">
+                Joined {currentUser.createdAt ? format(new Date(currentUser.createdAt), "MMMM yyyy") : "Recently"}
+              </Text>
             </View>
           </View>
 
