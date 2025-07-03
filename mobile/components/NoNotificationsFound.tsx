@@ -32,7 +32,7 @@ const NoNotificationsFound = () => {
     <View className="flex-1 items-center justify-center px-8 bg-white" style={{ minHeight: 400 }}>
       <View className="items-center">
         {/* BIG Animated Lottie Bell - Main Highlight */}
-        <View className="w-48 h-48 mb-8">
+        <View className="w-[1024px] h-[1024px] mb-8">
           <LottieView
             ref={animationRef}
             source={require("../assets/animations/empty-notifications.json")}
