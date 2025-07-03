@@ -1,0 +1,62 @@
+import type { DeepPartial, Theme } from "stream-chat-react-native"
+
+export const streamChatTheme: DeepPartial<Theme> = {
+  colors: {
+    primary: "#1DA1F2",
+    secondary: "#1877F2",
+    accent_blue: "#1DA1F2",
+    accent_green: "#20BD5F",
+    accent_red: "#FF3742",
+    bg_gradient_end: "#F7F7F7",
+    bg_gradient_start: "#FCFCFC",
+    black: "#000000",
+    blue_alice: "#00D4FF",
+    border: "#E8E8E8",
+    grey: "#7A7A7A",
+    grey_gainsboro: "#DBDBDB",
+    grey_whisper: "#ECEBEB",
+    icon: "#7A7A7A",
+    modal: "#FFFFFF",
+    overlay: "rgba(0, 0, 0, 0.5)",
+    shadow_icon: "#00000080",
+    targetedMessageBackground: "#FBF4DD",
+    transparent: "transparent",
+    white: "#FFFFFF",
+    white_smoke: "#F2F2F2",
+    white_snow: "#FCFCFC",
+  },
+  messageInput: {
+    container: {
+      backgroundColor: "#FFFFFF",
+      borderTopWidth: 1,
+      borderTopColor: "#E8E8E8",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    inputBox: {
+      backgroundColor: "#F7F7F7",
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: "#E8E8E8",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      fontSize: 16,
+      maxHeight: 100,
+    },
+    sendButton: {
+      backgroundColor: "#1DA1F2",
+      borderRadius: 20,
+      width: 36,
+      height: 36,
+      justifyContent: "center",
+      alignItems: "center",
+      marginLeft: 8,
+    },
+  },
+  messageList: {
+    container: {
+      backgroundColor: "#FFFFFF",
+      flex: 1,
+    },
+  },
+}

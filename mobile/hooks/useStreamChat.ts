@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/clerk-expo"
 import { useCurrentUser } from "./useCurrentUser"
 import { useApiClient } from "@/utils/api"
 
-const API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY || "YOUR_STREAM_API_KEY"
+const API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY || "2ykb7j78q76h"
 
 export const useStreamChat = () => {
   const [client, setClient] = useState<StreamChat | null>(null)

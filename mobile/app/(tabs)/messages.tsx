@@ -2,7 +2,7 @@ import { useStreamChat } from "@/hooks/useStreamChat"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { Feather } from "@expo/vector-icons"
 import { useState } from "react"
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator } from "react-native"
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   Chat,
@@ -96,7 +96,7 @@ const MessagesScreen = () => {
       <Chat client={client}>
         <View className="flex-1 bg-white">
           {/* HEADER */}
-          <View className="flex-row items-center justify-between px-4 py-4 bg-white">
+          <View className="flex-row items-center justify-between px-4 py-4 bg-white border-b border-gray-100">
             <Text className="text-3xl font-bold text-gray-900">Messages</Text>
             <TouchableOpacity onPress={openNewMessage}>
               <Feather name="edit" size={24} color="#1DA1F2" />
@@ -107,6 +107,7 @@ const MessagesScreen = () => {
           <View className="flex-1" style={{ paddingBottom: insets.bottom }}>
             <ChannelList
               onSelect={(channel) => {
+                console.log("📱 Channel selected:", channel.id)
                 setSelectedChannel(channel)
                 setIsChannelOpen(true)
               }}
@@ -147,7 +148,11 @@ const MessagesScreen = () => {
           {/* Chat Modal */}
           <Modal visible={isChannelOpen} animationType="slide" presentationStyle="pageSheet">
             {selectedChannel && (
-              <View className="flex-1">
+              <KeyboardAvoidingView
+                className="flex-1"
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+              >
                 {/* Chat Header */}
                 <View
                   className="flex-row items-center px-4 py-3 border-b border-gray-100 bg-white"
@@ -163,13 +168,13 @@ const MessagesScreen = () => {
 
                 {/* Chat Content */}
                 <Channel channel={selectedChannel}>
-                  <View className="flex-1">
+                  <View className="flex-1 bg-white">
                     <MessageList />
                     <MessageInput />
                   </View>
                   <Thread />
                 </Channel>
-              </View>
+              </KeyboardAvoidingView>
             )}
           </Modal>
         </View>
