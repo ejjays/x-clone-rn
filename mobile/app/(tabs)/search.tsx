@@ -83,7 +83,7 @@ const SearchScreen = () => {
         showsVerticalScrollIndicator={false}
         refreshControl={
            <RefreshControl
-             refreshing={isRefetching}
+             refreshing={isLoading}
              onRefresh={handlePullToRefresh}
              colors={["#1877F2"]} 
               tintColor="#1877F2"  
