@@ -39,7 +39,7 @@ const ProfileScreens = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Clean Header - Reduced top spacing */}
+      {/* Clean Header - Facebook style */}
       <View className="flex-row justify-between items-center px-4 py-2 bg-white" style={{ paddingTop: insets.top + 8 }}>
         <TouchableOpacity className="w-10 h-10 items-center justify-center">
           <Feather name="arrow-left" size={28} color="#1C1E21" />
