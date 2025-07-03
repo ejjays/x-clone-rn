@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react"
-import { View, Text, TextInput, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from "react-native"
+import { View, Text, SafeAreaView, TouchableOpacity, FlatList, TextInput, ActivityIndicator, Alert } from "react-native"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
-import { useApiClient, userApi, streamApi } from "../utils/api"
-import { useCurrentUser } from "../hooks/useCurrentUser"
+import { useApiClient, userApi } from "@/utils/api"
+import { useStreamChat } from "@/hooks/useStreamChat"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 interface User {
   _id: string
@@ -11,33 +12,35 @@ interface User {
   username: string
   firstName: string
   lastName: string
-  profilePicture: string
+  profilePicture?: string
+  email: string
 }
 
 export default function NewMessageScreen() {
-  const [searchQuery, setSearchQuery] = useState("")
   const [users, setUsers] = useState<User[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
-
   const api = useApiClient()
-  const { user: currentUser } = useCurrentUser()
+  const { createChannel } = useStreamChat()
+  const { currentUser } = useCurrentUser()
 
   useEffect(() => {
     fetchUsers()
   }, [])
 
   useEffect(() => {
-    if (searchQuery.trim()) {
+    if (searchQuery.trim() === "") {
+      setFilteredUsers(users)
+    } else {
       const filtered = users.filter(
         (user) =>
-          user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()),
+          user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.username.toLowerCase().includes(searchQuery.toLowerCase()),
       )
       setFilteredUsers(filtered)
-    } else {
-      setFilteredUsers(users)
     }
   }, [searchQuery, users])
 
@@ -45,9 +48,10 @@ export default function NewMessageScreen() {
     try {
       setLoading(true)
       const response = await userApi.getAllUsers(api)
+      const allUsers = response.data || []
 
       // Filter out current user
-      const otherUsers = response.data.filter((user: User) => user.clerkId !== currentUser?.clerkId)
+      const otherUsers = allUsers.filter((user: User) => user.clerkId !== currentUser?.clerkId)
       setUsers(otherUsers)
       setFilteredUsers(otherUsers)
     } catch (error) {
@@ -58,9 +62,9 @@ export default function NewMessageScreen() {
     }
   }
 
-  const createChannel = async (selectedUser: User) => {
-    if (!currentUser) {
-      Alert.alert("Error", "You must be logged in to start a conversation")
+  const handleUserSelect = async (selectedUser: User) => {
+    if (!currentUser || !selectedUser.clerkId) {
+      Alert.alert("Error", "User information is missing")
       return
     }
 
@@ -69,16 +73,14 @@ export default function NewMessageScreen() {
       console.log("🔄 Creating channel with:", selectedUser.firstName, selectedUser.lastName)
       console.log("🔄 Creating channel with user:", selectedUser.clerkId)
 
-      const channelData = {
-        members: [currentUser.clerkId, selectedUser.clerkId],
-        name: `${currentUser.firstName} & ${selectedUser.firstName} ${selectedUser.lastName}`,
+      const channel = await createChannel(selectedUser.clerkId, `${selectedUser.firstName} ${selectedUser.lastName}`)
+
+      if (channel) {
+        console.log("✅ Channel created, navigating to chat")
+        router.push(`/chat/${channel.id}`)
+      } else {
+        throw new Error("Failed to create channel")
       }
-
-      const response = await streamApi.createChannel(api, channelData)
-      console.log("✅ Channel created:", response.data)
-
-      // Navigate to the chat screen
-      router.push(`/chat/${response.data.channelId}`)
     } catch (error) {
       console.error("❌ Failed to create channel:", error)
       Alert.alert("Error", "Failed to start conversation")
@@ -90,20 +92,20 @@ export default function NewMessageScreen() {
   const renderUser = ({ item }: { item: User }) => (
     <TouchableOpacity
       className="flex-row items-center p-4 border-b border-gray-100"
-      onPress={() => createChannel(item)}
+      onPress={() => handleUserSelect(item)}
       disabled={creating}
     >
       <View className="w-12 h-12 rounded-full bg-blue-500 items-center justify-center mr-3">
-        <Text className="text-white font-semibold text-lg">{item.firstName?.[0]?.toUpperCase() || "U"}</Text>
+        <Text className="text-white font-semibold text-lg">
+          {item.firstName?.[0]?.toUpperCase() || item.username?.[0]?.toUpperCase() || "?"}
+        </Text>
       </View>
-
       <View className="flex-1">
-        <Text className="font-semibold text-gray-900">
+        <Text className="text-lg font-semibold text-gray-900">
           {item.firstName} {item.lastName}
         </Text>
-        <Text className="text-gray-500 text-sm">@{item.username}</Text>
+        <Text className="text-gray-500">@{item.username}</Text>
       </View>
-
       {creating && <ActivityIndicator size="small" color="#3B82F6" />}
     </TouchableOpacity>
   )
@@ -113,18 +115,18 @@ export default function NewMessageScreen() {
       {/* Header */}
       <View className="flex-row items-center p-4 border-b border-gray-200">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="close" size={24} color="#000" />
         </TouchableOpacity>
         <Text className="text-xl font-bold">New Message</Text>
       </View>
 
       {/* Search */}
-      <View className="p-4">
+      <View className="p-4 border-b border-gray-200">
         <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2">
           <Ionicons name="search" size={20} color="#666" />
           <TextInput
             className="flex-1 ml-2 text-base"
-            placeholder="Search people..."
+            placeholder="Search people"
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
@@ -138,20 +140,17 @@ export default function NewMessageScreen() {
           <ActivityIndicator size="large" color="#3B82F6" />
           <Text className="mt-2 text-gray-500">Loading users...</Text>
         </View>
+      ) : filteredUsers.length === 0 ? (
+        <View className="flex-1 items-center justify-center">
+          <Ionicons name="people-outline" size={48} color="#ccc" />
+          <Text className="mt-2 text-gray-500">{searchQuery ? "No users found" : "No users available"}</Text>
+        </View>
       ) : (
         <FlatList
           data={filteredUsers}
           renderItem={renderUser}
           keyExtractor={(item) => item._id}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View className="flex-1 items-center justify-center p-8">
-              <Ionicons name="people-outline" size={64} color="#D1D5DB" />
-              <Text className="text-gray-500 text-center mt-4">
-                {searchQuery ? "No users found" : "No users available"}
-              </Text>
-            </View>
-          }
         />
       )}
     </SafeAreaView>
