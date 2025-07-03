@@ -2,7 +2,6 @@
 
 import EditProfileModal from "@/components/EditProfileModal"
 import PostsList from "@/components/PostsList"
-import SignOutButton from "@/components/SignOutButton"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { usePosts } from "@/hooks/usePosts"
 import { useProfile } from "@/hooks/useProfile"
@@ -38,6 +37,50 @@ const ProfileScreens = () => {
 
   return (
     <View className="flex-1 bg-white">
+      {/* Enhanced Header with Cover Photo */}
+      <View className="relative">
+        {/* Cover Photo */}
+        <Image
+          source={{
+            uri:
+              currentUser.bannerImage ||
+              "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop",
+          }}
+          className="w-full h-64"
+          resizeMode="cover"
+        />
+
+        {/* Header Controls - Positioned over cover photo */}
+        <View className="absolute top-0 left-0 right-0 flex-row justify-between items-center px-4 py-3">
+          <TouchableOpacity className="w-10 h-10 bg-black/30 rounded-full items-center justify-center">
+            <Feather name="arrow-left" size={24} color="white" />
+          </TouchableOpacity>
+
+          <View className="flex-row space-x-3">
+            <TouchableOpacity className="w-10 h-10 bg-black/30 rounded-full items-center justify-center">
+              <Feather name="search" size={22} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity className="w-10 h-10 bg-black/30 rounded-full items-center justify-center">
+              <Feather name="log-out" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Profile Picture - Positioned over cover photo */}
+        <View className="absolute -bottom-16 left-6">
+          <View className="relative">
+            <Image
+              source={{ uri: currentUser.profilePicture }}
+              className="w-32 h-32 rounded-full border-4 border-white"
+            />
+            {/* Camera icon for profile picture */}
+            <TouchableOpacity className="absolute bottom-2 right-2 w-10 h-10 bg-gray-200 rounded-full items-center justify-center border-2 border-white">
+              <Feather name="camera" size={18} color="#1C1E21" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
@@ -53,53 +96,6 @@ const ProfileScreens = () => {
           />
         }
       >
-        {/* Enhanced Header with Cover Photo */}
-        <View className="relative">
-          {/* Cover Photo */}
-          <Image
-            source={{
-              uri:
-                currentUser.bannerImage ||
-                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop",
-            }}
-            className="w-full h-64"
-            resizeMode="cover"
-          />
-
-          {/* Header Controls - Positioned over cover photo */}
-          <View
-            className="absolute top-0 left-0 right-0 flex-row justify-between items-center px-4 py-3"
-            style={{ paddingTop: insets.top + 12 }}
-          >
-            <TouchableOpacity className="w-10 h-10 bg-black/30 rounded-full items-center justify-center">
-              <Feather name="arrow-left" size={24} color="white" />
-            </TouchableOpacity>
-
-            <View className="flex-row space-x-3">
-              <TouchableOpacity className="w-10 h-10 bg-black/30 rounded-full items-center justify-center">
-                <Feather name="search" size={22} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity className="w-10 h-10 bg-black/30 rounded-full items-center justify-center">
-                <SignOutButton />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Profile Picture - Positioned over cover photo */}
-          <View className="absolute -bottom-16 left-6">
-            <View className="relative">
-              <Image
-                source={{ uri: currentUser.profilePicture }}
-                className="w-32 h-32 rounded-full border-4 border-white"
-              />
-              {/* Camera icon for profile picture */}
-              <TouchableOpacity className="absolute bottom-2 right-2 w-10 h-10 bg-gray-200 rounded-full items-center justify-center border-2 border-white">
-                <Feather name="camera" size={18} color="#1C1E21" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
         {/* Profile Info Section */}
         <View className="px-6 pt-20 pb-6 border-b border-gray-100">
           <View className="flex-row justify-between items-start mb-4">

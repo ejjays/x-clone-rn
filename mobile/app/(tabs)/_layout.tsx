@@ -22,11 +22,9 @@ const TabsLayout = () => {
 
   // The root path for our tabs layout is '/', which corresponds to the index.tsx file.
   const isHomeScreen = pathname === "/"
-  const isProfileScreen = pathname === "/profile"
 
   // This effect runs when we switch tabs, triggering the animation.
   useEffect(() => {
-    // Hide header on profile screen, show on home screen
     headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, {
       duration: 200,
     })
@@ -41,17 +39,10 @@ const TabsLayout = () => {
     }
   })
 
-  // Hide tab bar on profile screen
-  const tabBarStyle = useAnimatedStyle(() => {
-    return {
-      display: isProfileScreen ? "none" : "flex",
-    }
-  })
-
   if (!isSignedIn) return <Redirect href="/(auth)" />
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={isProfileScreen ? [] : ["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 h-full">
           <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
@@ -69,67 +60,65 @@ const TabsLayout = () => {
         </View>
       </Animated.View>
 
-      {/* Top Tab Navigator - Hidden on profile screen */}
-      <Animated.View style={tabBarStyle}>
-        <MaterialTopTabs
-          screenOptions={{
-            tabBarActiveTintColor: "#1877F2",
-            tabBarInactiveTintColor: "#657786",
-            tabBarIndicatorStyle: {
-              backgroundColor: "#1877F2",
-              height: 3,
-            },
-            tabBarStyle: {
-              backgroundColor: "#fff",
-              elevation: 0,
-              shadowOpacity: 0,
-              borderBottomWidth: 1,
-              borderBottomColor: "#E5E5E5",
-              paddingTop: 0,
-              marginTop: 0,
-            },
-            tabBarContentContainerStyle: {
-              paddingTop: 0,
-            },
+      {/* Top Tab Navigator - Back to normal */}
+      <MaterialTopTabs
+        screenOptions={{
+          tabBarActiveTintColor: "#1877F2",
+          tabBarInactiveTintColor: "#657786",
+          tabBarIndicatorStyle: {
+            backgroundColor: "#1877F2",
+            height: 3,
+          },
+          tabBarStyle: {
+            backgroundColor: "#fff",
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 1,
+            borderBottomColor: "#E5E5E5",
+            paddingTop: 0,
+            marginTop: 0,
+          },
+          tabBarContentContainerStyle: {
+            paddingTop: 0,
+          },
+        }}
+      >
+        <MaterialTopTabs.Screen
+          name="index"
+          options={{
+            tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
+            tabBarShowLabel: false,
           }}
-        >
-          <MaterialTopTabs.Screen
-            name="index"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-          <MaterialTopTabs.Screen
-            name="search"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="users" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-          <MaterialTopTabs.Screen
-            name="notifications"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="bell" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-          <MaterialTopTabs.Screen
-            name="messages"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="tv" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-          <MaterialTopTabs.Screen
-            name="profile"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="menu" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-        </MaterialTopTabs>
-      </Animated.View>
+        />
+        <MaterialTopTabs.Screen
+          name="search"
+          options={{
+            tabBarIcon: ({ color }) => <Feather name="users" size={24} color={color} />,
+            tabBarShowLabel: false,
+          }}
+        />
+        <MaterialTopTabs.Screen
+          name="notifications"
+          options={{
+            tabBarIcon: ({ color }) => <Feather name="bell" size={24} color={color} />,
+            tabBarShowLabel: false,
+          }}
+        />
+        <MaterialTopTabs.Screen
+          name="messages"
+          options={{
+            tabBarIcon: ({ color }) => <Feather name="tv" size={24} color={color} />,
+            tabBarShowLabel: false,
+          }}
+        />
+        <MaterialTopTabs.Screen
+          name="profile"
+          options={{
+            tabBarIcon: ({ color }) => <Feather name="menu" size={24} color={color} />,
+            tabBarShowLabel: false,
+          }}
+        />
+      </MaterialTopTabs>
     </SafeAreaView>
   )
 }
