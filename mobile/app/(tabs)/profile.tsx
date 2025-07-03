@@ -39,17 +39,6 @@ const ProfileScreens = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Clean Header - Facebook style */}
-      <View className="flex-row justify-between items-center px-4 py-2 bg-white" style={{ paddingTop: insets.top + 8 }}>
-        <TouchableOpacity className="w-10 h-10 items-center justify-center">
-          <Feather name="arrow-left" size={28} color="#1C1E21" />
-        </TouchableOpacity>
-
-        <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleSignOut}>
-          <Feather name="log-out" size={24} color="#E0245E" />
-        </TouchableOpacity>
-      </View>
-
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
@@ -65,7 +54,7 @@ const ProfileScreens = () => {
           />
         }
       >
-        {/* Cover Photo */}
+        {/* Cover Photo with Header Overlay */}
         <View className="relative">
           <Image
             source={{
@@ -76,6 +65,23 @@ const ProfileScreens = () => {
             className="w-full h-64"
             resizeMode="cover"
           />
+
+          {/* Header Overlay - Positioned absolutely over cover photo */}
+          <View
+            className="absolute top-0 left-0 right-0 flex-row justify-between items-center px-4 py-2"
+            style={{ paddingTop: insets.top + 8 }}
+          >
+            <TouchableOpacity className="w-10 h-10 items-center justify-center bg-black/30 rounded-full">
+              <Feather name="arrow-left" size={28} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="w-10 h-10 items-center justify-center bg-black/30 rounded-full"
+              onPress={handleSignOut}
+            >
+              <Feather name="log-out" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
 
           {/* Profile Picture - Positioned over cover photo */}
           <View className="absolute -bottom-16 left-6">
