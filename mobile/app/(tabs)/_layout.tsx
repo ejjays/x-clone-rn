@@ -8,7 +8,6 @@ import { Redirect, usePathname, withLayoutContext } from "expo-router"
 import { useEffect } from "react"
 import { Text, TouchableOpacity, View } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated"
-import { SafeAreaView } from "react-native-safe-area-context"
 
 const { Navigator } = createMaterialTopTabNavigator()
 export const MaterialTopTabs = withLayoutContext(Navigator)
@@ -23,11 +22,12 @@ const TabsLayout = () => {
   // Animated values
   const headerHeight = useSharedValue(HEADER_HEIGHT)
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT)
+  const safeAreaPadding = useSharedValue(1) // 1 = show SafeAreaView, 0 = hide it
 
   const isHomeScreen = pathname === "/"
   const isProfileScreen = pathname === "/profile"
 
-  // Animate header and tab bar based on current screen
+  // Animate header, tab bar, and safe area based on current screen
   useEffect(() => {
     // Header animation
     headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, {
@@ -38,7 +38,12 @@ const TabsLayout = () => {
     tabBarHeight.value = withTiming(isProfileScreen ? 0 : TAB_BAR_HEIGHT, {
       duration: 300,
     })
-  }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight])
+
+    // Safe area animation - disable on profile to reclaim space
+    safeAreaPadding.value = withTiming(isProfileScreen ? 0 : 1, {
+      duration: 300,
+    })
+  }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight, safeAreaPadding])
 
   // Animated styles
   const animatedHeaderStyle = useAnimatedStyle(() => {
@@ -57,29 +62,19 @@ const TabsLayout = () => {
     }
   })
 
+  const animatedSafeAreaStyle = useAnimatedStyle(() => {
+    return {
+      paddingTop: safeAreaPadding.value * 44, // 44 is typical status bar height
+    }
+  })
+
   if (!isSignedIn) return <Redirect href="/(auth)" />
 
-  // For profile screen, render WITHOUT SafeAreaView to reclaim ALL space
-  if (isProfileScreen) {
-    return (
-      <View className="flex-1 bg-white">
-        <MaterialTopTabs
-          screenOptions={{
-            tabBarStyle: { display: "none" },
-          }}
-        >
-          <MaterialTopTabs.Screen name="index" />
-          <MaterialTopTabs.Screen name="search" />
-          <MaterialTopTabs.Screen name="notifications" />
-          <MaterialTopTabs.Screen name="messages" />
-          <MaterialTopTabs.Screen name="profile" />
-        </MaterialTopTabs>
-      </View>
-    )
-  }
-
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <View className="flex-1 bg-white">
+      {/* Animated Safe Area - only shows padding when NOT on profile */}
+      <Animated.View style={animatedSafeAreaStyle} />
+
       {/* Animated Header */}
       <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 h-full">
@@ -200,7 +195,7 @@ const TabsLayout = () => {
           <MaterialTopTabs.Screen name="profile" />
         </MaterialTopTabs>
       </View>
-    </SafeAreaView>
+    </View>
   )
 }
 export default TabsLayout
