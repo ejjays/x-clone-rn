@@ -17,11 +17,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import ChatScreen from "@/components/ChatScreen"
 import NewMessageScreen from "@/components/NewMessageScreen"
 import type { User } from "@/types"
-import { useAuth } from "@clerk/clerk-expo"
 
 const MessagesScreen = () => {
   const insets = useSafeAreaInsets()
-  const { userId: clerkId } = useAuth()
   const [searchText, setSearchText] = useState("")
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -32,17 +30,15 @@ const MessagesScreen = () => {
   const { currentUser } = useCurrentUser()
 
   const openConversation = async (conversationId: string, user: any) => {
-    console.log("🔓 Opening conversation:", { conversationId, user })
     setSelectedConversationId(conversationId)
     setSelectedUser(user)
     setIsChatOpen(true)
   }
 
   const startNewConversation = async (user: User) => {
-    console.log("🆕 Starting new conversation with:", user)
     setIsNewMessageOpen(false)
 
-    // 🔥 FIX: Use the user's MongoDB _id for conversation creation
+    // 🔥 FIX: Use MongoDB ID for conversation creation
     const conversationId = await createConversation(user._id)
     if (conversationId) {
       const chatUser = {
@@ -58,19 +54,16 @@ const MessagesScreen = () => {
   }
 
   const closeChatModal = () => {
-    console.log("🔒 Closing chat modal")
     setIsChatOpen(false)
     setSelectedConversationId(null)
     setSelectedUser(null)
   }
 
   const openNewMessage = () => {
-    console.log("📝 Opening new message screen")
     setIsNewMessageOpen(true)
   }
 
   const closeNewMessage = () => {
-    console.log("❌ Closing new message screen")
     setIsNewMessageOpen(false)
   }
 
@@ -136,20 +129,9 @@ const MessagesScreen = () => {
           </View>
         ) : (
           conversations.map((conversation) => {
-            // 🔥 FIX: Better user identification logic
+            // 🔥 FIX: Better user identification using MongoDB IDs
             const otherParticipantId =
-              conversation.participant_1 === clerkId || conversation.participant_1 === currentUser?._id
-                ? conversation.participant_2
-                : conversation.participant_1
-
-            console.log("👥 Conversation participants:", {
-              conversationId: conversation.id,
-              participant1: conversation.participant_1,
-              participant2: conversation.participant_2,
-              currentClerkId: clerkId,
-              currentMongoId: currentUser?._id,
-              otherParticipant: otherParticipantId,
-            })
+              conversation.participant_1 === currentUser?._id ? conversation.participant_2 : conversation.participant_1
 
             const mockUser = {
               name: "User " + otherParticipantId.slice(-6),
@@ -181,12 +163,6 @@ const MessagesScreen = () => {
                   </View>
                   <Text className="text-sm text-gray-500" numberOfLines={1}>
                     {conversation.last_message || "Start a conversation"}
-                  </Text>
-
-                  {/* 🔥 DEBUG: Show conversation ID and participants */}
-                  <Text className="text-xs text-red-500 mt-1">
-                    Conv {conversation.id}: {conversation.participant_1.slice(-6)} ↔{" "}
-                    {conversation.participant_2.slice(-6)}
                   </Text>
                 </View>
               </TouchableOpacity>

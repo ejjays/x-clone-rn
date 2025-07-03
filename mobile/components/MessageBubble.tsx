@@ -1,5 +1,5 @@
 import { View, Text } from "react-native"
-import { useAuth } from "@clerk/clerk-expo"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import type { Message } from "@/lib/supabase"
 
 interface MessageBubbleProps {
@@ -7,8 +7,9 @@ interface MessageBubbleProps {
 }
 
 const MessageBubble = ({ message }: MessageBubbleProps) => {
-  const { userId } = useAuth()
-  const isMe = message.user_id === userId
+  const { currentUser } = useCurrentUser()
+  // 🔥 FIX: Compare using MongoDB ID
+  const isMe = message.user_id === currentUser?._id
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -18,13 +19,6 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
       hour12: true,
     })
   }
-
-  console.log("💬 Rendering message bubble:", {
-    id: message.id,
-    text: message.text,
-    isMe,
-    userId: message.user_id,
-  })
 
   return (
     <View className={`flex-row mb-3 ${isMe ? "justify-end" : "justify-start"}`}>

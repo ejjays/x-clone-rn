@@ -5,27 +5,16 @@ import { Alert } from "react-native"
 import { useCurrentUser } from "./useCurrentUser"
 
 export const useConversations = () => {
-  const { userId } = useAuth() // This is Clerk ID
-  const { currentUser } = useCurrentUser() // This has MongoDB _id
+  const { userId } = useAuth()
+  const { currentUser } = useCurrentUser()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  console.log("🔄 useConversations hook initialized:", {
-    clerkId: userId,
-    mongoId: currentUser?._id,
-  })
-
   const fetchConversations = async (showRefreshing = false) => {
     if (!userId || !currentUser?._id) {
-      console.log("❌ No user IDs provided", { userId, mongoId: currentUser?._id })
       return
     }
-
-    console.log("📥 Fetching conversations for user:", {
-      clerkId: userId,
-      mongoId: currentUser._id,
-    })
 
     if (showRefreshing) {
       setIsRefreshing(true)
@@ -34,23 +23,18 @@ export const useConversations = () => {
     }
 
     try {
-      // 🔥 FIX: Search using BOTH Clerk ID and MongoDB ID
+      // 🔥 FIX: Use ONLY MongoDB IDs for consistency
       const { data, error } = await supabase
         .from("conversations")
         .select("*")
-        .or(
-          `participant_1.eq.${userId},participant_2.eq.${userId},participant_1.eq.${currentUser._id},participant_2.eq.${currentUser._id}`,
-        )
+        .or(`participant_1.eq.${currentUser._id},participant_2.eq.${currentUser._id}`)
         .order("last_message_at", { ascending: false })
-
-      console.log("📥 Conversations fetch result:", { data, error, count: data?.length })
 
       if (error) {
         console.error("❌ Error fetching conversations:", error)
         Alert.alert("Error", `Failed to load conversations: ${error.message}`)
       } else {
         setConversations(data || [])
-        console.log("✅ Conversations loaded successfully:", data?.length || 0)
       }
     } catch (error) {
       console.error("❌ Exception fetching conversations:", error)
@@ -67,32 +51,21 @@ export const useConversations = () => {
     }
   }, [userId, currentUser?._id])
 
-  const createConversation = async (otherUserId: string) => {
-    if (!userId || !currentUser?._id) {
-      console.log("❌ No user IDs for creating conversation")
+  const createConversation = async (otherUserMongoId: string) => {
+    if (!currentUser?._id) {
       return null
     }
 
-    console.log("🆕 Creating conversation:", {
-      clerkId: userId,
-      mongoId: currentUser._id,
-      otherUserId,
-    })
-
     try {
-      // 🔥 FIX: Check for existing conversation using ALL possible ID combinations
+      // 🔥 FIX: Use ONLY MongoDB IDs and check both directions
       const { data: existing, error: searchError } = await supabase
         .from("conversations")
         .select("*")
         .or(
-          `and(participant_1.eq.${userId},participant_2.eq.${otherUserId}),` +
-            `and(participant_1.eq.${otherUserId},participant_2.eq.${userId}),` +
-            `and(participant_1.eq.${currentUser._id},participant_2.eq.${otherUserId}),` +
-            `and(participant_1.eq.${otherUserId},participant_2.eq.${currentUser._id})`,
+          `and(participant_1.eq.${currentUser._id},participant_2.eq.${otherUserMongoId}),` +
+            `and(participant_1.eq.${otherUserMongoId},participant_2.eq.${currentUser._id})`,
         )
         .maybeSingle()
-
-      console.log("🔍 Existing conversation check:", { existing, searchError })
 
       if (searchError && searchError.code !== "PGRST116") {
         console.error("❌ Error checking existing conversation:", searchError)
@@ -101,21 +74,16 @@ export const useConversations = () => {
       }
 
       if (existing) {
-        console.log("✅ Found existing conversation:", existing.id)
         return existing.id
       }
 
-      // 🔥 FIX: Always use Clerk IDs for new conversations
+      // 🔥 FIX: Create new conversation using ONLY MongoDB IDs
       const conversationData = {
-        participant_1: userId, // Always use Clerk ID
-        participant_2: otherUserId, // This should also be Clerk ID or MongoDB ID
+        participant_1: currentUser._id, // MongoDB ID
+        participant_2: otherUserMongoId, // MongoDB ID
       }
 
-      console.log("🆕 Creating new conversation with data:", conversationData)
-
       const { data, error } = await supabase.from("conversations").insert([conversationData]).select().single()
-
-      console.log("🆕 Create conversation result:", { data, error })
 
       if (error) {
         console.error("❌ Error creating conversation:", error)
@@ -123,7 +91,6 @@ export const useConversations = () => {
         return null
       }
 
-      console.log("✅ Conversation created successfully:", data.id)
       fetchConversations()
       return data.id
     } catch (error) {
