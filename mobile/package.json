@@ -19,6 +19,7 @@
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/material-top-tabs": "^7.3.2",
     "@react-navigation/native": "^7.1.6",
+    "@supabase/supabase-js": "^2.50.3",
     "@tanstack/react-query": "^5.81.5",
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
@@ -38,6 +39,7 @@
     "expo-symbols": "~0.4.5",
     "expo-system-ui": "~5.0.10",
     "expo-web-browser": "~14.2.0",
+    "lottie-react-native": "7.2.2",
     "nativewind": "^4.1.23",
     "pusher-js": "^8.4.0",
     "react": "19.0.0",
@@ -51,8 +53,7 @@
     "react-native-tab-view": "^4.1.2",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "socket.io-client": "^4.8.1",
-    "lottie-react-native": "7.2.2"
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
