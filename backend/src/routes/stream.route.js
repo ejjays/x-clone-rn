@@ -1,13 +1,12 @@
-const express = require("express")
-const { getStreamToken, createChannel } = require("../controllers/stream.controller")
-const { authenticateToken } = require("../middleware/auth.middleware")
+import express from "express"
+import { protectRoute } from "../middleware/auth.middleware.js"
+import { getStreamToken, createChannel, getChannels } from "../controllers/stream.controller.js"
 
 const router = express.Router()
 
-// Get Stream token
-router.get("/token", authenticateToken, getStreamToken)
+// All routes are protected
+router.get("/token", protectRoute, getStreamToken)
+router.post("/channel", protectRoute, createChannel)
+router.get("/channels", protectRoute, getChannels)
 
-// Create channel
-router.post("/channel", authenticateToken, createChannel)
-
-module.exports = router
+export default router
