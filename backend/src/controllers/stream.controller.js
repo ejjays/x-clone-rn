@@ -5,101 +5,115 @@ const serverClient = StreamChat.getInstance(process.env.STREAM_API_KEY, process.
 
 export const getStreamToken = async (req, res) => {
   try {
-    const userId = req.user.userId
-    const user = await User.findById(userId)
+    // Get user ID from Clerk auth
+    const { userId } = req.auth()
 
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized - no user ID" })
+    }
+
+    console.log("🔄 Getting Stream token for user:", userId)
+
+    // Get user from database using Clerk ID
+    const user = await User.findOne({ clerkId: userId })
     if (!user) {
-      return res.status(404).json({ error: "User not found" })
+      return res.status(404).json({ error: "User not found in database" })
+    }
+
+    // Create Stream user object
+    const streamUser = {
+      id: userId, // Use Clerk ID as Stream user ID
+      name: `${user.firstName} ${user.lastName}`.trim(),
+      image: user.profilePicture || `https://getstream.io/random_png/?name=${user.firstName}`,
+      firstName: user.firstName,
+      lastName: user.lastName,
     }
 
     // Create or update user in Stream
-    const streamUser = {
-      id: user._id.toString(),
-      name: `${user.firstName} ${user.lastName}`,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      image: user.profilePicture || undefined,
-    }
-
     await serverClient.upsertUser(streamUser)
+    console.log("✅ Stream user created/updated:", userId)
 
     // Generate token
-    const token = serverClient.createToken(user._id.toString())
+    const token = serverClient.createToken(userId)
 
     res.json({
       token,
       user: streamUser,
     })
   } catch (error) {
-    console.error("Stream token error:", error)
+    console.error("❌ Stream token error:", error)
     res.status(500).json({ error: "Failed to generate Stream token" })
   }
 }
 
 export const createChannel = async (req, res) => {
   try {
-    const { otherUserId, channelName } = req.body
-    const currentUserId = req.user.userId
+    const { userId } = req.auth()
+    const { otherUserId } = req.body
 
-    // Get both users
-    const [currentUser, otherUser] = await Promise.all([User.findById(currentUserId), User.findById(otherUserId)])
-
-    if (!currentUser || !otherUser) {
-      return res.status(404).json({ error: "User not found" })
+    if (!userId || !otherUserId) {
+      return res.status(400).json({ error: "Missing user IDs" })
     }
 
-    // Create or update both users in Stream
+    console.log("🔄 Creating channel between:", userId, "and", otherUserId)
+
+    // Get both users from database
+    const [currentUser, otherUser] = await Promise.all([
+      User.findOne({ clerkId: userId }),
+      User.findOne({ clerkId: otherUserId }),
+    ])
+
+    if (!currentUser || !otherUser) {
+      return res.status(404).json({ error: "One or both users not found" })
+    }
+
+    // Create Stream user objects
     const streamUsers = [
       {
-        id: currentUser._id.toString(),
-        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        id: userId,
+        name: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
+        image: currentUser.profilePicture || `https://getstream.io/random_png/?name=${currentUser.firstName}`,
         firstName: currentUser.firstName,
         lastName: currentUser.lastName,
-        image: currentUser.profilePicture || undefined,
       },
       {
-        id: otherUser._id.toString(),
-        name: `${otherUser.firstName} ${otherUser.lastName}`,
+        id: otherUserId,
+        name: `${otherUser.firstName} ${otherUser.lastName}`.trim(),
+        image: otherUser.profilePicture || `https://getstream.io/random_png/?name=${otherUser.firstName}`,
         firstName: otherUser.firstName,
         lastName: otherUser.lastName,
-        image: otherUser.profilePicture || undefined,
       },
     ]
 
+    // Create or update users in Stream
     await serverClient.upsertUsers(streamUsers)
+    console.log("✅ Both users upserted in Stream")
 
     // Create channel ID (consistent ordering)
-    const channelId = [currentUserId, otherUserId].sort().join("-")
+    const channelId = [userId, otherUserId].sort().join("-")
 
-    // Create channel with proper metadata
+    // Create channel with metadata
     const channel = serverClient.channel("messaging", channelId, {
-      members: [currentUserId, otherUserId],
-      created_by_id: currentUserId,
+      members: [userId, otherUserId],
+      created_by_id: userId,
       // Store user info for easy access
-      user1: {
-        id: currentUser._id.toString(),
-        name: `${currentUser.firstName} ${currentUser.lastName}`,
-        firstName: currentUser.firstName,
-        lastName: currentUser.lastName,
-        image: currentUser.profilePicture || undefined,
-      },
-      user2: {
-        id: otherUser._id.toString(),
-        name: `${otherUser.firstName} ${otherUser.lastName}`,
-        firstName: otherUser.firstName,
-        lastName: otherUser.lastName,
-        image: otherUser.profilePicture || undefined,
-      },
+      user1: streamUsers[0],
+      user2: streamUsers[1],
     })
 
     await channel.create()
+    console.log("✅ Channel created:", channelId)
 
     res.json({
       channelId,
-      channel: channel.data,
+      channel: {
+        id: channelId,
+        type: "messaging",
+        members: [userId, otherUserId],
+      },
     })
   } catch (error) {
-    console.error("Create channel error:", error)
+    console.error("❌ Create channel error:", error)
     res.status(500).json({ error: "Failed to create channel" })
   }
 }

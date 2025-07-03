@@ -1,13 +1,13 @@
 import express from "express"
-import { getStreamToken, createChannel } from "../controllers/stream.controller.js"
 import { protectRoute } from "../middleware/auth.middleware.js"
+import { getStreamToken, createChannel } from "../controllers/stream.controller.js"
 
 const router = express.Router()
 
-// Get Stream token
+// Get Stream Chat token
 router.get("/token", protectRoute, getStreamToken)
 
-// Create channel
+// Create channel between users
 router.post("/channel", protectRoute, createChannel)
 
 export default router

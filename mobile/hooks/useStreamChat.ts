@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState } from "react"
 import { StreamChat } from "stream-chat"
 import { useAuth } from "@clerk/clerk-expo"
@@ -10,18 +12,18 @@ export const useStreamChat = () => {
   const [client, setClient] = useState<StreamChat | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, userId } = useAuth()
   const { currentUser } = useCurrentUser()
   const api = useApiClient()
 
   useEffect(() => {
-    if (!isSignedIn || !currentUser || client) return
+    if (!isSignedIn || !currentUser || !userId || client) return
 
     const initializeStreamChat = async () => {
       setIsConnecting(true)
 
       try {
-        console.log("🔄 Initializing Stream Chat...")
+        console.log("🔄 Initializing Stream Chat for user:", userId)
 
         // Get Stream token from backend
         const response = await api.get("/stream/token")
@@ -57,11 +59,11 @@ export const useStreamChat = () => {
         setIsConnected(false)
       }
     }
-  }, [isSignedIn, currentUser])
+  }, [isSignedIn, currentUser, userId])
 
   const createChannel = async (otherUserId: string, otherUserName: string) => {
-    if (!client || !currentUser) {
-      console.error("❌ Client or current user not available")
+    if (!client || !currentUser || !userId) {
+      console.error("❌ Client, current user, or user ID not available")
       return null
     }
 
