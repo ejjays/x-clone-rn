@@ -13,9 +13,9 @@ export const useCurrentUser = () => {
     queryKey: ["authUser"],
     queryFn: () => userApi.getCurrentUser(api),
     select: (response) => response.data.user,
-    retry: 3, // Retry failed requests
-    retryDelay: 1000, // Wait 1 second between retries
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 5 * 60 * 1000,
     onError: (error) => {
       console.error("❌ Failed to fetch current user:", error)
     },

@@ -1,17 +1,16 @@
 import axios, { type AxiosInstance } from "axios"
 import { useAuth } from "@clerk/clerk-expo"
 
+// 🔥 FIX THIS URL - Your current deployment doesn't exist!
+// Check your actual Vercel deployment URL
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://x-clone-rn-one.vercel.app/api"
-// ! 🔥 localhost api would not work on your actual physical device
-// const API_BASE_URL = "http://localhost:5001/api";
 
 console.log("🌐 API Base URL:", API_BASE_URL)
 
-// this will basically create an authenticated api, pass the token into our headers
 export const createApiClient = (getToken: () => Promise<string | null>): AxiosInstance => {
   const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 10000, // 10 second timeout
+    timeout: 10000,
   })
 
   api.interceptors.request.use(async (config) => {

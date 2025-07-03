@@ -20,11 +20,10 @@ export const useUserSync = () => {
         url: error.config?.url,
       })
     },
-    retry: 2, // Retry failed sync attempts
-    retryDelay: 2000, // Wait 2 seconds between retries
+    retry: 2,
+    retryDelay: 2000,
   })
 
-  // auto-sync user when signed in
   useEffect(() => {
     if (isSignedIn && !syncUserMutation.data && !syncUserMutation.isError) {
       console.log("🔄 Attempting to sync user...")

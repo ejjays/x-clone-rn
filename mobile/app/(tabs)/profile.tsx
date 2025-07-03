@@ -36,7 +36,6 @@ const ProfileScreens = () => {
     }
   }
 
-  // Show loading state while user data is loading
   if (isLoading) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
@@ -46,7 +45,6 @@ const ProfileScreens = () => {
     )
   }
 
-  // Show error state if user data failed to load
   if (!currentUser) {
     return (
       <View className="flex-1 bg-white items-center justify-center px-8">
@@ -66,7 +64,6 @@ const ProfileScreens = () => {
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      {/* Header IMMEDIATELY after status bar - ZERO gap */}
       <View className="flex-row justify-between items-center px-4 py-1 bg-white">
         <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleBackPress}>
           <Feather name="arrow-left" size={28} color="#1C1E21" />
@@ -93,7 +90,6 @@ const ProfileScreens = () => {
           />
         }
       >
-        {/* Cover Photo - NO overlay icons */}
         <View className="relative">
           <Image
             source={{
@@ -105,7 +101,6 @@ const ProfileScreens = () => {
             resizeMode="cover"
           />
 
-          {/* Profile Picture - Positioned over cover photo */}
           <View className="absolute -bottom-16 left-6">
             <View className="relative">
               <Image
@@ -116,7 +111,6 @@ const ProfileScreens = () => {
                 }}
                 className="w-32 h-32 rounded-full border-4 border-white"
               />
-              {/* Camera icon for profile picture */}
               <TouchableOpacity className="absolute bottom-2 right-2 w-10 h-10 bg-gray-200 rounded-full items-center justify-center border-2 border-white">
                 <Feather name="camera" size={18} color="#1C1E21" />
               </TouchableOpacity>
@@ -124,7 +118,6 @@ const ProfileScreens = () => {
           </View>
         </View>
 
-        {/* Profile Info Section */}
         <View className="px-6 pt-20 pb-6 border-b border-gray-100">
           <View className="flex-row justify-between items-start mb-4">
             <View className="flex-1">
@@ -178,7 +171,6 @@ const ProfileScreens = () => {
           </View>
         </View>
 
-        {/* Posts Section */}
         <View className="px-4 py-4 border-b border-gray-100">
           <Text className="text-lg font-bold text-gray-900">Posts</Text>
           <Text className="text-gray-500 text-sm">{userPosts.length} posts</Text>
