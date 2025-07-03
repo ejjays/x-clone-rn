@@ -1,6 +1,6 @@
 import { View, Text } from "react-native"
 import { useAuth } from "@clerk/clerk-expo"
-import type { Message } from "@/lib/supabase"
+import type { Message } from "@/lib/supabase" 
 
 interface MessageBubbleProps {
   message: Message
