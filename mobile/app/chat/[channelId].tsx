@@ -1,32 +1,34 @@
-import { useEffect, useState } from "react"
 import { View, Text, SafeAreaView, TouchableOpacity } from "react-native"
 import { useLocalSearchParams, router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useStreamChat } from "@/hooks/useStreamChat"
-import type { Channel } from "stream-chat"
+import { useEffect, useState } from "react"
+import type { Channel as StreamChannel } from "stream-chat"
 
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>()
   const { client } = useStreamChat()
-  const [channel, setChannel] = useState<Channel | null>(null)
+  const [channel, setChannel] = useState<StreamChannel | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!client || !channelId) return
 
-    const initChannel = async () => {
+    const initializeChannel = async () => {
       try {
-        const ch = client.channel("messaging", channelId)
-        await ch.watch()
-        setChannel(ch)
+        console.log("🔄 Initializing channel:", channelId)
+        const streamChannel = client.channel("messaging", channelId)
+        await streamChannel.watch()
+        setChannel(streamChannel)
+        console.log("✅ Channel initialized successfully")
       } catch (error) {
-        console.error("❌ Failed to load channel:", error)
+        console.error("❌ Failed to initialize channel:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    initChannel()
+    initializeChannel()
   }, [client, channelId])
 
   if (loading) {
@@ -43,18 +45,14 @@ export default function ChatScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
-          <Text className="text-gray-500">Chat not found</Text>
-          <TouchableOpacity onPress={() => router.back()} className="mt-4">
-            <Text className="text-blue-500">Go back</Text>
+          <Text className="text-gray-500">Failed to load chat</Text>
+          <TouchableOpacity onPress={() => router.back()} className="mt-4 px-4 py-2 bg-blue-500 rounded">
+            <Text className="text-white">Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     )
   }
-
-  // Get other user's name for header
-  const otherUser = Object.values(channel.state.members).find((member) => member.user?.id !== client.userID)
-  const otherUserName = otherUser?.user?.name || "Chat"
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -62,16 +60,12 @@ export default function ChatScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <View className="w-8 h-8 rounded-full bg-blue-500 items-center justify-center mr-3">
-          <Text className="text-white font-semibold text-sm">{otherUserName[0]?.toUpperCase() || "?"}</Text>
-        </View>
-        <Text className="text-lg font-semibold">{otherUserName}</Text>
+        <Text className="text-xl font-bold">{channel.data?.name || "Chat"}</Text>
       </View>
 
       <View className="flex-1 items-center justify-center">
-        <Text className="text-gray-500 mb-4">Chat interface coming soon!</Text>
-        <Text className="text-gray-400 text-sm text-center px-8">
-          This is where the Stream Chat UI components will be integrated. For now, the channel is created and ready.
+        <Text className="text-gray-500 text-center">
+          Chat interface will be implemented here.{"\n"}Channel ID: {channelId}
         </Text>
       </View>
     </SafeAreaView>
