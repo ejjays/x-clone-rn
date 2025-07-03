@@ -2,22 +2,30 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@clerk/clerk-expo"
 import { supabase, type Conversation } from "@/lib/supabase"
 import { Alert } from "react-native"
+import { useCurrentUser } from "./useCurrentUser"
 
 export const useConversations = () => {
-  const { userId } = useAuth()
+  const { userId } = useAuth() // This is Clerk ID
+  const { currentUser } = useCurrentUser() // This has MongoDB _id
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  console.log("🔄 useConversations hook initialized:", { userId })
+  console.log("🔄 useConversations hook initialized:", {
+    clerkId: userId,
+    mongoId: currentUser?._id,
+  })
 
   const fetchConversations = async (showRefreshing = false) => {
-    if (!userId) {
-      console.log("❌ No user ID provided")
+    if (!userId || !currentUser?._id) {
+      console.log("❌ No user IDs provided", { userId, mongoId: currentUser?._id })
       return
     }
 
-    console.log("📥 Fetching conversations for user:", userId)
+    console.log("📥 Fetching conversations for user:", {
+      clerkId: userId,
+      mongoId: currentUser._id,
+    })
 
     if (showRefreshing) {
       setIsRefreshing(true)
@@ -26,10 +34,13 @@ export const useConversations = () => {
     }
 
     try {
+      // 🔥 FIX: Search using BOTH Clerk ID and MongoDB ID
       const { data, error } = await supabase
         .from("conversations")
         .select("*")
-        .or(`participant_1.eq.${userId},participant_2.eq.${userId}`)
+        .or(
+          `participant_1.eq.${userId},participant_2.eq.${userId},participant_1.eq.${currentUser._id},participant_2.eq.${currentUser._id}`,
+        )
         .order("last_message_at", { ascending: false })
 
       console.log("📥 Conversations fetch result:", { data, error, count: data?.length })
@@ -51,24 +62,33 @@ export const useConversations = () => {
   }
 
   useEffect(() => {
-    fetchConversations()
-  }, [userId])
+    if (currentUser?._id) {
+      fetchConversations()
+    }
+  }, [userId, currentUser?._id])
 
   const createConversation = async (otherUserId: string) => {
-    if (!userId) {
-      console.log("❌ No user ID for creating conversation")
+    if (!userId || !currentUser?._id) {
+      console.log("❌ No user IDs for creating conversation")
       return null
     }
 
-    console.log("🆕 Creating conversation:", { userId, otherUserId })
+    console.log("🆕 Creating conversation:", {
+      clerkId: userId,
+      mongoId: currentUser._id,
+      otherUserId,
+    })
 
     try {
-      // Check if conversation already exists
+      // 🔥 FIX: Check for existing conversation using ALL possible ID combinations
       const { data: existing, error: searchError } = await supabase
         .from("conversations")
         .select("*")
         .or(
-          `and(participant_1.eq.${userId},participant_2.eq.${otherUserId}),and(participant_1.eq.${otherUserId},participant_2.eq.${userId})`,
+          `and(participant_1.eq.${userId},participant_2.eq.${otherUserId}),` +
+            `and(participant_1.eq.${otherUserId},participant_2.eq.${userId}),` +
+            `and(participant_1.eq.${currentUser._id},participant_2.eq.${otherUserId}),` +
+            `and(participant_1.eq.${otherUserId},participant_2.eq.${currentUser._id})`,
         )
         .maybeSingle()
 
@@ -85,10 +105,10 @@ export const useConversations = () => {
         return existing.id
       }
 
-      // Create new conversation
+      // 🔥 FIX: Always use Clerk IDs for new conversations
       const conversationData = {
-        participant_1: userId,
-        participant_2: otherUserId,
+        participant_1: userId, // Always use Clerk ID
+        participant_2: otherUserId, // This should also be Clerk ID or MongoDB ID
       }
 
       console.log("🆕 Creating new conversation with data:", conversationData)
@@ -104,7 +124,6 @@ export const useConversations = () => {
       }
 
       console.log("✅ Conversation created successfully:", data.id)
-      // Refresh conversations list
       fetchConversations()
       return data.id
     } catch (error) {

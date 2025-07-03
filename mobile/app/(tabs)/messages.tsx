@@ -17,9 +17,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import ChatScreen from "@/components/ChatScreen"
 import NewMessageScreen from "@/components/NewMessageScreen"
 import type { User } from "@/types"
+import { useAuth } from "@clerk/clerk-expo"
 
 const MessagesScreen = () => {
   const insets = useSafeAreaInsets()
+  const { userId: clerkId } = useAuth()
   const [searchText, setSearchText] = useState("")
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -38,8 +40,9 @@ const MessagesScreen = () => {
 
   const startNewConversation = async (user: User) => {
     console.log("🆕 Starting new conversation with:", user)
-    setIsNewMessageOpen(false) // Close the new message screen first
+    setIsNewMessageOpen(false)
 
+    // 🔥 FIX: Use the user's MongoDB _id for conversation creation
     const conversationId = await createConversation(user._id)
     if (conversationId) {
       const chatUser = {
@@ -133,13 +136,23 @@ const MessagesScreen = () => {
           </View>
         ) : (
           conversations.map((conversation) => {
-            // For now, we'll use mock user data since we need to implement user lookup
+            // 🔥 FIX: Better user identification logic
+            const otherParticipantId =
+              conversation.participant_1 === clerkId || conversation.participant_1 === currentUser?._id
+                ? conversation.participant_2
+                : conversation.participant_1
+
+            console.log("👥 Conversation participants:", {
+              conversationId: conversation.id,
+              participant1: conversation.participant_1,
+              participant2: conversation.participant_2,
+              currentClerkId: clerkId,
+              currentMongoId: currentUser?._id,
+              otherParticipant: otherParticipantId,
+            })
+
             const mockUser = {
-              name:
-                "User " +
-                (conversation.participant_1 === currentUser?._id
-                  ? conversation.participant_2
-                  : conversation.participant_1),
+              name: "User " + otherParticipantId.slice(-6),
               username: "user" + Math.random().toString(36).substr(2, 5),
               avatar: `https://ui-avatars.com/api/?name=User&background=1877F2&color=fff&size=120`,
               verified: false,
@@ -168,6 +181,12 @@ const MessagesScreen = () => {
                   </View>
                   <Text className="text-sm text-gray-500" numberOfLines={1}>
                     {conversation.last_message || "Start a conversation"}
+                  </Text>
+
+                  {/* 🔥 DEBUG: Show conversation ID and participants */}
+                  <Text className="text-xs text-red-500 mt-1">
+                    Conv {conversation.id}: {conversation.participant_1.slice(-6)} ↔{" "}
+                    {conversation.participant_2.slice(-6)}
                   </Text>
                 </View>
               </TouchableOpacity>
