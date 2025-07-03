@@ -6,7 +6,7 @@ import PostCard from "./PostCard"
 
 interface PostsListProps {
   username?: string
-  onOpenComments: (post: Post) => void
+  onOpenComments?: (post: Post) => void // Make this optional
 }
 
 const PostsList = ({ username, onOpenComments }: PostsListProps) => {
@@ -49,7 +49,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
             post={post}
             onLike={toggleLike}
             onDelete={deletePost}
-            onComment={onOpenComments}
+            onComment={onOpenComments || (() => {})}
             currentUser={currentUser}
             isLiked={checkIsLiked(post.likes, currentUser)}
           />
@@ -61,4 +61,4 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
   )
 }
 
-export default PostsList;
+export default PostsList

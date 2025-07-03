@@ -76,3 +76,10 @@ export const commentApi = {
   createComment: (api: AxiosInstance, postId: string, content: string) =>
     api.post(`/comments/post/${postId}`, { content }),
 }
+
+// 🔥 NEW: Stream Chat API
+export const streamApi = {
+  getToken: (api: AxiosInstance) => api.get("/stream/token"),
+  createChannel: (api: AxiosInstance, data: { members: string[]; name?: string }) => api.post("/stream/channel", data),
+  getChannels: (api: AxiosInstance) => api.get("/stream/channels"),
+}

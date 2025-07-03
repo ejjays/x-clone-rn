@@ -1,6 +1,6 @@
-import dotenv from "dotenv";
+import dotenv from "dotenv"
 
-dotenv.config();
+dotenv.config()
 
 export const ENV = {
   PORT: process.env.PORT,
@@ -12,4 +12,7 @@ export const ENV = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   ARCJET_KEY: process.env.ARCJET_KEY,
-};
+  // 🔥 NEW: Stream Chat credentials
+  STREAM_API_KEY: process.env.STREAM_API_KEY,
+  STREAM_SECRET_KEY: process.env.STREAM_SECRET_KEY,
+}
