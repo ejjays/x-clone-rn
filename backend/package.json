@@ -22,6 +22,7 @@
     "express-async-handler": "^1.2.0",
     "mongoose": "^8.16.0",
     "multer": "^2.0.1",
-    "pusher": "^5.2.0"
+    "pusher": "^5.2.0",
+    "stream-chat": "^9.10.0"
   }
 }
