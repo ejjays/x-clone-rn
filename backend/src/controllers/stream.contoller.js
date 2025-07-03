@@ -1,28 +1,26 @@
 import { StreamChat } from "stream-chat"
-import User from "../models/user.model.js"
 
 const serverClient = StreamChat.getInstance(process.env.STREAM_API_KEY, process.env.STREAM_SECRET_KEY)
 
 export const getStreamToken = async (req, res) => {
   try {
+    console.log("🔄 Getting Stream token for user:", req.auth().userId)
+
     const userId = req.auth().userId
 
     if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" })
-    }
-
-    // Get user from database
-    const user = await User.findOne({ clerkId: userId })
-    if (!user) {
-      return res.status(404).json({ error: "User not found" })
+      return res.status(400).json({ error: "User ID is required" })
     }
 
     // Create or update user in Stream
-    await serverClient.upsertUser({
+    const user = {
       id: userId,
-      name: `${user.firstName} ${user.lastName}`.trim(),
-      image: user.profilePicture || `https://getstream.io/random_png/?name=${user.firstName}`,
-    })
+      name: `${req.user?.firstName || "User"} ${req.user?.lastName || ""}`.trim(),
+      image: req.user?.profilePicture || `https://getstream.io/random_png/?name=${userId}`,
+    }
+
+    await serverClient.upsertUser(user)
+    console.log("✅ Stream user created/updated:", userId)
 
     // Generate token
     const token = serverClient.createToken(userId)
@@ -31,81 +29,114 @@ export const getStreamToken = async (req, res) => {
       token,
       user: {
         id: userId,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        image: user.profilePicture || `https://getstream.io/random_png/?name=${user.firstName}`,
+        name: user.name,
+        image: user.image,
       },
     })
   } catch (error) {
-    console.error("❌ Stream token error:", error)
+    console.error("Stream token error:", error)
     res.status(500).json({ error: "Failed to generate Stream token" })
   }
 }
 
 export const createChannel = async (req, res) => {
   try {
-    const { otherUserId } = req.body
-    const currentUserId = req.auth().userId
+    const { members, name, type = "messaging" } = req.body
+    const userId = req.auth().userId
 
-    if (!currentUserId || !otherUserId) {
-      return res.status(400).json({ error: "Missing user IDs" })
+    console.log("🔄 Creating channel with data:", { members, name, type, userId })
+
+    if (!members || !Array.isArray(members) || members.length < 2) {
+      return res.status(400).json({ error: "At least 2 members are required" })
     }
 
-    // Get both users from database
-    const [currentUser, otherUser] = await Promise.all([
-      User.findOne({ clerkId: currentUserId }),
-      User.findOne({ clerkId: otherUserId }),
-    ])
-
-    if (!currentUser || !otherUser) {
-      return res.status(404).json({ error: "User not found" })
+    // Validate that all members are valid strings
+    const validMembers = members.filter((member) => member && typeof member === "string")
+    if (validMembers.length !== members.length) {
+      console.error("❌ Invalid members array:", members)
+      return res.status(400).json({ error: "All members must be valid user IDs" })
     }
 
-    // Create or update users in Stream
-    await Promise.all([
-      serverClient.upsertUser({
-        id: currentUserId,
-        name: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
-        image: currentUser.profilePicture || `https://getstream.io/random_png/?name=${currentUser.firstName}`,
-      }),
-      serverClient.upsertUser({
-        id: otherUserId,
-        name: `${otherUser.firstName} ${otherUser.lastName}`.trim(),
-        image: otherUser.profilePicture || `https://getstream.io/random_png/?name=${otherUser.firstName}`,
-      }),
-    ])
+    // Create channel ID from sorted member IDs for consistency
+    const sortedMembers = [...validMembers].sort()
+    const channelId = `${type}_${sortedMembers.join("_")}`
 
-    // Create channel ID (consistent ordering)
-    const channelId = [currentUserId, otherUserId].sort().join("-")
+    console.log("📡 Creating Stream channel:", channelId)
 
-    // Create channel
-    const channel = serverClient.channel("messaging", channelId, {
-      members: [currentUserId, otherUserId],
-      created_by_id: currentUserId,
-      // Store user info for easy access
-      user1: {
-        id: currentUserId,
-        name: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
-        image: currentUser.profilePicture || `https://getstream.io/random_png/?name=${currentUser.firstName}`,
-      },
-      user2: {
-        id: otherUserId,
-        name: `${otherUser.firstName} ${otherUser.lastName}`.trim(),
-        image: otherUser.profilePicture || `https://getstream.io/random_png/?name=${otherUser.firstName}`,
-      },
+    const channel = serverClient.channel(type, channelId, {
+      name: name || `Chat between ${validMembers.length} users`,
+      members: validMembers,
+      created_by_id: userId,
     })
 
     await channel.create()
+
+    console.log("✅ Channel created successfully:", channelId)
 
     res.json({
       channelId,
       channel: {
         id: channelId,
-        type: "messaging",
-        members: [currentUserId, otherUserId],
+        type,
+        name: channel.data.name,
+        members: validMembers,
       },
     })
   } catch (error) {
-    console.error("❌ Create channel error:", error)
+    console.error("Create channel error:", error)
     res.status(500).json({ error: "Failed to create channel" })
+  }
+}
+
+export const getChannels = async (req, res) => {
+  try {
+    const userId = req.auth().userId
+
+    const filter = { members: { $in: [userId] } }
+    const sort = { last_message_at: -1 }
+
+    const channels = await serverClient.queryChannels(filter, sort, {
+      state: true,
+      watch: false,
+      presence: false,
+    })
+
+    const channelData = channels.map((channel) => ({
+      id: channel.id,
+      type: channel.type,
+      name: channel.data.name,
+      members: channel.state.members,
+      lastMessage: channel.state.messages.length > 0 ? channel.state.messages[channel.state.messages.length - 1] : null,
+      unreadCount: channel.countUnread(userId),
+    }))
+
+    res.json({ channels: channelData })
+  } catch (error) {
+    console.error("Get channels error:", error)
+    res.status(500).json({ error: "Failed to get channels" })
+  }
+}
+
+export const sendMessage = async (req, res) => {
+  try {
+    const { channelId } = req.params
+    const { text, type = "messaging" } = req.body
+    const userId = req.auth().userId
+
+    if (!text) {
+      return res.status(400).json({ error: "Message text is required" })
+    }
+
+    const channel = serverClient.channel(type, channelId)
+
+    const message = await channel.sendMessage({
+      text,
+      user_id: userId,
+    })
+
+    res.json({ message })
+  } catch (error) {
+    console.error("Send message error:", error)
+    res.status(500).json({ error: "Failed to send message" })
   }
 }
