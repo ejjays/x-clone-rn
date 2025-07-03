@@ -1,5 +1,6 @@
 import { useConversations } from "@/hooks/useConversations"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useUserLookup } from "@/hooks/useUserLookup"
 import { Feather } from "@expo/vector-icons"
 import { useState } from "react"
 import {
@@ -28,6 +29,7 @@ const MessagesScreen = () => {
 
   const { conversations, isLoading, isRefreshing, createConversation, refreshConversations } = useConversations()
   const { currentUser } = useCurrentUser()
+  const { getUserDisplayInfo, isLoading: isLoadingUsers } = useUserLookup()
 
   const openConversation = async (conversationId: string, user: any) => {
     setSelectedConversationId(conversationId)
@@ -38,17 +40,9 @@ const MessagesScreen = () => {
   const startNewConversation = async (user: User) => {
     setIsNewMessageOpen(false)
 
-    // 🔥 FIX: Use MongoDB ID for conversation creation
     const conversationId = await createConversation(user._id)
     if (conversationId) {
-      const chatUser = {
-        name: `${user.firstName} ${user.lastName}`,
-        username: user.username,
-        avatar:
-          user.profilePicture ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`,
-        verified: false,
-      }
+      const chatUser = getUserDisplayInfo(user._id)
       openConversation(conversationId.toString(), chatUser)
     }
   }
@@ -67,7 +61,7 @@ const MessagesScreen = () => {
     setIsNewMessageOpen(false)
   }
 
-  if (isLoading) {
+  if (isLoading || isLoadingUsers) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#1877F2" />
@@ -129,31 +123,26 @@ const MessagesScreen = () => {
           </View>
         ) : (
           conversations.map((conversation) => {
-            // 🔥 FIX: Better user identification using MongoDB IDs
+            // 🔥 FIX: Get real user info instead of mock data
             const otherParticipantId =
               conversation.participant_1 === currentUser?._id ? conversation.participant_2 : conversation.participant_1
 
-            const mockUser = {
-              name: "User " + otherParticipantId.slice(-6),
-              username: "user" + Math.random().toString(36).substr(2, 5),
-              avatar: `https://ui-avatars.com/api/?name=User&background=1877F2&color=fff&size=120`,
-              verified: false,
-            }
+            const userInfo = getUserDisplayInfo(otherParticipantId)
 
             return (
               <TouchableOpacity
                 key={conversation.id}
                 className="flex-row items-center p-4 border-b border-gray-50 active:bg-gray-50"
-                onPress={() => openConversation(conversation.id.toString(), mockUser)}
+                onPress={() => openConversation(conversation.id.toString(), userInfo)}
               >
-                <Image source={{ uri: mockUser.avatar }} className="size-12 rounded-full mr-3" />
+                <Image source={{ uri: userInfo.avatar }} className="size-12 rounded-full mr-3" />
 
                 <View className="flex-1">
                   <View className="flex-row items-center justify-between mb-1">
                     <View className="flex-row items-center gap-1">
-                      <Text className="font-semibold text-gray-900">{mockUser.name}</Text>
-                      {mockUser.verified && <Feather name="check-circle" size={16} color="#1DA1F2" className="ml-1" />}
-                      <Text className="text-gray-500 text-sm ml-1">@{mockUser.username}</Text>
+                      <Text className="font-semibold text-gray-900">{userInfo.name}</Text>
+                      {userInfo.verified && <Feather name="check-circle" size={16} color="#1DA1F2" className="ml-1" />}
+                      <Text className="text-gray-500 text-sm ml-1">@{userInfo.username}</Text>
                     </View>
                     <Text className="text-gray-500 text-sm">
                       {conversation.last_message_at

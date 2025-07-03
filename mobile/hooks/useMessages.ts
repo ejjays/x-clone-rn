@@ -47,7 +47,7 @@ export const useMessages = (conversationId?: string) => {
     fetchMessages()
   }, [conversationId])
 
-  // Set up real-time subscription
+  // 🔥 FIX: Enhanced real-time subscription
   useEffect(() => {
     if (!conversationId) return
 
@@ -63,10 +63,24 @@ export const useMessages = (conversationId?: string) => {
         },
         (payload) => {
           const newMessage = payload.new as Message
-          setMessages((current) => [...current, newMessage])
+
+          // 🔥 FIX: Force immediate UI update
+          setMessages((current) => {
+            // Avoid duplicates
+            const exists = current.some((msg) => msg.id === newMessage.id)
+            if (exists) return current
+
+            return [...current, newMessage]
+          })
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          console.log("✅ Real-time subscription active")
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("❌ Real-time subscription failed")
+        }
+      })
 
     return () => {
       supabase.removeChannel(channel)
@@ -81,10 +95,9 @@ export const useMessages = (conversationId?: string) => {
     setIsSending(true)
 
     try {
-      // 🔥 FIX: Use MongoDB ID for user_id
       const messageData = {
         text: text.trim(),
-        user_id: currentUser._id, // Use MongoDB ID
+        user_id: currentUser._id,
         conversation_id: Number.parseInt(conversationId),
       }
 
@@ -93,10 +106,8 @@ export const useMessages = (conversationId?: string) => {
       if (error) {
         console.error("❌ Error sending message:", error)
         Alert.alert("Error", `Failed to send message: ${error.message}`)
-      } else if (data && data[0]) {
-        // Immediately add to local state for instant feedback
-        setMessages((current) => [...current, data[0]])
       }
+      // Note: Don't add to local state here, let real-time subscription handle it
     } catch (error) {
       console.error("❌ Exception sending message:", error)
       Alert.alert("Error", "Failed to send message")
