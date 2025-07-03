@@ -47,13 +47,12 @@ app.get("/api", (req, res) => {
   })
 })
 
-// Connect to database with better error handling
+// Connect to database
 try {
   await connectDB()
   console.log("✅ Database connected successfully")
 } catch (error) {
   console.error("❌ Database connection failed:", error)
-  // Don't exit in production, let the app run without DB for debugging
   if (process.env.NODE_ENV !== "production") {
     process.exit(1)
   }
