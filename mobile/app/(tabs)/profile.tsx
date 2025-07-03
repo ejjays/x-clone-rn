@@ -48,12 +48,11 @@ const ProfileScreens = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Minimal Header ABOVE the cover photo - Reduced spacing */}
+      {/* Header RIGHT under status bar - NO extra spacing */}
       <View
-        className="flex-row justify-between items-center px-4 bg-white"
+        className="flex-row justify-between items-center px-4 py-2 bg-white"
         style={{
-          paddingTop: insets.top + 4, // Reduced from 8 to 4
-          paddingBottom: 8, // Small bottom padding
+          paddingTop: insets.top, // ONLY status bar height, NO extra padding
         }}
       >
         <TouchableOpacity
