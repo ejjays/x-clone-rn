@@ -14,11 +14,13 @@ const { Navigator } = createMaterialTopTabNavigator()
 export const MaterialTopTabs = withLayoutContext(Navigator)
 
 const HEADER_HEIGHT = 60 // A fixed height for our header
+const TAB_BAR_HEIGHT = 50 // Height for tab bar
 
 const TabsLayout = () => {
   const { isSignedIn } = useAuth()
   const pathname = usePathname()
   const headerHeight = useSharedValue(HEADER_HEIGHT)
+  const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT)
 
   // The root path for our tabs layout is '/', which corresponds to the index.tsx file.
   const isHomeScreen = pathname === "/"
@@ -27,9 +29,14 @@ const TabsLayout = () => {
   // This effect runs when we switch tabs, triggering the animation.
   useEffect(() => {
     headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, {
-      duration: 200,
+      duration: 300,
     })
-  }, [isHomeScreen, headerHeight])
+
+    // Smooth animation for tab bar
+    tabBarHeight.value = withTiming(isProfileScreen ? 0 : TAB_BAR_HEIGHT, {
+      duration: 300,
+    })
+  }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight])
 
   // This style will be applied to the header, animating its height and opacity.
   const animatedHeaderStyle = useAnimatedStyle(() => {
@@ -40,10 +47,19 @@ const TabsLayout = () => {
     }
   })
 
+  // Smooth tab bar animation
+  const animatedTabBarStyle = useAnimatedStyle(() => {
+    return {
+      height: tabBarHeight.value,
+      opacity: tabBarHeight.value / TAB_BAR_HEIGHT,
+      overflow: "hidden",
+    }
+  })
+
   if (!isSignedIn) return <Redirect href="/(auth)" />
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={isProfileScreen ? [] : ["top"]}>
       <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 h-full">
           <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
@@ -61,8 +77,8 @@ const TabsLayout = () => {
         </View>
       </Animated.View>
 
-      {/* Top Tab Navigator - Hide ONLY on profile screen */}
-      {!isProfileScreen && (
+      {/* Top Tab Navigator with smooth animation */}
+      <Animated.View style={animatedTabBarStyle}>
         <MaterialTopTabs
           screenOptions={{
             tabBarActiveTintColor: "#1877F2",
@@ -121,52 +137,7 @@ const TabsLayout = () => {
             }}
           />
         </MaterialTopTabs>
-      )}
-
-      {/* Show profile screen when on profile route */}
-      {isProfileScreen && (
-        <MaterialTopTabs
-          screenOptions={{
-            tabBarStyle: { display: "none" }, // Hide tab bar completely
-          }}
-        >
-          <MaterialTopTabs.Screen
-            name="index"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-          <MaterialTopTabs.Screen
-            name="search"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="users" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-          <MaterialTopTabs.Screen
-            name="notifications"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="bell" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-          <MaterialTopTabs.Screen
-            name="messages"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="tv" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-          <MaterialTopTabs.Screen
-            name="profile"
-            options={{
-              tabBarIcon: ({ color }) => <Feather name="menu" size={24} color={color} />,
-              tabBarShowLabel: false,
-            }}
-          />
-        </MaterialTopTabs>
-      )}
+      </Animated.View>
     </SafeAreaView>
   )
 }
