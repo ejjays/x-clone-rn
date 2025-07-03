@@ -48,8 +48,14 @@ const ProfileScreens = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header ABOVE the cover photo - Facebook style */}
-      <View className="flex-row justify-between items-center px-4 py-2 bg-white" style={{ paddingTop: insets.top + 8 }}>
+      {/* Minimal Header ABOVE the cover photo - Reduced spacing */}
+      <View
+        className="flex-row justify-between items-center px-4 bg-white"
+        style={{
+          paddingTop: insets.top + 4, // Reduced from 8 to 4
+          paddingBottom: 8, // Small bottom padding
+        }}
+      >
         <TouchableOpacity
           className="w-10 h-10 items-center justify-center bg-white rounded-full"
           onPress={handleBackPress}
