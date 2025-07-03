@@ -50,7 +50,7 @@ const HomeScreen = () => {
           <Stories />
         </View>
 
-        <View className="h-0.5 bg-gray-200" />
+        <View className="h-1.5 bg-gray-200" />
 
         <PostsList onOpenComments={handleOpenComments} />
       </ScrollView>
@@ -59,4 +59,4 @@ const HomeScreen = () => {
     </>
   )
 }
-export default HomeScreen;
+export default HomeScreen
