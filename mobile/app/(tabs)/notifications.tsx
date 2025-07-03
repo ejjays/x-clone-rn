@@ -4,7 +4,7 @@ import { useNotifications } from "@/hooks/useNotifications"
 import type { Notification } from "@/types"
 import { Feather } from "@expo/vector-icons"
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from "react-native"
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 const NotificationsScreen = () => {
   const { notifications, isLoading, error, refetch, isRefetching, deleteNotification } = useNotifications()
@@ -54,23 +54,23 @@ const NotificationsScreen = () => {
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center p-8">
           <Text className="text-gray-500 mb-4">Failed to load notifications</Text>
           <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded-lg" onPress={() => refetch()}>
             <Text className="text-white font-semibold">Retry</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     )
   }
 
   const groupedNotifications = groupNotificationsByTime(notifications)
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {/* Compact Facebook-style Header - Reduced spacing */}
-      <View className="flex-row items-center px-4 pt-2 pb-3 bg-white">
+    <View className="flex-1 bg-white">
+      {/* Compact Facebook-style Header - No SafeAreaView, minimal spacing */}
+      <View className="flex-row items-center px-4 py-3 bg-white" style={{ marginTop: -8 }}>
         <TouchableOpacity className="mr-4 p-1">
           <Feather name="arrow-left" size={26} color="#1C1E21" />
         </TouchableOpacity>
@@ -155,7 +155,7 @@ const NotificationsScreen = () => {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   )
 }
 
