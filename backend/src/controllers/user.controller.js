@@ -15,7 +15,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
 
 export const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find({})
-    .select("firstName lastName username profilePicture createdAt")
+    .select("firstName lastName username profilePicture email bio location createdAt")
     .sort({ createdAt: -1 })
 
   res.status(200).json({ users })

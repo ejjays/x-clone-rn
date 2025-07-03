@@ -32,12 +32,20 @@ const UserCard = ({ user, onFollow, onMessage, isFollowing }: UserCardProps) => 
     ])
   }
 
+  // Fallback profile picture if user doesn't have one
+  const profilePicture =
+    user.profilePicture ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`
+
   return (
     <TouchableOpacity className="flex-row items-center p-4 bg-white" activeOpacity={0.7}>
       {/* Profile Picture */}
       <Image
-        source={{ uri: user.profilePicture || "https://via.placeholder.com/60" }}
-        className="w-15 h-15 rounded-full mr-4"
+        source={{ uri: profilePicture }}
+        className="w-16 h-16 rounded-full mr-4"
+        defaultSource={{
+          uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`,
+        }}
       />
 
       {/* User Info */}
