@@ -1,12 +1,10 @@
 import express from "express"
-import { protectRoute } from "../middleware/auth.middleware.js"
-import { getStreamToken, createChannel, getChannels } from "../controllers/stream.controller.js"
+import { getStreamToken, createChannel } from "../controllers/stream.controller.js"
+import { authenticateToken } from "../middleware/auth.middleware.js"
 
 const router = express.Router()
 
-// All routes are protected
-router.get("/token", protectRoute, getStreamToken)
-router.post("/channel", protectRoute, createChannel)
-router.get("/channels", protectRoute, getChannels)
+router.get("/token", authenticateToken, getStreamToken)
+router.post("/channel", authenticateToken, createChannel)
 
 export default router

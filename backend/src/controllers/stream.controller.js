@@ -1,147 +1,105 @@
-import asyncHandler from "express-async-handler"
-import { getAuth } from "@clerk/express"
 import { StreamChat } from "stream-chat"
 import User from "../models/user.model.js"
-import { ENV } from "../config/env.js"
 
-// Initialize Stream Chat server client
-const serverClient = StreamChat.getInstance(ENV.STREAM_API_KEY, ENV.STREAM_SECRET_KEY)
+const serverClient = StreamChat.getInstance(process.env.STREAM_API_KEY, process.env.STREAM_SECRET_KEY)
 
-export const getStreamToken = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req)
-
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" })
-  }
-
-  const user = await User.findOne({ clerkId: userId })
-  if (!user) {
-    return res.status(404).json({ error: "User not found" })
-  }
-
+export const getStreamToken = async (req, res) => {
   try {
-    const streamUserId = user._id.toString()
-    const streamUser = {
-      id: streamUserId,
-      name: `${user.firstName} ${user.lastName}`,
-      image:
-        user.profilePicture ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`,
-      username: user.username,
-      email: user.email,
+    const userId = req.user.userId
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" })
     }
 
-    // Create or update user in Stream Chat
+    // Create or update user in Stream
+    const streamUser = {
+      id: user._id.toString(),
+      name: `${user.firstName} ${user.lastName}`,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      image: user.profilePicture || undefined,
+    }
+
     await serverClient.upsertUser(streamUser)
-    console.log(`✅ Stream user created/updated: ${streamUserId}`)
 
-    // Generate token for the user
-    const token = serverClient.createToken(streamUserId)
+    // Generate token
+    const token = serverClient.createToken(user._id.toString())
 
-    res.status(200).json({
+    res.json({
       token,
       user: streamUser,
     })
   } catch (error) {
-    console.error("❌ Stream Chat error:", error)
+    console.error("Stream token error:", error)
     res.status(500).json({ error: "Failed to generate Stream token" })
   }
-})
+}
 
-export const createChannel = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req)
-  const { otherUserId, channelName } = req.body
-
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" })
-  }
-
-  const user = await User.findOne({ clerkId: userId })
-  if (!user) {
-    return res.status(404).json({ error: "User not found" })
-  }
-
-  const otherUser = await User.findById(otherUserId)
-  if (!otherUser) {
-    return res.status(404).json({ error: "Other user not found" })
-  }
-
+export const createChannel = async (req, res) => {
   try {
-    const currentUserId = user._id.toString()
-    const targetUserId = otherUser._id.toString()
+    const { otherUserId, channelName } = req.body
+    const currentUserId = req.user.userId
 
-    // Ensure both users exist in Stream Chat
-    await serverClient.upsertUser({
-      id: currentUserId,
-      name: `${user.firstName} ${user.lastName}`,
-      image:
-        user.profilePicture ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`,
-      username: user.username,
-    })
+    // Get both users
+    const [currentUser, otherUser] = await Promise.all([User.findById(currentUserId), User.findById(otherUserId)])
 
-    await serverClient.upsertUser({
-      id: targetUserId,
-      name: `${otherUser.firstName} ${otherUser.lastName}`,
-      image:
-        otherUser.profilePicture ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.firstName + " " + otherUser.lastName)}&background=1877F2&color=fff&size=120`,
-      username: otherUser.username,
-    })
+    if (!currentUser || !otherUser) {
+      return res.status(404).json({ error: "User not found" })
+    }
 
-    console.log(`✅ Both users upserted: ${currentUserId}, ${targetUserId}`)
+    // Create or update both users in Stream
+    const streamUsers = [
+      {
+        id: currentUser._id.toString(),
+        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        firstName: currentUser.firstName,
+        lastName: currentUser.lastName,
+        image: currentUser.profilePicture || undefined,
+      },
+      {
+        id: otherUser._id.toString(),
+        name: `${otherUser.firstName} ${otherUser.lastName}`,
+        firstName: otherUser.firstName,
+        lastName: otherUser.lastName,
+        image: otherUser.profilePicture || undefined,
+      },
+    ]
 
-    // Create a unique channel ID based on user IDs
-    const channelId = [currentUserId, targetUserId].sort().join("-")
+    await serverClient.upsertUsers(streamUsers)
 
-    // Create channel
+    // Create channel ID (consistent ordering)
+    const channelId = [currentUserId, otherUserId].sort().join("-")
+
+    // Create channel with proper metadata
     const channel = serverClient.channel("messaging", channelId, {
-      members: [currentUserId, targetUserId],
+      members: [currentUserId, otherUserId],
       created_by_id: currentUserId,
-      name: channelName || `${user.firstName} & ${otherUser.firstName}`,
+      // Store user info for easy access
+      user1: {
+        id: currentUser._id.toString(),
+        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        firstName: currentUser.firstName,
+        lastName: currentUser.lastName,
+        image: currentUser.profilePicture || undefined,
+      },
+      user2: {
+        id: otherUser._id.toString(),
+        name: `${otherUser.firstName} ${otherUser.lastName}`,
+        firstName: otherUser.firstName,
+        lastName: otherUser.lastName,
+        image: otherUser.profilePicture || undefined,
+      },
     })
 
     await channel.create()
-    console.log(`✅ Channel created: ${channelId}`)
 
-    res.status(201).json({
+    res.json({
       channelId,
-      channel: {
-        id: channel.id,
-        type: channel.type,
-        members: [currentUserId, targetUserId],
-      },
+      channel: channel.data,
     })
   } catch (error) {
-    console.error("❌ Create channel error:", error)
+    console.error("Create channel error:", error)
     res.status(500).json({ error: "Failed to create channel" })
   }
-})
-
-export const getChannels = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req)
-
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" })
-  }
-
-  const user = await User.findOne({ clerkId: userId })
-  if (!user) {
-    return res.status(404).json({ error: "User not found" })
-  }
-
-  try {
-    const streamUserId = user._id.toString()
-    const filter = { members: { $in: [streamUserId] } }
-    const sort = { last_message_at: -1 }
-    const channels = await serverClient.queryChannels(filter, sort, {
-      watch: false,
-      state: true,
-    })
-
-    res.status(200).json({ channels })
-  } catch (error) {
-    console.error("❌ Get channels error:", error)
-    res.status(500).json({ error: "Failed to get channels" })
-  }
-})
+}

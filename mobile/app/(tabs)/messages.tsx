@@ -13,10 +13,12 @@ import {
   TextInput,
   FlatList,
   Alert,
+  Image,
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { Chat, ChannelList, OverlayProvider } from "stream-chat-react-native"
+import { Chat, OverlayProvider } from "stream-chat-react-native"
 import NewMessageScreen from "@/components/NewMessageScreen"
+import { CustomChannelList } from "@/components/CustomChannelList"
 import type { User } from "@/types"
 
 const MessagesScreen = () => {
@@ -141,6 +143,21 @@ const MessagesScreen = () => {
     }
   }
 
+  const getOtherUser = (channel) => {
+    const { user1, user2 } = channel.data
+
+    if (user1?.id === currentUser?._id) {
+      return user2
+    } else if (user2?.id === currentUser?._id) {
+      return user1
+    }
+
+    // Fallback: get from members
+    const otherMember = Object.values(channel.state.members).find((member) => member.user?.id !== currentUser?._id)
+
+    return otherMember?.user
+  }
+
   const renderMessage = ({ item: message }) => {
     const isMyMessage = message.user?.id === currentUser?._id
 
@@ -198,29 +215,15 @@ const MessagesScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* CHANNEL LIST */}
+          {/* CUSTOM CHANNEL LIST */}
           <View className="flex-1" style={{ paddingBottom: insets.bottom }}>
-            <ChannelList
-              onSelect={(channel) => {
+            <CustomChannelList
+              onSelectChannel={(channel) => {
                 console.log("📱 Channel selected:", channel.id)
                 setSelectedChannel(channel)
                 setIsChannelOpen(true)
                 setMessages([]) // Clear previous messages
               }}
-              EmptyStateComponent={() => (
-                <View className="flex-1 items-center justify-center py-20">
-                  <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
-                    <Feather name="message-circle" size={32} color="#65676B" />
-                  </View>
-                  <Text className="text-xl font-semibold text-gray-900 mb-3">No conversations yet</Text>
-                  <Text className="text-gray-500 text-center text-base leading-6 max-w-xs mb-6">
-                    Start a conversation with someone to see it here.
-                  </Text>
-                  <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-full" onPress={openNewMessage}>
-                    <Text className="text-white font-semibold">Start a conversation</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
             />
           </View>
 
@@ -257,8 +260,32 @@ const MessagesScreen = () => {
                   <TouchableOpacity onPress={closeChannel} className="mr-3">
                     <Feather name="arrow-left" size={24} color="#1DA1F2" />
                   </TouchableOpacity>
+
+                  {/* Other user's profile picture */}
+                  <View className="mr-3">
+                    {(() => {
+                      const otherUser = getOtherUser(selectedChannel)
+                      return otherUser?.image ? (
+                        <Image source={{ uri: otherUser.image }} className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <View className="w-8 h-8 rounded-full bg-blue-500 items-center justify-center">
+                          <Text className="text-white font-semibold text-sm">
+                            {otherUser?.firstName?.[0] || otherUser?.name?.[0] || "?"}
+                          </Text>
+                        </View>
+                      )
+                    })()}
+                  </View>
+
                   <View className="flex-1">
-                    <Text className="font-semibold text-gray-900 text-lg">{selectedChannel.data?.name || "Chat"}</Text>
+                    <Text className="font-semibold text-gray-900 text-lg">
+                      {(() => {
+                        const otherUser = getOtherUser(selectedChannel)
+                        return otherUser?.firstName && otherUser?.lastName
+                          ? `${otherUser.firstName} ${otherUser.lastName}`
+                          : otherUser?.name || "Chat"
+                      })()}
+                    </Text>
                   </View>
                 </View>
 
