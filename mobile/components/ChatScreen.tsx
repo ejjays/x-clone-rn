@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { View, ScrollView, ActivityIndicator, Text } from "react-native"
+import { View, ScrollView, ActivityIndicator, Text, RefreshControl } from "react-native"
 import { useMessages } from "@/hooks/useMessages"
 import MessageBubble from "./MessageBubble"
 import MessageInput from "./MessageInput"
@@ -9,7 +9,7 @@ interface ChatScreenProps {
 }
 
 const ChatScreen = ({ conversationId }: ChatScreenProps) => {
-  const { messages, isLoading, isSending, sendMessage } = useMessages(conversationId)
+  const { messages, isLoading, isSending, isRefreshing, sendMessage, refreshMessages } = useMessages(conversationId)
   const scrollViewRef = useRef<ScrollView>(null)
 
   // Auto-scroll to bottom when new messages arrive
@@ -36,6 +36,14 @@ const ChatScreen = ({ conversationId }: ChatScreenProps) => {
         ref={scrollViewRef}
         className="flex-1 px-4 py-4"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refreshMessages}
+            tintColor="#1877F2"
+            colors={["#1877F2"]}
+          />
+        }
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
       >
         {messages.length === 0 ? (

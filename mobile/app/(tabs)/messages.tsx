@@ -2,7 +2,17 @@ import { useConversations } from "@/hooks/useConversations"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { Feather } from "@expo/vector-icons"
 import { useState } from "react"
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Image, Modal, ActivityIndicator } from "react-native"
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  Image,
+  Modal,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import ChatScreen from "@/components/ChatScreen"
 import NewMessageScreen from "@/components/NewMessageScreen"
@@ -16,16 +26,18 @@ const MessagesScreen = () => {
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<any>(null)
 
-  const { conversations, isLoading, createConversation } = useConversations()
+  const { conversations, isLoading, isRefreshing, createConversation, refreshConversations } = useConversations()
   const { currentUser } = useCurrentUser()
 
   const openConversation = async (conversationId: string, user: any) => {
+    console.log("🔓 Opening conversation:", { conversationId, user })
     setSelectedConversationId(conversationId)
     setSelectedUser(user)
     setIsChatOpen(true)
   }
 
   const startNewConversation = async (user: User) => {
+    console.log("🆕 Starting new conversation with:", user)
     setIsNewMessageOpen(false) // Close the new message screen first
 
     const conversationId = await createConversation(user._id)
@@ -43,16 +55,19 @@ const MessagesScreen = () => {
   }
 
   const closeChatModal = () => {
+    console.log("🔒 Closing chat modal")
     setIsChatOpen(false)
     setSelectedConversationId(null)
     setSelectedUser(null)
   }
 
   const openNewMessage = () => {
+    console.log("📝 Opening new message screen")
     setIsNewMessageOpen(true)
   }
 
   const closeNewMessage = () => {
+    console.log("❌ Closing new message screen")
     setIsNewMessageOpen(false)
   }
 
@@ -94,6 +109,14 @@ const MessagesScreen = () => {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refreshConversations}
+            tintColor="#1877F2"
+            colors={["#1877F2"]}
+          />
+        }
       >
         {conversations.length === 0 ? (
           <View className="flex-1 items-center justify-center py-20">
@@ -156,7 +179,9 @@ const MessagesScreen = () => {
       {/* Quick Actions */}
       <View className="px-4 py-2 border-t border-gray-100 bg-gray-50">
         <Text className="text-xs text-gray-500 text-center">
-          {conversations.length === 0 ? "Tap the edit icon to start a conversation" : "Tap to open conversation"}
+          {conversations.length === 0
+            ? "Tap the edit icon to start a conversation"
+            : "Pull down to refresh • Tap to open conversation"}
         </Text>
       </View>
 

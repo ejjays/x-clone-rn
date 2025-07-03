@@ -8,40 +8,59 @@ export const useMessages = (conversationId?: string) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  console.log("🔄 useMessages hook initialized:", { conversationId, userId })
 
   // Fetch initial messages
-  useEffect(() => {
-    if (!conversationId) return
-
-    const fetchMessages = async () => {
-      setIsLoading(true)
-      try {
-        const { data, error } = await supabase
-          .from("messages")
-          .select("*")
-          .eq("conversation_id", conversationId)
-          .order("created_at", { ascending: true })
-
-        if (error) {
-          console.error("Error fetching messages:", error)
-          Alert.alert("Error", "Failed to load messages")
-        } else {
-          setMessages(data || [])
-        }
-      } catch (error) {
-        console.error("Error fetching messages:", error)
-        Alert.alert("Error", "Failed to load messages")
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchMessages = async (showRefreshing = false) => {
+    if (!conversationId) {
+      console.log("❌ No conversation ID provided")
+      return
     }
 
+    console.log("📥 Fetching messages for conversation:", conversationId)
+
+    if (showRefreshing) {
+      setIsRefreshing(true)
+    } else {
+      setIsLoading(true)
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true })
+
+      console.log("📥 Messages fetch result:", { data, error, count: data?.length })
+
+      if (error) {
+        console.error("❌ Error fetching messages:", error)
+        Alert.alert("Error", `Failed to load messages: ${error.message}`)
+      } else {
+        setMessages(data || [])
+        console.log("✅ Messages loaded successfully:", data?.length || 0)
+      }
+    } catch (error) {
+      console.error("❌ Exception fetching messages:", error)
+      Alert.alert("Error", "Failed to load messages")
+    } finally {
+      setIsLoading(false)
+      setIsRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
     fetchMessages()
   }, [conversationId])
 
   // Set up real-time subscription
   useEffect(() => {
     if (!conversationId) return
+
+    console.log("🔔 Setting up real-time subscription for conversation:", conversationId)
 
     const channel = supabase
       .channel(`messages-${conversationId}`)
@@ -54,46 +73,71 @@ export const useMessages = (conversationId?: string) => {
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
+          console.log("🔔 Real-time message received:", payload)
           const newMessage = payload.new as Message
-          setMessages((current) => [...current, newMessage])
+          setMessages((current) => {
+            console.log("📝 Adding new message to current messages:", current.length)
+            return [...current, newMessage]
+          })
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log("🔔 Subscription status:", status)
+      })
 
     return () => {
+      console.log("🔕 Cleaning up subscription")
       supabase.removeChannel(channel)
     }
   }, [conversationId])
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || !userId || !conversationId) return
+    if (!text.trim() || !userId || !conversationId) {
+      console.log("❌ Cannot send message:", { text: text.trim(), userId, conversationId })
+      return
+    }
 
+    console.log("📤 Sending message:", { text: text.trim(), userId, conversationId })
     setIsSending(true)
+
     try {
-      const { error } = await supabase.from("messages").insert([
-        {
-          text: text.trim(),
-          user_id: userId,
-          conversation_id: conversationId,
-        },
-      ])
+      const messageData = {
+        text: text.trim(),
+        user_id: userId,
+        conversation_id: Number.parseInt(conversationId),
+      }
+
+      console.log("📤 Message data:", messageData)
+
+      const { data, error } = await supabase.from("messages").insert([messageData]).select()
+
+      console.log("📤 Send result:", { data, error })
 
       if (error) {
-        console.error("Error sending message:", error)
-        Alert.alert("Error", "Failed to send message")
+        console.error("❌ Error sending message:", error)
+        Alert.alert("Error", `Failed to send message: ${error.message}`)
+      } else {
+        console.log("✅ Message sent successfully:", data)
+        // Don't add to local state here, let real-time subscription handle it
       }
     } catch (error) {
-      console.error("Error sending message:", error)
+      console.error("❌ Exception sending message:", error)
       Alert.alert("Error", "Failed to send message")
     } finally {
       setIsSending(false)
     }
   }
 
+  const refreshMessages = () => {
+    fetchMessages(true)
+  }
+
   return {
     messages,
     isLoading,
     isSending,
+    isRefreshing,
     sendMessage,
+    refreshMessages,
   }
 }

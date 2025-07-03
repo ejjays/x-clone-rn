@@ -1,10 +1,40 @@
 import "react-native-url-polyfill/auto"
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://nhvjdsiurzxfhmeqpxky.supabase.co"
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5odmpkc2l1cnp4ZmhtZXFweGt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1Mzg2ODUsImV4cCI6MjA2NzExNDY4NX0.W2bv0mWlnJ77XYjXrdwQhgEc8BNNchh5Y-NOwQdP0Js"
+// Replace these with your actual Supabase credentials
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL 
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY 
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+console.log("🔧 Supabase Config:", {
+  url: supabaseUrl,
+  key: supabaseAnonKey ? "✅ Key exists" : "❌ No key",
+})
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    // Disable auth since we're using Clerk
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+})
+
+// Test connection
+supabase
+  .from("conversations")
+  .select("count", { count: "exact", head: true })
+  .then(({ error, count }) => {
+    if (error) {
+      console.error("❌ Supabase connection failed:", error)
+    } else {
+      console.log("✅ Supabase connected successfully! Conversations count:", count)
+    }
+  })
 
 // Database types
 export interface Message {
@@ -12,6 +42,7 @@ export interface Message {
   text: string
   created_at: string
   user_id: string
+  conversation_id: number
   user_name?: string
   user_avatar?: string
 }
