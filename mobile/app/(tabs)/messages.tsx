@@ -1,18 +1,21 @@
 import { useStreamChat } from "@/hooks/useStreamChat"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { Feather } from "@expo/vector-icons"
-import { useState } from "react"
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useState, useEffect, useRef } from "react"
 import {
-  Chat,
-  ChannelList,
-  Channel,
-  MessageList,
-  MessageInput,
-  Thread,
-  OverlayProvider,
-} from "stream-chat-react-native"
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
+  FlatList,
+  Alert,
+} from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { Chat, ChannelList, OverlayProvider } from "stream-chat-react-native"
 import NewMessageScreen from "@/components/NewMessageScreen"
 import type { User } from "@/types"
 
@@ -22,9 +25,53 @@ const MessagesScreen = () => {
   const [selectedChannel, setSelectedChannel] = useState(null)
   const [isChannelOpen, setIsChannelOpen] = useState(false)
   const [isCreatingChannel, setIsCreatingChannel] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [messageText, setMessageText] = useState("")
+  const [isSending, setIsSending] = useState(false)
+  const flatListRef = useRef(null)
 
   const { client, isConnecting, isConnected, createChannel } = useStreamChat()
   const { currentUser } = useCurrentUser()
+
+  // Listen for new messages when channel is selected
+  useEffect(() => {
+    if (!selectedChannel) return
+
+    const handleNewMessage = (event) => {
+      console.log("📨 New message received:", event.message.text)
+      setMessages((prev) => [...prev, event.message])
+    }
+
+    const handleMessageUpdate = (event) => {
+      console.log("📝 Message updated:", event.message.text)
+      setMessages((prev) => prev.map((msg) => (msg.id === event.message.id ? event.message : msg)))
+    }
+
+    // Subscribe to channel events
+    selectedChannel.on("message.new", handleNewMessage)
+    selectedChannel.on("message.updated", handleMessageUpdate)
+
+    // Load existing messages
+    const loadMessages = async () => {
+      try {
+        const result = await selectedChannel.query({
+          messages: { limit: 50 },
+        })
+        console.log("📚 Loaded messages:", result.messages.length)
+        setMessages(result.messages.reverse())
+      } catch (error) {
+        console.error("❌ Failed to load messages:", error)
+      }
+    }
+
+    loadMessages()
+
+    // Cleanup
+    return () => {
+      selectedChannel.off("message.new", handleNewMessage)
+      selectedChannel.off("message.updated", handleMessageUpdate)
+    }
+  }, [selectedChannel])
 
   const openNewMessage = () => {
     setIsNewMessageOpen(true)
@@ -46,18 +93,20 @@ const MessagesScreen = () => {
     try {
       console.log("🔄 Starting conversation with:", user.firstName, user._id)
 
-      // Use the updated createChannel function that calls the backend
       const channel = await createChannel(user._id, user.firstName)
 
       if (channel) {
         setSelectedChannel(channel)
         setIsChannelOpen(true)
+        setMessages([]) // Clear previous messages
         console.log("✅ Channel created successfully!")
       } else {
         console.error("❌ Failed to create channel - no channel returned")
+        Alert.alert("Error", "Failed to create conversation")
       }
     } catch (error) {
       console.error("❌ Failed to start conversation:", error)
+      Alert.alert("Error", "Failed to start conversation")
     } finally {
       setIsCreatingChannel(false)
     }
@@ -66,6 +115,52 @@ const MessagesScreen = () => {
   const closeChannel = () => {
     setIsChannelOpen(false)
     setSelectedChannel(null)
+    setMessages([])
+    setMessageText("")
+  }
+
+  const sendMessage = async () => {
+    if (!messageText.trim() || !selectedChannel || isSending) return
+
+    setIsSending(true)
+    const tempMessage = messageText
+    setMessageText("")
+
+    try {
+      console.log("📤 Sending message:", tempMessage)
+      await selectedChannel.sendMessage({
+        text: tempMessage,
+      })
+      console.log("✅ Message sent successfully!")
+    } catch (error) {
+      console.error("❌ Failed to send message:", error)
+      setMessageText(tempMessage) // Restore message text on error
+      Alert.alert("Error", "Failed to send message")
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const renderMessage = ({ item: message }) => {
+    const isMyMessage = message.user?.id === currentUser?._id
+
+    return (
+      <View className={`mb-4 px-4 ${isMyMessage ? "items-end" : "items-start"}`}>
+        <View
+          className={`max-w-[80%] p-3 rounded-2xl ${
+            isMyMessage ? "bg-blue-500 rounded-br-md" : "bg-gray-100 rounded-bl-md"
+          }`}
+        >
+          <Text className={`text-base ${isMyMessage ? "text-white" : "text-gray-900"}`}>{message.text}</Text>
+          <Text className={`text-xs mt-1 ${isMyMessage ? "text-blue-100" : "text-gray-500"}`}>
+            {new Date(message.created_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </Text>
+        </View>
+      </View>
+    )
   }
 
   if (isConnecting) {
@@ -110,6 +205,7 @@ const MessagesScreen = () => {
                 console.log("📱 Channel selected:", channel.id)
                 setSelectedChannel(channel)
                 setIsChannelOpen(true)
+                setMessages([]) // Clear previous messages
               }}
               EmptyStateComponent={() => (
                 <View className="flex-1 items-center justify-center py-20">
@@ -166,14 +262,62 @@ const MessagesScreen = () => {
                   </View>
                 </View>
 
-                {/* Chat Content */}
-                <Channel channel={selectedChannel}>
-                  <View className="flex-1 bg-white">
-                    <MessageList />
-                    <MessageInput />
+                {/* Messages List */}
+                <View className="flex-1 bg-white">
+                  {messages.length === 0 ? (
+                    <View className="flex-1 items-center justify-center">
+                      <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
+                        <Feather name="message-circle" size={24} color="#65676B" />
+                      </View>
+                      <Text className="text-gray-500 text-center">No messages yet. Start the conversation!</Text>
+                    </View>
+                  ) : (
+                    <FlatList
+                      ref={flatListRef}
+                      data={messages}
+                      renderItem={renderMessage}
+                      keyExtractor={(item) => item.id}
+                      className="flex-1"
+                      contentContainerStyle={{ paddingVertical: 16 }}
+                      onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
+                      onLayout={() => flatListRef.current?.scrollToEnd()}
+                    />
+                  )}
+                </View>
+
+                {/* Message Input */}
+                <View
+                  className="bg-white border-t border-gray-100 px-4 py-3"
+                  style={{ paddingBottom: insets.bottom + 12 }}
+                >
+                  <View className="flex-row items-end">
+                    <View className="flex-1 bg-gray-100 rounded-full px-4 py-2 mr-3">
+                      <TextInput
+                        value={messageText}
+                        onChangeText={setMessageText}
+                        placeholder="Type a message..."
+                        placeholderTextColor="#9CA3AF"
+                        multiline
+                        maxLength={1000}
+                        className="text-base text-gray-900 max-h-24"
+                        style={{ fontSize: 16 }}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      onPress={sendMessage}
+                      disabled={!messageText.trim() || isSending}
+                      className={`w-10 h-10 rounded-full items-center justify-center ${
+                        messageText.trim() && !isSending ? "bg-blue-500" : "bg-gray-300"
+                      }`}
+                    >
+                      {isSending ? (
+                        <ActivityIndicator size="small" color="white" />
+                      ) : (
+                        <Feather name="send" size={18} color={messageText.trim() ? "white" : "#9CA3AF"} />
+                      )}
+                    </TouchableOpacity>
                   </View>
-                  <Thread />
-                </Channel>
+                </View>
               </KeyboardAvoidingView>
             )}
           </Modal>
