@@ -1,128 +1,99 @@
-import { useState } from "react"
-import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Alert } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { View, Text, FlatList, TouchableOpacity, SafeAreaView, Image, TextInput, ActivityIndicator } from "react-native"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useAllUsers } from "@/hooks/useAllUsers"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { streamApi } from "@/utils/api"
-
-interface User {
-  _id: string
-  clerkId: string
-  username: string
-  firstName: string
-  lastName: string
-  profilePicture: string
-  email: string
-}
+import { useApiClient, streamApi } from "@/utils/api"
+import { useState } from "react"
 
 export default function NewMessageScreen() {
+  const { users, isLoading } = useAllUsers()
+  const { currentUser } = useCurrentUser()
   const [searchQuery, setSearchQuery] = useState("")
-  const [isCreatingChannel, setIsCreatingChannel] = useState(false)
-  const { users, loading, error } = useAllUsers()
-  const { user: currentUser } = useCurrentUser()
+  const [creating, setCreating] = useState(false)
+  const api = useApiClient()
+
+  const handleUserSelect = async (user: any) => {
+    try {
+      if (!currentUser) {
+        console.error("❌ Current user not available")
+        return
+      }
+
+      console.log("🔄 Creating channel with:", user.firstName, user.lastName)
+      console.log("🔄 User clerkId:", user.clerkId)
+      console.log("🔄 Current user clerkId:", currentUser.clerkId)
+
+      if (!user.clerkId) {
+        console.error("❌ Selected user has no clerkId")
+        return
+      }
+
+      setCreating(true)
+
+      const channelData = {
+        members: [currentUser.clerkId, user.clerkId],
+        name: `${currentUser.firstName || "User"} & ${user.firstName} ${user.lastName}`,
+      }
+
+      console.log("📤 Creating channel with data:", channelData)
+
+      const response = await streamApi.createChannel(api, channelData)
+
+      if (response.data) {
+        console.log("✅ Channel created, navigating to:", response.data.channelId)
+        router.push(`/chat/${response.data.channelId}`)
+      }
+    } catch (error) {
+      console.error("❌ Failed to create channel:", error)
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const filteredUsers =
-    users?.filter((user: User) => {
-      if (!user || user.clerkId === currentUser?.clerkId) return false
+    users?.filter((user) => {
+      if (user.clerkId === currentUser?.clerkId) return false
+
+      if (!searchQuery) return true
 
       const query = searchQuery.toLowerCase()
       return (
-        user.username?.toLowerCase().includes(query) ||
         user.firstName?.toLowerCase().includes(query) ||
         user.lastName?.toLowerCase().includes(query) ||
-        user.email?.toLowerCase().includes(query)
+        user.username?.toLowerCase().includes(query)
       )
     }) || []
 
-  const handleUserSelect = async (selectedUser: User) => {
-    if (!selectedUser.clerkId) {
-      Alert.alert("Error", "User ID is missing")
-      return
-    }
-
-    if (!currentUser?.clerkId) {
-      Alert.alert("Error", "You must be logged in to start a conversation")
-      return
-    }
-
-    console.log("🔄 Creating channel with:", `${selectedUser.firstName} ${selectedUser.lastName}`)
-    console.log("🔄 Creating channel with user:", selectedUser.clerkId)
-
-    setIsCreatingChannel(true)
-
-    try {
-      const response = await streamApi.createChannel({
-        otherUserId: selectedUser.clerkId,
-        otherUserName: `${selectedUser.firstName} ${selectedUser.lastName}`,
-      })
-
-      console.log("✅ Channel created:", response)
-
-      // Navigate to the chat screen
-      router.push(`/chat/${response.channelId}`)
-    } catch (error) {
-      console.error("❌ Failed to create channel:", error)
-      Alert.alert("Error", "Failed to create conversation. Please try again.")
-    } finally {
-      setIsCreatingChannel(false)
-    }
-  }
-
-  const renderUserItem = ({ item }: { item: User }) => (
+  const renderUser = ({ item }: { item: any }) => (
     <TouchableOpacity
-      className="flex-row items-center p-4 border-b border-gray-100"
       onPress={() => handleUserSelect(item)}
-      disabled={isCreatingChannel}
+      className="flex-row items-center p-4 border-b border-gray-100"
+      disabled={creating}
     >
-      <View className="w-12 h-12 rounded-full bg-gray-300 mr-3 items-center justify-center">
+      <View className="w-12 h-12 rounded-full bg-blue-500 items-center justify-center mr-3 overflow-hidden">
         {item.profilePicture ? (
-          <Text className="text-lg font-semibold text-gray-600">{item.firstName?.[0]?.toUpperCase() || "?"}</Text>
+          <Image source={{ uri: item.profilePicture }} className="w-full h-full" />
         ) : (
-          <Text className="text-lg font-semibold text-gray-600">{item.firstName?.[0]?.toUpperCase() || "?"}</Text>
+          <Text className="text-white font-semibold text-lg">{item.firstName?.[0]?.toUpperCase() || "?"}</Text>
         )}
       </View>
-
       <View className="flex-1">
-        <Text className="text-base font-semibold text-gray-900">
+        <Text className="font-semibold text-gray-900">
           {item.firstName} {item.lastName}
         </Text>
-        <Text className="text-sm text-gray-500">@{item.username}</Text>
+        <Text className="text-gray-500 text-sm">@{item.username}</Text>
       </View>
-
-      {isCreatingChannel && <ActivityIndicator size="small" color="#1DA1F2" />}
+      {creating ? (
+        <ActivityIndicator size="small" color="#3B82F6" />
+      ) : (
+        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      )}
     </TouchableOpacity>
   )
 
-  if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#1DA1F2" />
-          <Text className="mt-2 text-gray-500">Loading users...</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 items-center justify-center p-4">
-          <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-          <Text className="mt-2 text-lg font-semibold text-gray-900">Error Loading Users</Text>
-          <Text className="mt-1 text-gray-500 text-center">
-            Unable to load users. Please check your connection and try again.
-          </Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
       <View className="flex-row items-center p-4 border-b border-gray-200">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -130,13 +101,12 @@ export default function NewMessageScreen() {
         <Text className="text-xl font-bold">New Message</Text>
       </View>
 
-      {/* Search Bar */}
-      <View className="p-4 border-b border-gray-100">
+      <View className="p-4">
         <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2">
-          <Ionicons name="search" size={20} color="#6B7280" />
+          <Ionicons name="search" size={20} color="#666" />
           <TextInput
             className="flex-1 ml-2 text-base"
-            placeholder="Search people"
+            placeholder="Search users..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
@@ -144,22 +114,27 @@ export default function NewMessageScreen() {
         </View>
       </View>
 
-      {/* Users List */}
-      <FlatList
-        data={filteredUsers}
-        renderItem={renderUserItem}
-        keyExtractor={(item) => item._id}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View className="flex-1 items-center justify-center p-8">
-            <Ionicons name="people-outline" size={48} color="#9CA3AF" />
-            <Text className="mt-4 text-lg font-semibold text-gray-900">No Users Found</Text>
-            <Text className="mt-1 text-gray-500 text-center">
-              {searchQuery ? "Try a different search term" : "No users available to message"}
-            </Text>
-          </View>
-        }
-      />
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text className="text-gray-500">Loading users...</Text>
+        </View>
+      ) : filteredUsers.length === 0 ? (
+        <View className="flex-1 items-center justify-center">
+          <Ionicons name="people-outline" size={64} color="#ccc" />
+          <Text className="mt-4 text-gray-500 text-lg">No users found</Text>
+          <Text className="text-gray-400 text-center mt-2">
+            {searchQuery ? "Try a different search term" : "No users available to chat with"}
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredUsers}
+          renderItem={renderUser}
+          keyExtractor={(item) => item._id}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   )
 }

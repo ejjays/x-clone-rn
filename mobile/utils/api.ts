@@ -1,126 +1,84 @@
-import axios, { type AxiosResponse } from "axios"
 import { useAuth } from "@clerk/clerk-expo"
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api"
+// 🔥 FIX THIS URL - Your current deployment doesn't exist!
+// Check your actual Vercel deployment URL
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://x-clone-rn-one.vercel.app/api"
 
-// Create axios instance
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-})
+console.log("🌐 API Base URL:", API_BASE_URL)
 
-// Request interceptor to add auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    const { getToken } = useAuth()
-    const token = getToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-
-    // Log API requests
-    console.log("🔑 API Request:", {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      hasToken: !!token,
-    })
-
-    return config
-  },
-  (error) => {
-    console.error("❌ Request Error:", error)
-    return Promise.reject(error)
-  },
-)
-
-// Response interceptor for logging
-apiClient.interceptors.response.use(
-  (response) => {
-    console.log("✅ API Response:", {
-      status: response.status,
-      url: response.config.url,
-    })
-    return response
-  },
-  (error) => {
-    const errorInfo = {
-      message: error.response?.data || error.message,
-      status: error.response?.status,
-      url: error.config?.url,
-    }
-
-    console.error("❌ API Error:", errorInfo)
-    return Promise.reject(error)
-  },
-)
-
-// Generic API function
-const apiRequest = async <T>(
-  method: 'GET\' | 'POST' | 'PUT' | 'DELETE',\
-  endpoint: string,\
-  data?: any\
-): Promise<T> => {
-try {
-  \
-  const response: AxiosResponse<T> = await apiClient.request({
-    method,
-    url: endpoint,
-    data,
+export const createApiClient = (getToken: () => Promise<string | null>): AxiosInstance => {
+  const api = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 10000,
   })
-  return response.data;
-} catch (error) {
-  throw error
+
+  api.interceptors.request.use(async (config) => {
+    try {
+      const token = await getToken()
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+      console.log("🔑 API Request:", {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        hasToken: !!token,
+      })
+    } catch (error) {
+      console.error("❌ Error getting auth token:", error)
+    }
+    return config
+  })
+
+  api.interceptors.response.use(
+    (response) => {
+      console.log("✅ API Response:", {
+        status: response.status,
+        url: response.config.url,
+      })
+      return response
+    },
+    (error) => {
+      console.error("❌ API Error:", {
+        status: error.response?.status,
+        url: error.config?.url,
+        message: error.response?.data?.error || error.message,
+      })
+      return Promise.reject(error)
+    },
+  )
+
+  return api
 }
+
+export const useApiClient = (): AxiosInstance => {
+  const { getToken } = useAuth()
+  return createApiClient(getToken)
 }
-\
-// User API
+
 export const userApi = {
-  getMe: () => apiRequest<any>("GET", "/users/me"),
-  getAllUsers: () => apiRequest<any[]>("GET", "/users/all"),
-  syncUser: () => apiRequest<any>("POST", "/users/sync"),
-  getUserByUsername: (username: string) => apiRequest<any>("GET", `/users/${username}`),
-  updateProfile: (data: any) => apiRequest<any>("PUT", "/users/profile", data),
+  syncUser: (api: AxiosInstance) => api.post("/users/sync"),
+  getCurrentUser: (api: AxiosInstance) => api.get("/users/me"),
+  updateProfile: (api: AxiosInstance, data: any) => api.put("/users/profile", data),
+  getAllUsers: (api: AxiosInstance) => api.get("/users/all"),
+  followUser: (api: AxiosInstance, userId: string) => api.post(`/users/follow/${userId}`),
 }
 
-// Post API
 export const postApi = {
-  getAllPosts: () => apiRequest<any[]>("GET", "/posts"),
-  getUserPosts: (username: string) => apiRequest<any[]>("GET", `/posts/user/${username}`),
-  createPost: (data: any) => apiRequest<any>("POST", "/posts", data),
-  likePost: (postId: string) => apiRequest<any>("POST", `/posts/${postId}/like`),
-  deletePost: (postId: string) => apiRequest<any>("DELETE", `/posts/${postId}`),
+  createPost: (api: AxiosInstance, data: { content: string; image?: string }) => api.post("/posts", data),
+  getPosts: (api: AxiosInstance) => api.get("/posts"),
+  getUserPosts: (api: AxiosInstance, username: string) => api.get(`/posts/user/${username}`),
+  likePost: (api: AxiosInstance, postId: string) => api.post(`/posts/${postId}/like`),
+  deletePost: (api: AxiosInstance, postId: string) => api.delete(`/posts/${postId}`),
 }
 
-// Comment API
 export const commentApi = {
-  getComments: (postId: string) => apiRequest<any[]>("GET", `/comments/${postId}`),
-  createComment: (postId: string, data: any) => apiRequest<any>("POST", `/comments/${postId}`, data),
-  deleteComment: (commentId: string) => apiRequest<any>("DELETE", `/comments/${commentId}`),
+  createComment: (api: AxiosInstance, postId: string, content: string) =>
+    api.post(`/comments/post/${postId}`, { content }),
 }
 
-// Notification API
-export const notificationApi = {
-  getNotifications: () => apiRequest<any[]>("GET", "/notifications"),
-  markAsRead: (notificationId: string) => apiRequest<any>("PUT", `/notifications/${notificationId}/read`),
-}
-
-// Stream Chat API
+// 🔥 NEW: Stream Chat API
 export const streamApi = {
-  getToken: () => apiRequest<{ token: string }>("GET", "/stream/token"),
-  createChannel: (data: { otherUserId: string; otherUserName: string }) =>
-    apiRequest<{ channelId: string }>("POST", "/stream/channel", data),
-  getChannels: () => apiRequest<any[]>("GET", "/stream/channels"),
-  sendMessage: (channelId: string, data: any) => apiRequest<any>("POST", `/stream/channel/${channelId}/message`, data),
-}
-
-// Export default API object
-export default {
-  userApi,
-  postApi,
-  commentApi,
-  notificationApi,
-  streamApi,
+  getToken: (api: AxiosInstance) => api.get("/stream/token"),
+  createChannel: (api: AxiosInstance, data: { members: string[]; name?: string }) => api.post("/stream/channel", data),
+  getChannels: (api: AxiosInstance) => api.get("/stream/channels"),
 }
