@@ -47,18 +47,21 @@ const ProfileScreens = () => {
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      {/* Header immediately after status bar - NO SafeAreaView wrapper */}
-      <View className="flex-row justify-between items-center px-4 py-2 bg-white">
+    <View className="flex-1 bg-white">
+      {/* Header positioned absolutely to overlay content */}
+      <View
+        className="absolute top-0 left-0 right-0 z-10 flex-row justify-between items-center px-4 py-2 bg-transparent"
+        style={{ paddingTop: insets.top }}
+      >
         <TouchableOpacity
-          className="w-10 h-10 items-center justify-center bg-white rounded-full"
+          className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-sm"
           onPress={handleBackPress}
         >
           <Feather name="arrow-left" size={28} color="#1C1E21" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="w-10 h-10 items-center justify-center bg-white rounded-full"
+          className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-sm"
           onPress={handleSignOut}
         >
           <Feather name="log-out" size={24} color="#E0245E" />
@@ -80,7 +83,7 @@ const ProfileScreens = () => {
           />
         }
       >
-        {/* Cover Photo - NO overlay icons */}
+        {/* Cover Photo - starts from very top */}
         <View className="relative">
           <Image
             source={{
