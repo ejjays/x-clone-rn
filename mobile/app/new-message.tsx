@@ -30,37 +30,64 @@ export default function NewMessageScreen() {
     fetchUsers()
   }, [])
 
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      console.log("🔄 Fetching users...")
+
+      const response = await userApi.getAllUsers(api)
+      console.log("📦 Raw API response:", response.data)
+
+      // Handle different possible response structures
+      let allUsers = []
+      if (response.data?.users && Array.isArray(response.data.users)) {
+        allUsers = response.data.users
+      } else if (Array.isArray(response.data)) {
+        allUsers = response.data
+      } else {
+        console.error("❌ Unexpected API response structure:", response.data)
+        throw new Error("Invalid response format")
+      }
+
+      console.log("👥 Processed users:", allUsers.length)
+
+      // Filter out current user
+      const otherUsers = allUsers.filter((user: User) => {
+        if (!currentUser) return true
+        return user.clerkId !== currentUser.clerkId && user._id !== currentUser._id
+      })
+
+      console.log("✅ Filtered users (excluding current):", otherUsers.length)
+
+      setUsers(otherUsers)
+      setFilteredUsers(otherUsers)
+    } catch (error) {
+      console.error("❌ Failed to fetch users:", error)
+      Alert.alert("Error", "Failed to load users. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
+    if (!Array.isArray(users)) {
+      console.warn("⚠️ Users is not an array:", users)
+      setFilteredUsers([])
+      return
+    }
+
     if (searchQuery.trim() === "") {
       setFilteredUsers(users)
     } else {
       const filtered = users.filter(
         (user) =>
-          user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.username.toLowerCase().includes(searchQuery.toLowerCase()),
+          user.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.username?.toLowerCase().includes(searchQuery.toLowerCase()),
       )
       setFilteredUsers(filtered)
     }
   }, [searchQuery, users])
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true)
-      const response = await userApi.getAllUsers(api)
-      const allUsers = response.data || []
-
-      // Filter out current user
-      const otherUsers = allUsers.filter((user: User) => user.clerkId !== currentUser?.clerkId)
-      setUsers(otherUsers)
-      setFilteredUsers(otherUsers)
-    } catch (error) {
-      console.error("❌ Failed to fetch users:", error)
-      Alert.alert("Error", "Failed to load users")
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleUserSelect = async (selectedUser: User) => {
     if (!currentUser || !selectedUser.clerkId) {

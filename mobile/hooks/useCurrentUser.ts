@@ -21,11 +21,10 @@ export const useCurrentUser = () => {
     },
   })
 
-  console.log("👤 Current user state:", {
-    user: currentUser ? "✅ Loaded" : "❌ Not loaded",
-    isLoading,
-    error: error ? "❌ Error" : "✅ No error",
-  })
+  // Only log when state actually changes
+  if (process.env.NODE_ENV === "development") {
+    console.log("👤 Current user loaded:", !!currentUser)
+  }
 
   return { currentUser, isLoading, error, refetch }
 }

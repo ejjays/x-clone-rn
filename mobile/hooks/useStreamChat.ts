@@ -15,7 +15,13 @@ export const useStreamChat = () => {
   const api = useApiClient()
 
   useEffect(() => {
-    if (!isSignedIn || !currentUser || !userId || client) return
+    if (!isSignedIn || !currentUser || !userId) return
+
+    // Prevent multiple initializations
+    if (client || isConnecting) {
+      console.log("🔄 Stream Chat already initializing or connected, skipping...")
+      return
+    }
 
     const initializeStreamChat = async () => {
       setIsConnecting(true)
@@ -31,6 +37,12 @@ export const useStreamChat = () => {
 
         // Initialize Stream Chat client
         const chatClient = StreamChat.getInstance(API_KEY)
+
+        // Check if already connected
+        if (chatClient.user) {
+          console.log("⚠️ Stream Chat already connected, disconnecting first...")
+          await chatClient.disconnectUser()
+        }
 
         // Connect user
         await chatClient.connectUser(user, token)

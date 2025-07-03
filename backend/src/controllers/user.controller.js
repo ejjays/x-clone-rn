@@ -14,11 +14,19 @@ export const getUserProfile = asyncHandler(async (req, res) => {
 })
 
 export const getAllUsers = asyncHandler(async (req, res) => {
+  console.log("🔄 Getting all users...")
+
   const users = await User.find({})
-    .select("firstName lastName username profilePicture email bio location createdAt")
+    .select("firstName lastName username profilePicture email bio location createdAt clerkId")
     .sort({ createdAt: -1 })
 
-  res.status(200).json({ users })
+  console.log("✅ Found users:", users.length)
+
+  res.status(200).json({
+    success: true,
+    users: users,
+    count: users.length,
+  })
 })
 
 export const updateProfile = asyncHandler(async (req, res) => {
