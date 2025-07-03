@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react"
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from "react-native"
+import { useEffect } from "react"
+
+import { useState } from "react"
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView } from "react-native"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
 import { router } from "expo-router"
@@ -31,7 +33,7 @@ interface ChannelData {
 export default function MessagesScreen() {
   const [channels, setChannels] = useState<ChannelData[]>([])
   const [loading, setLoading] = useState(true)
-  const { client, isConnected } = useStreamChat()
+  const { client, isConnected, isConnecting } = useStreamChat()
   const { currentUser } = useCurrentUser()
   const { userId } = useAuth()
 
@@ -86,14 +88,14 @@ export default function MessagesScreen() {
     loadChannels()
 
     // Listen for new messages
-    const handleNewMessage = () => {
+    const handleNewMessageEvent = () => {
       loadChannels()
     }
 
-    client.on("message.new", handleNewMessage)
+    client.on("message.new", handleNewMessageEvent)
 
     return () => {
-      client.off("message.new", handleNewMessage)
+      client.off("message.new", handleNewMessageEvent)
     }
   }, [client, isConnected, userId])
 
@@ -174,29 +176,15 @@ export default function MessagesScreen() {
     )
   }
 
-  if (!isConnected) {
-    return (
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-          <Text className="text-2xl font-bold text-gray-900">Messages</Text>
-          <TouchableOpacity onPress={handleNewMessage}>
-            <Ionicons name="create-outline" size={24} color="#1877F2" />
-          </TouchableOpacity>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#1877F2" />
-          <Text className="text-gray-500 mt-2">Connecting to chat...</Text>
-        </View>
-      </View>
-    )
-  }
-
   return (
-    <View className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white">
       <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-        <Text className="text-2xl font-bold text-gray-900">Messages</Text>
-        <TouchableOpacity onPress={handleNewMessage}>
-          <Ionicons name="create-outline" size={24} color="#1877F2" />
+        <Text className="text-2xl font-bold">Messages</Text>
+        <TouchableOpacity
+          onPress={handleNewMessage}
+          className="w-10 h-10 rounded-full bg-blue-500 items-center justify-center"
+        >
+          <Ionicons name="create-outline" size={20} color="white" />
         </TouchableOpacity>
       </View>
 
@@ -206,12 +194,30 @@ export default function MessagesScreen() {
           <Text className="text-gray-500 mt-2">Loading conversations...</Text>
         </View>
       ) : channels.length === 0 ? (
-        <View className="flex-1 items-center justify-center p-8">
-          <Ionicons name="chatbubbles-outline" size={64} color="#9CA3AF" />
-          <Text className="text-xl font-semibold text-gray-900 mt-4">No conversations yet</Text>
-          <Text className="text-gray-500 text-center mt-2">
-            Start a conversation by tapping the compose button above
-          </Text>
+        <View className="flex-1 items-center justify-center px-8">
+          {isConnecting ? (
+            <View className="items-center">
+              <Text className="text-gray-500 mb-2">Connecting to chat...</Text>
+              <Text className="text-gray-400 text-sm text-center">Setting up your messaging experience</Text>
+            </View>
+          ) : isConnected ? (
+            <View className="items-center">
+              <Ionicons name="chatbubbles-outline" size={64} color="#9CA3AF" />
+              <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">No conversations yet</Text>
+              <Text className="text-gray-500 text-center mb-6">
+                Start a conversation by tapping the compose button above
+              </Text>
+              <TouchableOpacity onPress={handleNewMessage} className="bg-blue-500 px-6 py-3 rounded-full">
+                <Text className="text-white font-semibold">Start a conversation</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View className="items-center">
+              <Ionicons name="warning-outline" size={64} color="#EF4444" />
+              <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">Connection failed</Text>
+              <Text className="text-gray-500 text-center">Unable to connect to chat service. Please try again.</Text>
+            </View>
+          )}
         </View>
       ) : (
         <FlatList
@@ -221,6 +227,6 @@ export default function MessagesScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </View>
+    </SafeAreaView>
   )
 }
