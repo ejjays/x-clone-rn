@@ -3,6 +3,7 @@ import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator } from "r
 import { Ionicons } from "@expo/vector-icons"
 import { useStreamChat } from "@/hooks/useStreamChat"
 import CustomChannelList from "@/components/CustomChannelList"
+import NoMessagesFound from "@/components/NoMessagesFound"
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client } = useStreamChat()
@@ -39,17 +40,9 @@ export default function MessagesScreen() {
       )
     }
 
-    // If connected but no channels, show empty state
+    // If connected but no channels, show empty state with animated Lottie
     if (isConnected && channels.length === 0) {
-      return (
-        <View className="flex-1 items-center justify-center px-8">
-          <Ionicons name="chatbubbles-outline" size={64} color="#9CA3AF" />
-          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">No conversations yet</Text>
-          <Text className="text-gray-500 text-center mb-6">
-            Start a new conversation by tapping the compose button above.
-          </Text>
-        </View>
-      )
+      return <NoMessagesFound />
     }
 
     // Show the channel list when we have channels
@@ -58,8 +51,9 @@ export default function MessagesScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-        <Text className="text-2xl font-bold">Messages</Text>
+      {/* Header - No border line, matching Notifications style */}
+      <View className="flex-row items-center justify-between px-4 py-4">
+        <Text className="text-3xl font-bold text-gray-900">Messages</Text>
         <TouchableOpacity
           onPress={handleNewMessage}
           className="w-10 h-10 rounded-full bg-blue-500 items-center justify-center"
