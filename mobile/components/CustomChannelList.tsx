@@ -12,41 +12,61 @@ export default function CustomChannelList({ onChannelSelect }: ChannelListProps)
   const { currentUser } = useCurrentUser()
 
   const getOtherUserInfo = (channel: any) => {
-    if (!currentUser) return null
+    if (!currentUser || !channel.state?.members) return null
 
-    // Get the other user from channel members
-    const otherMember = channel.state.members.find((member: any) => member.user.id !== currentUser.clerkId)
+    try {
+      // Convert members object to array if it's an object
+      const membersArray = Array.isArray(channel.state.members)
+        ? channel.state.members
+        : Object.values(channel.state.members || {})
 
-    if (otherMember) {
-      return {
-        name: otherMember.user.name || "Unknown User",
-        image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
-        online: otherMember.user.online,
+      // Get the other user from channel members
+      const otherMember = membersArray.find((member: any) => {
+        return member?.user?.id !== currentUser.clerkId
+      })
+
+      if (otherMember?.user) {
+        return {
+          name: otherMember.user.name || "Unknown User",
+          image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
+          online: otherMember.user.online || false,
+        }
       }
-    }
 
-    return null
+      return null
+    } catch (error) {
+      console.error("Error getting other user info:", error)
+      return null
+    }
   }
 
   const getLastMessage = (channel: any) => {
-    const messages = channel.state.messages
-    if (messages && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1]
-      return {
-        text: lastMessage.text || "No message",
-        timestamp: lastMessage.created_at,
-        isFromCurrentUser: lastMessage.user?.id === currentUser?.clerkId,
+    try {
+      const messages = channel.state?.messages
+      if (messages && Array.isArray(messages) && messages.length > 0) {
+        const lastMessage = messages[messages.length - 1]
+        return {
+          text: lastMessage.text || "No message",
+          timestamp: lastMessage.created_at,
+          isFromCurrentUser: lastMessage.user?.id === currentUser?.clerkId,
+        }
       }
+      return null
+    } catch (error) {
+      console.error("Error getting last message:", error)
+      return null
     }
-    return null
   }
 
   const renderChannelItem = ({ item: channel }: { item: any }) => {
     const otherUser = getOtherUserInfo(channel)
     const lastMessage = getLastMessage(channel)
-    const unreadCount = channel.state.unreadCount || 0
+    const unreadCount = channel.state?.unreadCount || 0
 
-    if (!otherUser) return null
+    // If we can't get other user info, don't render this item
+    if (!otherUser) {
+      return null
+    }
 
     return (
       <TouchableOpacity
@@ -90,5 +110,18 @@ export default function CustomChannelList({ onChannelSelect }: ChannelListProps)
     )
   }
 
-  return <FlatList data={channels} renderItem={renderChannelItem} keyExtractor={(item) => item.id} className="flex-1" />
+  // Filter out any null channels or channels without proper data
+  const validChannels = channels.filter((channel) => {
+    return channel && channel.id && channel.state
+  })
+
+  return (
+    <FlatList
+      data={validChannels}
+      renderItem={renderChannelItem}
+      keyExtractor={(item) => item.id}
+      className="flex-1"
+      showsVerticalScrollIndicator={false}
+    />
+  )
 }
