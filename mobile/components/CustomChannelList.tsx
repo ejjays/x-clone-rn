@@ -9,7 +9,7 @@ interface ChannelListProps {
 
 export default function CustomChannelList({ onChannelSelect }: ChannelListProps) {
   const { channels, loading } = useStreamChat()
-  const { user: currentUser } = useCurrentUser()
+  const { currentUser } = useCurrentUser()
 
   const getOtherUserInfo = (channel: any) => {
     if (!currentUser) return null
