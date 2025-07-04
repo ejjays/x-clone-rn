@@ -96,30 +96,32 @@ export default function CustomChannelList({ onChannelSelect, onRefresh }: Channe
           )}
         </View>
 
-        <View className="flex-1 ml-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-semibold text-gray-900 text-base">{otherUser.name}</Text>
+        <View className="flex-1 ml-3 min-w-0">
+          <View className="flex-row items-center justify-between mb-1">
+            <Text className="font-semibold text-gray-900 text-base flex-1 mr-2" numberOfLines={1} ellipsizeMode="tail">
+              {otherUser.name}
+            </Text>
             {lastMessage && (
-              <Text className="text-gray-500 text-sm">
+              <Text className="text-gray-500 text-sm flex-shrink-0">
                 {formatDistanceToNow(new Date(lastMessage.timestamp), { addSuffix: true })}
               </Text>
             )}
           </View>
 
           {lastMessage ? (
-            <View className="flex-row items-center justify-between mt-1">
-              <Text className="text-gray-600 text-sm flex-1" numberOfLines={1}>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-600 text-sm flex-1 mr-2" numberOfLines={1}>
                 {lastMessage.isFromCurrentUser ? "You: " : ""}
                 {lastMessage.text}
               </Text>
               {unreadCount > 0 && (
-                <View className="bg-blue-500 rounded-full min-w-[20px] h-5 items-center justify-center ml-2">
+                <View className="bg-blue-500 rounded-full min-w-[20px] h-5 items-center justify-center flex-shrink-0">
                   <Text className="text-white text-xs font-bold">{unreadCount > 99 ? "99+" : unreadCount}</Text>
                 </View>
               )}
             </View>
           ) : (
-            <Text className="text-gray-500 text-sm mt-1">No messages yet</Text>
+            <Text className="text-gray-500 text-sm">No messages yet</Text>
           )}
         </View>
       </TouchableOpacity>
