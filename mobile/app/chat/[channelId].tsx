@@ -36,9 +36,10 @@ export default function ChatScreen() {
 
   // Handle keyboard events
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) =>
-      setKeyboardHeight(e.endCoordinates.height),
-    )
+    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) => {
+      // Add extra padding for keyboard toolbar
+      setKeyboardHeight(e.endCoordinates.height + 20)
+    })
     const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0))
 
     return () => {
@@ -218,7 +219,7 @@ export default function ChatScreen() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         <View className="flex-1">
           <FlatList
@@ -226,10 +227,14 @@ export default function ChatScreen() {
             renderItem={renderMessage}
             keyExtractor={(item, index) => item.id || index.toString()}
             className="flex-1 px-4"
-            contentContainerStyle={{ paddingTop: 16, paddingBottom: 16 }}
+            contentContainerStyle={{
+              paddingTop: 16,
+              paddingBottom: keyboardHeight > 0 ? 20 : 16,
+            }}
             inverted
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
             ListEmptyComponent={() => (
               <View className="flex-1 items-center justify-center py-20" style={{ transform: [{ scaleY: -1 }] }}>
                 <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
@@ -241,9 +246,16 @@ export default function ChatScreen() {
 
           {/* Message Input - Fixed at bottom */}
           <View
-            className="flex-row items-end p-4 border-t border-gray-200 bg-white"
+            className="flex-row items-end border-t border-gray-200 bg-white"
             style={{
-              paddingBottom: Math.max(insets.bottom, 16),
+              paddingHorizontal: 16,
+              paddingTop: 12,
+              paddingBottom:
+                Platform.OS === "ios"
+                  ? Math.max(insets.bottom + 8, 20)
+                  : keyboardHeight > 0
+                    ? 20
+                    : Math.max(insets.bottom + 8, 20),
               marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
             }}
           >
@@ -252,13 +264,14 @@ export default function ChatScreen() {
                 value={newMessage}
                 onChangeText={setNewMessage}
                 placeholder="Type a message..."
-                className="border border-gray-300 rounded-full px-4 py-3 text-base max-h-24"
+                className="border border-gray-300 rounded-full px-4 py-3 text-base"
                 multiline
                 maxLength={500}
                 editable={!sending}
-                textAlignVertical="center"
+                textAlignVertical="top"
                 style={{
                   minHeight: 48,
+                  maxHeight: 120,
                 }}
               />
             </View>
