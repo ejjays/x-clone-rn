@@ -30,7 +30,7 @@ const NoMessagesFound = () => {
     <View className="flex-1 items-center justify-center px-8 bg-white" style={{ minHeight: 400 }}>
       <View className="items-center">
         {/* BIG Animated Lottie Messages Icon - Main Highlight */}
-        <View className="w-96 h-96 mt-3 mb-1">
+        <View className="w-96 h-96 mt-0 mb-1">
           <LottieView
             ref={animationRef}
             source={require("../assets/animations/empty-messages.json")}
