@@ -21,12 +21,14 @@ interface Channel {
 interface CustomChannelListProps {
   onRefresh?: () => void
   refreshing?: boolean
+  searchQuery?: string
 }
 
-export default function CustomChannelList({ onRefresh, refreshing = false }: CustomChannelListProps) {
+export default function CustomChannelList({ onRefresh, refreshing = false, searchQuery = "" }: CustomChannelListProps) {
   const { channels, loading } = useStreamChat()
   const { currentUser } = useCurrentUser()
   const [processedChannels, setProcessedChannels] = useState<any[]>([])
+  const [filteredChannels, setFilteredChannels] = useState<any[]>([])
 
   useEffect(() => {
     if (!channels || !currentUser) return
@@ -61,6 +63,20 @@ export default function CustomChannelList({ onRefresh, refreshing = false }: Cus
 
     setProcessedChannels(processed)
   }, [channels, currentUser])
+
+  // Filter channels based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredChannels(processedChannels)
+    } else {
+      const filtered = processedChannels.filter((channel) => {
+        const nameMatch = channel.name.toLowerCase().includes(searchQuery.toLowerCase())
+        const messageMatch = channel.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+        return nameMatch || messageMatch
+      })
+      setFilteredChannels(filtered)
+    }
+  }, [processedChannels, searchQuery])
 
   const renderChannelItem = ({ item }: { item: any }) => (
     <TouchableOpacity
@@ -99,9 +115,21 @@ export default function CustomChannelList({ onRefresh, refreshing = false }: Cus
     )
   }
 
+  // Show "No results" when searching but no matches found
+  if (searchQuery.trim() && filteredChannels.length === 0) {
+    return (
+      <View className="flex-1 items-center justify-center py-20">
+        <Text className="text-gray-500 text-lg mb-2">No conversations found</Text>
+        <Text className="text-gray-400 text-center px-8">
+          Try searching with different keywords or check your spelling
+        </Text>
+      </View>
+    )
+  }
+
   return (
     <FlatList
-      data={processedChannels}
+      data={filteredChannels}
       renderItem={renderChannelItem}
       keyExtractor={(item) => item.id}
       className="flex-1"

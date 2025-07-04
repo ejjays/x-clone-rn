@@ -1,5 +1,3 @@
-"use client"
-
 import LottieView from "lottie-react-native"
 import { useRef } from "react"
 import { Text, View } from "react-native"
@@ -32,7 +30,7 @@ const NoNotificationsFound = () => {
     <View className="flex-1 items-center justify-center px-8 bg-white" style={{ minHeight: 400 }}>
       <View className="items-center">
         {/* BIG Animated Lottie Bell - Main Highlight */}
-        <View className="w-96 h-96 mt-6 mb-2">
+        <View className="w-96 h-96 mt-8 mb-2">
           <LottieView
             ref={animationRef}
             source={require("../assets/animations/empty-notifications.json")}

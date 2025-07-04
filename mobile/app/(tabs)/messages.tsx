@@ -1,12 +1,14 @@
 import { router } from "expo-router"
-import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator } from "react-native"
+import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, TextInput } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useStreamChat } from "@/hooks/useStreamChat"
 import CustomChannelList from "@/components/CustomChannelList"
 import NoMessagesFound from "@/components/NoMessagesFound"
+import { useState } from "react"
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } = useStreamChat()
+  const [searchQuery, setSearchQuery] = useState("")
 
   const handleNewMessage = () => {
     router.push("/new-message")
@@ -14,6 +16,10 @@ export default function MessagesScreen() {
 
   const handleChannelSelect = (channelId: string) => {
     router.push(`/chat/${channelId}`)
+  }
+
+  const clearSearch = () => {
+    setSearchQuery("")
   }
 
   const renderContent = () => {
@@ -49,7 +55,9 @@ export default function MessagesScreen() {
     }
 
     // Show the channel list when we have channels
-    return <CustomChannelList onChannelSelect={handleChannelSelect} onRefresh={refreshChannels} />
+    return (
+      <CustomChannelList onChannelSelect={handleChannelSelect} onRefresh={refreshChannels} searchQuery={searchQuery} />
+    )
   }
 
   return (
@@ -65,6 +73,27 @@ export default function MessagesScreen() {
           <Ionicons name="create-outline" size={20} color="white" />
         </TouchableOpacity>
       </View>
+
+      {/* Search Field */}
+      <View className="px-4 pb-3">
+        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3">
+          <Ionicons name="search-outline" size={20} color="#6B7280" />
+          <TextInput
+            className="flex-1 ml-3 text-gray-900 text-base"
+            placeholder="Search conversations..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={clearSearch} className="ml-2">
+              <Ionicons name="close-circle" size={20} color="#6B7280" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       {renderContent()}
     </SafeAreaView>
   )
