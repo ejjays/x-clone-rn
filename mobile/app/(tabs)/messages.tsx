@@ -2,25 +2,22 @@ import { router } from "expo-router";
 import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useStreamChat } from "@/hooks/useStreamChat";
-import CustomChannelList from "@/components/CustomChannelList"; // ✨ Import the custom component
+import CustomChannelList from "@/components/CustomChannelList";
 
 export default function MessagesScreen() {
-  // ✨ Use the loading state and isConnected status from the hook
+  // ✨ Use the new, more reliable connection flags
   const { isConnecting, isConnected, channels } = useStreamChat();
 
   const handleNewMessage = () => {
     router.push("/new-message");
   };
 
-  // ✨ Define the function to handle channel selection
   const handleChannelSelect = (channelId: string) => {
-    // Navigate to the specific chat screen
     router.push(`/chat/${channelId}`);
   };
 
-  // A helper function to decide what to render based on the state
   const renderContent = () => {
-    // Show a loading indicator while the chat client connects and fetches channels.
+    // ✨ If we are in the process of connecting, show a spinner
     if (isConnecting) {
       return (
         <View className="flex-1 items-center justify-center">
@@ -30,7 +27,7 @@ export default function MessagesScreen() {
       );
     }
 
-    // ✨ If connected but there are no channels, show the empty state.
+    // ✨ If we are connected and have no channels, show the empty state
     if (isConnected && channels.length === 0) {
       return (
         <View className="flex-1 items-center justify-center px-8">
@@ -42,9 +39,14 @@ export default function MessagesScreen() {
         </View>
       );
     }
-
-    // ✨ If we have channels, render the custom list component.
-    return <CustomChannelList onChannelSelect={handleChannelSelect} />;
+    
+    // ✨ If we are connected and have channels, show the list
+    if (isConnected) {
+        return <CustomChannelList onChannelSelect={handleChannelSelect} />;
+    }
+    
+    // Fallback for any other state (e.g., disconnected)
+    return null;
   };
 
   return (
@@ -58,7 +60,6 @@ export default function MessagesScreen() {
           <Ionicons name="create-outline" size={20} color="white" />
         </TouchableOpacity>
       </View>
-
       {renderContent()}
     </SafeAreaView>
   );
