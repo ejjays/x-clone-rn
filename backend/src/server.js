@@ -18,7 +18,16 @@ const app = express()
 const PORT = ENV.PORT || 5000
 
 // Middleware
-app.use(cors())
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? ["https://x-clone-rn-one.vercel.app", "https://x-clone-o58we1hxw-ejjays-projects.vercel.app"]
+        : ["http://localhost:3000", "http://localhost:8081"],
+    credentials: true,
+  }),
+)
+
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 app.use(clerkMiddleware())
@@ -28,6 +37,7 @@ app.get("/", (req, res) => {
   res.json({
     message: "X Clone API is running!",
     timestamp: new Date().toISOString(),
+    status: "healthy",
     env: {
       nodeEnv: process.env.NODE_ENV,
       hasMongoUri: !!ENV.MONGODB_URI,
@@ -39,7 +49,7 @@ app.get("/", (req, res) => {
 })
 
 // API health check
-app.get("/api", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({
     message: "API is healthy!",
     timestamp: new Date().toISOString(),
@@ -58,19 +68,31 @@ try {
   }
 }
 
-// Routes
-app.use("/api/users", userRoutes)
-app.use("/api/posts", postRoutes)
-app.use("/api/comments", commentRoutes)
-app.use("/api/notifications", notificationRoutes)
-app.use("/api/stream", streamRoutes)
+// Routes with proper error handling
+try {
+  app.use("/api/users", userRoutes)
+  app.use("/api/posts", postRoutes)
+  app.use("/api/comments", commentRoutes)
+  app.use("/api/notifications", notificationRoutes)
+  app.use("/api/stream", streamRoutes)
+
+  console.log("✅ All routes registered successfully")
+} catch (error) {
+  console.error("❌ Error registering routes:", error)
+}
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
   console.error("❌ Global error handler:", err)
   console.error("❌ Error stack:", err.stack)
+  console.error("❌ Request details:", {
+    method: req.method,
+    path: req.path,
+    body: req.body,
+    query: req.query,
+  })
 
-  res.status(500).json({
+  res.status(err.status || 500).json({
     error: "Something went wrong!",
     message: err.message,
     timestamp: new Date().toISOString(),
@@ -81,11 +103,21 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use("*", (req, res) => {
+  console.log("❌ 404 - Route not found:", req.originalUrl)
   res.status(404).json({
     error: "Route not found",
     path: req.originalUrl,
     method: req.method,
     timestamp: new Date().toISOString(),
+    availableRoutes: [
+      "GET /",
+      "GET /api/health",
+      "GET /api/users/*",
+      "GET /api/posts/*",
+      "GET /api/comments/*",
+      "GET /api/notifications/*",
+      "GET /api/stream/*",
+    ],
   })
 })
 
@@ -93,6 +125,8 @@ app.use("*", (req, res) => {
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`)
+    console.log(`📍 Health check: http://localhost:${PORT}/`)
+    console.log(`📍 API health: http://localhost:${PORT}/api/health`)
   })
 }
 
