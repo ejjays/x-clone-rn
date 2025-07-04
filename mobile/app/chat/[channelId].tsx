@@ -171,7 +171,7 @@ export default function ChatScreen() {
           </View>
         )}
 
-        <View className={`flex-row mb-1 px-4 ${isFromCurrentUser ? "justify-end" : "justify-start"}`}>
+        <View className={`flex-row mb-1 ${isFromCurrentUser ? "justify-end pr-3" : "justify-start pl-3"}`}>
           {!isFromCurrentUser && (
             <View className="mr-2" style={{ width: 32 }}>
               {showAvatar && otherUser?.image ? (
@@ -181,22 +181,18 @@ export default function ChatScreen() {
           )}
 
           <View
-            className={`max-w-[70%] px-4 py-3 ${
+            className={`max-w-[80%] px-4 py-3 ${
               isFromCurrentUser
                 ? "bg-blue-500 rounded-2xl rounded-br-md shadow-sm"
                 : "bg-gray-100 rounded-2xl rounded-bl-md"
             }`}
-            style={{
-              marginRight: isFromCurrentUser ? 8 : 0,
-              marginLeft: !isFromCurrentUser ? 0 : 8,
-            }}
           >
             <Text className={`text-base leading-5 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
               {message.text}
             </Text>
           </View>
 
-          {isFromCurrentUser && <View style={{ width: 32 }} />}
+          {isFromCurrentUser && <View style={{ width: 8 }} />}
         </View>
       </View>
     )
