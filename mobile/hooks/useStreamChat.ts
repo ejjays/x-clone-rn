@@ -14,6 +14,7 @@ export const useStreamChat = () => {
   const [client, setClient] = useState<StreamChat | null>(globalClient)
   const [channels, setChannels] = useState<Channel[]>([])
   const [isConnectingState, setIsConnectingState] = useState(false)
+  const [isConnectedState, setIsConnectedState] = useState(false)
   const { isSignedIn, userId } = useAuth()
   const { currentUser } = useCurrentUser()
   const api = useApiClient()
@@ -24,6 +25,7 @@ export const useStreamChat = () => {
       setClient(null)
       setChannels([])
       setIsConnectingState(false)
+      setIsConnectedState(false)
       return
     }
 
@@ -33,10 +35,11 @@ export const useStreamChat = () => {
     }
 
     // If we already have a connected client for this user, use it
-    if (globalClient && globalClient.userID === userId && globalClient.wsConnection?.isConnected) {
+    if (globalClient && globalClient.userID === userId) {
       console.log("✅ Using existing Stream Chat connection")
       setClient(globalClient)
       setIsConnectingState(false)
+      setIsConnectedState(true)
       fetchChannels(globalClient)
       return
     }
@@ -55,6 +58,7 @@ export const useStreamChat = () => {
 
       isConnecting = true
       setIsConnectingState(true)
+      setIsConnectedState(false)
 
       try {
         // Disconnect any existing connection first
@@ -81,12 +85,14 @@ export const useStreamChat = () => {
         }
 
         setClient(globalClient)
+        setIsConnectedState(true)
         await fetchChannels(globalClient)
       } catch (error) {
         console.error("❌ Failed to connect to Stream Chat:", error)
         globalClient = null
         setClient(null)
         setChannels([])
+        setIsConnectedState(false)
       } finally {
         isConnecting = false
         setIsConnectingState(false)
@@ -136,6 +142,15 @@ export const useStreamChat = () => {
       await channel.watch()
 
       console.log("✅ Channel created successfully:", channelData.channelId)
+
+      // Refresh channels list
+      const userChannels = await client.queryChannels(
+        { type: "messaging", members: { $in: [userId] } },
+        [{ last_message_at: -1 }],
+        { watch: true, state: true },
+      )
+      setChannels(userChannels)
+
       return channel
     } catch (error) {
       console.error("❌ Failed to create channel:", error)
@@ -147,7 +162,7 @@ export const useStreamChat = () => {
     client,
     channels,
     isConnecting: isConnectingState,
-    isConnected: !!client && !isConnectingState && client.wsConnection?.isConnected,
+    isConnected: isConnectedState,
     createChannel,
   }
 }

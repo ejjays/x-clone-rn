@@ -5,7 +5,7 @@ import { useStreamChat } from "@/hooks/useStreamChat"
 import CustomChannelList from "@/components/CustomChannelList"
 
 export default function MessagesScreen() {
-  const { isConnecting, isConnected, channels } = useStreamChat()
+  const { isConnecting, isConnected, channels, client } = useStreamChat()
 
   const handleNewMessage = () => {
     router.push("/new-message")
@@ -16,8 +16,8 @@ export default function MessagesScreen() {
   }
 
   const renderContent = () => {
-    // Show loading only if we're connecting and have no client yet
-    if (isConnecting) {
+    // Show loading while connecting AND we don't have a client yet
+    if (isConnecting && !client) {
       return (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1877F2" />
@@ -26,8 +26,8 @@ export default function MessagesScreen() {
       )
     }
 
-    // If not connected, show a connection error
-    if (!isConnected) {
+    // If we have a client but not connected, or no client at all after connection attempt
+    if (!client || (!isConnected && !isConnecting)) {
       return (
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="cloud-offline-outline" size={64} color="#9CA3AF" />
@@ -40,7 +40,7 @@ export default function MessagesScreen() {
     }
 
     // If connected but no channels, show empty state
-    if (channels.length === 0) {
+    if (isConnected && channels.length === 0) {
       return (
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="chatbubbles-outline" size={64} color="#9CA3AF" />
@@ -52,7 +52,7 @@ export default function MessagesScreen() {
       )
     }
 
-    // Show the channel list
+    // Show the channel list when we have channels
     return <CustomChannelList onChannelSelect={handleChannelSelect} />
   }
 
@@ -63,6 +63,7 @@ export default function MessagesScreen() {
         <TouchableOpacity
           onPress={handleNewMessage}
           className="w-10 h-10 rounded-full bg-blue-500 items-center justify-center"
+          disabled={!client} // Only disable if we don't have a client at all
         >
           <Ionicons name="create-outline" size={20} color="white" />
         </TouchableOpacity>
