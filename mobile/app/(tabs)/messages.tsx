@@ -1,5 +1,5 @@
 import { router } from "expo-router"
-import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, TextInput } from "react-native"
+import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, TextInput, Platform } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useStreamChat } from "@/hooks/useStreamChat"
 import CustomChannelList from "@/components/CustomChannelList"
@@ -76,7 +76,7 @@ export default function MessagesScreen() {
 
       {/* Search Field */}
       <View className="px-4 pb-3">
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3">
+        <View className="flex-row items-center bg-gray-100 rounded-full px-4">
           <Ionicons name="search-outline" size={20} color="#6B7280" />
           <TextInput
             className="flex-1 ml-3 text-gray-900 text-base"
@@ -85,6 +85,9 @@ export default function MessagesScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             returnKeyType="search"
+            style={{
+              paddingVertical: Platform.OS === "android" ? 8 : 12,
+            }}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={clearSearch} className="ml-2">

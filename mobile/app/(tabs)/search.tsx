@@ -1,12 +1,10 @@
-"use client"
-
 import UserCard from "@/components/UserCard"
 import { useAllUsers } from "@/hooks/useAllUsers"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import type { User } from "@/types"
 import { Feather } from "@expo/vector-icons"
 import { useState } from "react"
-import { View, TextInput, ScrollView, Text, ActivityIndicator, RefreshControl, TouchableOpacity } from "react-native"
+import { View, TextInput, ScrollView, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 const SearchScreen = () => {
@@ -59,7 +57,7 @@ const SearchScreen = () => {
       {/* HEADER */}
       <View className="px-4 py-4 bg-white">
         <Text className="text-3xl font-bold text-gray-900 mb-3">Peoples</Text>
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3">
+        <View className="flex-row items-center bg-gray-100 rounded-full px-4">
           <Feather name="search" size={20} color="#657786" />
           <TextInput
             placeholder="Search people"
@@ -67,6 +65,9 @@ const SearchScreen = () => {
             placeholderTextColor="#657786"
             value={searchText}
             onChangeText={setSearchText}
+            style={{
+              paddingVertical: Platform.OS === "android" ? 8 : 12,
+            }}
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={() => setSearchText("")}>

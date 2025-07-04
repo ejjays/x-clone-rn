@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { View, Text, SafeAreaView, TouchableOpacity, FlatList, TextInput, ActivityIndicator, Alert } from "react-native"
+import { View, Text, SafeAreaView, TouchableOpacity, FlatList, TextInput, ActivityIndicator, Alert, Platform } from "react-native"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useApiClient, userApi } from "@/utils/api"
@@ -125,7 +125,7 @@ export default function NewMessageScreen() {
 
       {/* Search */}
       <View className="p-4 border-b border-gray-200">
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2">
+        <View className="flex-row items-center bg-gray-100 rounded-full px-4">
           <Ionicons name="search" size={20} color="#666" />
           <TextInput
             className="flex-1 ml-2 text-base"
@@ -133,6 +133,9 @@ export default function NewMessageScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
+             style={{
+              paddingVertical: Platform.OS === "android" ? 8 : 12,
+            }}
           />
         </View>
       </View>
