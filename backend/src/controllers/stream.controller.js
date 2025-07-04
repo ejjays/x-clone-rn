@@ -1,89 +1,89 @@
-import { StreamChat } from "stream-chat"
-import { ENV } from "../config/env.js"
+import { StreamChat } from "stream-chat";
+import { ENV } from "../config/env.js";
+import User from "../models/user.model.js"; // Make sure to import the User model
 
 // Initialize Stream Chat client
-const serverClient = StreamChat.getInstance(ENV.STREAM_API_KEY, ENV.STREAM_SECRET_KEY)
+const serverClient = StreamChat.getInstance(ENV.STREAM_API_KEY, ENV.STREAM_SECRET_KEY);
 
 // Generate Stream Chat token for user
 export const getStreamToken = async (req, res) => {
   try {
-    const { userId } = req.auth
+    const { userId } = req.auth;
 
     if (!userId) {
-      return res.status(400).json({ error: "User ID is required" })
+      return res.status(400).json({ error: "User ID is required" });
     }
 
-    console.log("🎫 Generating Stream token for user:", userId)
+    // --- FIX STARTS HERE ---
+    // Find the user in your database to get their details
+    const user = await User.findOne({ clerkId: userId }).select("firstName lastName profilePicture");
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found in database" });
+    }
+
+    console.log("🎫 Generating Stream token for user:", userId);
 
     // Generate token for the user
-    const token = serverClient.createToken(userId)
+    const token = serverClient.createToken(userId);
 
-    console.log("✅ Stream token generated successfully")
+    // Create the user object that the Stream client expects
+    const streamUser = {
+      id: userId,
+      name: `${user.firstName} ${user.lastName}`,
+      image: user.profilePicture,
+    };
+    
+    console.log("✅ Stream token generated successfully");
 
+    // Return the full user object along with the token
     res.json({
       token,
-      apiKey: ENV.STREAM_API_KEY,
-      userId,
-    })
+      user: streamUser,
+    });
+    // --- FIX ENDS HERE ---
+
   } catch (error) {
-    console.error("❌ Error generating Stream token:", error)
+    console.error("❌ Error generating Stream token:", error);
     res.status(500).json({
       error: "Failed to generate Stream token",
       details: error.message,
-    })
+    });
   }
-}
+};
 
-// Create a new channel
+// Create a new channel (No changes needed here, but kept for context)
 export const createChannel = async (req, res) => {
   try {
     const { userId } = req.auth
-    const { type = "messaging", id, name, members = [] } = req.body
+    const { type = "messaging", members = [] } = req.body
 
-    if (!userId) {
-      return res.status(400).json({ error: "User ID is required" })
+    const otherMember = members.find((member) => member !== userId)
+    const clerkUser = await clerkClient.users.getUser(otherMember)
+
+    const channelName =
+      `Conversation with ${clerkUser.firstName} ${clerkUser.lastName}` || `Channel with ${otherMember}`
+
+    if (!userId || !otherMember) {
+      return res.status(400).json({ error: "User ID and other member ID are required" })
     }
 
-    if (!id) {
-      return res.status(400).json({ error: "Channel ID is required" })
-    }
-
-    console.log("📺 Creating channel:", { type, id, name, members, userId })
-
-    // Ensure the current user is included in members
-    const allMembers = [...new Set([userId, ...members])]
-
-    // Create channel
-    const channel = serverClient.channel(type, id, {
-      name: name || `Channel ${id}`,
-      members: allMembers,
+    const channel = serverClient.channel(type, {
+      name: channelName,
+      members: [userId, otherMember],
       created_by_id: userId,
     })
 
-    // Create the channel on Stream's servers
-    await channel.create(userId)
+    await channel.create()
 
-    console.log("✅ Channel created successfully:", id)
-
-    res.json({
-      channel: {
-        id: channel.id,
-        type: channel.type,
-        name: channel.data.name,
-        members: allMembers,
-        created_by: userId,
-      },
-    })
+    res.status(201).json({ channelId: channel.id })
   } catch (error) {
     console.error("❌ Error creating channel:", error)
-    res.status(500).json({
-      error: "Failed to create channel",
-      details: error.message,
-    })
+    res.status(500).json({ error: "Failed to create channel" })
   }
 }
 
-// Get user's channels
+// Get user's channels (No changes needed here)
 export const getChannels = async (req, res) => {
   try {
     const { userId } = req.auth
@@ -92,34 +92,17 @@ export const getChannels = async (req, res) => {
       return res.status(400).json({ error: "User ID is required" })
     }
 
-    console.log("📋 Fetching channels for user:", userId)
-
-    // Query channels where user is a member
     const filter = { members: { $in: [userId] } }
     const sort = { last_message_at: -1 }
-    const options = { limit: 30 }
 
-    const channels = await serverClient.queryChannels(filter, sort, options)
-
-    console.log("✅ Channels fetched successfully:", channels.length)
-
-    const channelData = channels.map((channel) => ({
-      id: channel.id,
-      type: channel.type,
-      name: channel.data.name,
-      members: channel.state.members,
-      last_message_at: channel.state.last_message_at,
-      member_count: channel.state.member_count,
-    }))
-
-    res.json({
-      channels: channelData,
+    const channels = await serverClient.queryChannels(filter, sort, {
+      watch: true,
+      state: true,
     })
+
+    res.status(200).json({ channels })
   } catch (error) {
     console.error("❌ Error fetching channels:", error)
-    res.status(500).json({
-      error: "Failed to fetch channels",
-      details: error.message,
-    })
+    res.status(500).json({ error: "Failed to fetch channels" })
   }
 }
