@@ -1,155 +1,122 @@
-import { View, Text, TouchableOpacity, Image, FlatList, RefreshControl } from "react-native"
-import { useStreamChat } from "../hooks/useStreamChat"
-import { useCurrentUser } from "../hooks/useCurrentUser"
+import { useStreamChat } from "@/hooks/useStreamChat"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { formatDistanceToNow } from "date-fns"
-import { useState } from "react"
+import { router } from "expo-router"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, FlatList, Image, RefreshControl, Text, TouchableOpacity, View } from "react-native"
 
-interface ChannelListProps {
-  onChannelSelect: (channelId: string) => void
-  onRefresh?: () => Promise<void>
+interface Channel {
+  id: string
+  data: {
+    name?: string
+    image?: string
+  }
+  state: {
+    members: any
+    messages: any
+    last_message_at?: string
+  }
 }
 
-export default function CustomChannelList({ onChannelSelect, onRefresh }: ChannelListProps) {
-  const { channels } = useStreamChat()
+interface CustomChannelListProps {
+  onRefresh?: () => void
+  refreshing?: boolean
+}
+
+export default function CustomChannelList({ onRefresh, refreshing = false }: CustomChannelListProps) {
+  const { channels, loading } = useStreamChat()
   const { currentUser } = useCurrentUser()
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [processedChannels, setProcessedChannels] = useState<any[]>([])
 
-  const handleRefresh = async () => {
-    if (!onRefresh) return
+  useEffect(() => {
+    if (!channels || !currentUser) return
 
-    setIsRefreshing(true)
-    try {
-      await onRefresh()
-    } catch (error) {
-      console.error("❌ Error refreshing channels:", error)
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
-
-  const getOtherUserInfo = (channel: any) => {
-    if (!currentUser || !channel.state?.members) return null
-
-    try {
-      // Convert members object to array if it's an object
+    const processed = channels.map((channel: Channel) => {
+      // Get other user info
       const membersArray = Array.isArray(channel.state.members)
         ? channel.state.members
         : Object.values(channel.state.members || {})
 
-      // Get the other user from channel members
-      const otherMember = membersArray.find((member: any) => {
-        return member?.user?.id !== currentUser.clerkId
-      })
+      const otherMember = membersArray.find((member: any) => member?.user?.id !== currentUser.clerkId)
 
-      if (otherMember?.user) {
-        return {
-          name: otherMember.user.name || "Unknown User",
-          image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
-          online: otherMember.user.online || false,
-        }
+      // Get last message
+      const messagesArray = Array.isArray(channel.state.messages) ? Object.values(channel.state.messages) : []
+
+      const lastMessage = messagesArray[messagesArray.length - 1]
+
+      return {
+        id: channel.id,
+        name: otherMember?.user?.name || "Unknown User",
+        image: otherMember?.user?.image || `https://getstream.io/random_png/?name=${otherMember?.user?.name}`,
+        lastMessage: lastMessage?.text || "No messages yet",
+        lastMessageTime: channel.state.last_message_at
+          ? formatDistanceToNow(new Date(channel.state.last_message_at), {
+              addSuffix: true,
+            })
+          : "",
+        isFromCurrentUser: lastMessage?.user?.id === currentUser.clerkId,
+        online: otherMember?.user?.online || false,
       }
+    })
 
-      return null
-    } catch (error) {
-      console.error("Error getting other user info:", error)
-      return null
-    }
-  }
+    setProcessedChannels(processed)
+  }, [channels, currentUser])
 
-  const getLastMessage = (channel: any) => {
-    try {
-      const messages = channel.state?.messages
-      if (messages && Array.isArray(messages) && messages.length > 0) {
-        const lastMessage = messages[messages.length - 1]
-        return {
-          text: lastMessage.text || "No message",
-          timestamp: lastMessage.created_at,
-          isFromCurrentUser: lastMessage.user?.id === currentUser?.clerkId,
-        }
-      }
-      return null
-    } catch (error) {
-      console.error("Error getting last message:", error)
-      return null
-    }
-  }
+  const renderChannelItem = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      className="flex-row items-center p-4 border-b border-gray-100"
+      onPress={() => router.push(`/chat/${item.id}`)}
+    >
+      <View className="relative mr-3">
+        <Image source={{ uri: item.image }} className="w-12 h-12 rounded-full" />
+        {item.online && (
+          <View className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+        )}
+      </View>
 
-  const renderChannelItem = ({ item: channel }: { item: any }) => {
-    const otherUser = getOtherUserInfo(channel)
-    const lastMessage = getLastMessage(channel)
-    const unreadCount = channel.state?.unreadCount || 0
+      <View className="flex-1 min-w-0 mr-2">
+        <Text className="font-semibold text-gray-900 text-base mb-1" numberOfLines={1} ellipsizeMode="tail">
+          {item.name}
+        </Text>
+        <Text className="text-gray-500 text-sm" numberOfLines={1}>
+          {item.isFromCurrentUser ? "You: " : ""}
+          {item.lastMessage}
+        </Text>
+      </View>
 
-    // If we can't get other user info, don't render this item
-    if (!otherUser) {
-      return null
-    }
+      <View className="flex-shrink-0">
+        {item.lastMessageTime && <Text className="text-gray-400 text-xs">{item.lastMessageTime}</Text>}
+      </View>
+    </TouchableOpacity>
+  )
 
+  if (loading) {
     return (
-      <TouchableOpacity
-        className="flex-row items-center p-4 border-b border-gray-100"
-        onPress={() => onChannelSelect(channel.id)}
-      >
-        <View className="relative">
-          <Image source={{ uri: otherUser.image }} className="w-12 h-12 rounded-full" />
-          {otherUser.online && (
-            <View className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
-          )}
-        </View>
-
-        <View className="flex-1 ml-3 min-w-0">
-          <View className="flex-row items-center justify-between mb-1">
-            <Text className="font-semibold text-gray-900 text-base flex-1 mr-2" numberOfLines={1} ellipsizeMode="tail">
-              {otherUser.name}
-            </Text>
-            {lastMessage && (
-              <Text className="text-gray-500 text-sm flex-shrink-0">
-                {formatDistanceToNow(new Date(lastMessage.timestamp), { addSuffix: true })}
-              </Text>
-            )}
-          </View>
-
-          {lastMessage ? (
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm flex-1 mr-2" numberOfLines={1}>
-                {lastMessage.isFromCurrentUser ? "You: " : ""}
-                {lastMessage.text}
-              </Text>
-              {unreadCount > 0 && (
-                <View className="bg-blue-500 rounded-full min-w-[20px] h-5 items-center justify-center flex-shrink-0">
-                  <Text className="text-white text-xs font-bold">{unreadCount > 99 ? "99+" : unreadCount}</Text>
-                </View>
-              )}
-            </View>
-          ) : (
-            <Text className="text-gray-500 text-sm">No messages yet</Text>
-          )}
-        </View>
-      </TouchableOpacity>
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text className="text-gray-500 mt-2">Loading conversations...</Text>
+      </View>
     )
   }
 
-  // Filter out any null channels or channels without proper data
-  const validChannels = channels.filter((channel) => {
-    return channel && channel.id && channel.state
-  })
-
   return (
     <FlatList
-      data={validChannels}
+      data={processedChannels}
       renderItem={renderChannelItem}
       keyExtractor={(item) => item.id}
       className="flex-1"
       showsVerticalScrollIndicator={false}
       refreshControl={
         onRefresh ? (
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor="#1877F2"
-            colors={["#1877F2"]}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3B82F6"]} tintColor="#3B82F6" />
         ) : undefined
       }
+      ListEmptyComponent={() => (
+        <View className="flex-1 items-center justify-center py-20">
+          <Text className="text-gray-500 text-lg mb-2">No conversations yet</Text>
+          <Text className="text-gray-400 text-center px-8">Start a new conversation by tapping the compose button</Text>
+        </View>
+      )}
     />
   )
 }
