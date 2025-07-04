@@ -119,7 +119,6 @@ export default function CustomChannelList({
       onPress={() => router.push(`/chat/${item.id}`)}
     >
       <View className="relative mr-4">
-        {/* The profile picture size has been increased here */}
         <Image
           source={{ uri: item.image }}
           className="w-16 h-16 rounded-full"
@@ -130,14 +129,16 @@ export default function CustomChannelList({
       </View>
 
       <View className="flex-1 min-w-0 mr-2">
+        {/* --- ⬆️ TEXT SIZE INCREASED HERE --- */}
         <Text
-          className="font-semibold text-gray-900 text-base mb-1"
+          className="font-semibold text-gray-900 text-lg mb-1"
           numberOfLines={1}
           ellipsizeMode="tail"
         >
           {item.name}
         </Text>
-        <Text className="text-gray-500 text-sm" numberOfLines={1}>
+        {/* --- ⬆️ TEXT SIZE INCREASED HERE --- */}
+        <Text className="text-gray-500 text-base" numberOfLines={1}>
           {item.isFromCurrentUser ? "You: " : ""}
           {item.lastMessage}
         </Text>
