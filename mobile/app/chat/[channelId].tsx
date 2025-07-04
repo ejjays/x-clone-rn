@@ -238,18 +238,19 @@ export default function ChatScreen() {
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
 
-        {/* Profile Picture */}
+        {/* --- ⬆️ PROFILE PICTURE SIZE INCREASED HERE --- */}
         {otherUser?.image && (
           <View className="relative mr-3">
-            <Image source={{ uri: otherUser.image }} className="w-10 h-10 rounded-full" />
+            <Image source={{ uri: otherUser.image }} className="w-12 h-12 rounded-full" />
             {otherUser.online && (
-              <View className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+              <View className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white" />
             )}
           </View>
         )}
 
+        {/* --- ⬆️ USER NAME FONT SIZE INCREASED HERE --- */}
         <View className="flex-1 min-w-0">
-          <Text className="font-semibold text-gray-900 text-lg" numberOfLines={1} ellipsizeMode="tail">
+          <Text className="font-semibold text-gray-900 text-xl" numberOfLines={1} ellipsizeMode="tail">
             {otherUser?.name || "Chat"}
           </Text>
           {otherUser && <Text className="text-gray-500 text-sm">{otherUser.online ? "Online" : "Offline"}</Text>}
