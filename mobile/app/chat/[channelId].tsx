@@ -1,135 +1,161 @@
-import { useEffect, useState } from "react"
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useStreamChat } from "@/hooks/useStreamChat";
+import { Ionicons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import { formatDistanceToNow } from "date-fns";
+import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
   FlatList,
-  TextInput,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-} from "react-native"
-import { useLocalSearchParams, router } from "expo-router"
-import { useStreamChat } from "@/hooks/useStreamChat"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { Ionicons } from "@expo/vector-icons"
-import { formatDistanceToNow } from "date-fns"
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
-  const { channelId } = useLocalSearchParams<{ channelId: string }>()
-  const { client, isConnected, isConnecting } = useStreamChat()
-  const { currentUser } = useCurrentUser()
+  const { channelId } = useLocalSearchParams<{ channelId: string }>();
+  const { client, isConnected, isConnecting } = useStreamChat();
+  const { currentUser } = useCurrentUser();
 
-  const [channel, setChannel] = useState<any>(null)
-  const [messages, setMessages] = useState<any[]>([])
-  const [newMessage, setNewMessage] = useState("")
-  const [otherUser, setOtherUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
+  const [channel, setChannel] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [otherUser, setOtherUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (!client || !isConnected || !channelId || !currentUser) {
-      setLoading(false)
-      return
+      setLoading(false);
+      return;
     }
 
-    initializeChannel()
+    initializeChannel();
 
     async function initializeChannel() {
       try {
-        setLoading(true)
-        console.log("🔄 Initializing channel:", channelId)
+        setLoading(true);
+        console.log("🔄 Initializing channel:", channelId);
 
         // Get the channel
-        const ch = client.channel("messaging", channelId)
-        await ch.watch()
-        setChannel(ch)
+        const ch = client.channel("messaging", channelId);
+        await ch.watch();
+        setChannel(ch);
 
         // Get other user info
-        const membersArray = Array.isArray(ch.state.members) ? ch.state.members : Object.values(ch.state.members || {})
+        const membersArray = Array.isArray(ch.state.members)
+          ? ch.state.members
+          : Object.values(ch.state.members || {});
 
-        const otherMember = membersArray.find((member: any) => member?.user?.id !== currentUser.clerkId)
+        const otherMember = membersArray.find(
+          (member: any) => member?.user?.id !== currentUser.clerkId
+        );
 
         if (otherMember?.user) {
           setOtherUser({
             name: otherMember.user.name || "Unknown User",
-            image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
+            image:
+              otherMember.user.image ||
+              `https://getstream.io/random_png/?name=${otherMember.user.name}`,
             online: otherMember.user.online || false,
-          })
+          });
         }
 
         // Get messages
-        const messagesArray = Array.isArray(ch.state.messages) ? Object.values(ch.state.messages) : []
+        const messagesArray = Array.isArray(ch.state.messages)
+          ? Object.values(ch.state.messages)
+          : [];
 
-        setMessages(messagesArray.reverse())
+        setMessages(messagesArray.reverse());
 
         // Listen for new messages
         const handleNewMessage = (event: any) => {
-          console.log("📨 New message received:", event.message)
-          setMessages((prev) => [event.message, ...prev])
-        }
+          console.log("📨 New message received:", event.message);
+          setMessages((prev) => [event.message, ...prev]);
+        };
 
-        ch.on("message.new", handleNewMessage)
+        ch.on("message.new", handleNewMessage);
 
-        console.log("✅ Channel initialized successfully")
+        console.log("✅ Channel initialized successfully");
 
         // Cleanup function
         return () => {
-          ch.off("message.new", handleNewMessage)
-        }
+          ch.off("message.new", handleNewMessage);
+        };
       } catch (error) {
-        console.error("❌ Error initializing channel:", error)
-        Alert.alert("Error", "Failed to load chat. Please try again.")
+        console.error("❌ Error initializing channel:", error);
+        Alert.alert("Error", "Failed to load chat. Please try again.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }, [client, isConnected, channelId, currentUser])
+  }, [client, isConnected, channelId, currentUser]);
 
   const sendMessage = async () => {
-    if (!channel || !newMessage.trim() || sending) return
+    if (!channel || !newMessage.trim() || sending) return;
 
-    setSending(true)
+    setSending(true);
     try {
-      console.log("📤 Sending message:", newMessage.trim())
+      console.log("📤 Sending message:", newMessage.trim());
 
       await channel.sendMessage({
         text: newMessage.trim(),
-      })
+      });
 
-      setNewMessage("")
-      console.log("✅ Message sent successfully")
+      setNewMessage("");
+      console.log("✅ Message sent successfully");
     } catch (error) {
-      console.error("❌ Error sending message:", error)
-      Alert.alert("Error", "Failed to send message. Please try again.")
+      console.error("❌ Error sending message:", error);
+      Alert.alert("Error", "Failed to send message. Please try again.");
     } finally {
-      setSending(false)
+      setSending(false);
     }
-  }
+  };
 
   const renderMessage = ({ item: message }: { item: any }) => {
-    const isFromCurrentUser = message.user?.id === currentUser?.clerkId
-    const messageTime = message.created_at ? formatDistanceToNow(new Date(message.created_at), { addSuffix: true }) : ""
+    const isFromCurrentUser = message.user?.id === currentUser?.clerkId;
+    const messageTime = message.created_at
+      ? formatDistanceToNow(new Date(message.created_at), { addSuffix: true })
+      : "";
 
     return (
-      <View className={`flex-row mb-4 ${isFromCurrentUser ? "justify-end" : "justify-start"}`}>
+      <View
+        className={`flex-row mb-4 ${
+          isFromCurrentUser ? "justify-end" : "justify-start"
+        }`}
+      >
         <View
           className={`max-w-[75%] p-3 rounded-2xl ${
-            isFromCurrentUser ? "bg-blue-500 rounded-br-md" : "bg-gray-200 rounded-bl-md"
+            isFromCurrentUser
+              ? "bg-blue-500 rounded-br-md"
+              : "bg-gray-200 rounded-bl-md"
           }`}
         >
-          <Text className={`text-base ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>{message.text}</Text>
+          <Text
+            className={`text-base ${
+              isFromCurrentUser ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {message.text}
+          </Text>
           {messageTime && (
-            <Text className={`text-xs mt-1 ${isFromCurrentUser ? "text-blue-100" : "text-gray-500"}`}>
+            <Text
+              className={`text-xs mt-1 ${
+                isFromCurrentUser ? "text-blue-100" : "text-gray-500"
+              }`}
+            >
               {messageTime}
             </Text>
           )}
         </View>
       </View>
-    )
-  }
+    );
+  };
 
   // Show loading while connecting or initializing
   if (isConnecting || loading) {
@@ -142,7 +168,7 @@ export default function ChatScreen() {
           </Text>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   // Show error if not connected or no client
@@ -151,16 +177,22 @@ export default function ChatScreen() {
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="cloud-offline-outline" size={64} color="#9CA3AF" />
-          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">Connection Issue</Text>
-          <Text className="text-gray-500 text-center">
-            Unable to connect to chat service. Please check your internet connection.
+          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">
+            Connection Issue
           </Text>
-          <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-lg mt-4" onPress={() => router.back()}>
+          <Text className="text-gray-500 text-center">
+            Unable to connect to chat service. Please check your internet
+            connection.
+          </Text>
+          <TouchableOpacity
+            className="bg-blue-500 px-6 py-3 rounded-lg mt-4"
+            onPress={() => router.back()}
+          >
             <Text className="text-white font-semibold">Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   return (
@@ -172,8 +204,14 @@ export default function ChatScreen() {
         </TouchableOpacity>
 
         <View className="flex-1">
-          <Text className="font-semibold text-gray-900 text-lg">{otherUser?.name || "Chat"}</Text>
-          {otherUser && <Text className="text-gray-500 text-sm">{otherUser.online ? "Online" : "Offline"}</Text>}
+          <Text className="font-semibold text-gray-900 text-lg">
+            {otherUser?.name || "Chat"}
+          </Text>
+          {otherUser && (
+            <Text className="text-gray-500 text-sm">
+              {otherUser.online ? "Online" : "Offline"}
+            </Text>
+          )}
         </View>
 
         <TouchableOpacity className="p-2">
@@ -185,7 +223,10 @@ export default function ChatScreen() {
       </View>
 
       {/* Messages */}
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <FlatList
           data={messages}
           renderItem={renderMessage}
@@ -194,10 +235,15 @@ export default function ChatScreen() {
           inverted
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={() => (
-            <View className="flex-1 items-center justify-center py-20">
+            <View
+              className="flex-1 items-center justify-center py-20"
+              style={{ transform: [{ scaleY: -1 }] }}
+            >
               <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
               <Text className="text-gray-500 mt-2">No messages yet</Text>
-              <Text className="text-gray-400 text-sm">Start the conversation!</Text>
+              <Text className="text-gray-400 text-sm">
+                Start the conversation!
+              </Text>
             </View>
           )}
         />
@@ -216,16 +262,22 @@ export default function ChatScreen() {
           <TouchableOpacity
             onPress={sendMessage}
             disabled={!newMessage.trim() || sending}
-            className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-500" : "bg-gray-300"}`}
+            className={`p-3 rounded-full ${
+              newMessage.trim() && !sending ? "bg-blue-500" : "bg-gray-300"
+            }`}
           >
             {sending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Ionicons name="send" size={20} color={newMessage.trim() && !sending ? "white" : "gray"} />
+              <Ionicons
+                name="send"
+                size={20}
+                color={newMessage.trim() && !sending ? "white" : "gray"}
+              />
             )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
+  );
 }
