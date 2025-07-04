@@ -1,11 +1,12 @@
+import { clerkClient } from "@clerk/express";
 import { StreamChat } from "stream-chat";
 import { ENV } from "../config/env.js";
-import User from "../models/user.model.js"; // Make sure to import the User model
+import User from "../models/user.model.js";
 
 // Initialize Stream Chat client
 const serverClient = StreamChat.getInstance(ENV.STREAM_API_KEY, ENV.STREAM_SECRET_KEY);
 
-// Generate Stream Chat token for user
+// (The getStreamToken function is unchanged, but included for context)
 export const getStreamToken = async (req, res) => {
   try {
     const { userId } = req.auth;
@@ -14,7 +15,6 @@ export const getStreamToken = async (req, res) => {
       return res.status(400).json({ error: "User ID is required" });
     }
 
-    // --- FIX STARTS HERE ---
     // Find the user in your database to get their details
     const user = await User.findOne({ clerkId: userId }).select("firstName lastName profilePicture");
 
@@ -41,7 +41,6 @@ export const getStreamToken = async (req, res) => {
       token,
       user: streamUser,
     });
-    // --- FIX ENDS HERE ---
 
   } catch (error) {
     console.error("❌ Error generating Stream token:", error);
@@ -52,38 +51,50 @@ export const getStreamToken = async (req, res) => {
   }
 };
 
-// Create a new channel (No changes needed here, but kept for context)
+
+// Create a new channel
 export const createChannel = async (req, res) => {
   try {
     const { userId } = req.auth
     const { type = "messaging", members = [] } = req.body
 
-    const otherMember = members.find((member) => member !== userId)
-    const clerkUser = await clerkClient.users.getUser(otherMember)
+    // --- FIX STARTS HERE ---
+    // Find the ID of the other member in the conversation
+    const otherMemberId = members.find((member) => member !== userId)
 
-    const channelName =
-      `Conversation with ${clerkUser.firstName} ${clerkUser.lastName}` || `Channel with ${otherMember}`
-
-    if (!userId || !otherMember) {
-      return res.status(400).json({ error: "User ID and other member ID are required" })
+    if (!userId || !otherMemberId) {
+      return res.status(400).json({ error: "Both user IDs are required to create a channel." })
     }
+    
+    // Use the imported clerkClient to get the other user's details
+    const clerkUser = await clerkClient.users.getUser(otherMemberId)
 
+    // Construct a more descriptive channel name
+    const channelName =
+      `Conversation with ${clerkUser.firstName} ${clerkUser.lastName}` || `Channel with ${otherMemberId}`
+    // --- FIX ENDS HERE ---
+
+    // Create the channel using both user IDs
     const channel = serverClient.channel(type, {
       name: channelName,
-      members: [userId, otherMember],
+      members: [userId, otherMemberId],
       created_by_id: userId,
     })
 
     await channel.create()
 
+    // Return the created channel's ID
     res.status(201).json({ channelId: channel.id })
   } catch (error) {
     console.error("❌ Error creating channel:", error)
-    res.status(500).json({ error: "Failed to create channel" })
+    res.status(500).json({
+      error: "Failed to create channel",
+      details: error.message
+    })
   }
 }
 
-// Get user's channels (No changes needed here)
+// (The getChannels function is also unchanged)
 export const getChannels = async (req, res) => {
   try {
     const { userId } = req.auth
@@ -92,17 +103,33 @@ export const getChannels = async (req, res) => {
       return res.status(400).json({ error: "User ID is required" })
     }
 
+    console.log("📋 Fetching channels for user:", userId)
+
     const filter = { members: { $in: [userId] } }
     const sort = { last_message_at: -1 }
+    const options = { limit: 30 }
 
-    const channels = await serverClient.queryChannels(filter, sort, {
-      watch: true,
-      state: true,
+    const channels = await serverClient.queryChannels(filter, sort, options)
+
+    console.log("✅ Channels fetched successfully:", channels.length)
+
+    const channelData = channels.map((channel) => ({
+      id: channel.id,
+      type: channel.type,
+      name: channel.data.name,
+      members: channel.state.members,
+      last_message_at: channel.state.last_message_at,
+      member_count: channel.state.member_count,
+    }))
+
+    res.json({
+      channels: channelData,
     })
-
-    res.status(200).json({ channels })
   } catch (error) {
     console.error("❌ Error fetching channels:", error)
-    res.status(500).json({ error: "Failed to fetch channels" })
+    res.status(500).json({
+      error: "Failed to fetch channels",
+      details: error.message,
+    })
   }
 }
