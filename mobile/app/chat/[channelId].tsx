@@ -1,4 +1,3 @@
-// mobile/app/chat/[channelId].tsx
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useStreamChat } from "@/hooks/useStreamChat"
 import { Ionicons } from "@expo/vector-icons"
@@ -138,8 +137,9 @@ export default function ChatScreen() {
     const currentDate = new Date(currentMessage.created_at)
     const previousDate = new Date(previousMessage.created_at)
 
+    // Show timestamp if messages are more than 30 minutes apart
     const timeDiff = currentDate.getTime() - previousDate.getTime()
-    return timeDiff > 30 * 60 * 1000 
+    return timeDiff > 30 * 60 * 1000 // 30 minutes
   }
 
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
@@ -148,10 +148,11 @@ export default function ChatScreen() {
     const messageAbove = index < messages.length - 1 ? messages[index + 1] : null
     const messageBelow = index > 0 ? messages[index - 1] : null
 
-    const isFirstInGroup = !messageAbove || messageAbove.user?.id !== message.user?.id
-    const isLastInGroup = !messageBelow || messageBelow.user?.id !== message.user?.id
-
     const showTimestamp = shouldShowTimestamp(message, messageAbove)
+
+    const isFirstInGroup = showTimestamp || !messageAbove || messageAbove.user?.id !== message.user?.id
+    const isLastInGroup = !messageBelow || messageBelow.user?.id !== message.user?.id || shouldShowTimestamp(messageBelow, message)
+
     const showAvatar = isLastInGroup
 
     const getBubbleStyle = () => {
@@ -222,6 +223,7 @@ export default function ChatScreen() {
     )
   }
 
+  // Show loading while connecting or initializing
   if (isConnecting || loading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -235,6 +237,7 @@ export default function ChatScreen() {
     )
   }
 
+  // Show error if not connected or no client
   if (!client || !isConnected) {
     return (
       <SafeAreaView className="flex-1 bg-white">
