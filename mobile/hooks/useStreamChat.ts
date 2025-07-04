@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-expo";
-import { type Channel, StreamChat } from "stream-chat"; // Import the 'Channel' type
+import { type Channel, StreamChat } from "stream-chat";
 import { useApiClient, streamApi } from "@/utils/api";
 import { useCurrentUser } from "./useCurrentUser";
 
@@ -8,15 +8,14 @@ const API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY || "YOUR_STREAM_API_KEY";
 
 export const useStreamChat = () => {
   const [client, setClient] = useState<StreamChat | null>(null);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [isConnecting, setIsConnecting] = useState(true);
   const { isSignedIn, userId } = useAuth();
   const { currentUser } = useCurrentUser();
   const api = useApiClient();
 
-  // ✨ Add state for channels and connection status
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [isConnecting, setIsConnecting] = useState(true);
-
   useEffect(() => {
+    // We only run this effect when the user's ID changes.
     if (!isSignedIn || !userId) {
       setIsConnecting(false);
       return;
@@ -25,7 +24,7 @@ export const useStreamChat = () => {
     const chatClient = StreamChat.getInstance(API_KEY);
 
     const connectAndLoadChannels = async () => {
-      // Prevent reconnecting if the client is already connected for the same user
+      // Prevent re-connecting if the client is already set up for this user
       if (chatClient.userID === userId) {
         console.log("✅ Stream Chat already connected for user:", userId);
         setIsConnecting(false);
@@ -47,22 +46,28 @@ export const useStreamChat = () => {
         setClient(chatClient);
         console.log("✅ Stream Chat connected successfully!");
 
-        // --- ✨ NEW: Fetch user's channels ---
+        // --- ✨ FIX STARTS HERE ✨ ---
         console.log("🔄 Fetching user channels...");
         const channelFilter = {
           type: "messaging",
           members: { $in: [userId] },
-          // Only fetch channels that have at least one message
-          last_message_at: { $ne: null },
+          // ❌ The problematic line is removed from here.
         };
         const sort = [{ last_message_at: -1 }];
+
         const userChannels = await chatClient.queryChannels(channelFilter, sort, {
-          watch: true, // Watch for real-time changes
-          state: true, // Get full channel state with messages
+          watch: true,
+          state: true,
         });
-        setChannels(userChannels);
-        console.log(`✅ Fetched ${userChannels.length} active channels.`);
-        // --- End of new logic ---
+
+        // ✅ Add a client-side filter as a safeguard to ensure no empty channels are shown.
+        const channelsWithMessages = userChannels.filter(
+          (channel) => channel.state.messages.length > 0
+        );
+
+        setChannels(channelsWithMessages);
+        console.log(`✅ Found ${channelsWithMessages.length} channels with messages.`);
+        // --- ✨ FIX ENDS HERE ✨ ---
 
       } catch (error) {
         console.error("❌ Stream Chat connection or channel fetch failed:", error);
@@ -73,23 +78,24 @@ export const useStreamChat = () => {
 
     connectAndLoadChannels();
 
-    // Listen for events that should trigger a channel list refresh
+    // Set up listeners for real-time updates
     const handleEvent = (event: any) => {
-      console.log(`Received event: ${event.type}, refetching channels.`);
-      // A simple way to refresh is to re-query
+      console.log(`Received event: ${event.type}, refreshing channels.`);
+      // Re-running the connection and load logic handles updates gracefully
       connectAndLoadChannels();
     };
 
     chatClient.on(["message.new", "notification.message_new", "channel.updated"], handleEvent);
 
     return () => {
-      // Clean up listeners when the hook is no longer in use
+      // Clean up listeners when the component unmounts
       chatClient.off(handleEvent);
     };
-  }, [isSignedIn, userId]); // Dependencies are stable and prevent unnecessary re-runs
+    
+  }, [isSignedIn, userId]); // Dependencies are stable to prevent loops
 
-  // The createChannel function from our previous fix
   const createChannel = async (otherUserId: string, otherUserName: string) => {
+    // This function remains the same as our previous fix
     if (!client || !currentUser || !userId) {
       console.error("❌ Client, current user, or user ID not available.");
       return null;
@@ -113,7 +119,7 @@ export const useStreamChat = () => {
     client,
     isConnecting,
     isConnected: !!client?.user,
-    channels, // ✨ Expose the channels state
+    channels,
     createChannel,
   };
 };
