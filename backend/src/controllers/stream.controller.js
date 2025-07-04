@@ -3,14 +3,13 @@ import { StreamChat } from "stream-chat";
 import { ENV } from "../config/env.js";
 import User from "../models/user.model.js";
 
-// --- FIX STARTS HERE ---
-// Initialize the Stream Chat client with your API keys
+// Initialize Stream Chat client
 const serverClient = StreamChat.getInstance(
   ENV.STREAM_API_KEY,
-  ENV.STREAM_SECRET_KEY
+  ENV.STREAM_SECRET_KEY,
 );
-// --- FIX ENDS HERE ---
 
+// (The getStreamToken function is unchanged)
 export const getStreamToken = async (req, res) => {
   try {
     const { userId } = req.auth;
@@ -29,7 +28,6 @@ export const getStreamToken = async (req, res) => {
 
     console.log("🎫 Generating Stream token for user:", userId);
 
-    // Now, serverClient is defined and can be used to create the token
     const token = serverClient.createToken(userId);
 
     const streamUser = {
@@ -53,8 +51,7 @@ export const getStreamToken = async (req, res) => {
   }
 };
 
-// (No changes needed in the functions below, but they are included for context)
-
+// Create a new channel
 export const createChannel = async (req, res) => {
   try {
     const { userId } = req.auth;
@@ -68,11 +65,31 @@ export const createChannel = async (req, res) => {
         .json({ error: "Both user IDs are required to create a channel." });
     }
 
-    const clerkUser = await clerkClient.users.getUser(otherMemberId);
+    // --- FIX STARTS HERE ---
+    // Fetch both users from Clerk to ensure we have their latest details
+    const [currentUserClerk, otherUserClerk] = await Promise.all([
+      clerkClient.users.getUser(userId),
+      clerkClient.users.getUser(otherMemberId)
+    ]);
+
+    // Upsert both users into Stream. This will create them if they don't
+    // exist, or update them if they do. This is the key to fixing the error.
+    await serverClient.upsertUsers([
+      {
+        id: currentUserClerk.id,
+        name: `${currentUserClerk.firstName} ${currentUserClerk.lastName}`,
+        image: currentUserClerk.imageUrl,
+      },
+      {
+        id: otherUserClerk.id,
+        name: `${otherUserClerk.firstName} ${otherUserClerk.lastName}`,
+        image: otherUserClerk.imageUrl,
+      }
+    ]);
+    // --- FIX ENDS HERE ---
 
     const channelName =
-      `Conversation with ${clerkUser.firstName} ${clerkUser.lastName}` ||
-      `Channel with ${otherMemberId}`;
+      `Conversation with ${otherUserClerk.firstName} ${otherUserClerk.lastName}` || `Channel with ${otherMemberId}`;
 
     const channel = serverClient.channel(type, {
       name: channelName,
@@ -92,6 +109,8 @@ export const createChannel = async (req, res) => {
   }
 };
 
+
+// (The getChannels function is also unchanged)
 export const getChannels = async (req, res) => {
   try {
     const { userId } = req.auth;
