@@ -10,11 +10,13 @@ import { useStreamChat } from "@/hooks/useStreamChat"
 import { OverlayProvider, Chat } from "stream-chat-react-native"
 import { streamChatTheme } from "@/utils/StreamChatTheme"
 import { useEffect } from "react"
+import { useAuth } from "@clerk/clerk-expo"
 
 const queryClient = new QueryClient()
 
 // This is the main navigation component
 const InitialLayout = () => {
+  const { isSignedIn } = useAuth()
   const { client, isConnected, isConnecting } = useStreamChat()
 
   // Handle app state changes to properly disconnect
@@ -33,8 +35,8 @@ const InitialLayout = () => {
     }
   }, [])
 
-  // Show loading only while connecting for the first time
-  if (isConnecting && !client) {
+  // Show loading only while connecting for the first time AND user is signed in
+  if (isSignedIn && isConnecting && !client) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#1DA1F2" />
@@ -42,18 +44,31 @@ const InitialLayout = () => {
     )
   }
 
-  // Render the app even if Stream Chat isn't connected yet
-  // The individual screens will handle their own loading states
+  // If user is signed in and we have a client, wrap with Chat
+  if (isSignedIn && client) {
+    return (
+      <OverlayProvider value={{ style: streamChatTheme }}>
+        <Chat client={client} style={streamChatTheme}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="chat/[channelId]" />
+            <Stack.Screen name="new-message" />
+          </Stack>
+        </Chat>
+      </OverlayProvider>
+    )
+  }
+
+  // For non-signed in users or when client is not ready, render without Chat wrapper
   return (
     <OverlayProvider value={{ style: streamChatTheme }}>
-      <Chat client={client} style={streamChatTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="chat/[channelId]" />
-          <Stack.Screen name="new-message" />
-        </Stack>
-      </Chat>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="chat/[channelId]" />
+        <Stack.Screen name="new-message" />
+      </Stack>
     </OverlayProvider>
   )
 }

@@ -1,49 +1,46 @@
-import { useEffect } from "react";
-import { View, Text, SafeAreaView, ActivityIndicator, Alert } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { useStreamChat } from "@/hooks/useStreamChat";
-import {
-  Channel,
-  MessageInput,
-  MessageList,
-} from "stream-chat-react-native";
-import { streamChatTheme } from "@/utils/StreamChatTheme";
+import { useEffect } from "react"
+import { View, Text, SafeAreaView, ActivityIndicator, Alert } from "react-native"
+import { useLocalSearchParams, router } from "expo-router"
+import { useStreamChat } from "@/hooks/useStreamChat"
+import { Channel, MessageInput, MessageList } from "stream-chat-react-native"
+import { streamChatTheme } from "@/utils/StreamChatTheme"
 
 export default function ChatScreen() {
-  const { channelId } = useLocalSearchParams<{ channelId: string }>();
-  const { client, isConnected } = useStreamChat();
+  const { channelId } = useLocalSearchParams<{ channelId: string }>()
+  const { client, isConnected, isConnecting } = useStreamChat()
 
   useEffect(() => {
-    if (!isConnected) {
-      // You can add a loading indicator or a message here
-      console.log("Waiting for Stream Chat connection...");
+    if (!channelId) {
+      Alert.alert("Error", "No channel ID found.", [{ text: "OK", onPress: () => router.back() }])
     }
-  }, [isConnected]);
+  }, [channelId])
 
-  if (!isConnected || !client) {
+  // Show loading while connecting
+  if (isConnecting || !isConnected || !client) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color="#3B82F6" />
           <Text style={{ color: "#6B7280", marginTop: 8 }}>
-            Connecting to chat...
+            {isConnecting ? "Connecting to chat..." : "Loading chat..."}
           </Text>
         </View>
       </SafeAreaView>
-    );
+    )
   }
 
   if (!channelId) {
-    Alert.alert("Error", "No channel ID found.");
     return (
-      <View>
-        <Text>Error: No channel ID provided.</Text>
-      </View>
-    );
+      <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ color: "#6B7280" }}>Error: No channel ID provided.</Text>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   // Get the channel from the client
-  const channel = client.channel("messaging", channelId);
+  const channel = client.channel("messaging", channelId)
 
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
@@ -52,5 +49,5 @@ export default function ChatScreen() {
         <MessageInput />
       </Channel>
     </View>
-  );
+  )
 }

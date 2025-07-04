@@ -14,7 +14,6 @@ export default function NewMessageScreen() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const api = useApiClient()
-  // ✨ Get the client and connection status from the hook
   const { client, isConnected, createChannel } = useStreamChat()
   const { currentUser } = useCurrentUser()
 
@@ -62,7 +61,7 @@ export default function NewMessageScreen() {
   }, [searchQuery, users])
 
   const handleUserSelect = async (selectedUser: User) => {
-    // Add a guard to ensure the chat client is ready
+    // Check if chat is ready
     if (!client || !isConnected) {
       Alert.alert("Connection Error", "Chat is not yet connected. Please wait a moment and try again.")
       return
@@ -81,7 +80,6 @@ export default function NewMessageScreen() {
 
       if (channel && channel.id) {
         console.log("✅ Channel created successfully:", channel.id)
-        // Use router.push instead of router.replace for better navigation
         router.push(`/chat/${channel.id}`)
       } else {
         throw new Error("Channel creation returned null or invalid channel")
@@ -98,7 +96,6 @@ export default function NewMessageScreen() {
     <TouchableOpacity
       className="flex-row items-center p-4 border-b border-gray-100"
       onPress={() => handleUserSelect(item)}
-      // ✨ Disable the button while creating a channel OR if the chat client is not connected
       disabled={creating || !isConnected}
     >
       <View className="w-12 h-12 rounded-full bg-blue-500 items-center justify-center mr-3">
@@ -140,7 +137,7 @@ export default function NewMessageScreen() {
         </View>
       </View>
 
-      {/* ✨ Add a connection status indicator */}
+      {/* Connection status indicator */}
       {!isConnected && (
         <View className="p-2 bg-yellow-100 items-center">
           <Text className="text-yellow-800 text-xs font-semibold">Connecting to chat service...</Text>
