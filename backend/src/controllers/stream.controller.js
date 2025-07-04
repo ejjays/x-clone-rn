@@ -1,9 +1,16 @@
-import { clerkClient } from "@clerk/express"; // <-- ADD THIS LINE
+import { clerkClient } from "@clerk/express";
 import { StreamChat } from "stream-chat";
 import { ENV } from "../config/env.js";
 import User from "../models/user.model.js";
 
-// (The getStreamToken function is unchanged)
+// --- FIX STARTS HERE ---
+// Initialize the Stream Chat client with your API keys
+const serverClient = StreamChat.getInstance(
+  ENV.STREAM_API_KEY,
+  ENV.STREAM_SECRET_KEY
+);
+// --- FIX ENDS HERE ---
+
 export const getStreamToken = async (req, res) => {
   try {
     const { userId } = req.auth;
@@ -22,6 +29,7 @@ export const getStreamToken = async (req, res) => {
 
     console.log("🎫 Generating Stream token for user:", userId);
 
+    // Now, serverClient is defined and can be used to create the token
     const token = serverClient.createToken(userId);
 
     const streamUser = {
@@ -45,7 +53,8 @@ export const getStreamToken = async (req, res) => {
   }
 };
 
-// Create a new channel
+// (No changes needed in the functions below, but they are included for context)
+
 export const createChannel = async (req, res) => {
   try {
     const { userId } = req.auth;
@@ -83,7 +92,6 @@ export const createChannel = async (req, res) => {
   }
 };
 
-// (The getChannels function is unchanged)
 export const getChannels = async (req, res) => {
   try {
     const { userId } = req.auth;
