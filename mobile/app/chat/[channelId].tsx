@@ -1,3 +1,4 @@
+// mobile/app/chat/[channelId].tsx
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useStreamChat } from "@/hooks/useStreamChat"
 import { Ionicons } from "@expo/vector-icons"
@@ -137,9 +138,8 @@ export default function ChatScreen() {
     const currentDate = new Date(currentMessage.created_at)
     const previousDate = new Date(previousMessage.created_at)
 
-    // Show timestamp if messages are more than 30 minutes apart
     const timeDiff = currentDate.getTime() - previousDate.getTime()
-    return timeDiff > 30 * 60 * 1000 // 30 minutes
+    return timeDiff > 30 * 60 * 1000 
   }
 
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
@@ -156,12 +156,18 @@ export default function ChatScreen() {
     const showAvatar = isLastInGroup
 
     const getBubbleStyle = () => {
-      let style = "rounded-3xl" 
+      let style = "rounded-3xl"
+
+      // --- ⬆️ MODIFICATION FOR ISOLATED MESSAGE ---
+      if (isFirstInGroup && isLastInGroup) {
+        // This is an isolated message, so it should be fully rounded.
+        // We just return the base 'rounded-3xl' style without modifications.
+        return style;
+      }
+      // --- END OF MODIFICATION ---
 
       if (isFromCurrentUser) {
-        if (isFirstInGroup && isLastInGroup) {
-          style += " rounded-br-lg"
-        } else if (isFirstInGroup) {
+        if (isFirstInGroup) {
           style += " rounded-br-lg"
         } else if (isLastInGroup) {
           style += " rounded-tr-lg"
@@ -169,9 +175,7 @@ export default function ChatScreen() {
           style += " rounded-tr-lg rounded-br-lg"
         }
       } else {
-        if (isFirstInGroup && isLastInGroup) {
-          style += " rounded-bl-lg"
-        } else if (isFirstInGroup) {
+        if (isFirstInGroup) {
           style += " rounded-bl-lg"
         } else if (isLastInGroup) {
           style += " rounded-tl-lg"
