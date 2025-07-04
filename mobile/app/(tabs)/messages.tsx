@@ -157,12 +157,18 @@ export default function MessagesScreen() {
 
           <View className="flex-row items-center justify-between mt-1">
             <Text className="text-gray-600 text-sm flex-1" numberOfLines={1}>
-              {item.lastMessage
-                ? item.lastMessage.user.id === userId
-                  ? `You: ${item.lastMessage.text}`
-                  : item.lastMessage.text
-                : "No messages yet..."}
-            </Text>
+               {item.lastMessage ? (
+               item.lastMessage.user.id === userId ? (
+               <>
+              You: <Text>{item.lastMessage.text}</Text>
+              </>
+              ) : (
+             <Text>{item.lastMessage.text}</Text>
+                     )
+                 ) : (
+               "No messages yet..."
+               )}
+        </Text>
             {item.unreadCount && item.unreadCount > 0 && (
               <View className="bg-blue-500 rounded-full min-w-[20px] h-5 items-center justify-center ml-2">
                 <Text className="text-white text-xs font-medium">
