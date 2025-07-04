@@ -171,7 +171,7 @@ export default function ChatScreen() {
           </View>
         )}
 
-        <View className={`flex-row mb-1 ${isFromCurrentUser ? "justify-end pr-3" : "justify-start pl-3"}`}>
+        <View className={`flex-row mb-1 ${isFromCurrentUser ? "justify-end pr-1" : "justify-start pl-1"}`}>
           {!isFromCurrentUser && (
             <View className="mr-2" style={{ width: 32 }}>
               {showAvatar && otherUser?.image ? (
