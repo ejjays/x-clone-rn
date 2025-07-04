@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useRef } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@clerk/clerk-expo"
-import { type Channel, StreamChat } from "stream-chat"
+import { StreamChat } from "stream-chat"
 import { useApiClient, streamApi } from "@/utils/api"
 import { useCurrentUser } from "./useCurrentUser"
 
@@ -8,13 +9,13 @@ const API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY || "YOUR_STREAM_API_KEY"
 
 // Global singleton instance
 let globalClient: StreamChat | null = null
-let isConnecting = false
+let isConnectingGlobal = false
 
 export const useStreamChat = () => {
   const [client, setClient] = useState<StreamChat | null>(globalClient)
-  const [channels, setChannels] = useState<Channel[]>([])
-  const [isConnectingState, setIsConnectingState] = useState(false)
-  const [isConnectedState, setIsConnectedState] = useState(false)
+  const [channels, setChannels] = useState<any[]>([])
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
   const { isSignedIn, userId } = useAuth()
   const { currentUser } = useCurrentUser()
   const api = useApiClient()
@@ -93,8 +94,8 @@ export const useStreamChat = () => {
     if (!isSignedIn || !userId || !currentUser) {
       setClient(null)
       setChannels([])
-      setIsConnectingState(false)
-      setIsConnectedState(false)
+      setIsConnecting(false)
+      setIsConnected(false)
 
       // Clean up listeners
       if (channelsListenerRef.current) {
@@ -113,15 +114,15 @@ export const useStreamChat = () => {
     if (globalClient && globalClient.userID === userId) {
       console.log("✅ Using existing Stream Chat connection")
       setClient(globalClient)
-      setIsConnectingState(false)
-      setIsConnectedState(true)
+      setIsConnecting(false)
+      setIsConnected(true)
       fetchChannels(globalClient)
       setupChannelListeners(globalClient)
       return
     }
 
     // If we're already connecting, don't start another connection
-    if (isConnecting) {
+    if (isConnectingGlobal) {
       console.log("⏳ Connection already in progress...")
       return
     }
@@ -130,11 +131,11 @@ export const useStreamChat = () => {
     connectUser()
 
     async function connectUser() {
-      if (isConnecting) return
+      if (isConnectingGlobal) return
 
-      isConnecting = true
-      setIsConnectingState(true)
-      setIsConnectedState(false)
+      isConnectingGlobal = true
+      setIsConnecting(true)
+      setIsConnected(false)
 
       try {
         // Disconnect any existing connection first
@@ -161,7 +162,7 @@ export const useStreamChat = () => {
         }
 
         setClient(globalClient)
-        setIsConnectedState(true)
+        setIsConnected(true)
         await fetchChannels(globalClient)
         setupChannelListeners(globalClient)
       } catch (error) {
@@ -169,10 +170,10 @@ export const useStreamChat = () => {
         globalClient = null
         setClient(null)
         setChannels([])
-        setIsConnectedState(false)
+        setIsConnected(false)
       } finally {
-        isConnecting = false
-        setIsConnectingState(false)
+        isConnectingGlobal = false
+        setIsConnecting(false)
       }
     }
 
@@ -231,8 +232,8 @@ export const useStreamChat = () => {
   return {
     client,
     channels,
-    isConnecting: isConnectingState,
-    isConnected: isConnectedState,
+    isConnecting,
+    isConnected,
     createChannel,
     refreshChannels,
   }
@@ -244,7 +245,6 @@ export const disconnectStreamChat = async () => {
     try {
       await globalClient.disconnectUser()
       globalClient = null
-      isConnecting = false
       console.log("✅ Stream Chat disconnected")
     } catch (error) {
       console.error("❌ Error disconnecting Stream Chat:", error)

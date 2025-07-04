@@ -1,15 +1,31 @@
-import { View, Text, TouchableOpacity, Image, FlatList } from "react-native"
+import { View, Text, TouchableOpacity, Image, FlatList, RefreshControl } from "react-native"
 import { useStreamChat } from "../hooks/useStreamChat"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { formatDistanceToNow } from "date-fns"
+import { useState } from "react"
 
 interface ChannelListProps {
   onChannelSelect: (channelId: string) => void
+  onRefresh?: () => Promise<void>
 }
 
-export default function CustomChannelList({ onChannelSelect }: ChannelListProps) {
+export default function CustomChannelList({ onChannelSelect, onRefresh }: ChannelListProps) {
   const { channels } = useStreamChat()
   const { currentUser } = useCurrentUser()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    if (!onRefresh) return
+
+    setIsRefreshing(true)
+    try {
+      await onRefresh()
+    } catch (error) {
+      console.error("❌ Error refreshing channels:", error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   const getOtherUserInfo = (channel: any) => {
     if (!currentUser || !channel.state?.members) return null
@@ -122,6 +138,16 @@ export default function CustomChannelList({ onChannelSelect }: ChannelListProps)
       keyExtractor={(item) => item.id}
       className="flex-1"
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#1877F2"
+            colors={["#1877F2"]}
+          />
+        ) : undefined
+      }
     />
   )
 }

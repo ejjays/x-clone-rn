@@ -1,61 +1,44 @@
-import LottieView from "lottie-react-native";
-import { useRef, useCallback } from "react";
-import { Text, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { View, Text, TouchableOpacity } from "react-native"
+import { Ionicons } from "@expo/vector-icons"
+import LottieView from "lottie-react-native"
 
-const NoMessagesFound = () => {
-  const animationRef = useRef<LottieView>(null);
+interface NoMessagesFoundProps {
+  onRefresh?: () => Promise<void>
+}
 
-  // Only start animation when the messages screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      // Start animation when screen comes into focus
-      animationRef.current?.play();
-
-      // Set up interval to loop animation every 4 seconds while screen is focused
-      const interval = setInterval(() => {
-        animationRef.current?.play();
-      }, 4000);
-
-      // Cleanup when screen loses focus
-      return () => {
-        clearInterval(interval);
-        animationRef.current?.reset(); // Reset animation when leaving screen
-      };
-    }, [])
-  );
+export default function NoMessagesFound({ onRefresh }: NoMessagesFoundProps) {
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      await onRefresh()
+    }
+  }
 
   return (
-    <View
-      className="flex-1 items-center justify-start pt-20 px-8 bg-white"
-      style={{ minHeight: 400 }}
-    >
-      <View className="items-center">
-        {/* BIG Animated Lottie Messages Icon - Main Highlight */}
-        <View className="w-80 h-80 mb-1">
-          <LottieView
-            ref={animationRef}
-            source={require("../assets/animations/empty-messages.json")}
-            style={{
-              width: "100%",
-              height: "100%",
-            }}
-            loop={false}
-            autoPlay={false} // Don't auto-play, we control it manually
-            speed={1.0}
-            resizeMode="contain"
-          />
-        </View>
+    <View className="flex-1 items-center justify-center px-8">
+      {/* Lottie Animation */}
+      <LottieView
+        source={require("../assets/animations/empty-messages.json")}
+        autoPlay
+        loop
+        style={{
+          width: 200,
+          height: 200,
+        }}
+      />
 
-        <Text className="text-2xl font-bold text-gray-900 mb-4">
-          No conversations yet
-        </Text>
-        <Text className="text-gray-500 text-center text-base leading-6 max-w-sm">
-          Start a new conversation by tapping the compose button above.
-        </Text>
-      </View>
+      {/* Text Content */}
+      <Text className="text-2xl font-bold text-gray-800 mt-4 mb-2">No Messages Yet</Text>
+      <Text className="text-gray-500 text-center text-base leading-6 mb-6">
+        Start a conversation with someone! Tap the compose button to send your first message.
+      </Text>
+
+      {/* Refresh Button */}
+      {onRefresh && (
+        <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-full flex-row items-center" onPress={handleRefresh}>
+          <Ionicons name="refresh" size={20} color="white" />
+          <Text className="text-white font-semibold ml-2">Refresh</Text>
+        </TouchableOpacity>
+      )}
     </View>
-  );
-};
-
-export default NoMessagesFound;
+  )
+}

@@ -1,14 +1,12 @@
 import { router } from "expo-router"
-import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, RefreshControl, ScrollView } from "react-native"
+import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useStreamChat } from "@/hooks/useStreamChat"
 import CustomChannelList from "@/components/CustomChannelList"
 import NoMessagesFound from "@/components/NoMessagesFound"
-import { useState } from "react"
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } = useStreamChat()
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const handleNewMessage = () => {
     router.push("/new-message")
@@ -16,17 +14,6 @@ export default function MessagesScreen() {
 
   const handleChannelSelect = (channelId: string) => {
     router.push(`/chat/${channelId}`)
-  }
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await refreshChannels()
-    } catch (error) {
-      console.error("❌ Error refreshing channels:", error)
-    } finally {
-      setIsRefreshing(false)
-    }
   }
 
   const renderContent = () => {
@@ -49,48 +36,20 @@ export default function MessagesScreen() {
           <Text className="text-gray-500 text-center">
             Unable to connect to chat service. Please check your internet connection.
           </Text>
-          <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-lg mt-4" onPress={handleRefresh}>
+          <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-lg mt-4" onPress={refreshChannels}>
             <Text className="text-white font-semibold">Retry Connection</Text>
           </TouchableOpacity>
         </View>
       )
     }
 
-    // If connected but no channels, show empty state with animated Lottie
+    // If connected but no channels, show empty state
     if (isConnected && channels.length === 0) {
-      return (
-        <ScrollView
-          contentContainerStyle={{ flex: 1 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              tintColor="#1877F2"
-              colors={["#1877F2"]}
-            />
-          }
-        >
-          <NoMessagesFound />
-        </ScrollView>
-      )
+      return <NoMessagesFound onRefresh={refreshChannels} />
     }
 
     // Show the channel list when we have channels
-    return (
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor="#1877F2"
-            colors={["#1877F2"]}
-          />
-        }
-      >
-        <CustomChannelList onChannelSelect={handleChannelSelect} />
-      </ScrollView>
-    )
+    return <CustomChannelList onChannelSelect={handleChannelSelect} onRefresh={refreshChannels} />
   }
 
   return (
@@ -107,6 +66,6 @@ export default function MessagesScreen() {
         </TouchableOpacity>
       </View>
       {renderContent()}
-    </SafeAreaView> 
+    </SafeAreaView>
   )
 }
