@@ -4,10 +4,10 @@ import { createComment, getComments, deleteComment } from "../controllers/commen
 
 const router = express.Router()
 
-// public routes
+// Public routes
 router.get("/post/:postId", getComments)
 
-// protected routes
+// Protected routes
 router.post("/post/:postId", protectRoute, createComment)
 router.delete("/:commentId", protectRoute, deleteComment)
 

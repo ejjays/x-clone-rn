@@ -11,10 +11,10 @@ import { protectRoute } from "../middleware/auth.middleware.js"
 
 const router = express.Router()
 
-// public route
+// Public routes
 router.get("/profile/:username", getUserProfile)
 
-// protected routes
+// Protected routes
 router.post("/sync", protectRoute, syncUser)
 router.get("/me", protectRoute, getCurrentUser)
 router.get("/all", protectRoute, getAllUsers)

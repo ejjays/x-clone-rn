@@ -4,6 +4,7 @@ import { getNotifications, deleteNotification } from "../controllers/notificatio
 
 const router = express.Router()
 
+// Protected routes only
 router.get("/", protectRoute, getNotifications)
 router.delete("/:notificationId", protectRoute, deleteNotification)
 

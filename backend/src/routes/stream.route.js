@@ -4,13 +4,9 @@ import { getStreamToken, createChannel, getChannels } from "../controllers/strea
 
 const router = express.Router()
 
-// Get Stream Chat token
+// All routes are protected
 router.get("/token", protectRoute, getStreamToken)
-
-// Create a new channel
 router.post("/channel", protectRoute, createChannel)
-
-// Get user's channels
 router.get("/channels", protectRoute, getChannels)
 
 export default router
