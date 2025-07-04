@@ -162,14 +162,16 @@ export default function ChatScreen() {
     return (
       <View>
         {showTimestamp && (
-          <View className="items-center my-4">
-            <Text className="text-gray-300 text-xs font-medium tracking-wide">
-              {formatMessageTime(new Date(message.created_at))}
-            </Text>
+          <View className="items-center my-6">
+            <View className="bg-gray-100 px-3 py-1 rounded-full">
+              <Text className="text-gray-500 text-xs font-medium tracking-wide">
+                {formatMessageTime(new Date(message.created_at))}
+              </Text>
+            </View>
           </View>
         )}
 
-        <View className={`flex-row mb-2 ${isFromCurrentUser ? "justify-end" : "justify-start"}`}>
+        <View className={`flex-row mb-1 px-4 ${isFromCurrentUser ? "justify-end" : "justify-start"}`}>
           {!isFromCurrentUser && (
             <View className="mr-2" style={{ width: 32 }}>
               {showAvatar && otherUser?.image ? (
@@ -179,11 +181,19 @@ export default function ChatScreen() {
           )}
 
           <View
-            className={`max-w-[75%] px-4 py-3 ${
-              isFromCurrentUser ? "bg-blue-500 rounded-3xl rounded-br-lg" : "bg-slate-700 rounded-3xl rounded-bl-lg"
+            className={`max-w-[70%] px-4 py-3 ${
+              isFromCurrentUser
+                ? "bg-blue-500 rounded-2xl rounded-br-md shadow-sm"
+                : "bg-gray-100 rounded-2xl rounded-bl-md"
             }`}
+            style={{
+              marginRight: isFromCurrentUser ? 8 : 0,
+              marginLeft: !isFromCurrentUser ? 0 : 8,
+            }}
           >
-            <Text className="text-white text-base leading-5">{message.text}</Text>
+            <Text className={`text-base leading-5 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
+              {message.text}
+            </Text>
           </View>
 
           {isFromCurrentUser && <View style={{ width: 32 }} />}
@@ -195,45 +205,41 @@ export default function ChatScreen() {
   // Show loading while connecting or initializing
   if (isConnecting || loading) {
     return (
-      <View className="flex-1 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-600">
-        <SafeAreaView className="flex-1">
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#FFFFFF" />
-            <Text className="text-white mt-2">
-              {isConnecting ? "Connecting to chat..." : "Loading conversation..."}
-            </Text>
-          </View>
-        </SafeAreaView>
-      </View>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text className="text-gray-500 mt-2">
+            {isConnecting ? "Connecting to chat..." : "Loading conversation..."}
+          </Text>
+        </View>
+      </SafeAreaView>
     )
   }
 
   // Show error if not connected or no client
   if (!client || !isConnected) {
     return (
-      <View className="flex-1 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-600">
-        <SafeAreaView className="flex-1">
-          <View className="flex-1 items-center justify-center px-8">
-            <Ionicons name="cloud-offline-outline" size={64} color="#FFFFFF" />
-            <Text className="text-xl font-semibold text-white mt-4 mb-2">Connection Issue</Text>
-            <Text className="text-blue-100 text-center">
-              Unable to connect to chat service. Please check your internet connection.
-            </Text>
-            <TouchableOpacity className="bg-white/20 px-6 py-3 rounded-lg mt-4" onPress={() => router.back()}>
-              <Text className="text-white font-semibold">Go Back</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </View>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center px-8">
+          <Ionicons name="cloud-offline-outline" size={64} color="#9CA3AF" />
+          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">Connection Issue</Text>
+          <Text className="text-gray-500 text-center">
+            Unable to connect to chat service. Please check your internet connection.
+          </Text>
+          <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-lg mt-4" onPress={() => router.back()}>
+            <Text className="text-white font-semibold">Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     )
   }
 
   return (
-    <View className="flex-1 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-600" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="flex-row items-center p-4 bg-black/20">
+      <View className="flex-row items-center p-4 border-b border-gray-200 bg-white">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
 
         {/* Profile Picture */}
@@ -247,17 +253,17 @@ export default function ChatScreen() {
         )}
 
         <View className="flex-1 min-w-0">
-          <Text className="font-semibold text-white text-lg" numberOfLines={1} ellipsizeMode="tail">
+          <Text className="font-semibold text-gray-900 text-lg" numberOfLines={1} ellipsizeMode="tail">
             {otherUser?.name || "Chat"}
           </Text>
-          {otherUser && <Text className="text-blue-100 text-sm">{otherUser.online ? "Online" : "Offline"}</Text>}
+          {otherUser && <Text className="text-gray-500 text-sm">{otherUser.online ? "Online" : "Offline"}</Text>}
         </View>
 
         <TouchableOpacity className="p-2">
-          <Ionicons name="call-outline" size={24} color="#FFFFFF" />
+          <Ionicons name="call-outline" size={24} color="#374151" />
         </TouchableOpacity>
         <TouchableOpacity className="p-2 ml-2">
-          <Ionicons name="videocam-outline" size={24} color="#FFFFFF" />
+          <Ionicons name="videocam-outline" size={24} color="#374151" />
         </TouchableOpacity>
       </View>
 
@@ -272,7 +278,7 @@ export default function ChatScreen() {
             data={messages}
             renderItem={renderMessage}
             keyExtractor={(item, index) => item.id || index.toString()}
-            className="flex-1 px-4"
+            className="flex-1 bg-white"
             contentContainerStyle={{
               paddingTop: 16,
               paddingBottom: keyboardHeight > 0 ? 20 : 16,
@@ -283,18 +289,17 @@ export default function ChatScreen() {
             keyboardDismissMode="interactive"
             ListEmptyComponent={() => (
               <View className="flex-1 items-center justify-center py-20" style={{ transform: [{ scaleY: -1 }] }}>
-                <Ionicons name="chatbubbles-outline" size={48} color="#FFFFFF" />
-                <Text className="text-white mt-2">No messages yet</Text>
-                <Text className="text-blue-100 text-sm">Start the conversation!</Text>
+                <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
+                <Text className="text-gray-500 mt-2">No messages yet</Text>
+                <Text className="text-gray-400 text-sm">Start the conversation!</Text>
               </View>
             )}
           />
 
           {/* Message Input */}
           <View
-            className="flex-row items-end bg-black/20"
+            className="flex-row items-end border-t border-gray-200 bg-white px-4"
             style={{
-              paddingHorizontal: 16,
               paddingTop: 12,
               paddingBottom:
                 Platform.OS === "ios"
@@ -311,7 +316,7 @@ export default function ChatScreen() {
                 onChangeText={setNewMessage}
                 placeholder="Type a message..."
                 placeholderTextColor="#9CA3AF"
-                className="bg-white/90 rounded-full px-4 py-3 text-base text-gray-900"
+                className="border border-gray-300 rounded-full px-4 py-3 text-base text-gray-900 bg-gray-50"
                 multiline
                 maxLength={500}
                 editable={!sending}
@@ -325,13 +330,13 @@ export default function ChatScreen() {
             <TouchableOpacity
               onPress={sendMessage}
               disabled={!newMessage.trim() || sending}
-              className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-600" : "bg-gray-600"}`}
+              className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-500" : "bg-gray-300"}`}
               style={{ marginBottom: 2 }}
             >
               {sending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Ionicons name="send" size={20} color="white" />
+                <Ionicons name="send" size={20} color={newMessage.trim() && !sending ? "white" : "gray"} />
               )}
             </TouchableOpacity>
           </View>
