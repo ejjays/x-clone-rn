@@ -8,7 +8,7 @@ import { useState } from "react"
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } = useStreamChat()
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("") 
 
   const handleNewMessage = () => {
     router.push("/new-message")
