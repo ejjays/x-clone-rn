@@ -19,7 +19,6 @@ import {
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { LinearGradient } from "expo-linear-gradient"
 
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>()
@@ -181,7 +180,7 @@ export default function ChatScreen() {
 
           <View
             className={`max-w-[75%] px-4 py-3 ${
-              isFromCurrentUser ? "bg-blue-500 rounded-3xl rounded-br-lg" : "bg-gray-700 rounded-3xl rounded-bl-lg"
+              isFromCurrentUser ? "bg-blue-500 rounded-3xl rounded-br-lg" : "bg-slate-700 rounded-3xl rounded-bl-lg"
             }`}
           >
             <Text className="text-white text-base leading-5">{message.text}</Text>
@@ -196,7 +195,7 @@ export default function ChatScreen() {
   // Show loading while connecting or initializing
   if (isConnecting || loading) {
     return (
-      <LinearGradient colors={["#1e3a8a", "#1e40af", "#3b82f6"]} className="flex-1">
+      <View className="flex-1 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-600">
         <SafeAreaView className="flex-1">
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#FFFFFF" />
@@ -205,14 +204,14 @@ export default function ChatScreen() {
             </Text>
           </View>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     )
   }
 
   // Show error if not connected or no client
   if (!client || !isConnected) {
     return (
-      <LinearGradient colors={["#1e3a8a", "#1e40af", "#3b82f6"]} className="flex-1">
+      <View className="flex-1 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-600">
         <SafeAreaView className="flex-1">
           <View className="flex-1 items-center justify-center px-8">
             <Ionicons name="cloud-offline-outline" size={64} color="#FFFFFF" />
@@ -220,129 +219,124 @@ export default function ChatScreen() {
             <Text className="text-blue-100 text-center">
               Unable to connect to chat service. Please check your internet connection.
             </Text>
-            <TouchableOpacity
-              className="bg-white bg-opacity-20 px-6 py-3 rounded-lg mt-4"
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity className="bg-white/20 px-6 py-3 rounded-lg mt-4" onPress={() => router.back()}>
               <Text className="text-white font-semibold">Go Back</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     )
   }
 
   return (
-    <LinearGradient colors={["#1e3a8a", "#1e40af", "#3b82f6"]} className="flex-1">
-      <View className="flex-1" style={{ paddingTop: insets.top }}>
-        {/* Header */}
-        <View className="flex-row items-center p-4 bg-black bg-opacity-20">
-          <TouchableOpacity onPress={() => router.back()} className="mr-3">
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
+    <View className="flex-1 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-600" style={{ paddingTop: insets.top }}>
+      {/* Header */}
+      <View className="flex-row items-center p-4 bg-black/20">
+        <TouchableOpacity onPress={() => router.back()} className="mr-3">
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
 
-          {/* Profile Picture */}
-          {otherUser?.image && (
-            <View className="relative mr-3">
-              <Image source={{ uri: otherUser.image }} className="w-10 h-10 rounded-full" />
-              {otherUser.online && (
-                <View className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-              )}
-            </View>
-          )}
-
-          <View className="flex-1 min-w-0">
-            <Text className="font-semibold text-white text-lg" numberOfLines={1} ellipsizeMode="tail">
-              {otherUser?.name || "Chat"}
-            </Text>
-            {otherUser && <Text className="text-blue-100 text-sm">{otherUser.online ? "Online" : "Offline"}</Text>}
+        {/* Profile Picture */}
+        {otherUser?.image && (
+          <View className="relative mr-3">
+            <Image source={{ uri: otherUser.image }} className="w-10 h-10 rounded-full" />
+            {otherUser.online && (
+              <View className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+            )}
           </View>
+        )}
 
-          <TouchableOpacity className="p-2">
-            <Ionicons name="call-outline" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity className="p-2 ml-2">
-            <Ionicons name="videocam-outline" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
+        <View className="flex-1 min-w-0">
+          <Text className="font-semibold text-white text-lg" numberOfLines={1} ellipsizeMode="tail">
+            {otherUser?.name || "Chat"}
+          </Text>
+          {otherUser && <Text className="text-blue-100 text-sm">{otherUser.online ? "Online" : "Offline"}</Text>}
         </View>
 
-        {/* Messages Container */}
-        <KeyboardAvoidingView
-          className="flex-1"
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-        >
-          <View className="flex-1">
-            <FlatList
-              data={messages}
-              renderItem={renderMessage}
-              keyExtractor={(item, index) => item.id || index.toString()}
-              className="flex-1 px-4"
-              contentContainerStyle={{
-                paddingTop: 16,
-                paddingBottom: keyboardHeight > 0 ? 20 : 16,
-              }}
-              inverted
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="interactive"
-              ListEmptyComponent={() => (
-                <View className="flex-1 items-center justify-center py-20" style={{ transform: [{ scaleY: -1 }] }}>
-                  <Ionicons name="chatbubbles-outline" size={48} color="#FFFFFF" />
-                  <Text className="text-white mt-2">No messages yet</Text>
-                  <Text className="text-blue-100 text-sm">Start the conversation!</Text>
-                </View>
-              )}
-            />
-
-            {/* Message Input */}
-            <View
-              className="flex-row items-end bg-black bg-opacity-20"
-              style={{
-                paddingHorizontal: 16,
-                paddingTop: 12,
-                paddingBottom:
-                  Platform.OS === "ios"
-                    ? Math.max(insets.bottom + 8, 20)
-                    : keyboardHeight > 0
-                      ? 20
-                      : Math.max(insets.bottom + 8, 20),
-                marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
-              }}
-            >
-              <View className="flex-1 mr-3">
-                <TextInput
-                  value={newMessage}
-                  onChangeText={setNewMessage}
-                  placeholder="Type a message..."
-                  placeholderTextColor="#9CA3AF"
-                  className="bg-white bg-opacity-90 rounded-full px-4 py-3 text-base text-gray-900"
-                  multiline
-                  maxLength={500}
-                  editable={!sending}
-                  textAlignVertical="top"
-                  style={{
-                    minHeight: 48,
-                    maxHeight: 120,
-                  }}
-                />
-              </View>
-              <TouchableOpacity
-                onPress={sendMessage}
-                disabled={!newMessage.trim() || sending}
-                className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-600" : "bg-gray-600"}`}
-                style={{ marginBottom: 2 }}
-              >
-                {sending ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Ionicons name="send" size={20} color="white" />
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
+        <TouchableOpacity className="p-2">
+          <Ionicons name="call-outline" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <TouchableOpacity className="p-2 ml-2">
+          <Ionicons name="videocam-outline" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
-    </LinearGradient>
+
+      {/* Messages Container */}
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      >
+        <View className="flex-1">
+          <FlatList
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item, index) => item.id || index.toString()}
+            className="flex-1 px-4"
+            contentContainerStyle={{
+              paddingTop: 16,
+              paddingBottom: keyboardHeight > 0 ? 20 : 16,
+            }}
+            inverted
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            ListEmptyComponent={() => (
+              <View className="flex-1 items-center justify-center py-20" style={{ transform: [{ scaleY: -1 }] }}>
+                <Ionicons name="chatbubbles-outline" size={48} color="#FFFFFF" />
+                <Text className="text-white mt-2">No messages yet</Text>
+                <Text className="text-blue-100 text-sm">Start the conversation!</Text>
+              </View>
+            )}
+          />
+
+          {/* Message Input */}
+          <View
+            className="flex-row items-end bg-black/20"
+            style={{
+              paddingHorizontal: 16,
+              paddingTop: 12,
+              paddingBottom:
+                Platform.OS === "ios"
+                  ? Math.max(insets.bottom + 8, 20)
+                  : keyboardHeight > 0
+                    ? 20
+                    : Math.max(insets.bottom + 8, 20),
+              marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
+            }}
+          >
+            <View className="flex-1 mr-3">
+              <TextInput
+                value={newMessage}
+                onChangeText={setNewMessage}
+                placeholder="Type a message..."
+                placeholderTextColor="#9CA3AF"
+                className="bg-white/90 rounded-full px-4 py-3 text-base text-gray-900"
+                multiline
+                maxLength={500}
+                editable={!sending}
+                textAlignVertical="top"
+                style={{
+                  minHeight: 48,
+                  maxHeight: 120,
+                }}
+              />
+            </View>
+            <TouchableOpacity
+              onPress={sendMessage}
+              disabled={!newMessage.trim() || sending}
+              className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-600" : "bg-gray-600"}`}
+              style={{ marginBottom: 2 }}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Ionicons name="send" size={20} color="white" />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </View>
   )
 }
