@@ -8,14 +8,14 @@ interface ChannelListProps {
 }
 
 export default function CustomChannelList({ onChannelSelect }: ChannelListProps) {
-  const { channels, loading } = useStreamChat()
+  const { channels } = useStreamChat()
   const { currentUser } = useCurrentUser()
 
   const getOtherUserInfo = (channel: any) => {
     if (!currentUser) return null
 
     // Get the other user from channel members
-    const otherMember = channel.state.members.find((member: any) => member.user.id !== currentUser.id)
+    const otherMember = channel.state.members.find((member: any) => member.user.id !== currentUser.clerkId)
 
     if (otherMember) {
       return {
@@ -35,15 +35,10 @@ export default function CustomChannelList({ onChannelSelect }: ChannelListProps)
       return {
         text: lastMessage.text || "No message",
         timestamp: lastMessage.created_at,
-        isFromCurrentUser: lastMessage.user?.id === currentUser?.id,
+        isFromCurrentUser: lastMessage.user?.id === currentUser?.clerkId,
       }
     }
-    // Return a default message for channels without messages
-    return {
-      text: "Start a conversation...",
-      timestamp: channel.created_at || new Date().toISOString(),
-      isFromCurrentUser: false,
-    }
+    return null
   }
 
   const renderChannelItem = ({ item: channel }: { item: any }) => {
@@ -75,13 +70,10 @@ export default function CustomChannelList({ onChannelSelect }: ChannelListProps)
             )}
           </View>
 
-          {lastMessage && (
+          {lastMessage ? (
             <View className="flex-row items-center justify-between mt-1">
-              <Text
-                className={`text-sm flex-1 ${lastMessage.text === "Start a conversation..." ? "text-gray-400 italic" : "text-gray-600"}`}
-                numberOfLines={1}
-              >
-                {lastMessage.isFromCurrentUser && lastMessage.text !== "Start a conversation..." ? "You: " : ""}
+              <Text className="text-gray-600 text-sm flex-1" numberOfLines={1}>
+                {lastMessage.isFromCurrentUser ? "You: " : ""}
                 {lastMessage.text}
               </Text>
               {unreadCount > 0 && (
@@ -90,26 +82,11 @@ export default function CustomChannelList({ onChannelSelect }: ChannelListProps)
                 </View>
               )}
             </View>
+          ) : (
+            <Text className="text-gray-500 text-sm mt-1">No messages yet</Text>
           )}
         </View>
       </TouchableOpacity>
-    )
-  }
-
-  if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-gray-500">Loading conversations...</Text>
-      </View>
-    )
-  }
-
-  if (!channels || channels.length === 0) {
-    return (
-      <View className="flex-1 items-center justify-center p-8">
-        <Text className="text-gray-500 text-center text-lg">No conversations yet</Text>
-        <Text className="text-gray-400 text-center mt-2">Start a conversation by messaging someone!</Text>
-      </View>
     )
   }
 
