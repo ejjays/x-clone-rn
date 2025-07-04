@@ -187,7 +187,8 @@ export default function ChatScreen() {
                 : "bg-gray-100 rounded-2xl rounded-bl-md"
             }`}
           >
-            <Text className={`text-base leading-5 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
+            {/* --- ⬆️ MESSAGE BUBBLE TEXT SIZE INCREASED HERE --- */}
+            <Text className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
               {message.text}
             </Text>
           </View>
@@ -238,7 +239,7 @@ export default function ChatScreen() {
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
 
-        {/* --- ⬆️ PROFILE PICTURE SIZE INCREASED HERE --- */}
+        {/* --- PROFILE PICTURE SIZE INCREASED HERE --- */}
         {otherUser?.image && (
           <View className="relative mr-3">
             <Image source={{ uri: otherUser.image }} className="w-12 h-12 rounded-full" />
@@ -248,7 +249,7 @@ export default function ChatScreen() {
           </View>
         )}
 
-        {/* --- ⬆️ USER NAME FONT SIZE INCREASED HERE --- */}
+        {/* --- USER NAME FONT SIZE INCREASED HERE --- */}
         <View className="flex-1 min-w-0">
           <Text className="font-semibold text-gray-900 text-xl" numberOfLines={1} ellipsizeMode="tail">
             {otherUser?.name || "Chat"}
