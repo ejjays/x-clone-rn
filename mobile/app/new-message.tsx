@@ -1,119 +1,98 @@
-import { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  SafeAreaView,
-  TouchableOpacity,
-  FlatList,
-  TextInput,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useApiClient, userApi } from "@/utils/api";
-import { useStreamChat } from "@/hooks/useStreamChat";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import type { User } from "@/types";
+import { useState, useEffect } from "react"
+import { View, Text, SafeAreaView, TouchableOpacity, FlatList, TextInput, ActivityIndicator, Alert } from "react-native"
+import { router } from "expo-router"
+import { Ionicons } from "@expo/vector-icons"
+import { useApiClient, userApi } from "@/utils/api"
+import { useStreamChat } from "@/hooks/useStreamChat"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import type { User } from "@/types"
 
 export default function NewMessageScreen() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const api = useApiClient();
+  const [users, setUsers] = useState<User[]>([])
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const api = useApiClient()
   // ✨ Get the client and connection status from the hook
-  const { client, isConnected, createChannel } = useStreamChat();
-  const { currentUser } = useCurrentUser();
+  const { client, isConnected, createChannel } = useStreamChat()
+  const { currentUser } = useCurrentUser()
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers()
+  }, [])
 
   const fetchUsers = async () => {
     try {
-      setLoading(true);
-      console.log("🔄 Fetching users...");
+      setLoading(true)
+      console.log("🔄 Fetching users...")
 
-      const response = await userApi.getAllUsers(api);
-      console.log("📦 Raw API response:", response.data);
+      const response = await userApi.getAllUsers(api)
+      console.log("📦 Raw API response:", response.data)
 
-      let allUsers = response.data?.users || [];
-      console.log("👥 Processed users:", allUsers.length);
+      const allUsers = response.data?.users || []
+      console.log("👥 Processed users:", allUsers.length)
 
-      const otherUsers = allUsers.filter(
-        (user: User) => user.clerkId !== currentUser?.clerkId
-      );
+      const otherUsers = allUsers.filter((user: User) => user.clerkId !== currentUser?.clerkId)
 
-      console.log(
-        "✅ Filtered users (excluding current):",
-        otherUsers.length
-      );
+      console.log("✅ Filtered users (excluding current):", otherUsers.length)
 
-      setUsers(otherUsers);
-      setFilteredUsers(otherUsers);
+      setUsers(otherUsers)
+      setFilteredUsers(otherUsers)
     } catch (error) {
-      console.error("❌ Failed to fetch users:", error);
-      Alert.alert("Error", "Failed to load users. Please try again.");
+      console.error("❌ Failed to fetch users:", error)
+      Alert.alert("Error", "Failed to load users. Please try again.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setFilteredUsers(users);
+      setFilteredUsers(users)
     } else {
       const filtered = users.filter(
         (user) =>
           user.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           user.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.username?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredUsers(filtered);
+          user.username?.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+      setFilteredUsers(filtered)
     }
-  }, [searchQuery, users]);
+  }, [searchQuery, users])
 
   const handleUserSelect = async (selectedUser: User) => {
-    // ✨ Add a guard to ensure the chat client is ready
+    // Add a guard to ensure the chat client is ready
     if (!client || !isConnected) {
-      Alert.alert(
-        "Connection Error",
-        "Chat is not yet connected. Please wait a moment and try again."
-      );
-      return;
+      Alert.alert("Connection Error", "Chat is not yet connected. Please wait a moment and try again.")
+      return
     }
 
     if (!currentUser || !selectedUser.clerkId) {
-      Alert.alert("Error", "User information is missing.");
-      return;
+      Alert.alert("Error", "User information is missing.")
+      return
     }
 
-    setCreating(true);
+    setCreating(true)
     try {
-      console.log(
-        `🔄 Creating channel with: ${selectedUser.firstName} ${selectedUser.lastName}`
-      );
-      const channel = await createChannel(
-        selectedUser.clerkId,
-        `${selectedUser.firstName} ${selectedUser.lastName}`
-      );
+      console.log(`🔄 Creating channel with: ${selectedUser.firstName} ${selectedUser.lastName}`)
 
-      if (channel) {
-        console.log("✅ Channel created, navigating to chat");
-        // ✨ Replace the current screen to provide a better UX
-        router.replace(`/chat/${channel.id}`);
+      const channel = await createChannel(selectedUser.clerkId, `${selectedUser.firstName} ${selectedUser.lastName}`)
+
+      if (channel && channel.id) {
+        console.log("✅ Channel created successfully:", channel.id)
+        // Use router.push instead of router.replace for better navigation
+        router.push(`/chat/${channel.id}`)
       } else {
-        throw new Error("Channel creation returned null");
+        throw new Error("Channel creation returned null or invalid channel")
       }
     } catch (error) {
-      console.error("❌ Failed to create channel:", error);
-      Alert.alert("Error", "Failed to start conversation. Please try again.");
+      console.error("❌ Failed to create channel:", error)
+      Alert.alert("Error", "Failed to start conversation. Please try again.")
     } finally {
-      setCreating(false);
+      setCreating(false)
     }
-  };
+  }
 
   const renderUser = ({ item }: { item: User }) => (
     <TouchableOpacity
@@ -124,9 +103,7 @@ export default function NewMessageScreen() {
     >
       <View className="w-12 h-12 rounded-full bg-blue-500 items-center justify-center mr-3">
         <Text className="text-white font-semibold text-lg">
-          {item.firstName?.[0]?.toUpperCase() ||
-            item.username?.[0]?.toUpperCase() ||
-            "?"}
+          {item.firstName?.[0]?.toUpperCase() || item.username?.[0]?.toUpperCase() || "?"}
         </Text>
       </View>
       <View className="flex-1">
@@ -137,7 +114,7 @@ export default function NewMessageScreen() {
       </View>
       {creating && <ActivityIndicator size="small" color="#3B82F6" />}
     </TouchableOpacity>
-  );
+  )
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -162,7 +139,7 @@ export default function NewMessageScreen() {
           />
         </View>
       </View>
-      
+
       {/* ✨ Add a connection status indicator */}
       {!isConnected && (
         <View className="p-2 bg-yellow-100 items-center">
@@ -179,9 +156,7 @@ export default function NewMessageScreen() {
       ) : filteredUsers.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Ionicons name="people-outline" size={48} color="#ccc" />
-          <Text className="mt-2 text-gray-500">
-            {searchQuery ? "No users found" : "No users available"}
-          </Text>
+          <Text className="mt-2 text-gray-500">{searchQuery ? "No users found" : "No users available"}</Text>
         </View>
       ) : (
         <FlatList
@@ -192,5 +167,5 @@ export default function NewMessageScreen() {
         />
       )}
     </SafeAreaView>
-  );
+  )
 }

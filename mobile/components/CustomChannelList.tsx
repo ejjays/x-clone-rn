@@ -38,7 +38,12 @@ export default function CustomChannelList({ onChannelSelect }: ChannelListProps)
         isFromCurrentUser: lastMessage.user?.id === currentUser?.id,
       }
     }
-    return null
+    // Return a default message for channels without messages
+    return {
+      text: "Start a conversation...",
+      timestamp: channel.created_at || new Date().toISOString(),
+      isFromCurrentUser: false,
+    }
   }
 
   const renderChannelItem = ({ item: channel }: { item: any }) => {
@@ -72,8 +77,11 @@ export default function CustomChannelList({ onChannelSelect }: ChannelListProps)
 
           {lastMessage && (
             <View className="flex-row items-center justify-between mt-1">
-              <Text className="text-gray-600 text-sm flex-1" numberOfLines={1}>
-                {lastMessage.isFromCurrentUser ? "You: " : ""}
+              <Text
+                className={`text-sm flex-1 ${lastMessage.text === "Start a conversation..." ? "text-gray-400 italic" : "text-gray-600"}`}
+                numberOfLines={1}
+              >
+                {lastMessage.isFromCurrentUser && lastMessage.text !== "Start a conversation..." ? "You: " : ""}
                 {lastMessage.text}
               </Text>
               {unreadCount > 0 && (
