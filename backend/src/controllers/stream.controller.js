@@ -1,16 +1,14 @@
 import { StreamChat } from "stream-chat"
 import { ENV } from "../config/env.js"
 
-// Initialize Stream Chat client
 const serverClient = StreamChat.getInstance(ENV.STREAM_API_KEY, ENV.STREAM_SECRET_KEY)
 
-// Get Stream Chat token for authenticated user
 export const getStreamToken = async (req, res) => {
   try {
     const { userId } = req.auth
 
     if (!userId) {
-      return res.status(401).json({ error: "Unauthorized - No user ID" })
+      return res.status(400).json({ error: "User ID is required" })
     }
 
     console.log("🎫 Generating Stream token for user:", userId)
@@ -32,47 +30,37 @@ export const getStreamToken = async (req, res) => {
   }
 }
 
-// Create a new channel
 export const createChannel = async (req, res) => {
   try {
     const { userId } = req.auth
-    const { type = "messaging", members, name, image } = req.body
+    const { type = "messaging", id, name, members = [] } = req.body
 
     if (!userId) {
-      return res.status(401).json({ error: "Unauthorized - No user ID" })
+      return res.status(400).json({ error: "User ID is required" })
     }
 
-    if (!members || !Array.isArray(members) || members.length === 0) {
-      return res.status(400).json({ error: "Members array is required" })
-    }
+    console.log("📺 Creating channel:", { type, id, name, members })
 
     // Ensure the current user is included in members
     const allMembers = [...new Set([userId, ...members])]
 
-    console.log("📝 Creating channel with members:", allMembers)
-
-    // Generate a unique channel ID
-    const channelId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-
-    // Create the channel
-    const channel = serverClient.channel(type, channelId, {
-      name: name || `Chat ${channelId}`,
-      image: image || null,
-      created_by_id: userId,
+    // Create or get the channel
+    const channel = serverClient.channel(type, id, {
+      name: name || `Channel ${id}`,
       members: allMembers,
+      created_by_id: userId,
     })
 
-    // Create the channel on Stream's servers
+    // Create the channel
     await channel.create(userId)
 
-    console.log("✅ Channel created successfully:", channelId)
-
     res.json({
-      channelId,
-      type,
-      members: allMembers,
-      name: name || `Chat ${channelId}`,
-      image,
+      channel: {
+        id: channel.id,
+        type: channel.type,
+        name: channel.data.name,
+        members: allMembers,
+      },
     })
   } catch (error) {
     console.error("❌ Error creating channel:", error)
@@ -83,50 +71,37 @@ export const createChannel = async (req, res) => {
   }
 }
 
-// Get user's channels
 export const getChannels = async (req, res) => {
   try {
     const { userId } = req.auth
 
     if (!userId) {
-      return res.status(401).json({ error: "Unauthorized - No user ID" })
+      return res.status(400).json({ error: "User ID is required" })
     }
 
-    console.log("📋 Fetching channels for user:", userId)
+    console.log("📋 Getting channels for user:", userId)
 
     // Query channels where the user is a member
-    const filter = {
-      type: "messaging",
-      members: { $in: [userId] },
-    }
-
+    const filter = { members: { $in: [userId] } }
     const sort = { last_message_at: -1 }
     const options = { limit: 30 }
 
     const channels = await serverClient.queryChannels(filter, sort, options)
 
-    console.log(`✅ Found ${channels.length} channels for user:`, userId)
-
-    // Format the response
-    const formattedChannels = channels.map((channel) => ({
+    const channelData = channels.map((channel) => ({
       id: channel.id,
       type: channel.type,
       name: channel.data.name,
-      image: channel.data.image,
       members: channel.state.members,
-      lastMessage: channel.state.messages[channel.state.messages.length - 1] || null,
-      createdAt: channel.data.created_at,
-      updatedAt: channel.data.updated_at,
+      last_message_at: channel.state.last_message_at,
+      member_count: channel.state.member_count,
     }))
 
-    res.json({
-      channels: formattedChannels,
-      total: channels.length,
-    })
+    res.json({ channels: channelData })
   } catch (error) {
-    console.error("❌ Error fetching channels:", error)
+    console.error("❌ Error getting channels:", error)
     res.status(500).json({
-      error: "Failed to fetch channels",
+      error: "Failed to get channels",
       message: error.message,
     })
   }

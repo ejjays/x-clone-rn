@@ -22,7 +22,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? ["https://x-clone-rn-one.vercel.app", "https://x-clone-o58we1hxw-ejjays-projects.vercel.app"]
+        ? ["https://x-clone-rn-one.vercel.app", "https://x-clone-qelkhtfz5-ejjays-projects.vercel.app"]
         : ["http://localhost:3000", "http://localhost:8081"],
     credentials: true,
   }),
