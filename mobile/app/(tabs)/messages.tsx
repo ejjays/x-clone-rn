@@ -107,6 +107,6 @@ export default function MessagesScreen() {
         </TouchableOpacity>
       </View>
       {renderContent()}
-    </SafeAreaView>
+    </SafeAreaView> 
   )
 }
