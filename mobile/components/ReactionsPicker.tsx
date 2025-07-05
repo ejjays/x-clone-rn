@@ -1,4 +1,3 @@
-import { Feather } from "@expo/vector-icons"
 import {
   Text,
   TouchableOpacity,
@@ -32,8 +31,9 @@ interface ReactionsPickerProps {
   anchorMeasurements: { pageX: number; pageY: number; width: number } | null
 }
 
-const PICKER_WIDTH = 320 // Approximate width of the picker
-const PICKER_HEIGHT = 60 // Approximate height of the picker
+// --- FIX #1: Adjusted the width for a cleaner look without the plus button ---
+const PICKER_WIDTH = 280
+const PICKER_HEIGHT = 60
 
 const ReactionsPicker = ({
   isVisible,
@@ -56,7 +56,9 @@ const ReactionsPicker = ({
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
-      opacity: isVisible ? withTiming(1, { duration: 100 }) : withTiming(0, { duration: 150 }),
+      opacity: isVisible
+        ? withTiming(1, { duration: 100 })
+        : withTiming(0, { duration: 150 }),
     }
   })
 
@@ -65,21 +67,15 @@ const ReactionsPicker = ({
     onSelect(reactionType)
   }
 
-  // --- Smart Positioning Logic ---
   let pickerStyle = {}
   if (anchorMeasurements) {
     const { pageX, pageY, width: anchorWidth } = anchorMeasurements
-
-    // Default to centering above the anchor
     let left = pageX + anchorWidth / 2 - PICKER_WIDTH / 2
-    let top = pageY - PICKER_HEIGHT - 10 // 10px offset from the bubble
+    let top = pageY - PICKER_HEIGHT - 10
 
-    // Boundary checks to prevent overflow
-    if (left < 10) {
-      left = 10 // Margin from left edge
-    }
+    if (left < 10) left = 10
     if (left + PICKER_WIDTH > screenWidth) {
-      left = screenWidth - PICKER_WIDTH - 10 // Margin from right edge
+      left = screenWidth - PICKER_WIDTH - 10
     }
 
     pickerStyle = { top, left }
@@ -95,7 +91,8 @@ const ReactionsPicker = ({
             pickerStyle,
           ]}
         >
-          <View className="bg-gray-800/90 rounded-full p-2 shadow-lg flex-row items-center space-x-2">
+          {/* --- FIX #2: Removed the separator and plus button --- */}
+          <View className="bg-gray-800/90 rounded-full p-2 shadow-lg flex-row items-center justify-center space-x-2">
             {reactions.map((reaction) => (
               <TouchableOpacity
                 key={reaction.type}
@@ -105,13 +102,6 @@ const ReactionsPicker = ({
                 <Text className="text-4xl">{reaction.emoji}</Text>
               </TouchableOpacity>
             ))}
-            <View className="w-[2px] h-8 bg-gray-600 rounded-full mx-1" />
-            <TouchableOpacity
-              onPress={onClose} // Let's make the plus button close it for now
-              className="w-10 h-10 bg-gray-600/80 rounded-full items-center justify-center"
-            >
-              <Feather name="plus" size={20} color="white" />
-            </TouchableOpacity>
           </View>
         </Animated.View>
       </Pressable>

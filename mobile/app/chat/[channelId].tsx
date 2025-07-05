@@ -5,7 +5,7 @@ import { useStreamChat } from "@/context/StreamChatContext"
 import { Ionicons } from "@expo/vector-icons"
 import { router, useLocalSearchParams } from "expo-router"
 import { format, isToday, isYesterday } from "date-fns"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -18,8 +18,6 @@ import {
   View,
   Image,
   Keyboard,
-  NativeSyntheticEvent,
-  NativeTouchEvent,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import * as Haptics from "expo-haptics"
@@ -37,66 +35,72 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
-
-  // State for the picker
   const [selectedMessage, setSelectedMessage] = useState<any>(null)
   const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null)
-  const messageRefs = useRef<{ [key: string]: View }>({})
+  const messageRefs = useRef<{ [key: string]: View | null }>({})
 
+  // --- REAL-TIME UPDATE FIX ---
+  // This useEffect now correctly subscribes to channel events and updates the state.
   useEffect(() => {
-    // ... (This useEffect block is unchanged)
     if (!client || !isConnected || !channelId || !currentUser) {
-      setLoading(false)
-      return
+      setLoading(false);
+      return;
     }
 
     const initializeChannel = async () => {
       try {
-        setLoading(true)
-        const ch = client.channel("messaging", channelId)
-        await ch.watch()
-        setChannel(ch)
+        setLoading(true);
+        const ch = client.channel("messaging", channelId);
+        await ch.watch();
+        setChannel(ch);
 
-        const membersArray = Array.isArray(ch.state.members) ? ch.state.members : Object.values(ch.state.members || {})
-        const otherMember = membersArray.find((member: any) => member?.user?.id !== currentUser.clerkId)
+        const membersArray = Array.isArray(ch.state.members)
+          ? ch.state.members
+          : Object.values(ch.state.members || {});
+        const otherMember = membersArray.find(
+          (member: any) => member?.user?.id !== currentUser.clerkId
+        );
 
         if (otherMember?.user) {
           setOtherUser({
             name: otherMember.user.name || "Unknown User",
             image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
             online: otherMember.user.online || false,
-          })
+          });
         }
         
-        const handleEvent = () => {
-          setMessages(ch.state.messages.slice().reverse())
-        }
+        // This function handles all real-time events efficiently
+        const handleEvent = (event: any) => {
+          // Use the channel from the event to ensure we have the latest state
+          const eventChannel = event.channel || ch;
+          setMessages(eventChannel.state.messages.slice().reverse());
+        };
 
-        setMessages(ch.state.messages.slice().reverse())
+        setMessages(ch.state.messages.slice().reverse());
 
-        ch.on("message.new", handleEvent)
-        ch.on("message.updated", handleEvent)
-        ch.on("message.deleted", handleEvent)
+        // Bind the single, robust event handler
+        ch.on("message.new", handleEvent);
+        ch.on("message.updated", handleEvent);
+        ch.on("message.deleted", handleEvent);
 
-        setLoading(false)
+        setLoading(false);
 
         return () => {
-          ch.off("message.new", handleEvent)
-          ch.off("message.updated", handleEvent)
-          ch.off("message.deleted", handleEvent)
-        }
+          ch.off("message.new", handleEvent);
+          ch.off("message.updated", handleEvent);
+          ch.off("message.deleted", handleEvent);
+        };
       } catch (error) {
-        console.error("❌ Error initializing channel:", error)
-        Alert.alert("Error", "Failed to load chat. Please try again.")
-        setLoading(false)
+        console.error("❌ Error initializing channel:", error);
+        Alert.alert("Error", "Failed to load chat. Please try again.");
+        setLoading(false);
       }
-    }
+    };
 
-    initializeChannel()
-  }, [client, isConnected, channelId, currentUser])
+    initializeChannel();
+  }, [client, isConnected, channelId, currentUser]);
 
   useEffect(() => {
-    // ... (This useEffect block is unchanged)
     const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) =>
       setKeyboardHeight(e.endCoordinates.height + 20),
     )
@@ -108,7 +112,6 @@ export default function ChatScreen() {
   }, [])
 
   const sendMessage = async () => {
-    // ... (This function is unchanged)
     if (!channel || !newMessage.trim() || sending) return
     setSending(true)
     try {
@@ -123,19 +126,33 @@ export default function ChatScreen() {
   }
 
   const handleReaction = async (reactionType: string) => {
-    // ... (This function is unchanged)
     if (!channel || !selectedMessage) return
     try {
+      // Optimistic UI update for instant feedback
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.id === selectedMessage.id
+            ? {
+                ...msg,
+                latest_reactions: [
+                  ...(msg.latest_reactions || []),
+                  { type: reactionType, user_id: currentUser.clerkId },
+                ],
+              }
+            : msg
+        )
+      )
+      
+      setSelectedMessage(null) // Hide picker immediately
+
       await channel.sendReaction(selectedMessage.id, { type: reactionType })
-      setSelectedMessage(null)
     } catch (error) {
       console.error("❌ Failed to send reaction:", error)
       Alert.alert("Error", "Could not send reaction.")
-      setSelectedMessage(null)
+      // Optionally, revert the optimistic update here if needed
     }
   }
 
-  // --- NEW: Function to handle long press and measure the component ---
   const handleLongPress = (message: any) => {
     const ref = messageRefs.current[message.id]
     if (ref) {
@@ -147,25 +164,22 @@ export default function ChatScreen() {
   }
 
   const formatMessageTime = (date: Date) => {
-    // ... (This function is unchanged)
     if (isToday(date)) return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
     if (isYesterday(date)) return `YESTERDAY AT ${format(date, "d MMM 'AT' h:mm a").toUpperCase()}`
-    return format(date, "d MMM yyyy 'AT' h:mm a").toUpperCase()
+    return format(date, "d MMM<y_bin_46> 'AT' h:mm a").toUpperCase()
   }
 
   const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
-    // ... (This function is unchanged)
     if (!previousMessage) return true
     const timeDiff = new Date(currentMessage.created_at).getTime() - new Date(previousMessage.created_at).getTime()
     return timeDiff > 30 * 60 * 1000
   }
 
-  // --- renderMessage is now much simpler ---
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
     const isFromCurrentUser = message.user?.id === currentUser?.clerkId
 
-    const messageAbove = index < messages.length - 1 ? messages[index + 1] : null
-    const messageBelow = index > 0 ? messages[index - 1] : null
+    const messageAbove = index < messages.length - 1 ? messages[index + 1] : null;
+    const messageBelow = index > 0 ? messages[index - 1] : null;
 
     const showTimestamp = shouldShowTimestamp(message, messageAbove)
     const isFirstInGroup = showTimestamp || !messageAbove || messageAbove.user?.id !== message.user.id
@@ -187,25 +201,23 @@ export default function ChatScreen() {
       return style
     }
 
-    const latestReactions = message.latest_reactions || []
     const ReactionComponent = () => {
+      const latestReactions = message.latest_reactions || []
       if (!latestReactions.length) return null
-      const reactionCounts = latestReactions.reduce((acc: any, r: any) => {
-        acc[r.type] = (acc[r.type] || 0) + 1
-        return acc
-      }, {})
-      const topReaction = Object.keys(reactionCounts).sort((a, b) => reactionCounts[b] - reactionCounts[a])[0]
-      const emojiMap: { [key: string]: string } = {
-        love: "❤️",
-        haha: "😂",
-        wow: "😮",
-        kissing_heart: "😘",
-        enraged: "😡",
-        thumbsup: "👍",
-      }
+
+      const reactionCounts: { [key: string]: number } = {}
+      const emojiMap: { [key: string]: string } = { love: "❤️", haha: "😂", wow: "😮", kissing_heart: "😘", enraged: "😡", thumbsup: "👍" }
+      
+      const reactionEmojis = latestReactions.map((r: any) => emojiMap[r.type]).filter(Boolean)
+      const uniqueEmojis = [...new Set(reactionEmojis)];
+
+      if (!uniqueEmojis.length) return null
+      
       return (
-        <View className="absolute -bottom-2.5 -right-2 bg-white rounded-full p-0.5 shadow">
-          <Text className="text-sm">{emojiMap[topReaction] || "❤️"}</Text>
+        <View className="absolute -bottom-2.5 -right-2 bg-white rounded-full p-0.5 shadow flex-row">
+           {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
+             <Text key={idx} className="text-sm" style={{ transform: [{ translateX: -idx * 4 }] }}>{emoji}</Text>
+           ))}
         </View>
       )
     }
@@ -232,7 +244,7 @@ export default function ChatScreen() {
 
             <View
               className="max-w-[80%]"
-              ref={(el) => (messageRefs.current[message.id] = el as View)} // Assign ref to measure
+              ref={(el) => (messageRefs.current[message.id] = el)}
             >
               <TouchableOpacity onLongPress={() => handleLongPress(message)} delayLongPress={200} activeOpacity={0.8}>
                 <View
@@ -255,8 +267,8 @@ export default function ChatScreen() {
     )
   }
 
+  // Loading and error states
   if (isConnecting || loading) {
-    // ... (This block is unchanged)
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
@@ -266,11 +278,10 @@ export default function ChatScreen() {
           </Text>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   if (!client || !isConnected) {
-    // ... (This block is unchanged)
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center px-8">
@@ -281,10 +292,9 @@ export default function ChatScreen() {
           </Text>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
-  // --- The main return block now includes the single Picker instance ---
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       {/* Header */}
@@ -374,7 +384,6 @@ export default function ChatScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* RENDER THE SINGLE PICKER INSTANCE HERE */}
       <ReactionsPicker
         isVisible={!!selectedMessage}
         onClose={() => setSelectedMessage(null)}
