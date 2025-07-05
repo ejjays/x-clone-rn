@@ -14,78 +14,88 @@ export const useCreatePost = () => {
     mutationFn: async (postData: { content: string; imageUri?: string }) => {
       const formData = new FormData();
 
-      if (postData.content) formData.append("content", postData.content);
+      if (postData.content) {
+        formData.append("content", postData.content);
+      }
 
       if (postData.imageUri) {
         const uriParts = postData.imageUri.split(".");
         const fileType = uriParts[uriParts.length - 1].toLowerCase();
 
+        // A more robust map for mime types
         const mimeTypeMap: Record<string, string> = {
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
           png: "image/png",
           gif: "image/gif",
           webp: "image/webp",
         };
-        const mimeType = mimeTypeMap[fileType] || "image/jpeg";
+        const mimeType = mimeTypeMap[fileType] || "image/jpeg"; // Default to jpeg
 
         formData.append("image", {
           uri: postData.imageUri,
-          name: `image.${fileType}`,
+          name: `upload.${fileType}`,
           type: mimeType,
         } as any);
       }
 
+      // Important: Use the correct headers for multipart/form-data
       return api.post("/posts", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
     },
     onSuccess: () => {
       setContent("");
       setSelectedImage(null);
+      // Invalidate posts query to refetch and show the new post
       queryClient.invalidateQueries({ queryKey: ["posts"] });
-      Alert.alert("Success", "Post created successfully!");
+      Alert.alert("Success", "Your post has been created!");
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Post creation failed:", error.response?.data || error.message);
       Alert.alert("Error", "Failed to create post. Please try again.");
     },
   });
 
   const handleImagePicker = async (useCamera: boolean = false) => {
-    const permissionResult = useCamera
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    let permissionResult;
+
+    if (useCamera) {
+      permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    } else {
+      permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    }
 
     if (permissionResult.status !== "granted") {
       const source = useCamera ? "camera" : "photo library";
       Alert.alert(
-        "Permission needed",
-        `Please grant permission to access your ${source}`
+        "Permission Required",
+        `We need permission to access your ${source} to continue.`
       );
       return;
     }
 
-    const pickerOptions = {
+    const pickerOptions: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Only allow images for now
       allowsEditing: true,
-      quality: 0.8,
+      aspect: [4, 3],
+      quality: 0.8, // Compress image to reduce size
     };
 
     const result = useCamera
       ? await ImagePicker.launchCameraAsync(pickerOptions)
-      : await ImagePicker.launchImageLibraryAsync({
-          ...pickerOptions,
-          mediaTypes: ImagePicker.MediaType.Images,
-        });
+      : await ImagePicker.launchImageLibraryAsync(pickerOptions);
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       setSelectedImage(result.assets[0].uri);
     }
   };
 
   const createPost = () => {
     if (!content.trim() && !selectedImage) {
-      Alert.alert(
-        "Empty Post",
-        "Please write something or add an image before posting!"
-      );
+      Alert.alert("Empty Post", "Please write something or add an image.");
       return;
     }
 
@@ -106,7 +116,7 @@ export const useCreatePost = () => {
     selectedImage,
     isCreating: createPostMutation.isPending,
     pickImageFromGallery: () => handleImagePicker(false),
-    takePhoto: () => handleImagePicker(true),
+    takePhoto: () => handleImagePicker(true), // Added for future use
     removeImage: () => setSelectedImage(null),
     createPost,
   };
