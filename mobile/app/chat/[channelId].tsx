@@ -36,13 +36,9 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
 
-  // --- State for the Reaction Picker ---
   const [selectedMessage, setSelectedMessage] = useState<any>(null)
   const flatListRef = useRef<FlatList>(null)
 
-  // --- THE RELOAD BUG FIX ---
-  // The useEffect that initializes the channel NO LONGER depends on `selectedMessage`.
-  // This stops the entire screen from reloading on long-press.
   useEffect(() => {
     if (!client || !isConnected || !channelId || !currentUser) {
       setLoading(false)
@@ -53,11 +49,10 @@ export default function ChatScreen() {
       try {
         setLoading(true)
         const ch = client.channel("messaging", channelId)
-        await ch.watch() // 'watch' is crucial for getting real-time updates
+        await ch.watch()
         setChannel(ch)
 
         const membersArray = Array.isArray(ch.state.members) ? ch.state.members : Object.values(ch.state.members || {})
-
         const otherMember = membersArray.find((member: any) => member?.user?.id !== currentUser.clerkId)
 
         if (otherMember?.user) {
@@ -67,23 +62,19 @@ export default function ChatScreen() {
             online: otherMember.user.online || false,
           })
         }
-
-        // Set initial messages correctly
-        setMessages(ch.state.messages.slice().reverse())
-
-        // --- Improved event listeners ---
+        
         const handleEvent = () => {
           setMessages(ch.state.messages.slice().reverse())
         }
 
+        setMessages(ch.state.messages.slice().reverse())
+
         ch.on("message.new", handleEvent)
-        ch.on("message.updated", handleEvent) // For reactions, edits, etc.
+        ch.on("message.updated", handleEvent)
         ch.on("message.deleted", handleEvent)
 
         setLoading(false)
-        console.log("✅ Channel initialized successfully")
 
-        // Cleanup listeners when component unmounts
         return () => {
           ch.off("message.new", handleEvent)
           ch.off("message.updated", handleEvent)
@@ -97,9 +88,8 @@ export default function ChatScreen() {
     }
 
     initializeChannel()
-  }, [client, isConnected, channelId, currentUser]) // CRITICAL FIX: `selectedMessage` is removed from here
+  }, [client, isConnected, channelId, currentUser])
 
-  // --- Keyboard Handling ---
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) =>
       setKeyboardHeight(e.endCoordinates.height + 20),
@@ -111,7 +101,6 @@ export default function ChatScreen() {
     }
   }, [])
 
-  // --- Message and Reaction Functions ---
   const sendMessage = async () => {
     if (!channel || !newMessage.trim() || sending) return
     setSending(true)
@@ -129,13 +118,12 @@ export default function ChatScreen() {
   const handleReaction = async (reactionType: string) => {
     if (!channel || !selectedMessage) return
     try {
-      // Send the reaction and then immediately hide the picker
       await channel.sendReaction(selectedMessage.id, { type: reactionType })
       setSelectedMessage(null)
     } catch (error) {
       console.error("❌ Failed to send reaction:", error)
       Alert.alert("Error", "Could not send reaction.")
-      setSelectedMessage(null) // Also hide picker on error
+      setSelectedMessage(null)
     }
   }
 
@@ -144,20 +132,18 @@ export default function ChatScreen() {
     setSelectedMessage(message)
   }
 
-  // --- UI Formatting Functions ---
   const formatMessageTime = (date: Date) => {
     if (isToday(date)) return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
-    if (isYesterday(date)) return `YESTERDAY AT ${format(date, "h:mm a").toUpperCase()}`
-    return format(date, "d MMM 'AT' h:mm a").toUpperCase()
+    if (isYesterday(date)) return `YESTERDAY AT ${format(date, "d MMM 'AT' h:mm a").toUpperCase()}`
+    return format(date, "d MMM yyyy 'AT' h:mm a").toUpperCase()
   }
 
   const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
     if (!previousMessage) return true
     const timeDiff = new Date(currentMessage.created_at).getTime() - new Date(previousMessage.created_at).getTime()
-    return timeDiff > 30 * 60 * 1000 // 30 minutes
+    return timeDiff > 30 * 60 * 1000
   }
 
-  // --- The `renderMessage` function with all fixes ---
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
     const isFromCurrentUser = message.user?.id === currentUser?.clerkId
 
@@ -170,9 +156,9 @@ export default function ChatScreen() {
     const showAvatar = isLastInGroup
 
     // --- BUBBLE STYLE FIX ---
-    // This logic is now restored to make the bubbles beautiful again.
     const getBubbleStyle = () => {
-      let style = "rounded-2xl"
+      // 👈 Here is the fix for the roundness
+      let style = "rounded-3xl"
       if (isFirstInGroup && isLastInGroup) return style
       if (isFromCurrentUser) {
         if (isFirstInGroup) style += " rounded-br-lg"
@@ -229,7 +215,10 @@ export default function ChatScreen() {
               </View>
             )}
 
-            <View className="max-w-[80%] items-center">
+            {/* --- OVERLAP FIX ---
+            I've added `z-10` here. This makes the selected message render on top of all others,
+            so the reaction picker won't get cut off. */}
+            <View className="max-w-[80%] items-center z-10">
               <TouchableOpacity onLongPress={() => handleLongPress(message)} delayLongPress={200} activeOpacity={0.8}>
                 <View
                   className={`px-4 py-2.5 ${getBubbleStyle()} ${
@@ -243,9 +232,10 @@ export default function ChatScreen() {
                 <ReactionComponent />
               </TouchableOpacity>
               {selectedMessage?.id === message.id && (
-                <ReactionsPicker onSelect={handleReaction} isVisible={selectedMessage?.id === message.id} />
+                <ReactionsPicker onSelect={handleReaction} isVisible={selectedMessage?.id === message.id} onAdd={() => {}} />
               )}
             </View>
+
             {isFromCurrentUser && <View style={{ width: 8 }} />}
           </View>
         </View>
@@ -253,7 +243,6 @@ export default function ChatScreen() {
     )
   }
 
-  // Loading and error states are unchanged...
   if (isConnecting || loading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -276,18 +265,13 @@ export default function ChatScreen() {
           <Text className="text-gray-500 text-center">
             Unable to connect to chat service. Please check your internet connection.
           </Text>
-          <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-lg mt-4" onPress={() => router.back()}>
-            <Text className="text-white font-semibold">Go Back</Text>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
     )
   }
 
-  // Main chat UI
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      {/* Header */}
       <View className="flex-row items-center p-4 border-b border-gray-200 bg-white">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
           <Ionicons name="arrow-back" size={24} color="#374151" />
@@ -314,77 +298,72 @@ export default function ChatScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Messages Container */}
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <TouchableOpacity
-          activeOpacity={1}
-          className="flex-1"
-          onPress={() => {
-            Keyboard.dismiss()
-            setSelectedMessage(null) // Also hide picker when tapping outside
-          }}
-        >
+        {/* --- SCROLLING FIX ---
+         I removed the outer TouchableOpacity wrapper around the FlatList. */}
+        <View className="flex-1">
           <FlatList
             ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
             keyExtractor={(item) => item.id}
-            className="flex-1 bg-white px-2" // Added horizontal padding
+            className="flex-1 bg-white px-2"
             contentContainerStyle={{ paddingTop: 16, paddingBottom: keyboardHeight > 0 ? 20 : 16 }}
             inverted
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             onScrollBeginDrag={() => {
               Keyboard.dismiss()
-              setSelectedMessage(null) // Hide picker on scroll
+              setSelectedMessage(null) // This hides the picker when you start scrolling.
             }}
-          />
-        </TouchableOpacity>
-
-        {/* Message Input */}
-        <View
-          className="flex-row items-end border-t border-gray-200 bg-white px-4"
-          style={{
-            paddingTop: 12,
-            paddingBottom:
-              Platform.OS === "ios"
-                ? Math.max(insets.bottom, 16)
-                : keyboardHeight > 0
-                  ? 16
-                  : Math.max(insets.bottom, 16),
-            marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
-          }}
-        >
-          <View className="flex-1 mr-3">
-            <TextInput
-              value={newMessage}
-              onChangeText={setNewMessage}
-              placeholder="Type a message..."
-              placeholderTextColor="#9CA3AF"
-              className="border border-gray-300 rounded-full px-4 py-3 text-base text-gray-900 bg-gray-50"
-              multiline
-              maxLength={500}
-              editable={!sending}
-              textAlignVertical="top"
-              style={{ minHeight: 48, maxHeight: 120 }}
-            />
-          </View>
-          <TouchableOpacity
-            onPress={sendMessage}
-            disabled={!newMessage.trim() || sending}
-            className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-500" : "bg-gray-300"}`}
-            style={{ marginBottom: 2 }}
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Ionicons name="send" size={20} color={newMessage.trim() && !sending ? "white" : "gray"} />
+            ListEmptyComponent={() => (
+              <View className="flex-1 items-center justify-center py-20" style={{ transform: [{ scaleY: -1 }] }}>
+                <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
+                <Text className="text-gray-500 mt-2">No messages yet</Text>
+                <Text className="text-gray-400 text-sm">Start the conversation!</Text>
+              </View>
             )}
-          </TouchableOpacity>
+          />
+
+          <View
+            className="flex-row items-end border-t border-gray-200 bg-white px-4"
+            style={{
+              paddingTop: 12,
+              paddingBottom: Math.max(insets.bottom, 16),
+              marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
+            }}
+          >
+            <View className="flex-1 mr-3">
+              <TextInput
+                value={newMessage}
+                onChangeText={setNewMessage}
+                placeholder="Type a message..."
+                placeholderTextColor="#9CA3AF"
+                className="border border-gray-300 rounded-full px-4 py-3 text-base text-gray-900 bg-gray-50"
+                multiline
+                maxLength={500}
+                editable={!sending}
+                textAlignVertical="top"
+                style={{ minHeight: 48, maxHeight: 120 }}
+              />
+            </View>
+            <TouchableOpacity
+              onPress={sendMessage}
+              disabled={!newMessage.trim() || sending}
+              className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-500" : "bg-gray-300"}`}
+              style={{ marginBottom: 2 }}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Ionicons name="send" size={20} color={newMessage.trim() && !sending ? "white" : "gray"} />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </View>
