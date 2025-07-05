@@ -11,6 +11,7 @@ import { OverlayProvider, Chat } from "stream-chat-react-native"
 import { streamChatTheme } from "@/utils/StreamChatTheme"
 import { useEffect } from "react"
 import { useAuth } from "@clerk/clerk-expo"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 const queryClient = new QueryClient()
 
@@ -75,7 +76,8 @@ const InitialLayout = () => {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <ErrorBoundary>
+     <GestureHandlerRootView style={{ flex: 1 }}>
       <ClerkProvider publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!} tokenCache={tokenCache}>
         <QueryClientProvider client={queryClient}>
           <InitialLayout />
@@ -83,5 +85,6 @@ export default function RootLayout() {
         </QueryClientProvider>
       </ClerkProvider>
     </GestureHandlerRootView>
+   </ErrorBoundary>
   )
 }
