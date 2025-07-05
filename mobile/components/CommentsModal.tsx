@@ -14,7 +14,6 @@ import {
   Platform,
   Modal,
   FlatList,
-  Pressable
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CommentCard from "./CommentCard";
@@ -27,7 +26,7 @@ export interface CommentsModalRef {
 
 const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ selectedPost }, ref) => {
   const [isVisible, setIsVisible] = useState(false);
-  // We use both top and bottom insets for padding inside the modal
+  // We get the insets to apply them specifically where needed.
   const { top, bottom } = useSafeAreaInsets();
   const { commentText, setCommentText, createComment, isCreatingComment } = useComments();
   const { currentUser } = useCurrentUser();
@@ -52,45 +51,51 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
   
   useEffect(() => {
     // This effect can be used to clear text after a comment is successfully posted.
-    // The logic inside useComments already handles this, so we can keep it clean here.
   }, [isCreatingComment]);
 
   return (
     <Modal
       animationType="slide"
-      transparent={false} // Make modal non-transparent to cover everything
+      transparent={false} // This is correct, ensures it covers everything.
       visible={isVisible}
       onRequestClose={closeModal}
+      // This StatusBar setting is for when the modal is active
+      statusBarTranslucent 
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 bg-gray-100" // The background color is now on the main view
-      >
-        {/* Main content container with safe area padding */}
-        <View className="flex-1" style={{ paddingTop: top }}>
+      <View className="flex-1 bg-gray-100 rounded-t-2xl">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1"
+        >
+          {/* THIS IS THE FIX: The main container View has no top padding.
+            We apply the top padding only to the Header content.
+          */}
           
-          {/* Custom Header */}
-          <View className="p-4 bg-white border-b border-gray-200 rounded-t-2xl">
-            <View className="items-center pb-2">
-              <View className="w-12 h-1.5 bg-gray-300 rounded-full" />
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-xl font-bold">Comments</Text>
-              <TouchableOpacity
-                onPress={closeModal}
-                className="w-8 h-8 items-center justify-center rounded-full bg-gray-100"
-              >
-                <Feather name="x" size={18} color="#666" />
-              </TouchableOpacity>
+          {/* Custom Header with SafeArea padding */}
+          <View style={{ paddingTop: top }} className="bg-white rounded-t-2xl">
+            <View className="p-4 border-b border-gray-200">
+              <View className="items-center pb-2">
+                <View className="w-12 h-1.5 bg-gray-300 rounded-full" />
+              </View>
+              <View className="flex-row items-center justify-between">
+                <Text className="text-xl font-bold">Comments</Text>
+                <TouchableOpacity
+                  onPress={closeModal}
+                  className="w-8 h-8 items-center justify-center rounded-full bg-gray-100"
+                >
+                  <Feather name="x" size={18} color="#666" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
-          {/* Comments List */}
+          {/* Comments List takes up the remaining space */}
           <FlatList
             data={selectedPost?.comments || []}
             renderItem={({ item }) => <CommentCard comment={item} />}
             keyExtractor={(item) => item._id}
             showsVerticalScrollIndicator={false}
+            className="flex-1"
             contentContainerStyle={{
               padding: 16,
               flexGrow: 1,
@@ -111,7 +116,7 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
             keyboardShouldPersistTaps="handled"
           />
 
-          {/* Comment Input Footer */}
+          {/* Comment Input Footer with SafeArea padding */}
           <View
             className="bg-white border-t border-gray-200"
             style={{
@@ -155,8 +160,8 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
               </View>
             </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 });
