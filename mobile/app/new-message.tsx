@@ -3,7 +3,7 @@ import { View, Text, SafeAreaView, TouchableOpacity, FlatList, TextInput, Activi
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useApiClient, userApi } from "@/utils/api"
-import { useStreamChat } from "@/hooks/useStreamChat"
+import { useStreamChat } from "@/context/StreamChatContext"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import type { User } from "@/types"
 

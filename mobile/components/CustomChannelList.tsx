@@ -1,4 +1,4 @@
-import { useStreamChat } from "@/hooks/useStreamChat";
+import { useStreamChat } from "@/context/StreamChatContext"
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { formatDistanceToNow } from "date-fns";
 import { router } from "expo-router";

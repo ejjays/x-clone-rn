@@ -1,6 +1,6 @@
 // mobile/app/chat/[channelId].tsx
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { useStreamChat } from "@/hooks/useStreamChat"
+import { useStreamChat } from "@/context/StreamChatContext"
 import { Ionicons } from "@expo/vector-icons"
 import { router, useLocalSearchParams } from "expo-router"
 import { format, isToday, isYesterday } from "date-fns"

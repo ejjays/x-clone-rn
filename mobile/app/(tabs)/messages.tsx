@@ -1,40 +1,34 @@
-import { router } from "expo-router"
-import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, TextInput, Platform } from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import { useStreamChat } from "@/hooks/useStreamChat"
-import CustomChannelList from "@/components/CustomChannelList"
-import NoMessagesFound from "@/components/NoMessagesFound"
-import { useState } from "react"
+import { router } from "expo-router";
+import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, TextInput, Platform } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useStreamChat } from "@/context/StreamChatContext"; // 👈 Use the new context hook
+import CustomChannelList from "@/components/CustomChannelList";
+import NoMessagesFound from "@/components/NoMessagesFound";
+import { useState } from "react";
 
 export default function MessagesScreen() {
-  const { isConnecting, isConnected, channels, client, refreshChannels } = useStreamChat()
-  const [searchQuery, setSearchQuery] = useState("") 
+  const { isConnecting, isConnected, channels, client, refreshChannels } = useStreamChat(); // 👈 This now gets shared state
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleNewMessage = () => {
-    router.push("/new-message")
-  }
-
-  const handleChannelSelect = (channelId: string) => {
-    router.push(`/chat/${channelId}`)
-  }
+    router.push("/new-message");
+  };
 
   const clearSearch = () => {
-    setSearchQuery("")
-  }
+    setSearchQuery("");
+  };
 
   const renderContent = () => {
-    // Show loading while connecting AND we don't have a client yet
     if (isConnecting && !client) {
       return (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1877F2" />
           <Text className="text-gray-500 mt-2">Connecting to chat...</Text>
         </View>
-      )
+      );
     }
 
-    // If we have a client but not connected, or no client at all after connection attempt
-    if (!client || (!isConnected && !isConnecting)) {
+    if (!client || !isConnected) {
       return (
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="cloud-offline-outline" size={64} color="#9CA3AF" />
@@ -46,29 +40,25 @@ export default function MessagesScreen() {
             <Text className="text-white font-semibold">Retry Connection</Text>
           </TouchableOpacity>
         </View>
-      )
+      );
     }
 
-    // If connected but no channels, show empty state
-    if (isConnected && channels.length === 0) {
-      return <NoMessagesFound onRefresh={refreshChannels} />
+    if (channels.length === 0) {
+      return <NoMessagesFound onRefresh={refreshChannels} />;
     }
 
-    // Show the channel list when we have channels
-    return (
-      <CustomChannelList onChannelSelect={handleChannelSelect} onRefresh={refreshChannels} searchQuery={searchQuery} />
-    )
-  }
+    return <CustomChannelList onRefresh={refreshChannels} searchQuery={searchQuery} />;
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header - No border line, matching Notifications style */}
+      {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-4">
         <Text className="text-3xl font-bold text-gray-900">Messages</Text>
         <TouchableOpacity
           onPress={handleNewMessage}
           className="w-10 h-10 rounded-full bg-blue-500 items-center justify-center"
-          disabled={!client} // Only disable if we don't have a client at all
+          disabled={!client || !isConnected}
         >
           <Ionicons name="create-outline" size={20} color="white" />
         </TouchableOpacity>
@@ -99,5 +89,5 @@ export default function MessagesScreen() {
 
       {renderContent()}
     </SafeAreaView>
-  )
+  );
 }
