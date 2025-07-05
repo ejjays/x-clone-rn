@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { usePosts } from "@/hooks/usePosts"
 import { useProfile } from "@/hooks/useProfile"
 import { useSignOut } from "@/hooks/useSignOut"
-import { Feather } from "@expo/vector-icons"
+import { ArrowLeft, Calendar, Camera, ChevronDown, LogOut, MapPin, UserX } from "lucide-react-native" // Replaced Feather
 import { format } from "date-fns"
 import { View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity, RefreshControl } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -49,7 +49,7 @@ const ProfileScreens = () => {
     return (
       <View className="flex-1 bg-white items-center justify-center px-8">
         <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
-          <Feather name="user-x" size={32} color="#65676B" />
+          <UserX size={32} color="#65676B" />
         </View>
         <Text className="text-xl font-semibold text-gray-900 mb-3">Profile not available</Text>
         <Text className="text-gray-500 text-center text-base leading-6 mb-6">
@@ -66,11 +66,11 @@ const ProfileScreens = () => {
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       <View className="flex-row justify-between items-center px-4 py-1 bg-white">
         <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleBackPress}>
-          <Feather name="arrow-left" size={28} color="#1C1E21" />
+          <ArrowLeft size={28} color="#1C1E21" />
         </TouchableOpacity>
 
         <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleSignOut}>
-          <Feather name="log-out" size={24} color="#E0245E" />
+          <LogOut size={24} color="#E0245E" />
         </TouchableOpacity>
       </View>
 
@@ -112,7 +112,7 @@ const ProfileScreens = () => {
                 className="w-32 h-32 rounded-full border-4 border-white"
               />
               <TouchableOpacity className="absolute bottom-2 right-2 w-10 h-10 bg-gray-200 rounded-full items-center justify-center border-2 border-white">
-                <Feather name="camera" size={18} color="#1C1E21" />
+                <Camera size={18} color="#1C1E21" />
               </TouchableOpacity>
             </View>
           </View>
@@ -126,7 +126,7 @@ const ProfileScreens = () => {
                   {currentUser.firstName} {currentUser.lastName}
                 </Text>
                 <TouchableOpacity>
-                  <Feather name="chevron-down" size={20} color="#1C1E21" />
+                  <ChevronDown size={20} color="#1C1E21" />
                 </TouchableOpacity>
               </View>
               <Text className="text-gray-500 text-base mb-3">@{currentUser.username}</Text>
@@ -142,13 +142,13 @@ const ProfileScreens = () => {
           <View className="space-y-3 mb-4">
             {currentUser.location && (
               <View className="flex-row items-center">
-                <Feather name="map-pin" size={16} color="#65676B" />
+                <MapPin size={16} color="#65676B" />
                 <Text className="text-gray-600 ml-2">{currentUser.location}</Text>
               </View>
             )}
 
             <View className="flex-row items-center">
-              <Feather name="calendar" size={16} color="#65676B" />
+              <Calendar size={16} color="#65676B" />
               <Text className="text-gray-600 ml-2">
                 Joined {currentUser.createdAt ? format(new Date(currentUser.createdAt), "MMMM yyyy") : "Recently"}
               </Text>

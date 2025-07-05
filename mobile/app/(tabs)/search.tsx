@@ -2,7 +2,7 @@ import UserCard from "@/components/UserCard"
 import { useAllUsers } from "@/hooks/useAllUsers"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import type { User } from "@/types"
-import { Feather } from "@expo/vector-icons"
+import { Search, Users, X } from "lucide-react-native" 
 import { useState } from "react"
 import { View, TextInput, ScrollView, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -58,7 +58,7 @@ const SearchScreen = () => {
       <View className="px-4 py-4 bg-white">
         <Text className="text-3xl font-bold text-gray-900 mb-3">Peoples</Text>
         <View className="flex-row items-center bg-gray-100 rounded-full px-4">
-          <Feather name="search" size={20} color="#657786" />
+          <Search size={20} color="#657786" />
           <TextInput
             placeholder="Search people"
             className="flex-1 ml-3 text-base"
@@ -71,7 +71,7 @@ const SearchScreen = () => {
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={() => setSearchText("")}>
-              <Feather name="x" size={20} color="#657786" />
+              <X size={20} color="#657786" />
             </TouchableOpacity>
           )}
         </View>
@@ -93,7 +93,7 @@ const SearchScreen = () => {
           <View className="flex-1 items-center justify-center p-8">
             <View className="items-center">
               <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
-                <Feather name="users" size={32} color="#65676B" />
+                <Users size={32} color="#65676B" />
               </View>
               <Text className="text-xl font-semibold text-gray-900 mb-3">
                 {searchText ? "No people found" : "No people yet"}

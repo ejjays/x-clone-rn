@@ -1,6 +1,6 @@
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useUser } from "@clerk/clerk-expo";
-import { Feather } from "@expo/vector-icons";
+import { Image as ImageIcon, Send, X } from "lucide-react-native"; // Replaced Feather
 import { useState } from "react";
 import {
   View,
@@ -63,12 +63,10 @@ const PostComposer = () => {
         >
           {isCreating ? (
             <ActivityIndicator size="small" />
+          ) : isTextInputFocused ? (
+            <Send size={24} color={"#1877F2"} />
           ) : (
-            <Feather
-              name={isTextInputFocused ? "send" : "image"}
-              size={24}
-              color={isTextInputFocused ? "#1877F2" : "#4CAF50"}
-            />
+            <ImageIcon size={24} color={"#4CAF50"} />
           )}
         </TouchableOpacity>
       </View>
@@ -85,7 +83,7 @@ const PostComposer = () => {
             className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-full"
             onPress={removeImage}
           >
-            <Feather name="x" size={18} color="white" />
+            <X size={18} color="white" />
           </TouchableOpacity>
         </View>
       )}

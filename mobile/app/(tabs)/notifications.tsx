@@ -2,7 +2,7 @@ import NoNotificationsFound from "@/components/NoNotificationsFound"
 import NotificationCard from "@/components/NotificationCard"
 import { useNotifications } from "@/hooks/useNotifications"
 import type { Notification } from "@/types"
-import { Feather } from "@expo/vector-icons"
+import { Check, Search } from "lucide-react-native" // Replaced Feather
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -75,10 +75,10 @@ const NotificationsScreen = () => {
 
         <View className="flex-row space-x-2">
           <TouchableOpacity className="w-9 h-9 bg-gray-200 rounded-full items-center justify-center">
-            <Feather name="check" size={18} color="#1C1E21" />
+            <Check size={18} color="#1C1E21" />
           </TouchableOpacity>
           <TouchableOpacity className="w-9 h-9 bg-gray-200 rounded-full items-center justify-center">
-            <Feather name="search" size={18} color="#1C1E21" />
+            <Search size={18} color="#1C1E21" />
           </TouchableOpacity>
         </View>
       </View>

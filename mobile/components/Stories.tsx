@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-expo";
-import { Feather } from "@expo/vector-icons";
+import { Plus } from "lucide-react-native"; // Replaced Feather
 import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 
 // Mock data for stories
@@ -57,7 +57,7 @@ const Stories = () => {
             </Text>
           </View>
           <View className="absolute top-28 left-1/2 -ml-5 bg-blue-500 rounded-full w-10 h-10 items-center justify-center border-4 border-white">
-            <Feather name="plus" size={24} color="white" />
+            <Plus size={24} color="white" />
           </View>
         </TouchableOpacity>
 

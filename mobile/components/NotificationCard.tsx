@@ -1,5 +1,5 @@
 import type { Notification } from "@/types"
-import { Feather } from "@expo/vector-icons"
+import { Bell, Heart, MessageCircle, MoreHorizontal, UserPlus } from "lucide-react-native" // Replaced Feather
 import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
 
 interface NotificationCardProps {
@@ -44,25 +44,25 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
       case "like":
         return (
           <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-red-500 rounded-full items-center justify-center border-2 border-white">
-            <Feather name="heart" size={14} color="white" />
+            <Heart size={14} color="white" />
           </View>
         )
       case "comment":
         return (
           <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-500 rounded-full items-center justify-center border-2 border-white">
-            <Feather name="message-circle" size={14} color="white" />
+            <MessageCircle size={14} color="white" />
           </View>
         )
       case "follow":
         return (
           <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 rounded-full items-center justify-center border-2 border-white">
-            <Feather name="user-plus" size={14} color="white" />
+            <UserPlus size={14} color="white" />
           </View>
         )
       default:
         return (
           <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-gray-500 rounded-full items-center justify-center border-2 border-white">
-            <Feather name="bell" size={14} color="white" />
+            <Bell size={14} color="white" />
           </View>
         )
     }
@@ -153,7 +153,7 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
 
         {/* More Options */}
         <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleDelete}>
-          <Feather name="more-horizontal" size={22} color="#65676B" />
+          <MoreHorizontal size={22} color="#65676B" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

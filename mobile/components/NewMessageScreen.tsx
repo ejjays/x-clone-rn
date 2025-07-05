@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, ActivityIndicator } from "react-native"
-import { Feather } from "@expo/vector-icons"
+import { MessageCircle, Search, Users, X } from "lucide-react-native" // Replaced Feather
 import { useAllUsers } from "@/hooks/useAllUsers"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import type { User } from "@/types"
@@ -37,7 +37,7 @@ const NewMessageScreen = ({ onSelectUser, onClose }: NewMessageScreenProps) => {
       {/* Header */}
       <View className="flex-row items-center px-4 py-4 border-b border-gray-100">
         <TouchableOpacity onPress={onClose} className="mr-4">
-          <Feather name="x" size={24} color="#1C1E21" />
+          <X size={24} color="#1C1E21" />
         </TouchableOpacity>
         <Text className="text-xl font-semibold text-gray-900">New Message</Text>
       </View>
@@ -45,7 +45,7 @@ const NewMessageScreen = ({ onSelectUser, onClose }: NewMessageScreenProps) => {
       {/* Search Bar */}
       <View className="px-4 py-3 border-b border-gray-100">
         <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3">
-          <Feather name="search" size={20} color="#657786" />
+          <Search size={20} color="#657786" />
           <TextInput
             placeholder="Search people"
             className="flex-1 ml-3 text-base"
@@ -56,7 +56,7 @@ const NewMessageScreen = ({ onSelectUser, onClose }: NewMessageScreenProps) => {
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={() => setSearchText("")}>
-              <Feather name="x" size={20} color="#657786" />
+              <X size={20} color="#657786" />
             </TouchableOpacity>
           )}
         </View>
@@ -80,7 +80,7 @@ const NewMessageScreen = ({ onSelectUser, onClose }: NewMessageScreenProps) => {
           <View className="flex-1 items-center justify-center py-20">
             <View className="items-center">
               <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
-                <Feather name="users" size={32} color="#65676B" />
+                <Users size={32} color="#65676B" />
               </View>
               <Text className="text-xl font-semibold text-gray-900 mb-3">
                 {searchText ? "No people found" : "No people yet"}
@@ -125,7 +125,7 @@ const NewMessageScreen = ({ onSelectUser, onClose }: NewMessageScreenProps) => {
 
                   {/* Message Icon */}
                   <View className="w-12 h-12 bg-blue-500 rounded-full items-center justify-center">
-                    <Feather name="message-circle" size={20} color="white" />
+                    <MessageCircle size={20} color="white" />
                   </View>
                 </TouchableOpacity>
               )

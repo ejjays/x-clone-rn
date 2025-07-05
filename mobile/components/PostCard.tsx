@@ -1,6 +1,6 @@
 import type { Post, User } from "@/types"
 import { formatDate, formatNumber } from "@/utils/formatters"
-import { AntDesign, Feather } from "@expo/vector-icons"
+import { Heart, MessageCircle, Share2, Trash } from "lucide-react-native"; // Replaced Feather & AntDesign
 import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
 
 interface PostCardProps {
@@ -39,7 +39,7 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
         </View>
         {isOwnPost && (
           <TouchableOpacity onPress={handleDelete} className="p-2">
-            <Feather name="trash" size={20} color="#657786" />
+            <Trash size={20} color="#657786" />
           </TouchableOpacity>
         )}
       </View>
@@ -53,23 +53,19 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
       {/* Post Actions */}
       <View className="flex-row justify-around py-2 border-t border-gray-100 mt-2">
         <TouchableOpacity className="flex-row items-center space-x-2" onPress={() => onLike(post._id)}>
-          {isLiked ? (
-            <AntDesign name="heart" size={22} color="#E0245E" />
-          ) : (
-            <Feather name="heart" size={22} color="#657786" />
-          )}
+          <Heart size={22} color={isLiked ? "#E0245E" : "#657786"} fill={isLiked ? "#E0245E" : "none"} />
           <Text className={`font-medium ${isLiked ? "text-red-500" : "text-gray-500"}`}>
             {formatNumber(post.likes?.length || 0)} Like
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity className="flex-row items-center space-x-2" onPress={() => onComment(post)}>
-          <Feather name="message-circle" size={22} color="#657786" />
+          <MessageCircle size={22} color="#657786" />
           <Text className="text-gray-500 font-medium">{formatNumber(post.comments?.length || 0)} Comment</Text>
         </TouchableOpacity>
 
         <TouchableOpacity className="flex-row items-center space-x-2">
-          <Feather name="share-2" size={22} color="#657786" />
+          <Share2 size={22} color="#657786" />
           <Text className="text-gray-500 font-medium">Share</Text>
         </TouchableOpacity>
       </View>
@@ -77,4 +73,4 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
   )
 }
 
-export default PostCard;
+export default PostCard

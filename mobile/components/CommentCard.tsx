@@ -1,6 +1,6 @@
 import type { Comment } from "@/types"
 import { formatDate } from "@/utils/formatters"
-import { Feather } from "@expo/vector-icons"
+import { Heart } from "lucide-react-native" // Replaced Feather
 import { View, Text, Image, TouchableOpacity } from "react-native"
 
 interface CommentCardProps {
@@ -25,7 +25,7 @@ const CommentCard = ({ comment }: CommentCardProps) => {
         <View className="flex-row items-center space-x-6 mt-2 px-4">
           <Text className="text-xs text-gray-500">{formatDate(comment.createdAt)}</Text>
           <TouchableOpacity className="flex-row items-center space-x-1">
-            <Feather name="heart" size={14} color="#9CA3AF" />
+            <Heart size={14} color="#9CA3AF" />
             <Text className="text-xs text-gray-500 font-medium">Like</Text>
           </TouchableOpacity>
           <TouchableOpacity>

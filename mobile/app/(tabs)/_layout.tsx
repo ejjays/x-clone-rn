@@ -1,8 +1,5 @@
-"use client"
-
-// mobile/app/(tabs)/_layout.tsx
 import { useAuth } from "@clerk/clerk-expo"
-import { Feather } from "@expo/vector-icons"
+import { Bell, Home, Menu, MessageCircle, Plus, Search, Tv, Users } from "lucide-react-native" 
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs"
 import { Redirect, usePathname, withLayoutContext } from "expo-router"
 import { useEffect } from "react"
@@ -81,13 +78,13 @@ const TabsLayout = () => {
           <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
           <View className="flex-row space-x-2">
             <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-              <Feather name="plus" size={22} color="#000" />
+              <Plus size={22} color="#000" />
             </TouchableOpacity>
             <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-              <Feather name="search" size={22} color="#000" />
+              <Search size={22} color="#000" />
             </TouchableOpacity>
             <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-              <Feather name="message-circle" size={22} color="#000" />
+              <MessageCircle size={22} color="#000" />
             </TouchableOpacity>
           </View>
         </View>
@@ -129,35 +126,35 @@ const TabsLayout = () => {
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("index")}
                   >
-                    <Feather name="home" size={24} color={pathname === "/" ? "#1877F2" : "#657786"} />
+                    <Home size={24} color={pathname === "/" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("search")}
                   >
-                    <Feather name="users" size={24} color={pathname === "/search" ? "#1877F2" : "#657786"} />
+                    <Users size={24} color={pathname === "/search" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("notifications")}
                   >
-                    <Feather name="bell" size={24} color={pathname === "/notifications" ? "#1877F2" : "#657786"} />
+                    <Bell size={24} color={pathname === "/notifications" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("messages")}
                   >
-                    <Feather name="tv" size={24} color={pathname === "/messages" ? "#1877F2" : "#657786"} />
+                    <Tv size={24} color={pathname === "/messages" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("profile")}
                   >
-                    <Feather name="menu" size={24} color={pathname === "/profile" ? "#1877F2" : "#657786"} />
+                    <Menu size={24} color={pathname === "/profile" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
                 </View>
 

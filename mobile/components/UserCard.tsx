@@ -1,5 +1,5 @@
 import type { User } from "@/types"
-import { Feather } from "@expo/vector-icons"
+import { MessageCircle, MoreHorizontal } from "lucide-react-native" // Replaced Feather
 import { View, Text, Image, TouchableOpacity, Alert } from "react-native"
 
 interface UserCardProps {
@@ -69,12 +69,12 @@ const UserCard = ({ user, onFollow, onMessage, isFollowing, showMessageButton = 
             className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center"
             onPress={handleMessage}
           >
-            <Feather name="message-circle" size={18} color="white" />
+            <MessageCircle size={18} color="white" />
           </TouchableOpacity>
         )}
 
         <TouchableOpacity className="w-8 h-8 items-center justify-center" onPress={handleMoreOptions}>
-          <Feather name="more-horizontal" size={20} color="#65676B" />
+          <MoreHorizontal size={20} color="#65676B" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

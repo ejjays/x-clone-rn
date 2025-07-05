@@ -1,7 +1,7 @@
 import { useComments } from "@/hooks/useComments";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { Post } from "@/types";
-import { Feather } from "@expo/vector-icons";
+import { MessageCircle, Send, X } from "lucide-react-native"; // Replaced Feather
 import { forwardRef, useImperativeHandle, useState, useCallback, useEffect } from "react";
 import {
   View,
@@ -42,13 +42,13 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
     open: openModal,
     close: closeModal,
   }), [openModal, closeModal]);
-  
+
   const handleCreateComment = () => {
     if (selectedPost) {
       createComment({ postId: selectedPost._id, content: commentText.trim() });
     }
   };
-  
+
   useEffect(() => {
     // This effect can be used to clear text after a comment is successfully posted.
   }, [isCreatingComment]);
@@ -60,7 +60,7 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
       visible={isVisible}
       onRequestClose={closeModal}
       // This StatusBar setting is for when the modal is active
-      statusBarTranslucent 
+      statusBarTranslucent
     >
       <View className="flex-1 bg-gray-100 rounded-t-2xl">
         <KeyboardAvoidingView
@@ -70,7 +70,7 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
           {/* THIS IS THE FIX: The main container View has no top padding.
             We apply the top padding only to the Header content.
           */}
-          
+
           {/* Custom Header with SafeArea padding */}
           <View style={{ paddingTop: top }} className="bg-white rounded-t-2xl">
             <View className="p-4 border-b border-gray-200">
@@ -83,7 +83,7 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
                   onPress={closeModal}
                   className="w-8 h-8 items-center justify-center rounded-full bg-gray-100"
                 >
-                  <Feather name="x" size={18} color="#666" />
+                  <X size={18} color="#666" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -104,7 +104,7 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
               <View className="flex-1 items-center justify-center py-20">
                 <View className="items-center">
                   <View className="w-16 h-16 bg-gray-200 rounded-full items-center justify-center mb-4">
-                    <Feather name="message-circle" size={24} color="#9CA3AF" />
+                    <MessageCircle size={24} color="#9CA3AF" />
                   </View>
                   <Text className="text-lg font-medium text-gray-900 mb-2">No comments yet</Text>
                   <Text className="text-gray-500 text-center text-base max-w-xs">
@@ -150,8 +150,7 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
                   {isCreatingComment ? (
                     <ActivityIndicator size="small" color="#1DA1F2" />
                   ) : (
-                    <Feather
-                      name="send"
+                    <Send
                       size={22}
                       color={commentText.trim() ? "#1DA1F2" : "#9CA3AF"}
                     />
