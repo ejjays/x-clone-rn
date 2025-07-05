@@ -1,10 +1,11 @@
+// mobile/app/chat/[channelId].tsx
 import ReactionsPicker from "@/components/ReactionsPicker"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useStreamChat } from "@/context/StreamChatContext"
 import { Ionicons } from "@expo/vector-icons"
 import { router, useLocalSearchParams } from "expo-router"
 import { format, isToday, isYesterday } from "date-fns"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -19,6 +20,7 @@ import {
   Keyboard,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
+import * as Haptics from "expo-haptics"
 
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>()
@@ -33,50 +35,25 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
-  const [selectedMessage, setSelectedMessage] = useState<any>(null) // 👈 2. ADD STATE FOR SELECTED MESSAGE
 
-  // Handle reaction selection
-  const handleReaction = async (reactionType: string) => {
-    if (!channel || !selectedMessage) return
-    try {
-      await channel.sendReaction(selectedMessage.id, {
-        type: reactionType,
-      })
-      setSelectedMessage(null) // Hide the picker after selection
-    } catch (error) {
-      console.error("❌ Failed to send reaction:", error)
-      Alert.alert("Error", "Could not send reaction.")
-    }
-  }
+  // --- State for the Reaction Picker ---
+  const [selectedMessage, setSelectedMessage] = useState<any>(null)
+  const flatListRef = useRef<FlatList>(null)
 
-  // Handle keyboard events
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardHeight(e.endCoordinates.height + 20)
-    })
-    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0))
-
-    return () => {
-      keyboardDidShowListener?.remove()
-      keyboardDidHideListener?.remove()
-    }
-  }, [])
-
+  // --- THE RELOAD BUG FIX ---
+  // The useEffect that initializes the channel NO LONGER depends on `selectedMessage`.
+  // This stops the entire screen from reloading on long-press.
   useEffect(() => {
     if (!client || !isConnected || !channelId || !currentUser) {
       setLoading(false)
       return
     }
 
-    initializeChannel()
-
-    async function initializeChannel() {
+    const initializeChannel = async () => {
       try {
         setLoading(true)
-        console.log("🔄 Initializing channel:", channelId)
-
         const ch = client.channel("messaging", channelId)
-        await ch.watch()
+        await ch.watch() // 'watch' is crucial for getting real-time updates
         setChannel(ch)
 
         const membersArray = Array.isArray(ch.state.members) ? ch.state.members : Object.values(ch.state.members || {})
@@ -91,76 +68,96 @@ export default function ChatScreen() {
           })
         }
 
-        const handleNewData = (event: any) => {
-          setMessages(event.target.state.messages.reverse())
-          // When new data comes in, check if our selected message still exists.
-          if (selectedMessage && !event.target.state.messages.find((m: any) => m.id === selectedMessage.id)) {
-            setSelectedMessage(null)
-          }
+        // Set initial messages correctly
+        setMessages(ch.state.messages.slice().reverse())
+
+        // --- Improved event listeners ---
+        const handleEvent = () => {
+          setMessages(ch.state.messages.slice().reverse())
         }
 
-        ch.on("message.new", handleNewData)
-        ch.on("message.updated", handleNewData) // Listen for updates (like reactions)
+        ch.on("message.new", handleEvent)
+        ch.on("message.updated", handleEvent) // For reactions, edits, etc.
+        ch.on("message.deleted", handleEvent)
 
-        const initialMessages = ch.state.messages ? Object.values(ch.state.messages) : []
-        setMessages(initialMessages.reverse())
-
+        setLoading(false)
         console.log("✅ Channel initialized successfully")
 
+        // Cleanup listeners when component unmounts
         return () => {
-          ch.off("message.new", handleNewData)
-          ch.off("message.updated", handleNewData)
+          ch.off("message.new", handleEvent)
+          ch.off("message.updated", handleEvent)
+          ch.off("message.deleted", handleEvent)
         }
       } catch (error) {
         console.error("❌ Error initializing channel:", error)
         Alert.alert("Error", "Failed to load chat. Please try again.")
-      } finally {
         setLoading(false)
       }
     }
-  }, [client, isConnected, channelId, currentUser, selectedMessage]) // Re-run if selectedMessage changes
 
+    initializeChannel()
+  }, [client, isConnected, channelId, currentUser]) // CRITICAL FIX: `selectedMessage` is removed from here
+
+  // --- Keyboard Handling ---
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) =>
+      setKeyboardHeight(e.endCoordinates.height + 20),
+    )
+    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0))
+    return () => {
+      keyboardDidShowListener?.remove()
+      keyboardDidHideListener?.remove()
+    }
+  }, [])
+
+  // --- Message and Reaction Functions ---
   const sendMessage = async () => {
     if (!channel || !newMessage.trim() || sending) return
-
     setSending(true)
     try {
-      console.log("📤 Sending message:", newMessage.trim())
-
-      await channel.sendMessage({
-        text: newMessage.trim(),
-      })
-
+      await channel.sendMessage({ text: newMessage.trim() })
       setNewMessage("")
-      console.log("✅ Message sent successfully")
     } catch (error) {
       console.error("❌ Error sending message:", error)
-      Alert.alert("Error", "Failed to send message. Please try again.")
+      Alert.alert("Error", "Failed to send message.")
     } finally {
       setSending(false)
     }
   }
 
-  const formatMessageTime = (date: Date) => {
-    if (isToday(date)) {
-      return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
-    } else if (isYesterday(date)) {
-      return `YESTERDAY AT ${format(date, "h:mm a").toUpperCase()}`
-    } else {
-      return format(date, "d MMM 'AT' h:mm a").toUpperCase()
+  const handleReaction = async (reactionType: string) => {
+    if (!channel || !selectedMessage) return
+    try {
+      // Send the reaction and then immediately hide the picker
+      await channel.sendReaction(selectedMessage.id, { type: reactionType })
+      setSelectedMessage(null)
+    } catch (error) {
+      console.error("❌ Failed to send reaction:", error)
+      Alert.alert("Error", "Could not send reaction.")
+      setSelectedMessage(null) // Also hide picker on error
     }
+  }
+
+  const handleLongPress = (message: any) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    setSelectedMessage(message)
+  }
+
+  // --- UI Formatting Functions ---
+  const formatMessageTime = (date: Date) => {
+    if (isToday(date)) return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
+    if (isYesterday(date)) return `YESTERDAY AT ${format(date, "h:mm a").toUpperCase()}`
+    return format(date, "d MMM 'AT' h:mm a").toUpperCase()
   }
 
   const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
     if (!previousMessage) return true
-
-    const currentDate = new Date(currentMessage.created_at)
-    const previousDate = new Date(previousMessage.created_at)
-
-    const timeDiff = currentDate.getTime() - previousDate.getTime()
-    return timeDiff > 30 * 60 * 1000
+    const timeDiff = new Date(currentMessage.created_at).getTime() - new Date(previousMessage.created_at).getTime()
+    return timeDiff > 30 * 60 * 1000 // 30 minutes
   }
 
+  // --- The `renderMessage` function with all fixes ---
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
     const isFromCurrentUser = message.user?.id === currentUser?.clerkId
 
@@ -168,17 +165,15 @@ export default function ChatScreen() {
     const messageBelow = index > 0 ? messages[index - 1] : null
 
     const showTimestamp = shouldShowTimestamp(message, messageAbove)
-
     const isFirstInGroup = showTimestamp || !messageAbove || messageAbove.user?.id !== message.user?.id
     const isLastInGroup = !messageBelow || messageBelow.user?.id !== message.user?.id || shouldShowTimestamp(messageBelow, message)
-
     const showAvatar = isLastInGroup
 
+    // --- BUBBLE STYLE FIX ---
+    // This logic is now restored to make the bubbles beautiful again.
     const getBubbleStyle = () => {
-      let style = "rounded-3xl"
-      if (isFirstInGroup && isLastInGroup) {
-        return style
-      }
+      let style = "rounded-2xl"
+      if (isFirstInGroup && isLastInGroup) return style
       if (isFromCurrentUser) {
         if (isFirstInGroup) style += " rounded-br-lg"
         else if (isLastInGroup) style += " rounded-tr-lg"
@@ -192,9 +187,28 @@ export default function ChatScreen() {
     }
 
     const latestReactions = message.latest_reactions || []
-    const loveReaction = latestReactions.find((r: any) => r.type === "love")
+    const ReactionComponent = () => {
+      if (!latestReactions.length) return null
+      const reactionCounts = latestReactions.reduce((acc: any, r: any) => {
+        acc[r.type] = (acc[r.type] || 0) + 1
+        return acc
+      }, {})
+      const topReaction = Object.keys(reactionCounts).sort((a, b) => reactionCounts[b] - reactionCounts[a])[0]
+      const emojiMap: { [key: string]: string } = {
+        love: "❤️",
+        haha: "😂",
+        wow: "😮",
+        kissing_heart: "😘",
+        enraged: "😡",
+        thumbsup: "👍",
+      }
+      return (
+        <View className="absolute -bottom-2.5 -right-2 bg-white rounded-full p-0.5 shadow">
+          <Text className="text-sm">{emojiMap[topReaction] || "❤️"}</Text>
+        </View>
+      )
+    }
 
-    // 👇 3. WRAP THE MESSAGE BUBBLE IN A `TouchableOpacity` WITH `onLongPress`
     return (
       <View>
         {showTimestamp && (
@@ -207,52 +221,39 @@ export default function ChatScreen() {
           </View>
         )}
 
-        <View
-          className={`flex-row items-end ${
-            isLastInGroup ? "mb-2" : "mb-0.5"
-          } ${isFromCurrentUser ? "justify-end pr-1" : "justify-start pl-1"}`}
-        >
-          {!isFromCurrentUser && (
-            <View className="mr-2" style={{ width: 32 }}>
-              {showAvatar && otherUser?.image ? (
-                <Image source={{ uri: otherUser.image }} className="w-8 h-8 rounded-full" />
-              ) : null}
-            </View>
-          )}
-
-          <TouchableOpacity
-            onLongPress={() => setSelectedMessage(message)}
-            onPress={() => setSelectedMessage(null)} // Hide picker on short press
-            delayLongPress={200}
-            activeOpacity={0.8}
-          >
-            {selectedMessage?.id === message.id && (
-              <ReactionsPicker onSelect={handleReaction} onAdd={() => Alert.alert("Add More", "More reactions coming soon!")} />
-            )}
-            <View
-              className={`max-w-[80%] px-4 py-2.5 ${getBubbleStyle()} ${
-                isFromCurrentUser ? "bg-blue-500 shadow-sm" : "bg-gray-200"
-              }`}
-            >
-              <Text className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
-                {message.text}
-              </Text>
-            </View>
-            {loveReaction && (
-              <View className="absolute -bottom-2 -right-2 bg-white rounded-full p-0.5 shadow">
-                <Text>❤️</Text>
+        <View className={`flex-row items-end ${isLastInGroup ? "mb-2" : "mb-0.5"}`}>
+          <View className={`flex-1 flex-row items-end ${isFromCurrentUser ? "justify-end pr-1" : "justify-start pl-1"}`}>
+            {!isFromCurrentUser && (
+              <View className="mr-2" style={{ width: 32 }}>
+                {showAvatar && otherUser?.image && <Image source={{ uri: otherUser.image }} className="w-8 h-8 rounded-full" />}
               </View>
             )}
-          </TouchableOpacity>
 
-          {isFromCurrentUser && <View style={{ width: 8 }} />}
+            <View className="max-w-[80%] items-center">
+              <TouchableOpacity onLongPress={() => handleLongPress(message)} delayLongPress={200} activeOpacity={0.8}>
+                <View
+                  className={`px-4 py-2.5 ${getBubbleStyle()} ${
+                    isFromCurrentUser ? "bg-blue-500 shadow-sm" : "bg-gray-200"
+                  }`}
+                >
+                  <Text className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
+                    {message.text}
+                  </Text>
+                </View>
+                <ReactionComponent />
+              </TouchableOpacity>
+              {selectedMessage?.id === message.id && (
+                <ReactionsPicker onSelect={handleReaction} isVisible={selectedMessage?.id === message.id} />
+              )}
+            </View>
+            {isFromCurrentUser && <View style={{ width: 8 }} />}
+          </View>
         </View>
       </View>
     )
   }
 
-  // ... (rest of the file is unchanged)
-
+  // Loading and error states are unchanged...
   if (isConnecting || loading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -283,6 +284,7 @@ export default function ChatScreen() {
     )
   }
 
+  // Main chat UI
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       {/* Header */}
@@ -290,7 +292,6 @@ export default function ChatScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
-
         {otherUser?.image && (
           <View className="relative mr-3">
             <Image source={{ uri: otherUser.image }} className="w-12 h-12 rounded-full" />
@@ -299,14 +300,12 @@ export default function ChatScreen() {
             )}
           </View>
         )}
-
         <View className="flex-1 min-w-0">
           <Text className="font-semibold text-gray-900 text-xl" numberOfLines={1} ellipsizeMode="tail">
             {otherUser?.name || "Chat"}
           </Text>
           {otherUser && <Text className="text-gray-500 text-sm">{otherUser.online ? "Online" : "Offline"}</Text>}
         </View>
-
         <TouchableOpacity className="p-2">
           <Ionicons name="call-outline" size={24} color="#374151" />
         </TouchableOpacity>
@@ -321,73 +320,71 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <View className="flex-1">
+        <TouchableOpacity
+          activeOpacity={1}
+          className="flex-1"
+          onPress={() => {
+            Keyboard.dismiss()
+            setSelectedMessage(null) // Also hide picker when tapping outside
+          }}
+        >
           <FlatList
+            ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
-            keyExtractor={(item, index) => item.id || index.toString()}
-            className="flex-1 bg-white"
-            contentContainerStyle={{
-              paddingTop: 16,
-              paddingBottom: keyboardHeight > 0 ? 20 : 16,
-            }}
+            keyExtractor={(item) => item.id}
+            className="flex-1 bg-white px-2" // Added horizontal padding
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: keyboardHeight > 0 ? 20 : 16 }}
             inverted
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            ListEmptyComponent={() => (
-              <View className="flex-1 items-center justify-center py-20" style={{ transform: [{ scaleY: -1 }] }}>
-                <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
-                <Text className="text-gray-500 mt-2">No messages yet</Text>
-                <Text className="text-gray-400 text-sm">Start the conversation!</Text>
-              </View>
-            )}
-          />
-
-          {/* Message Input */}
-          <View
-            className="flex-row items-end border-t border-gray-200 bg-white px-4"
-            style={{
-              paddingTop: 12,
-              paddingBottom:
-                Platform.OS === "ios"
-                  ? Math.max(insets.bottom + 8, 20)
-                  : keyboardHeight > 0
-                    ? 20
-                    : Math.max(insets.bottom + 8, 20),
-              marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
+            onScrollBeginDrag={() => {
+              Keyboard.dismiss()
+              setSelectedMessage(null) // Hide picker on scroll
             }}
-          >
-            <View className="flex-1 mr-3">
-              <TextInput
-                value={newMessage}
-                onChangeText={setNewMessage}
-                placeholder="Type a message..."
-                placeholderTextColor="#9CA3AF"
-                className="border border-gray-300 rounded-full px-4 py-3 text-base text-gray-900 bg-gray-50"
-                multiline
-                maxLength={500}
-                editable={!sending}
-                textAlignVertical="top"
-                style={{
-                  minHeight: 48,
-                  maxHeight: 120,
-                }}
-              />
-            </View>
-            <TouchableOpacity
-              onPress={sendMessage}
-              disabled={!newMessage.trim() || sending}
-              className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-500" : "bg-gray-300"}`}
-              style={{ marginBottom: 2 }}
-            >
-              {sending ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Ionicons name="send" size={20} color={newMessage.trim() && !sending ? "white" : "gray"} />
-              )}
-            </TouchableOpacity>
+          />
+        </TouchableOpacity>
+
+        {/* Message Input */}
+        <View
+          className="flex-row items-end border-t border-gray-200 bg-white px-4"
+          style={{
+            paddingTop: 12,
+            paddingBottom:
+              Platform.OS === "ios"
+                ? Math.max(insets.bottom, 16)
+                : keyboardHeight > 0
+                  ? 16
+                  : Math.max(insets.bottom, 16),
+            marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
+          }}
+        >
+          <View className="flex-1 mr-3">
+            <TextInput
+              value={newMessage}
+              onChangeText={setNewMessage}
+              placeholder="Type a message..."
+              placeholderTextColor="#9CA3AF"
+              className="border border-gray-300 rounded-full px-4 py-3 text-base text-gray-900 bg-gray-50"
+              multiline
+              maxLength={500}
+              editable={!sending}
+              textAlignVertical="top"
+              style={{ minHeight: 48, maxHeight: 120 }}
+            />
           </View>
+          <TouchableOpacity
+            onPress={sendMessage}
+            disabled={!newMessage.trim() || sending}
+            className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-500" : "bg-gray-300"}`}
+            style={{ marginBottom: 2 }}
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Ionicons name="send" size={20} color={newMessage.trim() && !sending ? "white" : "gray"} />
+            )}
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </View>
