@@ -5,7 +5,7 @@ import { useStreamChat } from "@/context/StreamChatContext"
 import { Ionicons } from "@expo/vector-icons"
 import { router, useLocalSearchParams } from "expo-router"
 import { format, isToday, isYesterday } from "date-fns"
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,8 @@ import {
   View,
   Image,
   Keyboard,
+  NativeSyntheticEvent,
+  NativeTouchEvent,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import * as Haptics from "expo-haptics"
@@ -36,10 +38,13 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
 
+  // State for the picker
   const [selectedMessage, setSelectedMessage] = useState<any>(null)
-  const flatListRef = useRef<FlatList>(null)
+  const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null)
+  const messageRefs = useRef<{ [key: string]: View }>({})
 
   useEffect(() => {
+    // ... (This useEffect block is unchanged)
     if (!client || !isConnected || !channelId || !currentUser) {
       setLoading(false)
       return
@@ -91,6 +96,7 @@ export default function ChatScreen() {
   }, [client, isConnected, channelId, currentUser])
 
   useEffect(() => {
+    // ... (This useEffect block is unchanged)
     const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) =>
       setKeyboardHeight(e.endCoordinates.height + 20),
     )
@@ -102,6 +108,7 @@ export default function ChatScreen() {
   }, [])
 
   const sendMessage = async () => {
+    // ... (This function is unchanged)
     if (!channel || !newMessage.trim() || sending) return
     setSending(true)
     try {
@@ -116,6 +123,7 @@ export default function ChatScreen() {
   }
 
   const handleReaction = async (reactionType: string) => {
+    // ... (This function is unchanged)
     if (!channel || !selectedMessage) return
     try {
       await channel.sendReaction(selectedMessage.id, { type: reactionType })
@@ -127,23 +135,32 @@ export default function ChatScreen() {
     }
   }
 
+  // --- NEW: Function to handle long press and measure the component ---
   const handleLongPress = (message: any) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    setSelectedMessage(message)
+    const ref = messageRefs.current[message.id]
+    if (ref) {
+      ref.measure((_x, _y, width, height, pageX, pageY) => {
+        setAnchorMeasurements({ pageX, pageY, width })
+        setSelectedMessage(message)
+      })
+    }
   }
 
   const formatMessageTime = (date: Date) => {
+    // ... (This function is unchanged)
     if (isToday(date)) return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
     if (isYesterday(date)) return `YESTERDAY AT ${format(date, "d MMM 'AT' h:mm a").toUpperCase()}`
     return format(date, "d MMM yyyy 'AT' h:mm a").toUpperCase()
   }
 
   const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
+    // ... (This function is unchanged)
     if (!previousMessage) return true
     const timeDiff = new Date(currentMessage.created_at).getTime() - new Date(previousMessage.created_at).getTime()
     return timeDiff > 30 * 60 * 1000
   }
 
+  // --- renderMessage is now much simpler ---
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
     const isFromCurrentUser = message.user?.id === currentUser?.clerkId
 
@@ -151,13 +168,11 @@ export default function ChatScreen() {
     const messageBelow = index > 0 ? messages[index - 1] : null
 
     const showTimestamp = shouldShowTimestamp(message, messageAbove)
-    const isFirstInGroup = showTimestamp || !messageAbove || messageAbove.user?.id !== message.user?.id
-    const isLastInGroup = !messageBelow || messageBelow.user?.id !== message.user?.id || shouldShowTimestamp(messageBelow, message)
+    const isFirstInGroup = showTimestamp || !messageAbove || messageAbove.user?.id !== message.user.id
+    const isLastInGroup = !messageBelow || messageBelow.user?.id !== message.user.id || shouldShowTimestamp(messageBelow, message)
     const showAvatar = isLastInGroup
 
-    // --- BUBBLE STYLE FIX ---
     const getBubbleStyle = () => {
-      // 👈 Here is the fix for the roundness
       let style = "rounded-3xl"
       if (isFirstInGroup && isLastInGroup) return style
       if (isFromCurrentUser) {
@@ -215,10 +230,10 @@ export default function ChatScreen() {
               </View>
             )}
 
-            {/* --- OVERLAP FIX ---
-            I've added `z-10` here. This makes the selected message render on top of all others,
-            so the reaction picker won't get cut off. */}
-            <View className="max-w-[80%] items-center z-10">
+            <View
+              className="max-w-[80%]"
+              ref={(el) => (messageRefs.current[message.id] = el as View)} // Assign ref to measure
+            >
               <TouchableOpacity onLongPress={() => handleLongPress(message)} delayLongPress={200} activeOpacity={0.8}>
                 <View
                   className={`px-4 py-2.5 ${getBubbleStyle()} ${
@@ -231,9 +246,6 @@ export default function ChatScreen() {
                 </View>
                 <ReactionComponent />
               </TouchableOpacity>
-              {selectedMessage?.id === message.id && (
-                <ReactionsPicker onSelect={handleReaction} isVisible={selectedMessage?.id === message.id} onAdd={() => {}} />
-              )}
             </View>
 
             {isFromCurrentUser && <View style={{ width: 8 }} />}
@@ -244,6 +256,7 @@ export default function ChatScreen() {
   }
 
   if (isConnecting || loading) {
+    // ... (This block is unchanged)
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
@@ -257,6 +270,7 @@ export default function ChatScreen() {
   }
 
   if (!client || !isConnected) {
+    // ... (This block is unchanged)
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center px-8">
@@ -270,8 +284,10 @@ export default function ChatScreen() {
     )
   }
 
+  // --- The main return block now includes the single Picker instance ---
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      {/* Header */}
       <View className="flex-row items-center p-4 border-b border-gray-200 bg-white">
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
           <Ionicons name="arrow-back" size={24} color="#374151" />
@@ -303,11 +319,8 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        {/* --- SCROLLING FIX ---
-         I removed the outer TouchableOpacity wrapper around the FlatList. */}
         <View className="flex-1">
           <FlatList
-            ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
             keyExtractor={(item) => item.id}
@@ -318,17 +331,11 @@ export default function ChatScreen() {
             keyboardShouldPersistTaps="handled"
             onScrollBeginDrag={() => {
               Keyboard.dismiss()
-              setSelectedMessage(null) // This hides the picker when you start scrolling.
+              setSelectedMessage(null)
             }}
-            ListEmptyComponent={() => (
-              <View className="flex-1 items-center justify-center py-20" style={{ transform: [{ scaleY: -1 }] }}>
-                <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
-                <Text className="text-gray-500 mt-2">No messages yet</Text>
-                <Text className="text-gray-400 text-sm">Start the conversation!</Text>
-              </View>
-            )}
           />
 
+          {/* Message Input */}
           <View
             className="flex-row items-end border-t border-gray-200 bg-white px-4"
             style={{
@@ -366,6 +373,14 @@ export default function ChatScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* RENDER THE SINGLE PICKER INSTANCE HERE */}
+      <ReactionsPicker
+        isVisible={!!selectedMessage}
+        onClose={() => setSelectedMessage(null)}
+        onSelect={handleReaction}
+        anchorMeasurements={anchorMeasurements}
+      />
     </View>
   )
 }
