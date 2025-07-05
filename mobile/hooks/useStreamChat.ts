@@ -1,253 +1,53 @@
-import { useRef } from "react"
-import { useEffect, useState, useCallback } from "react"
-import { useAuth } from "@clerk/clerk-expo"
-import { StreamChat } from "stream-chat"
-import { useApiClient, streamApi } from "@/utils/api"
-import { useCurrentUser } from "./useCurrentUser"
+import { useUser } from "@clerk/clerk-expo";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { StreamChat } from "stream-chat";
 
-const API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY || "YOUR_STREAM_API_KEY"
+import { streamApi, useApiClient } from "../utils/api";
 
-// Global singleton instance
-let globalClient: StreamChat | null = null
-let isConnectingGlobal = false
+const STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY!;
+const chatClient = StreamChat.getInstance(STREAM_API_KEY);
 
 export const useStreamChat = () => {
-  const [client, setClient] = useState<StreamChat | null>(globalClient)
-  const [channels, setChannels] = useState<any[]>([])
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [isConnected, setIsConnected] = useState(false)
-  const { isSignedIn, userId } = useAuth()
-  const { currentUser } = useCurrentUser()
-  const api = useApiClient()
-  const connectionAttempted = useRef(false)
-  const channelsListenerRef = useRef<(() => void) | null>(null)
+  const { user } = useUser();
+  const api = useApiClient();
+  const [isConnected, setIsConnected] = useState(false);
 
-  // Memoized function to fetch channels
-  const fetchChannels = useCallback(
-    async (chatClient: StreamChat) => {
-      if (!chatClient || !userId) return
-
-      try {
-        console.log("🔄 Fetching channels...")
-
-        const userChannels = await chatClient.queryChannels(
-          { type: "messaging", members: { $in: [userId] } },
-          [{ last_message_at: -1 }],
-          { watch: true, state: true },
-        )
-
-        setChannels(userChannels)
-        console.log(`✅ Found ${userChannels.length} channels.`)
-
-        return userChannels
-      } catch (error) {
-        console.error("❌ Failed to fetch channels:", error)
-        setChannels([])
-        return []
-      }
-    },
-    [userId],
-  )
-
-  // Set up real-time channel updates
-  const setupChannelListeners = useCallback(
-    (chatClient: StreamChat) => {
-      if (!chatClient || !userId) return
-
-      // Clean up existing listeners
-      if (channelsListenerRef.current) {
-        channelsListenerRef.current()
-      }
-
-      // Listen for new channels
-      const handleChannelUpdated = () => {
-        console.log("🔄 Channel updated, refreshing channels list...")
-        fetchChannels(chatClient)
-      }
-
-      const handleChannelDeleted = () => {
-        console.log("🗑️ Channel deleted, refreshing channels list...")
-        fetchChannels(chatClient)
-      }
-
-      const handleNotificationNewMessage = () => {
-        console.log("📨 New message notification, refreshing channels list...")
-        fetchChannels(chatClient)
-      }
-
-      // Set up event listeners
-      chatClient.on("channel.updated", handleChannelUpdated)
-      chatClient.on("channel.deleted", handleChannelDeleted)
-      chatClient.on("notification.message_new", handleNotificationNewMessage)
-
-      // Store cleanup function
-      channelsListenerRef.current = () => {
-        chatClient.off("channel.updated", handleChannelUpdated)
-        chatClient.off("channel.deleted", handleChannelDeleted)
-        chatClient.off("notification.message_new", handleNotificationNewMessage)
-      }
-    },
-    [fetchChannels, userId],
-  )
+  const { data: streamToken } = useQuery({
+    queryKey: ["streamToken"],
+    queryFn: () => streamApi.getToken(api),
+    enabled: !!user,
+  });
 
   useEffect(() => {
-    if (!isSignedIn || !userId || !currentUser) {
-      setClient(null)
-      setChannels([])
-      setIsConnecting(false)
-      setIsConnected(false)
-
-      // Clean up listeners
-      if (channelsListenerRef.current) {
-        channelsListenerRef.current()
-        channelsListenerRef.current = null
-      }
-      return
-    }
-
-    // Prevent multiple connection attempts
-    if (connectionAttempted.current) {
-      return
-    }
-
-    // If we already have a connected client for this user, use it
-    if (globalClient && globalClient.userID === userId) {
-      console.log("✅ Using existing Stream Chat connection")
-      setClient(globalClient)
-      setIsConnecting(false)
-      setIsConnected(true)
-      fetchChannels(globalClient)
-      setupChannelListeners(globalClient)
-      return
-    }
-
-    // If we're already connecting, don't start another connection
-    if (isConnectingGlobal) {
-      console.log("⏳ Connection already in progress...")
-      return
-    }
-
-    connectionAttempted.current = true
-    connectUser()
-
-    async function connectUser() {
-      if (isConnectingGlobal) return
-
-      isConnectingGlobal = true
-      setIsConnecting(true)
-      setIsConnected(false)
-
-      try {
-        // Disconnect any existing connection first
-        if (globalClient && globalClient.userID && globalClient.userID !== userId) {
-          console.log("🔄 Disconnecting previous user...")
-          await globalClient.disconnectUser()
-          globalClient = null
+    // Only run if we have a user, a token, and are not already connected
+    if (user && streamToken && !isConnected) {
+      const connectUser = async () => {
+        if (chatClient.userID === user.id) {
+          console.log("✅ Using existing Stream Chat connection");
+          setIsConnected(true);
+          return;
         }
 
-        // Create or get existing client
-        if (!globalClient) {
-          globalClient = StreamChat.getInstance(API_KEY)
-        }
+        console.log("🔄 Connecting to Stream Chat...");
+        await chatClient.connectUser(
+          {
+            id: user.id,
+            name: user.fullName ?? user.id,
+            image: user.imageUrl,
+          },
+          streamToken.data.token,
+        );
+        setIsConnected(true);
+        console.log("✅ Stream Chat connected successfully!");
+      };
 
-        // Only connect if not already connected to this user
-        if (globalClient.userID !== userId) {
-          console.log("🔄 Connecting to Stream Chat...")
-
-          const response = await streamApi.getToken(api)
-          const { token, user } = response.data
-
-          await globalClient.connectUser(user, token)
-          console.log("✅ Stream Chat connected successfully!")
-        }
-
-        setClient(globalClient)
-        setIsConnected(true)
-        await fetchChannels(globalClient)
-        setupChannelListeners(globalClient)
-      } catch (error) {
-        console.error("❌ Failed to connect to Stream Chat:", error)
-        globalClient = null
-        setClient(null)
-        setChannels([])
-        setIsConnected(false)
-      } finally {
-        isConnectingGlobal = false
-        setIsConnecting(false)
-      }
+      connectUser();
     }
-
-    // Cleanup function
-    return () => {
-      connectionAttempted.current = false
-      if (channelsListenerRef.current) {
-        channelsListenerRef.current()
-        channelsListenerRef.current = null
-      }
-    }
-  }, [isSignedIn, userId, currentUser, fetchChannels, setupChannelListeners])
-
-  const createChannel = async (otherUserId: string, otherUserName: string) => {
-    if (!client || !currentUser || !userId) {
-      console.error("❌ Cannot create channel: client or user is not ready.")
-      return null
-    }
-
-    try {
-      console.log("🔄 Creating channel...")
-
-      const response = await streamApi.createChannel(api, {
-        members: [userId, otherUserId],
-        name: `${currentUser.firstName} & ${otherUserName}`,
-      })
-
-      const channelData = response.data
-      const channel = client.channel("messaging", channelData.channelId)
-      await channel.watch()
-
-      console.log("✅ Channel created successfully:", channelData.channelId)
-
-      // Force refresh channels list immediately
-      const updatedChannels = await fetchChannels(client)
-
-      // Also trigger a small delay refresh to ensure the channel is fully synced
-      setTimeout(() => {
-        fetchChannels(client)
-      }, 1000)
-
-      return channel
-    } catch (error) {
-      console.error("❌ Failed to create channel:", error)
-      return null
-    }
-  }
-
-  // Function to manually refresh channels
-  const refreshChannels = useCallback(() => {
-    if (client) {
-      fetchChannels(client)
-    }
-  }, [client, fetchChannels])
+  }, [user, streamToken, isConnected]); // Add isConnected to dependency array
 
   return {
-    client,
-    channels,
-    isConnecting,
+    chatClient,
     isConnected,
-    createChannel,
-    refreshChannels,
-  }
-}
-
-// Cleanup function to disconnect when app closes
-export const disconnectStreamChat = async () => {
-  if (globalClient && globalClient.userID) {
-    try {
-      await globalClient.disconnectUser()
-      globalClient = null
-      console.log("✅ Stream Chat disconnected")
-    } catch (error) {
-      console.error("❌ Error disconnecting Stream Chat:", error)
-    }
-  }
-}
+  };
+};
