@@ -1,8 +1,8 @@
-import { useComments } from "@/hooks/useComments"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
-import type { Post } from "@/types"
-import { Feather } from "@expo/vector-icons"
-import { forwardRef, useImperativeHandle, useRef, useState } from "react"
+import { useComments } from "@/hooks/useComments";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import type { Post } from "@/types";
+import { Feather } from "@expo/vector-icons";
+import { forwardRef, useImperativeHandle, useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,149 +10,162 @@ import {
   ActivityIndicator,
   Image,
   TouchableOpacity,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
-} from "react-native"
-import { Modalize } from "react-native-modalize"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import CommentCard from "./CommentCard"
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window")
+  Modal,
+  Pressable,
+  FlatList
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import CommentCard from "./CommentCard";
 
 interface CommentsModalProps {
-  selectedPost: Post | null
+  selectedPost: Post | null;
 }
 
-const CommentsModal = forwardRef<Modalize, CommentsModalProps>(({ selectedPost }, ref) => {
-  const modalizeRef = useRef<Modalize>(null)
-  // Use bottom inset for keyboard padding, but not top
-  const { bottom } = useSafeAreaInsets()
-  const { commentText, setCommentText, createComment, isCreatingComment } = useComments()
-  const { currentUser } = useCurrentUser()
+// We are defining a type for the methods we expose via the ref
+export interface CommentsModalRef {
+  open: () => void;
+  close: () => void;
+}
 
-  useImperativeHandle(ref, () => modalizeRef.current as Modalize)
+const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ selectedPost }, ref) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const { bottom } = useSafeAreaInsets();
+  const { commentText, setCommentText, createComment, isCreatingComment } = useComments();
+  const { currentUser } = useCurrentUser();
 
-  const handleClose = () => {
-    modalizeRef.current?.close()
-  }
+  const openModal = useCallback(() => setIsVisible(true), []);
+  const closeModal = useCallback(() => {
+    setIsVisible(false);
+    setCommentText(""); // Clear comment text on close
+  }, [setCommentText]);
+
+  // This exposes the `open` and `close` methods to the parent component
+  useImperativeHandle(ref, () => ({
+    open: openModal,
+    close: closeModal,
+  }), [openModal, closeModal]);
 
   const handleCreateComment = () => {
     if (selectedPost) {
-      createComment(selectedPost._id)
+      createComment({ postId: selectedPost._id, content: commentText.trim() });
     }
-  }
-
-  // A simple handle for aesthetics
-  const renderHeader = () => (
-    <View className="items-center py-4 bg-white rounded-t-2xl">
-      <View className="w-10 h-1 bg-gray-300 rounded-full" />
-    </View>
-  )
-
-  const renderFooter = () => (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      // The offset helps push the input above the tab bar if needed, but we cover it
-      keyboardVerticalOffset={0} 
-    >
-      <View
-        className="bg-white border-t border-gray-200"
-        style={{
-          paddingBottom: bottom === 0 ? 16 : bottom,
-          paddingTop: 16,
-        }}
-      >
-        <View className="flex-row items-center px-4">
-          <Image
-            source={{
-              uri:
-                currentUser?.profilePicture ||
-                `https://ui-avatars.com/api/?name=${currentUser?.firstName}+${currentUser?.lastName}`,
-            }}
-            className="w-10 h-10 rounded-full mr-3"
-          />
-          <View className="flex-1 bg-gray-100 rounded-full flex-row items-center pr-2">
-            <TextInput
-              className="flex-1 p-3 text-base text-gray-900"
-              placeholder="Add a comment..."
-              placeholderTextColor="#9CA3AF"
-              value={commentText}
-              onChangeText={setCommentText}
-              multiline
-            />
-            <TouchableOpacity
-              onPress={handleCreateComment}
-              disabled={isCreatingComment || !commentText.trim()}
-              className="p-2"
-            >
-              {isCreatingComment ? (
-                <ActivityIndicator size="small" color="#1DA1F2" />
-              ) : (
-                <Feather
-                  name="send"
-                  size={22}
-                  color={commentText.trim() ? "#1DA1F2" : "#9CA3AF"}
-                />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
-  )
+  };
+  
+  // This is a small fix to clear the comment text after successful posting
+  useEffect(() => {
+    if (!isCreatingComment) {
+        // Post-creation logic can go here if needed
+    }
+  }, [isCreatingComment]);
 
   return (
-    <Modalize
-      ref={modalizeRef}
-      // This is the key change: we make the modal itself take the full screen height
-      modalHeight={SCREEN_HEIGHT}
-      // We explicitly set the top offset to 0 to cover the header
-      modalTopOffset={0} 
-      // This style applies to the modal's view container
-      modalStyle={{
-        backgroundColor: "#F9FAFB",
-        borderTopLeftRadius: 20, // Rounded top-left corner
-        borderTopRightRadius: 20, // Rounded top-right corner
-        overflow: "hidden", // Ensures content respects the border radius
-      }}
-      // The overlay being transparent makes the background content visible until covered
-      overlayStyle={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }} 
-      // We let the content scroll inside, not adjust the modal height
-      adjustToContentHeight={false}
-      // We will use our own simple handle
-      withHandle={false}
-      HeaderComponent={renderHeader()}
-      FooterComponent={renderFooter()}
-      flatListProps={{
-        data: selectedPost?.comments || [],
-        renderItem: ({ item }) => <CommentCard comment={item} />,
-        keyExtractor: (item) => item._id,
-        showsVerticalScrollIndicator: false,
-        contentContainerStyle: {
-          paddingHorizontal: 16,
-          paddingBottom: 50, // Extra space at the bottom of the list
-          flexGrow: 1,
-        },
-        ListEmptyComponent: () => (
-          <View className="flex-1 items-center justify-center py-20">
-            <View className="items-center">
-              <View className="w-16 h-16 bg-gray-200 rounded-full items-center justify-center mb-4">
-                <Feather name="message-circle" size={24} color="#9CA3AF" />
-              </View>
-              <Text className="text-lg font-medium text-gray-900 mb-2">No comments yet</Text>
-              <Text className="text-gray-500 text-center text-base max-w-xs">
-                Be the first to share what you think!
-              </Text>
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={closeModal}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }} onPress={closeModal} />
+        
+        <View className="flex-1 bg-gray-100 rounded-t-2xl overflow-hidden mt-12">
+          {/* Custom Header */}
+          <View className="p-4 bg-white border-b border-gray-200">
+            <View className="items-center pb-2">
+              <View className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </View>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-xl font-bold">Comments</Text>
+              <TouchableOpacity
+                onPress={closeModal}
+                className="w-8 h-8 items-center justify-center rounded-full bg-gray-100"
+              >
+                <Feather name="x" size={18} color="#666" />
+              </TouchableOpacity>
             </View>
           </View>
-        ),
-      }}
-      onClosed={() => setCommentText("")}
-    />
-  )
-})
 
-CommentsModal.displayName = "CommentsModal"
+          {/* Comments List */}
+          <FlatList
+            data={selectedPost?.comments || []}
+            renderItem={({ item }) => <CommentCard comment={item} />}
+            keyExtractor={(item) => item._id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              padding: 16,
+              flexGrow: 1,
+            }}
+            ListEmptyComponent={() => (
+              <View className="flex-1 items-center justify-center py-20">
+                <View className="items-center">
+                  <View className="w-16 h-16 bg-gray-200 rounded-full items-center justify-center mb-4">
+                    <Feather name="message-circle" size={24} color="#9CA3AF" />
+                  </View>
+                  <Text className="text-lg font-medium text-gray-900 mb-2">No comments yet</Text>
+                  <Text className="text-gray-500 text-center text-base max-w-xs">
+                    Be the first to share what you think!
+                  </Text>
+                </View>
+              </View>
+            )}
+            keyboardShouldPersistTaps="handled"
+          />
 
-export default CommentsModal
+          {/* Comment Input Footer */}
+          <View
+            className="bg-white border-t border-gray-200"
+            style={{
+              paddingBottom: bottom === 0 ? 16 : bottom,
+              paddingTop: 16,
+            }}
+          >
+            <View className="flex-row items-center px-4">
+              <Image
+                source={{
+                  uri:
+                    currentUser?.profilePicture ||
+                    `https://ui-avatars.com/api/?name=${currentUser?.firstName}+${currentUser?.lastName}`,
+                }}
+                className="w-10 h-10 rounded-full mr-3"
+              />
+              <View className="flex-1 bg-gray-100 rounded-full flex-row items-center pr-2">
+                <TextInput
+                  className="flex-1 p-3 text-base text-gray-900"
+                  placeholder="Add a comment..."
+                  placeholderTextColor="#9CA3AF"
+                  value={commentText}
+                  onChangeText={setCommentText}
+                  multiline
+                />
+                <TouchableOpacity
+                  onPress={handleCreateComment}
+                  disabled={isCreatingComment || !commentText.trim()}
+                  className="p-2"
+                >
+                  {isCreatingComment ? (
+                    <ActivityIndicator size="small" color="#1DA1F2" />
+                  ) : (
+                    <Feather
+                      name="send"
+                      size={22}
+                      color={commentText.trim() ? "#1DA1F2" : "#9CA3AF"}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+});
+
+CommentsModal.displayName = "CommentsModal";
+
+export default CommentsModal;

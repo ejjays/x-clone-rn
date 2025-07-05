@@ -16,6 +16,7 @@ export const useComments = () => {
     },
     onSuccess: () => {
       setCommentText("");
+      // This will refetch all posts, which includes the new comment counts and details
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: () => {
@@ -23,13 +24,14 @@ export const useComments = () => {
     },
   });
 
-  const createComment = (postId: string) => {
-    if (!commentText.trim()) {
+  // The function now accepts the needed data directly
+  const createComment = (data: { postId: string; content: string }) => {
+    if (!data.content.trim()) {
       Alert.alert("Empty Comment", "Please write something before posting!");
       return;
     }
 
-    createCommentMutation.mutate({ postId, content: commentText.trim() });
+    createCommentMutation.mutate(data);
   };
 
   return {
