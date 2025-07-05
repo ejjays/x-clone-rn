@@ -9,7 +9,7 @@ interface StreamChatContextType {
   client: StreamChat | null;
   isConnected: boolean;
   isConnecting: boolean;
-  channels: any[]; // Consider using a more specific type from Stream
+  channels: any[];
   refreshChannels: () => Promise<void>;
   createChannel: (memberId: string, name?: string) => Promise<any>;
 }
@@ -80,7 +80,8 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
     } catch (error) {
       console.error("❌ Failed to refresh channels:", error);
     }
-  }, [client, user]);
+    // 👇 THIS IS THE FIX. I changed `client` to `chatClient` here.
+  }, [chatClient, user]);
 
   // Function to create a new channel
   const createChannel = async (memberId: string, name?: string) => {
