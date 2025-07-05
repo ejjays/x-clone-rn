@@ -2,7 +2,7 @@ import { useComments } from "@/hooks/useComments"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import type { Post } from "@/types"
 import { Feather } from "@expo/vector-icons"
-import { forwardRef, useImperativeHandle, useRef } from "react"
+import { forwardRef, useImperativeHandle, useRef, useState } from "react"
 import {
   View,
   Text,
@@ -26,7 +26,8 @@ interface CommentsModalProps {
 
 const CommentsModal = forwardRef<Modalize, CommentsModalProps>(({ selectedPost }, ref) => {
   const modalizeRef = useRef<Modalize>(null)
-  const { top, bottom } = useSafeAreaInsets()
+  // Use bottom inset for keyboard padding, but not top
+  const { bottom } = useSafeAreaInsets()
   const { commentText, setCommentText, createComment, isCreatingComment } = useComments()
   const { currentUser } = useCurrentUser()
 
@@ -42,24 +43,18 @@ const CommentsModal = forwardRef<Modalize, CommentsModalProps>(({ selectedPost }
     }
   }
 
+  // A simple handle for aesthetics
   const renderHeader = () => (
-    <View className="bg-white p-4 border-b border-gray-200">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-xl font-bold">Comments</Text>
-        <TouchableOpacity
-          onPress={handleClose}
-          className="w-8 h-8 items-center justify-center rounded-full bg-gray-100"
-        >
-          <Feather name="x" size={18} color="#666" />
-        </TouchableOpacity>
-      </View>
+    <View className="items-center py-4 bg-white rounded-t-2xl">
+      <View className="w-10 h-1 bg-gray-300 rounded-full" />
     </View>
   )
 
   const renderFooter = () => (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      // The offset helps push the input above the tab bar if needed, but we cover it
+      keyboardVerticalOffset={0} 
     >
       <View
         className="bg-white border-t border-gray-200"
@@ -79,7 +74,7 @@ const CommentsModal = forwardRef<Modalize, CommentsModalProps>(({ selectedPost }
           />
           <View className="flex-1 bg-gray-100 rounded-full flex-row items-center pr-2">
             <TextInput
-              className="flex-1 p-3 text-base"
+              className="flex-1 p-3 text-base text-gray-900"
               placeholder="Add a comment..."
               placeholderTextColor="#9CA3AF"
               value={commentText}
@@ -89,13 +84,14 @@ const CommentsModal = forwardRef<Modalize, CommentsModalProps>(({ selectedPost }
             <TouchableOpacity
               onPress={handleCreateComment}
               disabled={isCreatingComment || !commentText.trim()}
+              className="p-2"
             >
               {isCreatingComment ? (
                 <ActivityIndicator size="small" color="#1DA1F2" />
               ) : (
                 <Feather
                   name="send"
-                  size={24}
+                  size={22}
                   color={commentText.trim() ? "#1DA1F2" : "#9CA3AF"}
                 />
               )}
@@ -109,25 +105,33 @@ const CommentsModal = forwardRef<Modalize, CommentsModalProps>(({ selectedPost }
   return (
     <Modalize
       ref={modalizeRef}
+      // This is the key change: we make the modal itself take the full screen height
+      modalHeight={SCREEN_HEIGHT}
+      // We explicitly set the top offset to 0 to cover the header
+      modalTopOffset={0} 
+      // This style applies to the modal's view container
       modalStyle={{
         backgroundColor: "#F9FAFB",
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
-        // This is the fix: use the top safe area inset to avoid the header
-        marginTop: top, 
+        borderTopLeftRadius: 20, // Rounded top-left corner
+        borderTopRightRadius: 20, // Rounded top-right corner
+        overflow: "hidden", // Ensures content respects the border radius
       }}
-      // This is the fix: adjust the height to account for the top safe area
-      modalHeight={SCREEN_HEIGHT - top} 
+      // The overlay being transparent makes the background content visible until covered
+      overlayStyle={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }} 
+      // We let the content scroll inside, not adjust the modal height
+      adjustToContentHeight={false}
+      // We will use our own simple handle
       withHandle={false}
-      HeaderComponent={renderHeader}
-      FooterComponent={renderFooter}
+      HeaderComponent={renderHeader()}
+      FooterComponent={renderFooter()}
       flatListProps={{
         data: selectedPost?.comments || [],
         renderItem: ({ item }) => <CommentCard comment={item} />,
         keyExtractor: (item) => item._id,
         showsVerticalScrollIndicator: false,
         contentContainerStyle: {
-          padding: 16,
+          paddingHorizontal: 16,
+          paddingBottom: 50, // Extra space at the bottom of the list
           flexGrow: 1,
         },
         ListEmptyComponent: () => (
