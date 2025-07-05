@@ -1,11 +1,11 @@
 // mobile/app/chat/[channelId].tsx
-import ReactionsPicker from "@/components/ReactionsPicker"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { useStreamChat } from "@/context/StreamChatContext"
-import { Ionicons } from "@expo/vector-icons"
-import { router, useLocalSearchParams } from "expo-router"
-import { format, isToday, isYesterday } from "date-fns"
-import { useEffect, useState, useRef, useCallback } from "react"
+import ReactionsPicker from "@/components/ReactionsPicker";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useStreamChat } from "@/context/StreamChatContext";
+import { Ionicons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import { format, isToday, isYesterday } from "date-fns";
+import { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,27 +18,27 @@ import {
   View,
   Image,
   Keyboard,
-} from "react-native"
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
-import * as Haptics from "expo-haptics"
-import Animated, { Layout } from "react-native-reanimated"
+} from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
+import Animated, { Layout } from "react-native-reanimated";
 
 export default function ChatScreen() {
-  const { channelId } = useLocalSearchParams<{ channelId: string }>()
-  const { client, isConnected, isConnecting } = useStreamChat()
-  const { currentUser } = useCurrentUser()
-  const insets = useSafeAreaInsets()
+  const { channelId } = useLocalSearchParams<{ channelId: string }>();
+  const { client, isConnected, isConnecting } = useStreamChat();
+  const { currentUser } = useCurrentUser();
+  const insets = useSafeAreaInsets();
 
-  const [channel, setChannel] = useState<any>(null)
-  const [messages, setMessages] = useState<any[]>([])
-  const [newMessage, setNewMessage] = useState("")
-  const [otherUser, setOtherUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
-  const [keyboardHeight, setKeyboardHeight] = useState(0)
-  const [selectedMessage, setSelectedMessage] = useState<any>(null)
-  const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null)
-  const messageRefs = useRef<{ [key: string]: View | null }>({})
+  const [channel, setChannel] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [otherUser, setOtherUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null);
+  const messageRefs = useRef<{ [key: string]: View | null }>({});
 
   useEffect(() => {
     if (!client || !isConnected || !channelId || !currentUser) {
@@ -121,31 +121,31 @@ export default function ChatScreen() {
     }
   }
 
+  // --- REACTION LOGIC FIX ---
+  // This function now handles both adding and removing reactions.
   const handleReaction = async (reactionType: string) => {
-    if (!channel || !selectedMessage) return
-    try {
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === selectedMessage.id
-            ? {
-                ...msg,
-                latest_reactions: [
-                  ...(msg.latest_reactions || []),
-                  { type: reactionType, user_id: currentUser.clerkId },
-                ],
-              }
-            : msg
-        )
-      )
-      
-      setSelectedMessage(null)
+    if (!channel || !selectedMessage) return;
 
-      await channel.sendReaction(selectedMessage.id, { type: reactionType })
+    try {
+      const existingReaction = selectedMessage.latest_reactions?.find(
+        (r: any) => r.type === reactionType && r.user_id === currentUser.clerkId
+      );
+
+      setSelectedMessage(null); // Hide picker immediately
+
+      if (existingReaction) {
+        // If the user has already reacted with this type, remove it.
+        await channel.deleteReaction(selectedMessage.id, existingReaction.type);
+      } else {
+        // Otherwise, add the new reaction.
+        await channel.sendReaction(selectedMessage.id, { type: reactionType });
+      }
     } catch (error) {
-      console.error("❌ Failed to send reaction:", error)
-      Alert.alert("Error", "Could not send reaction.")
+      console.error("❌ Failed to send/delete reaction:", error);
+      Alert.alert("Error", "Could not update reaction.");
     }
-  }
+  };
+
 
   const handleLongPress = (message: any) => {
     const ref = messageRefs.current[message.id]
@@ -160,7 +160,7 @@ export default function ChatScreen() {
   const formatMessageTime = (date: Date) => {
     if (isToday(date)) return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
     if (isYesterday(date)) return `YESTERDAY AT ${format(date, "d MMM 'AT' h:mm a").toUpperCase()}`
-    return format(date, "d MMM<y_bin_46> 'AT' h:mm a").toUpperCase()
+    return format(date, "d MMM Picardy 'AT' h:mm a").toUpperCase()
   }
 
   const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
@@ -234,7 +234,6 @@ export default function ChatScreen() {
               </View>
             )}
 
-            {/* --- FIX: ADDED CONDITIONAL PADDING HERE --- */}
             <View
               className={`max-w-[80%] ${hasReactions ? "pb-4" : ""}`}
               ref={(el) => (messageRefs.current[message.id] = el)}
