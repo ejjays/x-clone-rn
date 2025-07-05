@@ -122,30 +122,50 @@ export default function ChatScreen() {
   }
 
   // --- REACTION LOGIC FIX ---
-  // This function now handles both adding and removing reactions.
+  // This function now handles both adding and removing reactions with an optimistic update.
   const handleReaction = async (reactionType: string) => {
     if (!channel || !selectedMessage) return;
 
+    const existingReaction = selectedMessage.latest_reactions?.find(
+      (r: any) => r.type === reactionType && r.user_id === currentUser.clerkId
+    );
+
+    // Optimistic UI update
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) => {
+        if (msg.id !== selectedMessage.id) return msg;
+
+        let newReactions = [...(msg.latest_reactions || [])];
+
+        if (existingReaction) {
+          // Remove the reaction
+          newReactions = newReactions.filter(
+            (r) => !(r.type === reactionType && r.user_id === currentUser.clerkId)
+          );
+        } else {
+          // Add the new reaction
+          newReactions.push({ type: reactionType, user_id: currentUser.clerkId });
+        }
+        return { ...msg, latest_reactions: newReactions };
+      })
+    );
+    
+    setSelectedMessage(null); // Hide picker immediately
+
     try {
-      const existingReaction = selectedMessage.latest_reactions?.find(
-        (r: any) => r.type === reactionType && r.user_id === currentUser.clerkId
-      );
-
-      setSelectedMessage(null); // Hide picker immediately
-
       if (existingReaction) {
-        // If the user has already reacted with this type, remove it.
+        // If it existed, send a delete request to the server
         await channel.deleteReaction(selectedMessage.id, existingReaction.type);
       } else {
-        // Otherwise, add the new reaction.
+        // Otherwise, send a new reaction request
         await channel.sendReaction(selectedMessage.id, { type: reactionType });
       }
     } catch (error) {
       console.error("❌ Failed to send/delete reaction:", error);
       Alert.alert("Error", "Could not update reaction.");
+      // Note: You could add logic here to revert the optimistic UI update on error
     }
   };
-
 
   const handleLongPress = (message: any) => {
     const ref = messageRefs.current[message.id]
