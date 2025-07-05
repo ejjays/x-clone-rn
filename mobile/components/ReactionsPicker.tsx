@@ -31,8 +31,8 @@ interface ReactionsPickerProps {
   anchorMeasurements: { pageX: number; pageY: number; width: number } | null
 }
 
-// --- FIX #1: Adjusted the width for a cleaner look without the plus button ---
-const PICKER_WIDTH = 280
+// --- FIX: Increased width from 280 to 300 for more spacing ---
+const PICKER_WIDTH = 300
 const PICKER_HEIGHT = 60
 
 const ReactionsPicker = ({
@@ -91,7 +91,6 @@ const ReactionsPicker = ({
             pickerStyle,
           ]}
         >
-          {/* --- FIX #2: Removed the separator and plus button --- */}
           <View className="bg-gray-800/90 rounded-full p-2 shadow-lg flex-row items-center justify-center space-x-2">
             {reactions.map((reaction) => (
               <TouchableOpacity

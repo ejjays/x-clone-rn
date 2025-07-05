@@ -21,6 +21,7 @@ import {
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import * as Haptics from "expo-haptics"
+import Animated, { Layout } from "react-native-reanimated"
 
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>()
@@ -39,8 +40,6 @@ export default function ChatScreen() {
   const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null)
   const messageRefs = useRef<{ [key: string]: View | null }>({})
 
-  // --- REAL-TIME UPDATE FIX ---
-  // This useEffect now correctly subscribes to channel events and updates the state.
   useEffect(() => {
     if (!client || !isConnected || !channelId || !currentUser) {
       setLoading(false);
@@ -69,16 +68,13 @@ export default function ChatScreen() {
           });
         }
         
-        // This function handles all real-time events efficiently
         const handleEvent = (event: any) => {
-          // Use the channel from the event to ensure we have the latest state
           const eventChannel = event.channel || ch;
           setMessages(eventChannel.state.messages.slice().reverse());
         };
 
         setMessages(ch.state.messages.slice().reverse());
 
-        // Bind the single, robust event handler
         ch.on("message.new", handleEvent);
         ch.on("message.updated", handleEvent);
         ch.on("message.deleted", handleEvent);
@@ -128,7 +124,6 @@ export default function ChatScreen() {
   const handleReaction = async (reactionType: string) => {
     if (!channel || !selectedMessage) return
     try {
-      // Optimistic UI update for instant feedback
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.id === selectedMessage.id
@@ -143,13 +138,12 @@ export default function ChatScreen() {
         )
       )
       
-      setSelectedMessage(null) // Hide picker immediately
+      setSelectedMessage(null)
 
       await channel.sendReaction(selectedMessage.id, { type: reactionType })
     } catch (error) {
       console.error("❌ Failed to send reaction:", error)
       Alert.alert("Error", "Could not send reaction.")
-      // Optionally, revert the optimistic update here if needed
     }
   }
 
@@ -176,7 +170,8 @@ export default function ChatScreen() {
   }
 
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
-    const isFromCurrentUser = message.user?.id === currentUser?.clerkId
+    const isFromCurrentUser = message.user?.id === currentUser?.clerkId;
+    const hasReactions = message.latest_reactions && message.latest_reactions.length > 0;
 
     const messageAbove = index < messages.length - 1 ? messages[index + 1] : null;
     const messageBelow = index > 0 ? messages[index - 1] : null;
@@ -202,13 +197,10 @@ export default function ChatScreen() {
     }
 
     const ReactionComponent = () => {
-      const latestReactions = message.latest_reactions || []
-      if (!latestReactions.length) return null
+      if (!hasReactions) return null
 
-      const reactionCounts: { [key: string]: number } = {}
       const emojiMap: { [key: string]: string } = { love: "❤️", haha: "😂", wow: "😮", kissing_heart: "😘", enraged: "😡", thumbsup: "👍" }
-      
-      const reactionEmojis = latestReactions.map((r: any) => emojiMap[r.type]).filter(Boolean)
+      const reactionEmojis = message.latest_reactions.map((r: any) => emojiMap[r.type]).filter(Boolean)
       const uniqueEmojis = [...new Set(reactionEmojis)];
 
       if (!uniqueEmojis.length) return null
@@ -223,7 +215,7 @@ export default function ChatScreen() {
     }
 
     return (
-      <View>
+      <Animated.View layout={Layout.duration(200)}>
         {showTimestamp && (
           <View className="items-center my-6">
             <View className="bg-gray-100 px-3 py-1 rounded-full">
@@ -242,8 +234,9 @@ export default function ChatScreen() {
               </View>
             )}
 
+            {/* --- FIX: ADDED CONDITIONAL PADDING HERE --- */}
             <View
-              className="max-w-[80%]"
+              className={`max-w-[80%] ${hasReactions ? "pb-4" : ""}`}
               ref={(el) => (messageRefs.current[message.id] = el)}
             >
               <TouchableOpacity onLongPress={() => handleLongPress(message)} delayLongPress={200} activeOpacity={0.8}>
@@ -263,11 +256,10 @@ export default function ChatScreen() {
             {isFromCurrentUser && <View style={{ width: 8 }} />}
           </View>
         </View>
-      </View>
+      </Animated.View>
     )
   }
 
-  // Loading and error states
   if (isConnecting || loading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
