@@ -113,8 +113,11 @@ const CommentsModal = forwardRef<Modalize, CommentsModalProps>(({ selectedPost }
         backgroundColor: "#F9FAFB",
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
+        // This is the fix: use the top safe area inset to avoid the header
+        marginTop: top, 
       }}
-      modalHeight={SCREEN_HEIGHT}
+      // This is the fix: adjust the height to account for the top safe area
+      modalHeight={SCREEN_HEIGHT - top} 
       withHandle={false}
       HeaderComponent={renderHeader}
       FooterComponent={renderFooter}
