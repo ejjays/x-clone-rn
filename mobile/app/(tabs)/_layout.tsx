@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo"
-import { Bell, Home, Menu, MessageCircle, Plus, Search, Tv, Users } from "lucide-react-native" 
+import { Bell, Home, Menu, MessageCircle, Plus, Search, Mail, UsersRound } from "lucide-react-native" 
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs"
 import { Redirect, usePathname, withLayoutContext } from "expo-router"
 import { useEffect } from "react"
@@ -133,7 +133,7 @@ const TabsLayout = () => {
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("search")}
                   >
-                    <Users size={24} color={pathname === "/search" ? "#1877F2" : "#657786"} />
+                    <UsersRound size={24} color={pathname === "/search" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -147,7 +147,7 @@ const TabsLayout = () => {
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("messages")}
                   >
-                    <Tv size={24} color={pathname === "/messages" ? "#1877F2" : "#657786"} />
+                    <Mail size={24} color={pathname === "/messages" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
