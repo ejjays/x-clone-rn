@@ -14,17 +14,6 @@
       "autoIncrement": true,
       "android": {
         "buildType": "apk"
-      },
-      "secrets": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": {
-          "description": "The Clerk Publishable Key for the mobile app"
-        },
-        "EXPO_PUBLIC_API_URL": {
-          "description": "The URL for the backend API"
-        },
-        "EXPO_PUBLIC_STREAM_API_KEY": {
-          "description": "The Stream API Key for chat functionality"
-        }
       }
     }
   },
