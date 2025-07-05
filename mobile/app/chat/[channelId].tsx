@@ -1,10 +1,10 @@
-// mobile/app/chat/[channelId].tsx
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useStreamChat } from "@/context/StreamChatContext"; // 👈 Ensure this import is from context
-import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import { format, isToday, isYesterday } from "date-fns";
-import { useEffect, useState } from "react";
+import ReactionsPicker from "@/components/ReactionsPicker"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useStreamChat } from "@/context/StreamChatContext"
+import { Ionicons } from "@expo/vector-icons"
+import { router, useLocalSearchParams } from "expo-router"
+import { format, isToday, isYesterday } from "date-fns"
+import { useEffect, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -17,161 +17,184 @@ import {
   View,
   Image,
   Keyboard,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+} from "react-native"
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 export default function ChatScreen() {
-  const { channelId } = useLocalSearchParams<{ channelId: string }>();
-  const { client, isConnected, isConnecting } = useStreamChat();
-  const { currentUser } = useCurrentUser();
-  const insets = useSafeAreaInsets();
+  const { channelId } = useLocalSearchParams<{ channelId: string }>()
+  const { client, isConnected, isConnecting } = useStreamChat()
+  const { currentUser } = useCurrentUser()
+  const insets = useSafeAreaInsets()
 
-  const [channel, setChannel] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [otherUser, setOtherUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [channel, setChannel] = useState<any>(null)
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMessage, setNewMessage] = useState("")
+  const [otherUser, setOtherUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const [selectedMessage, setSelectedMessage] = useState<any>(null) // 👈 2. ADD STATE FOR SELECTED MESSAGE
+
+  // Handle reaction selection
+  const handleReaction = async (reactionType: string) => {
+    if (!channel || !selectedMessage) return
+    try {
+      await channel.sendReaction(selectedMessage.id, {
+        type: reactionType,
+      })
+      setSelectedMessage(null) // Hide the picker after selection
+    } catch (error) {
+      console.error("❌ Failed to send reaction:", error)
+      Alert.alert("Error", "Could not send reaction.")
+    }
+  }
 
   // Handle keyboard events
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardHeight(e.endCoordinates.height + 20);
-    });
-    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0));
+      setKeyboardHeight(e.endCoordinates.height + 20)
+    })
+    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0))
 
     return () => {
-      keyboardDidShowListener?.remove();
-      keyboardDidHideListener?.remove();
-    };
-  }, []);
+      keyboardDidShowListener?.remove()
+      keyboardDidHideListener?.remove()
+    }
+  }, [])
 
   useEffect(() => {
     if (!client || !isConnected || !channelId || !currentUser) {
-      setLoading(false);
-      return;
+      setLoading(false)
+      return
     }
 
-    initializeChannel();
+    initializeChannel()
 
     async function initializeChannel() {
       try {
-        setLoading(true);
-        console.log("🔄 Initializing channel:", channelId);
+        setLoading(true)
+        console.log("🔄 Initializing channel:", channelId)
 
-        const ch = client.channel("messaging", channelId);
-        await ch.watch();
-        setChannel(ch);
+        const ch = client.channel("messaging", channelId)
+        await ch.watch()
+        setChannel(ch)
 
-        const membersArray = Array.isArray(ch.state.members) ? ch.state.members : Object.values(ch.state.members || {});
+        const membersArray = Array.isArray(ch.state.members) ? ch.state.members : Object.values(ch.state.members || {})
 
-        const otherMember = membersArray.find((member: any) => member?.user?.id !== currentUser.clerkId);
+        const otherMember = membersArray.find((member: any) => member?.user?.id !== currentUser.clerkId)
 
         if (otherMember?.user) {
           setOtherUser({
             name: otherMember.user.name || "Unknown User",
             image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
             online: otherMember.user.online || false,
-          });
+          })
         }
 
-        const messagesArray = ch.state.messages ? Object.values(ch.state.messages) : [];
-        setMessages(messagesArray.reverse());
+        const handleNewData = (event: any) => {
+          setMessages(event.target.state.messages.reverse())
+          // When new data comes in, check if our selected message still exists.
+          if (selectedMessage && !event.target.state.messages.find((m: any) => m.id === selectedMessage.id)) {
+            setSelectedMessage(null)
+          }
+        }
 
-        const handleNewMessage = (event: any) => {
-          console.log("📨 New message received:", event.message);
-          setMessages((prev) => [event.message, ...prev]);
-        };
+        ch.on("message.new", handleNewData)
+        ch.on("message.updated", handleNewData) // Listen for updates (like reactions)
 
-        ch.on("message.new", handleNewMessage);
+        const initialMessages = ch.state.messages ? Object.values(ch.state.messages) : []
+        setMessages(initialMessages.reverse())
 
-        console.log("✅ Channel initialized successfully");
+        console.log("✅ Channel initialized successfully")
 
         return () => {
-          ch.off("message.new", handleNewMessage);
-        };
+          ch.off("message.new", handleNewData)
+          ch.off("message.updated", handleNewData)
+        }
       } catch (error) {
-        console.error("❌ Error initializing channel:", error);
-        Alert.alert("Error", "Failed to load chat. Please try again.");
+        console.error("❌ Error initializing channel:", error)
+        Alert.alert("Error", "Failed to load chat. Please try again.")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-  }, [client, isConnected, channelId, currentUser]);
+  }, [client, isConnected, channelId, currentUser, selectedMessage]) // Re-run if selectedMessage changes
 
   const sendMessage = async () => {
-    if (!channel || !newMessage.trim() || sending) return;
+    if (!channel || !newMessage.trim() || sending) return
 
-    setSending(true);
+    setSending(true)
     try {
-      console.log("📤 Sending message:", newMessage.trim());
+      console.log("📤 Sending message:", newMessage.trim())
 
       await channel.sendMessage({
         text: newMessage.trim(),
-      });
+      })
 
-      setNewMessage("");
-      console.log("✅ Message sent successfully");
+      setNewMessage("")
+      console.log("✅ Message sent successfully")
     } catch (error) {
-      console.error("❌ Error sending message:", error);
-      Alert.alert("Error", "Failed to send message. Please try again.");
+      console.error("❌ Error sending message:", error)
+      Alert.alert("Error", "Failed to send message. Please try again.")
     } finally {
-      setSending(false);
+      setSending(false)
     }
-  };
+  }
 
   const formatMessageTime = (date: Date) => {
     if (isToday(date)) {
-      return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`;
+      return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
     } else if (isYesterday(date)) {
-      return `YESTERDAY AT ${format(date, "h:mm a").toUpperCase()}`;
+      return `YESTERDAY AT ${format(date, "h:mm a").toUpperCase()}`
     } else {
-      return format(date, "d MMM 'AT' h:mm a").toUpperCase();
+      return format(date, "d MMM 'AT' h:mm a").toUpperCase()
     }
-  };
+  }
 
   const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
-    if (!previousMessage) return true;
+    if (!previousMessage) return true
 
-    const currentDate = new Date(currentMessage.created_at);
-    const previousDate = new Date(previousMessage.created_at);
+    const currentDate = new Date(currentMessage.created_at)
+    const previousDate = new Date(previousMessage.created_at)
 
-    const timeDiff = currentDate.getTime() - previousDate.getTime();
-    return timeDiff > 30 * 60 * 1000;
-  };
+    const timeDiff = currentDate.getTime() - previousDate.getTime()
+    return timeDiff > 30 * 60 * 1000
+  }
 
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
-    const isFromCurrentUser = message.user?.id === currentUser?.clerkId;
+    const isFromCurrentUser = message.user?.id === currentUser?.clerkId
 
-    const messageAbove = index < messages.length - 1 ? messages[index + 1] : null;
-    const messageBelow = index > 0 ? messages[index - 1] : null;
+    const messageAbove = index < messages.length - 1 ? messages[index + 1] : null
+    const messageBelow = index > 0 ? messages[index - 1] : null
 
-    const showTimestamp = shouldShowTimestamp(message, messageAbove);
+    const showTimestamp = shouldShowTimestamp(message, messageAbove)
 
-    const isFirstInGroup = showTimestamp || !messageAbove || messageAbove.user?.id !== message.user?.id;
-    const isLastInGroup = !messageBelow || messageBelow.user?.id !== message.user?.id || shouldShowTimestamp(messageBelow, message);
+    const isFirstInGroup = showTimestamp || !messageAbove || messageAbove.user?.id !== message.user?.id
+    const isLastInGroup = !messageBelow || messageBelow.user?.id !== message.user?.id || shouldShowTimestamp(messageBelow, message)
 
-    const showAvatar = isLastInGroup;
+    const showAvatar = isLastInGroup
 
     const getBubbleStyle = () => {
-      let style = "rounded-3xl";
+      let style = "rounded-3xl"
       if (isFirstInGroup && isLastInGroup) {
-        return style;
+        return style
       }
       if (isFromCurrentUser) {
-        if (isFirstInGroup) style += " rounded-br-lg";
-        else if (isLastInGroup) style += " rounded-tr-lg";
-        else style += " rounded-tr-lg rounded-br-lg";
+        if (isFirstInGroup) style += " rounded-br-lg"
+        else if (isLastInGroup) style += " rounded-tr-lg"
+        else style += " rounded-tr-lg rounded-br-lg"
       } else {
-        if (isFirstInGroup) style += " rounded-bl-lg";
-        else if (isLastInGroup) style += " rounded-tl-lg";
-        else style += " rounded-tl-lg rounded-bl-lg";
+        if (isFirstInGroup) style += " rounded-bl-lg"
+        else if (isLastInGroup) style += " rounded-tl-lg"
+        else style += " rounded-tl-lg rounded-bl-lg"
       }
-      return style;
-    };
+      return style
+    }
 
+    const latestReactions = message.latest_reactions || []
+    const loveReaction = latestReactions.find((r: any) => r.type === "love")
+
+    // 👇 3. WRAP THE MESSAGE BUBBLE IN A `TouchableOpacity` WITH `onLongPress`
     return (
       <View>
         {showTimestamp && (
@@ -184,7 +207,6 @@ export default function ChatScreen() {
           </View>
         )}
 
-        {/* --- 👇 FIX #2: I ADDED `items-end` HERE TO ALIGN THE AVATAR --- */}
         <View
           className={`flex-row items-end ${
             isLastInGroup ? "mb-2" : "mb-0.5"
@@ -198,23 +220,37 @@ export default function ChatScreen() {
             </View>
           )}
 
-          {/* --- 👇 FIX #1: I CHANGED `py-3` to `py-2.5` HERE --- */}
-          <View
-            className={`max-w-[80%] px-4 py-2.5 ${getBubbleStyle()} ${
-              isFromCurrentUser ? "bg-blue-500 shadow-sm" : "bg-gray-200"
-            }`}
+          <TouchableOpacity
+            onLongPress={() => setSelectedMessage(message)}
+            onPress={() => setSelectedMessage(null)} // Hide picker on short press
+            delayLongPress={200}
+            activeOpacity={0.8}
           >
-            <Text className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
-              {message.text}
-            </Text>
-          </View>
+            {selectedMessage?.id === message.id && (
+              <ReactionsPicker onSelect={handleReaction} onAdd={() => Alert.alert("Add More", "More reactions coming soon!")} />
+            )}
+            <View
+              className={`max-w-[80%] px-4 py-2.5 ${getBubbleStyle()} ${
+                isFromCurrentUser ? "bg-blue-500 shadow-sm" : "bg-gray-200"
+              }`}
+            >
+              <Text className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
+                {message.text}
+              </Text>
+            </View>
+            {loveReaction && (
+              <View className="absolute -bottom-2 -right-2 bg-white rounded-full p-0.5 shadow">
+                <Text>❤️</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
           {isFromCurrentUser && <View style={{ width: 8 }} />}
         </View>
       </View>
-    );
-  };
-  
+    )
+  }
+
   // ... (rest of the file is unchanged)
 
   if (isConnecting || loading) {
@@ -227,7 +263,7 @@ export default function ChatScreen() {
           </Text>
         </View>
       </SafeAreaView>
-    );
+    )
   }
 
   if (!client || !isConnected) {
@@ -244,7 +280,7 @@ export default function ChatScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    );
+    )
   }
 
   return (
@@ -355,5 +391,5 @@ export default function ChatScreen() {
         </View>
       </KeyboardAvoidingView>
     </View>
-  );
+  )
 }
