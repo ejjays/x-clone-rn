@@ -11,8 +11,9 @@ if (!API_BASE_URL) {
   );
 }
 
+console.log(`✅ Initializing API with base URL: ${API_BASE_URL}`);
+
 // --- API Client Creation ---
-// This function remains the same
 export const createApiClient = (getToken: () => Promise<string | null>): AxiosInstance => {
   const api = axios.create({
     baseURL: API_BASE_URL,
@@ -31,11 +32,22 @@ export const createApiClient = (getToken: () => Promise<string | null>): AxiosIn
     return config;
   });
 
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      console.error("❌ API Error:", {
+        status: error.response?.status,
+        url: error.config?.url,
+        message: error.response?.data?.error || error.message,
+      });
+      return Promise.reject(error);
+    },
+  );
+
   return api;
 };
 
-
-// --- THIS IS THE FIX ---
+// --- Custom Hook with Memoization ---
 /**
  * Custom hook to get a memoized API client instance.
  * `useMemo` ensures the API client is not recreated on every render,
@@ -50,8 +62,7 @@ export const useApiClient = (): AxiosInstance => {
 };
 
 
-// --- API Endpoints ---
-// These remain the same
+// --- API Endpoint Definitions ---
 export const userApi = {
   syncUser: (api: AxiosInstance) => api.post("/users/sync"),
   getCurrentUser: (api: AxiosInstance) => api.get("/users/me"),

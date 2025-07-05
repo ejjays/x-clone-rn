@@ -1,8 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
-
-import { userApi, useApiClient } from "../utils/api";
+import { useApiClient, userApi } from "../utils/api";
 
 export const useUserSync = () => {
   const { isSignedIn } = useAuth();
@@ -10,26 +9,30 @@ export const useUserSync = () => {
 
   const syncUserMutation = useMutation({
     mutationFn: () => userApi.syncUser(api),
-    onSuccess: (response: any) => {
-      console.log("✅ User synced successfully:", response.data.user);
+    onSuccess: () => {
+      console.log("✅ User synced successfully (single run).");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("❌ User sync failed:", error);
     },
-    retry: 2,
-    retryDelay: 2000,
   });
 
   useEffect(() => {
-    // Only run if the user is signed in and sync hasn't already succeeded
-    if (isSignedIn && api && !syncUserMutation.isSuccess) {
+    // This robust check prevents the sync from running unnecessarily.
+    // It will only run if the user is signed in, the API is ready,
+    // and the sync process is not already running or successfully completed.
+    if (
+      isSignedIn &&
+      api &&
+      !syncUserMutation.isPending && // Not already running
+      !syncUserMutation.isSuccess // Not already succeeded
+    ) {
       console.log("🔄 Attempting to sync user...");
       syncUserMutation.mutate();
     }
-  }, [isSignedIn, api, syncUserMutation.isSuccess]); // Add isSuccess to dependency array
+  }, [isSignedIn, api, syncUserMutation.isPending, syncUserMutation.isSuccess]);
 
   return {
     isSyncing: syncUserMutation.isPending,
-    syncError: syncUserMutation.error,
   };
 };
