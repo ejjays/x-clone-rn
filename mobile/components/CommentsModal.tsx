@@ -13,15 +13,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
-  Pressable,
-  FlatList
+  FlatList,
+  Pressable
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CommentCard from "./CommentCard";
-
-interface CommentsModalProps {
-  selectedPost: Post | null;
-}
 
 // We are defining a type for the methods we expose via the ref
 export interface CommentsModalRef {
@@ -31,7 +27,8 @@ export interface CommentsModalRef {
 
 const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ selectedPost }, ref) => {
   const [isVisible, setIsVisible] = useState(false);
-  const { bottom } = useSafeAreaInsets();
+  // We use both top and bottom insets for padding inside the modal
+  const { top, bottom } = useSafeAreaInsets();
   const { commentText, setCommentText, createComment, isCreatingComment } = useComments();
   const { currentUser } = useCurrentUser();
 
@@ -46,36 +43,34 @@ const CommentsModal = forwardRef<CommentsModalRef, CommentsModalProps>(({ select
     open: openModal,
     close: closeModal,
   }), [openModal, closeModal]);
-
+  
   const handleCreateComment = () => {
     if (selectedPost) {
       createComment({ postId: selectedPost._id, content: commentText.trim() });
     }
   };
   
-  // This is a small fix to clear the comment text after successful posting
   useEffect(() => {
-    if (!isCreatingComment) {
-        // Post-creation logic can go here if needed
-    }
+    // This effect can be used to clear text after a comment is successfully posted.
+    // The logic inside useComments already handles this, so we can keep it clean here.
   }, [isCreatingComment]);
 
   return (
     <Modal
       animationType="slide"
-      transparent={true}
+      transparent={false} // Make modal non-transparent to cover everything
       visible={isVisible}
       onRequestClose={closeModal}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
+        className="flex-1 bg-gray-100" // The background color is now on the main view
       >
-        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }} onPress={closeModal} />
-        
-        <View className="flex-1 bg-gray-100 rounded-t-2xl overflow-hidden mt-12">
+        {/* Main content container with safe area padding */}
+        <View className="flex-1" style={{ paddingTop: top }}>
+          
           {/* Custom Header */}
-          <View className="p-4 bg-white border-b border-gray-200">
+          <View className="p-4 bg-white border-b border-gray-200 rounded-t-2xl">
             <View className="items-center pb-2">
               <View className="w-12 h-1.5 bg-gray-300 rounded-full" />
             </View>
