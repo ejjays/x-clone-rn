@@ -12,11 +12,13 @@ interface PostsListProps {
 }
 
 const PostsList = ({ username, onOpenComments }: PostsListProps) => {
-  const { currentUser } = useCurrentUser();
-  const { posts, isLoading, error, refetch, toggleLike, deletePost, checkIsLiked } = usePosts(username);
+  // --- FIX START ---
+  // We need to know when the user is loading, so we get `isUserLoading` here
+  const { currentUser, isLoading: isUserLoading } = useCurrentUser();
+  const { posts, isLoading: isPostsLoading, error, refetch, toggleLike, deletePost, checkIsLiked } = usePosts(username);
 
-  // When loading, show a list of skeleton placeholders
-  if (isLoading) {
+  // Show skeleton placeholders if EITHER posts are loading OR the user is loading.
+  if (isPostsLoading || isUserLoading) {
     return (
       <View>
         {[...Array(3)].map((_, index) => (
@@ -25,6 +27,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
       </View>
     );
   }
+  // --- FIX END ---
 
   if (error) {
     return (
@@ -37,6 +40,11 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
     );
   }
 
+  // This is a safety check. If for some reason the user isn't loaded, we don't render anything.
+  if (!currentUser) {
+    return null;
+  }
+  
   if (posts.length === 0) {
     return (
       <View className="p-8 items-center">
@@ -54,7 +62,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
             onLike={toggleLike}
             onDelete={deletePost}
             onComment={onOpenComments || (() => {})}
-            currentUser={currentUser!}
+            currentUser={currentUser}
             isLiked={checkIsLiked(post.likes, currentUser)}
           />
           {/* Thin divider between posts, but not after the last post */}
