@@ -1,46 +1,47 @@
-import { useAuth } from "@clerk/clerk-expo"
-import { Bell, Home, Menu, MessageCircle, Plus, Search, Mail, UserRoundSearch } from "lucide-react-native" 
-import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs"
-import { Redirect, usePathname, withLayoutContext } from "expo-router"
-import { useEffect } from "react"
-import { Text, TouchableOpacity, View } from "react-native"
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated"
+import { useAuth } from "@clerk/clerk-expo";
+import { Bell, Home, Menu, MessageCircle, Plus, Search, Mail } from "lucide-react-native";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import { Redirect, usePathname, withLayoutContext } from "expo-router";
+import { useEffect } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import PeopleIcon from "@/assets/icons/PeopleIcon"; // <-- I've added this import
 
-const { Navigator } = createMaterialTopTabNavigator()
-export const MaterialTopTabs = withLayoutContext(Navigator)
+const { Navigator } = createMaterialTopTabNavigator();
+export const MaterialTopTabs = withLayoutContext(Navigator);
 
-const HEADER_HEIGHT = 60
-const TAB_BAR_HEIGHT = 50
+const HEADER_HEIGHT = 60;
+const TAB_BAR_HEIGHT = 50;
 
 const TabsLayout = () => {
-  const { isSignedIn } = useAuth()
-  const pathname = usePathname()
+  const { isSignedIn } = useAuth();
+  const pathname = usePathname();
 
   // Animated values
-  const headerHeight = useSharedValue(HEADER_HEIGHT)
-  const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT)
-  const safeAreaPadding = useSharedValue(1) // 1 = show SafeAreaView, 0 = hide it
+  const headerHeight = useSharedValue(HEADER_HEIGHT);
+  const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
+  const safeAreaPadding = useSharedValue(1); // 1 = show SafeAreaView, 0 = hide it
 
-  const isHomeScreen = pathname === "/"
-  const isProfileScreen = pathname === "/profile"
+  const isHomeScreen = pathname === "/";
+  const isProfileScreen = pathname === "/profile";
 
   // Animate header, tab bar, and safe area based on current screen
   useEffect(() => {
     // Header animation
     headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, {
       duration: 300,
-    })
+    });
 
     // Tab bar animation - hide on profile, show on others
     tabBarHeight.value = withTiming(isProfileScreen ? 0 : TAB_BAR_HEIGHT, {
       duration: 300,
-    })
+    });
 
     // Safe area animation - disable on profile to reclaim space
     safeAreaPadding.value = withTiming(isProfileScreen ? 0 : 1, {
       duration: 300,
-    })
-  }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight, safeAreaPadding])
+    });
+  }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight, safeAreaPadding]);
 
   // Animated styles
   const animatedHeaderStyle = useAnimatedStyle(() => {
@@ -48,24 +49,24 @@ const TabsLayout = () => {
       height: headerHeight.value,
       opacity: headerHeight.value / HEADER_HEIGHT,
       overflow: "hidden",
-    }
-  })
+    };
+  });
 
   const animatedTabBarStyle = useAnimatedStyle(() => {
     return {
       height: tabBarHeight.value,
       opacity: tabBarHeight.value / TAB_BAR_HEIGHT,
       overflow: "hidden",
-    }
-  })
+    };
+  });
 
   const animatedSafeAreaStyle = useAnimatedStyle(() => {
     return {
       paddingTop: safeAreaPadding.value * 44, // 44 is typical status bar height
-    }
-  })
+    };
+  });
 
-  if (!isSignedIn) return <Redirect href="/(auth)" />
+  if (!isSignedIn) return <Redirect href="/(auth)" />;
 
   return (
     <View className="flex-1 bg-white">
@@ -133,7 +134,8 @@ const TabsLayout = () => {
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("search")}
                   >
-                    <UserRoundSearch size={24} color={pathname === "/search" ? "#1877F2" : "#657786"} />
+                    {/* THIS IS THE CHANGE! */}
+                    <PeopleIcon size={24} color={pathname === "/search" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -170,12 +172,12 @@ const TabsLayout = () => {
                             pathname === "/"
                               ? 0
                               : pathname === "/search"
-                                ? 71.2
-                                : pathname === "/notifications"
-                                  ? 142.4
-                                  : pathname === "/messages"
-                                    ? 213.6
-                                    : 284.8,
+                              ? 71.2
+                              : pathname === "/notifications"
+                              ? 142.4
+                              : pathname === "/messages"
+                              ? 213.6
+                              : 284.8,
                         },
                       ],
                     }}
@@ -193,6 +195,6 @@ const TabsLayout = () => {
         </MaterialTopTabs>
       </View>
     </View>
-  )
-}
-export default TabsLayout
+  );
+};
+export default TabsLayout;
