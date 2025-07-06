@@ -1,8 +1,9 @@
 import type { Post, User } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
-import { Heart, Share2, Trash } from "lucide-react-native";
+import { Heart, Trash } from "lucide-react-native";
 import { View, Text, Alert, Image, TouchableOpacity } from "react-native";
 import CommentIcon from "../assets/icons/Comment"; 
+import ShareIcon from "../assets/icons/ShareIcon";
 
 interface PostCardProps {
   post: Post;
@@ -61,13 +62,12 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
         </TouchableOpacity>
 
         <TouchableOpacity className="flex-row items-center space-x-2" onPress={() => onComment(post)}>
-          {/* Use the new custom CommentIcon component */}
           <CommentIcon size={22} color="#657786" />
           <Text className="text-gray-500 font-medium ml-1">{formatNumber(post.comments?.length || 0)} Comment</Text>
         </TouchableOpacity>
 
         <TouchableOpacity className="flex-row items-center space-x-2">
-          <Share2 size={22} color="#657786" />
+          <ShareIcon size={22} color="#657786" />
           <Text className="text-gray-500 font-medium ml-1">Share</Text>
         </TouchableOpacity>
       </View>
