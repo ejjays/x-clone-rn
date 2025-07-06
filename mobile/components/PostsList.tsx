@@ -1,25 +1,29 @@
-import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { usePosts } from "@/hooks/usePosts"
-import type { Post } from "@/types"
-import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native"
-import PostCard from "./PostCard"
+// mobile/components/PostsList.tsx
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { usePosts } from "@/hooks/usePosts";
+import type { Post } from "@/types";
+import { View, Text, TouchableOpacity } from "react-native";
+import PostCard from "./PostCard";
+import PostCardSkeleton from "./PostCardSkeleton";
 
 interface PostsListProps {
-  username?: string
-  onOpenComments?: (post: Post) => void // Make this optional
+  username?: string;
+  onOpenComments?: (post: Post) => void;
 }
 
 const PostsList = ({ username, onOpenComments }: PostsListProps) => {
-  const { currentUser, isLoading: isUserLoading } = useCurrentUser()
-  const { posts, isLoading: isPostsLoading, error, refetch, toggleLike, deletePost, checkIsLiked } = usePosts(username)
+  const { currentUser } = useCurrentUser();
+  const { posts, isLoading, error, refetch, toggleLike, deletePost, checkIsLiked } = usePosts(username);
 
-  if (isUserLoading || isPostsLoading) {
+  // When loading, show a list of skeleton placeholders
+  if (isLoading) {
     return (
-      <View className="p-8 items-center">
-        <ActivityIndicator size="large" color="#1DA1F2" />
-        <Text className="text-gray-500 mt-2">Loading...</Text>
+      <View>
+        {[...Array(3)].map((_, index) => (
+          <PostCardSkeleton key={index} />
+        ))}
       </View>
-    )
+    );
   }
 
   if (error) {
@@ -30,7 +34,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
           <Text className="text-white font-semibold">Retry</Text>
         </TouchableOpacity>
       </View>
-    )
+    );
   }
 
   if (posts.length === 0) {
@@ -38,7 +42,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
       <View className="p-8 items-center">
         <Text className="text-gray-500">No posts yet</Text>
       </View>
-    )
+    );
   }
 
   return (
@@ -50,7 +54,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
             onLike={toggleLike}
             onDelete={deletePost}
             onComment={onOpenComments || (() => {})}
-            currentUser={currentUser}
+            currentUser={currentUser!}
             isLiked={checkIsLiked(post.likes, currentUser)}
           />
           {/* Thin divider between posts, but not after the last post */}
@@ -58,7 +62,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
         </View>
       ))}
     </View>
-  )
-}
+  );
+};
 
-export default PostsList
+export default PostsList;
