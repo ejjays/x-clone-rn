@@ -180,7 +180,7 @@ export default function ChatScreen() {
   const formatMessageTime = (date: Date) => {
     if (isToday(date)) return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
     if (isYesterday(date)) return `YESTERDAY AT ${format(date, "d MMM 'AT' h:mm a").toUpperCase()}`
-    return format(date, "d MMM Picardy 'AT' h:mm a").toUpperCase()
+    return format(date, "d MMM yyyy 'AT' h:mm a").toUpperCase()
   }
 
   const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
