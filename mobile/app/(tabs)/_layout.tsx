@@ -135,7 +135,7 @@ const TabsLayout = () => {
                     onPress={() => props.navigation.navigate("search")}
                   >
                     {/* THIS IS THE CHANGE! */}
-                    <PeopleIcon size={24} color={pathname === "/search" ? "#1877F2" : "#657786"} />
+                    <PeopleIcon size={30} color={pathname === "/search" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity

@@ -3,8 +3,8 @@ import { Svg, Path, Circle } from 'react-native-svg';
 
 const PeopleIcon = (props) => (
   <Svg
-    width={props.size || 32}
-    height={props.size || 32}
+    width={props.size || 30}
+    height={props.size || 30}
     viewBox="0 0 24 24"
     fill="none"
     {...props}
