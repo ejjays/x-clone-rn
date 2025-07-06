@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { usePosts } from "@/hooks/usePosts"
 import { useProfile } from "@/hooks/useProfile"
 import { useSignOut } from "@/hooks/useSignOut"
-import { ArrowLeft, Calendar, Camera, ChevronDown, LogOut, MapPin, UserX } from "lucide-react-native" // Replaced Feather
+import { ArrowLeft, Calendar, Camera, ChevronDown, LogOut, MapPin, UserX } from "lucide-react-native" 
 import { format } from "date-fns"
 import { View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity, RefreshControl } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
