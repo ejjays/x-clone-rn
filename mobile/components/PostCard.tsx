@@ -1,19 +1,20 @@
-import type { Post, User } from "@/types"
-import { formatDate, formatNumber } from "@/utils/formatters"
-import { Heart, MessageCircle, Share2, Trash } from "lucide-react-native"; // Replaced Feather & AntDesign
-import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
+import type { Post, User } from "@/types";
+import { formatDate, formatNumber } from "@/utils/formatters";
+import { Heart, Share2, Trash } from "lucide-react-native";
+import { View, Text, Alert, Image, TouchableOpacity } from "react-native";
+import CommentIcon from "../assets/icons/Comment"; 
 
 interface PostCardProps {
-  post: Post
-  onLike: (postId: string) => void
-  onDelete: (postId: string) => void
-  onComment: (post: Post) => void
-  isLiked?: boolean
-  currentUser: User
+  post: Post;
+  onLike: (postId: string) => void;
+  onDelete: (postId: string) => void;
+  onComment: (post: Post) => void;
+  isLiked?: boolean;
+  currentUser: User;
 }
 
 const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: PostCardProps) => {
-  const isOwnPost = post.user._id === currentUser._id
+  const isOwnPost = post.user._id === currentUser._id;
 
   const handleDelete = () => {
     Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
@@ -23,8 +24,8 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
         style: "destructive",
         onPress: () => onDelete(post._id),
       },
-    ])
-  }
+    ]);
+  };
 
   return (
     <View className="bg-white">
@@ -60,7 +61,8 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
         </TouchableOpacity>
 
         <TouchableOpacity className="flex-row items-center space-x-2" onPress={() => onComment(post)}>
-          <MessageCircle size={22} color="#657786" />
+          {/* Use the new custom CommentIcon component */}
+          <CommentIcon size={22} color="#657786" />
           <Text className="text-gray-500 font-medium">{formatNumber(post.comments?.length || 0)} Comment</Text>
         </TouchableOpacity>
 
@@ -70,7 +72,7 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
         </TouchableOpacity>
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default PostCard
+export default PostCard;
