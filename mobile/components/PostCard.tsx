@@ -55,7 +55,7 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
       <View className="flex-row justify-around py-2 border-t border-gray-100 mt-2">
         <TouchableOpacity className="flex-row items-center space-x-2" onPress={() => onLike(post._id)}>
           <Heart size={22} color={isLiked ? "#E0245E" : "#657786"} fill={isLiked ? "#E0245E" : "none"} />
-          <Text className={`font-medium ${isLiked ? "text-red-500" : "text-gray-500"}`}>
+          <Text className={`font-medium ml-1 ${isLiked ? "text-red-500" : "text-gray-500"}`}>
             {formatNumber(post.likes?.length || 0)} Like
           </Text>
         </TouchableOpacity>
@@ -63,12 +63,12 @@ const PostCard = ({ currentUser, onDelete, onLike, post, isLiked, onComment }: P
         <TouchableOpacity className="flex-row items-center space-x-2" onPress={() => onComment(post)}>
           {/* Use the new custom CommentIcon component */}
           <CommentIcon size={22} color="#657786" />
-          <Text className="text-gray-500 font-medium">{formatNumber(post.comments?.length || 0)} Comment</Text>
+          <Text className="text-gray-500 font-medium ml-1">{formatNumber(post.comments?.length || 0)} Comment</Text>
         </TouchableOpacity>
 
         <TouchableOpacity className="flex-row items-center space-x-2">
           <Share2 size={22} color="#657786" />
-          <Text className="text-gray-500 font-medium">Share</Text>
+          <Text className="text-gray-500 font-medium ml-1">Share</Text>
         </TouchableOpacity>
       </View>
     </View>
