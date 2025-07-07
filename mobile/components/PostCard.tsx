@@ -156,7 +156,7 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
                 <Text key={index} className="text-lg" style={{ transform: [{translateX: -index * 4}]}}>{emoji}</Text>
               ))}
             </View>
-            <Text className="text-gray-500 text-base ml-2">{formatNumber(post.reactions.length)}</Text>
+            <Text className="text-gray-500 text-base ml-1">{formatNumber(post.reactions.length)}</Text>
           </View>
         )}
 
