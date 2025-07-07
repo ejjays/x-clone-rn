@@ -1,4 +1,3 @@
-// mobile/components/PostsList.tsx
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
@@ -8,16 +7,21 @@ import PostCardSkeleton from "./PostCardSkeleton";
 
 interface PostsListProps {
   username?: string;
-  onOpenComments?: (post: Post) => void;
+  onOpenComments?: (postId: string) => void;
 }
 
 const PostsList = ({ username, onOpenComments }: PostsListProps) => {
-  // --- FIX START ---
-  // We need to know when the user is loading, so we get `isUserLoading` here
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
-  const { posts, isLoading: isPostsLoading, error, refetch, toggleLike, deletePost, checkIsLiked } = usePosts(username);
+  const {
+    posts,
+    isLoading: isPostsLoading,
+    error,
+    refetch,
+    reactToPost,
+    deletePost,
+    getCurrentUserReaction,
+  } = usePosts(username);
 
-  // Show skeleton placeholders if EITHER posts are loading OR the user is loading.
   if (isPostsLoading || isUserLoading) {
     return (
       <View>
@@ -27,7 +31,6 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
       </View>
     );
   }
-  // --- FIX END ---
 
   if (error) {
     return (
@@ -40,7 +43,6 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
     );
   }
 
-  // This is a safety check. If for some reason the user isn't loaded, we don't render anything.
   if (!currentUser) {
     return null;
   }
@@ -59,13 +61,12 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
         <View key={post._id}>
           <PostCard
             post={post}
-            onLike={toggleLike}
+            reactToPost={reactToPost}
             onDelete={deletePost}
             onComment={onOpenComments || (() => {})}
             currentUser={currentUser}
-            isLiked={checkIsLiked(post.likes, currentUser)}
+            currentUserReaction={getCurrentUserReaction(post.reactions, currentUser)}
           />
-          {/* Thin divider between posts, but not after the last post */}
           {index < posts.length - 1 && <View className="h-1 bg-gray-200" />}
         </View>
       ))}

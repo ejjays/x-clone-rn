@@ -64,16 +64,16 @@ export const userApi = {
 export const postApi = {
   createPost: (api: AxiosInstance, data: { content: string; image?: string }) => api.post("/posts", data),
   getPosts: (api: AxiosInstance) => api.get("/posts"),
-  getPost: (api: AxiosInstance, postId: string) => api.get(`/posts/${postId}`), // NEW: Get single post
+  getPost: (api: AxiosInstance, postId: string) => api.get(`/posts/${postId}`),
   getUserPosts: (api: AxiosInstance, username: string) => api.get(`/posts/user/${username}`),
-  likePost: (api: AxiosInstance, postId: string) => api.post(`/posts/${postId}/like`),
+  reactToPost: (api: AxiosInstance, postId: string, reactionType: string) => api.post(`/posts/${postId}/react`, { reactionType }),
   deletePost: (api: AxiosInstance, postId: string) => api.delete(`/posts/${postId}`),
 }
 
 export const commentApi = {
   createComment: (api: AxiosInstance, postId: string, content: string) =>
     api.post(`/comments/post/${postId}`, { content }),
-  likeComment: (api: AxiosInstance, commentId: string) => api.post(`/comments/${commentId}/like`), // NEW: Like a comment
+  likeComment: (api: AxiosInstance, commentId: string) => api.post(`/comments/${commentId}/like`),
 }
 
 export const streamApi = {

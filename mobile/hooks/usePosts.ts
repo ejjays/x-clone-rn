@@ -1,7 +1,6 @@
-// mobile/hooks/usePosts.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient, postApi } from "../utils/api";
-import type { Post, User } from "@/types";
+import type { Post, User, Reaction } from "@/types";
 import { Alert } from "react-native";
 import { useCurrentUser } from "./useCurrentUser";
 
@@ -24,45 +23,47 @@ export const usePosts = (username?: string) => {
     },
   });
 
-  const toggleLikeMutation = useMutation({
-    mutationFn: (postId: string) => postApi.likePost(api, postId),
-    // THE FIX FOR INSTANT LIKES STARTS HERE
-    onMutate: async (postId: string) => {
+  const reactToPostMutation = useMutation({
+    mutationFn: ({ postId, reactionType }: { postId: string; reactionType: string }) =>
+      postApi.reactToPost(api, postId, reactionType),
+    onMutate: async ({ postId, reactionType }) => {
       if (!currentUser) return;
 
-      // 1. Cancel any outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey });
-
-      // 2. Snapshot the previous value
       const previousPosts = queryClient.getQueryData<Post[]>(queryKey);
 
-      // 3. Optimistically update to the new value
-      queryClient.setQueryData<Post[]>(queryKey, (oldPosts = []) => {
-        return oldPosts.map((post) => {
-          if (post._id === postId) {
-            // Check if user's ID is already in the likes array
-            const isLiked = post.likes.includes(currentUser._id);
-            // If it is, filter it out (unlike). If not, add it (like).
-            const newLikes = isLiked
-              ? post.likes.filter((id) => id !== currentUser._id)
-              : [...post.likes, currentUser._id];
-            return { ...post, likes: newLikes };
-          }
-          return post;
-        });
-      });
+      queryClient.setQueryData<Post[]>(queryKey, (oldPosts = []) =>
+        oldPosts.map((post) => {
+          if (post._id !== postId) return post;
 
-      // 4. Return a context object with the snapshotted value
+          const newReactions = [...post.reactions];
+          const existingReactionIndex = newReactions.findIndex((r) => r.user?._id === currentUser._id);
+
+          if (existingReactionIndex > -1) {
+            if (newReactions[existingReactionIndex].type === reactionType) {
+              newReactions.splice(existingReactionIndex, 1);
+            } else {
+              newReactions[existingReactionIndex].type = reactionType;
+            }
+          } else {
+            newReactions.push({
+              _id: new Date().toISOString(), // Temporary ID for optimistic update
+              user: currentUser,
+              type: reactionType,
+            } as Reaction);
+          }
+          return { ...post, reactions: newReactions };
+        })
+      );
+
       return { previousPosts };
     },
-    // If the mutation fails, use the context returned from onMutate to roll back
-    onError: (_err, _postId, context) => {
+    onError: (_err, _vars, context) => {
       if (context?.previousPosts) {
         queryClient.setQueryData(queryKey, context.previousPosts);
       }
-      Alert.alert("Error", "Could not update the post. Please try again.");
+      Alert.alert("Error", "Could not update reaction. Please try again.");
     },
-    // Always refetch after error or success to make sure our data is in sync
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
     },
@@ -79,9 +80,9 @@ export const usePosts = (username?: string) => {
     },
   });
 
-  const checkIsLiked = (likes: string[], currentUser: User | null | undefined) => {
-    if (!currentUser) return false;
-    return likes.includes(currentUser._id);
+  const getCurrentUserReaction = (reactions: Reaction[], currentUser: User | null | undefined) => {
+    if (!currentUser) return null;
+    return reactions.find((r) => r.user?._id === currentUser._id) || null;
   };
 
   return {
@@ -89,8 +90,8 @@ export const usePosts = (username?: string) => {
     isLoading,
     error,
     refetch,
-    toggleLike: toggleLikeMutation.mutate,
+    reactToPost: reactToPostMutation.mutate,
     deletePost: deletePostMutation.mutate,
-    checkIsLiked,
+    getCurrentUserReaction,
   };
 };

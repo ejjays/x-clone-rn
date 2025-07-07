@@ -7,9 +7,9 @@ import cloudinary from "../config/cloudinary.js";
 import Notification from "../models/notification.model.js";
 import Comment from "../models/comment.model.js";
 
-export const getPosts = asyncHandler(async (req, res) => {
-  const posts = await Post.find()
-    .sort({ createdAt: -1 })
+// --- HELPER TO POPULATE POSTS ---
+const populatePost = (query) =>
+  query
     .populate("user", "username firstName lastName profilePicture")
     .populate({
       path: "comments",
@@ -17,50 +17,34 @@ export const getPosts = asyncHandler(async (req, res) => {
         path: "user",
         select: "username firstName lastName profilePicture",
       },
+    })
+    .populate({
+      path: "reactions.user",
+      select: "username firstName lastName profilePicture",
     });
 
+// --- CONTROLLERS ---
+export const getPosts = asyncHandler(async (req, res) => {
+  const posts = await populatePost(Post.find().sort({ createdAt: -1 }));
   res.status(200).json({ posts });
 });
 
 export const getPost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
-
-  const post = await Post.findById(postId)
-    .populate("user", "username firstName lastName profilePicture")
-    .populate({
-      path: "comments",
-      populate: {
-        path: "user",
-        select: "username firstName lastName profilePicture",
-      },
-    });
-
+  const post = await populatePost(Post.findById(postId));
   if (!post) {
     return res.status(404).json({ error: "Post not found" });
   }
-
   res.status(200).json({ post });
 });
 
 export const getUserPosts = asyncHandler(async (req, res) => {
   const { username } = req.params;
-
   const user = await User.findOne({ username });
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
-
-  const posts = await Post.find({ user: user._id })
-    .sort({ createdAt: -1 })
-    .populate("user", "username firstName lastName profilePicture")
-    .populate({
-      path: "comments",
-      populate: {
-        path: "user",
-        select: "username firstName lastName profilePicture",
-      },
-    });
-
+  const posts = await populatePost(Post.find({ user: user._id }).sort({ createdAt: -1 }));
   res.status(200).json({ posts });
 });
 
@@ -70,9 +54,7 @@ export const createPost = asyncHandler(async (req, res) => {
   const imageFile = req.file;
 
   if (!content && !imageFile) {
-    return res
-      .status(400)
-      .json({ error: "Post must contain either text or image" });
+    return res.status(400).json({ error: "Post must contain either text or image" });
   }
 
   const user = await User.findOne({ clerkId: userId });
@@ -84,18 +66,11 @@ export const createPost = asyncHandler(async (req, res) => {
 
   if (imageFile) {
     try {
-      const base64Image = `data:${imageFile.mimetype};base64,${imageFile.buffer.toString(
-        "base64"
-      )}`;
-
+      const base64Image = `data:${imageFile.mimetype};base64,${imageFile.buffer.toString("base64")}`;
       const uploadResponse = await cloudinary.uploader.upload(base64Image, {
         folder: "social_media_posts",
         resource_type: "image",
-        transformation: [
-          { width: 800, height: 600, crop: "limit" },
-          { quality: "auto" },
-          { format: "auto" },
-        ],
+        transformation: [{ width: 800, height: 600, crop: "limit" }, { quality: "auto" }, { format: "auto" }],
       });
       imageUrl = uploadResponse.secure_url;
     } catch (uploadError) {
@@ -110,65 +85,56 @@ export const createPost = asyncHandler(async (req, res) => {
     image: imageUrl,
   });
 
-  const populatedPost = await Post.findById(newPost._id).populate(
-    "user",
-    "username firstName lastName profilePicture"
-  );
-
-  // Trigger Pusher event
-  // await req.pusher.trigger("posts-channel", "new-post", populatedPost);
-
+  const populatedPost = await populatePost(Post.findById(newPost._id));
   res.status(201).json({ post: populatedPost });
 });
 
-export const likePost = asyncHandler(async (req, res) => {
+export const reactToPost = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { postId } = req.params;
+  const { reactionType } = req.body;
+
+  const allowedReactions = ["like", "love", "haha", "wow", "sad", "angry"];
+  if (!reactionType || !allowedReactions.includes(reactionType)) {
+    return res.status(400).json({ error: "Invalid reaction type" });
+  }
 
   const user = await User.findOne({ clerkId: userId });
-  let post = await Post.findById(postId);
+  const post = await Post.findById(postId);
 
   if (!user || !post) {
     return res.status(404).json({ error: "User or post not found" });
   }
 
-  const isLiked = post.likes.includes(user._id);
+  const existingReactionIndex = post.reactions.findIndex((reaction) => reaction.user.toString() === user._id.toString());
 
-  if (isLiked) {
-    await Post.findByIdAndUpdate(postId, {
-      $pull: { likes: user._id },
-    });
+  if (existingReactionIndex > -1) {
+    if (post.reactions[existingReactionIndex].type === reactionType) {
+      // User is removing their reaction
+      post.reactions.splice(existingReactionIndex, 1);
+    } else {
+      // User is changing their reaction
+      post.reactions[existingReactionIndex].type = reactionType;
+    }
   } else {
-    await Post.findByIdAndUpdate(postId, {
-      $push: { likes: user._id },
-    });
-
+    // User is adding a new reaction
+    post.reactions.push({ user: user._id, type: reactionType });
+    // Create notification only for new reactions and not on own post
     if (post.user.toString() !== user._id.toString()) {
       await Notification.create({
         from: user._id,
         to: post.user,
-        type: "like",
+        type: "like", // Re-using 'like' for any reaction notification
         post: postId,
       });
     }
   }
 
-  const updatedPost = await Post.findById(postId)
-    .populate("user", "username firstName lastName profilePicture")
-    .populate({
-      path: "comments",
-      populate: {
-        path: "user",
-        select: "username firstName lastName profilePicture",
-      },
-    });
-      
-  // Trigger Pusher event
-  // await req.pusher.trigger("posts-channel", "post-liked", updatedPost);
+  await post.save();
 
-  res.status(200).json({
-    message: isLiked ? "Post unliked successfully" : "Post liked successfully",
-  });
+  const updatedPost = await populatePost(Post.findById(postId));
+
+  res.status(200).json({ post: updatedPost, message: "Reaction updated successfully" });
 });
 
 export const deletePost = asyncHandler(async (req, res) => {
@@ -183,16 +149,11 @@ export const deletePost = asyncHandler(async (req, res) => {
   }
 
   if (post.user.toString() !== user._id.toString()) {
-    return res
-      .status(403)
-      .json({ error: "You can only delete your own posts" });
+    return res.status(403).json({ error: "You can only delete your own posts" });
   }
 
   await Comment.deleteMany({ post: postId });
   await Post.findByIdAndDelete(postId);
-
-  // Trigger Pusher event
-  // await req.pusher.trigger("posts-channel", "post-deleted", postId);
 
   res.status(200).json({ message: "Post deleted successfully" });
 });

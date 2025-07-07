@@ -1,5 +1,18 @@
 import mongoose from "mongoose";
 
+const reactionSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  type: {
+    type: String,
+    required: true,
+    enum: ["like", "love", "haha", "wow", "sad", "angry"],
+  },
+});
+
 const postSchema = new mongoose.Schema(
   {
     user: {
@@ -15,12 +28,7 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    likes: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    reactions: [reactionSchema], // Replaces the 'likes' array
     comments: [
       {
         type: mongoose.Schema.Types.ObjectId,
