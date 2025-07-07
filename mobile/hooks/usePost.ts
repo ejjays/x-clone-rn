@@ -1,44 +1,82 @@
 // mobile/hooks/usePost.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPost, createComment as createCommentApi, likeComment as apiLikeComment } from "@/utils/api";
-import { router } from "expo-router";
+import { useApiClient, postApi, commentApi } from "../utils/api";
+import type { Post, User } from "@/types";
+import { useCurrentUser } from "./useCurrentUser";
 
 export const usePost = (postId: string) => {
+  const api = useApiClient();
   const queryClient = useQueryClient();
+  const { currentUser } = useCurrentUser();
+
+  const queryKey = ["post", postId];
 
   const {
     data: post,
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["post", postId],
-    queryFn: () => getPost(postId),
+  } = useQuery<Post>({
+    queryKey,
+    queryFn: async () => {
+      const response = await postApi.getPost(api, postId);
+      return response.data.post;
+    },
     enabled: !!postId,
   });
 
   const createCommentMutation = useMutation({
-    mutationFn: (commentText: string) => createCommentApi(postId, commentText),
-    onSuccess: () => {
-      // Refreshes the single post details page
-      queryClient.invalidateQueries({ queryKey: ["post", postId] });
-      // THE FIX: This also tells the main feed to refresh
+    mutationFn: (content: string) => commentApi.createComment(api, postId, content),
+    onSuccess: (response) => {
+      // THE REAL-TIME FIX: Invalidate the main 'posts' list to update comment counts everywhere
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+
+      // This part optimistically updates the current screen so you see your comment instantly
+      const newComment = response.data.comment;
+      queryClient.setQueryData(queryKey, (oldData: Post | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          comments: [newComment, ...(oldData.comments || [])],
+        };
+      });
     },
-    onError: (error) => {
-      console.error("Failed to create comment:", error);
-    }
   });
 
   const likeCommentMutation = useMutation({
-    mutationFn: (commentId: string) => apiLikeComment(commentId),
-    onSuccess: () => {
-        // Refreshes the single post details page to show comment like
-        queryClient.invalidateQueries({ queryKey: ["post", postId] });
+    mutationFn: (commentId: string) => commentApi.likeComment(api, commentId),
+    onMutate: async (commentId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousPost = queryClient.getQueryData<Post>(queryKey);
+
+      if (!currentUser) {
+        return { previousPost };
+      }
+
+      queryClient.setQueryData<Post>(queryKey, (oldPost) => {
+        if (!oldPost) return undefined;
+        return {
+          ...oldPost,
+          comments: oldPost.comments.map((c) => {
+            if (c._id === commentId) {
+              const isLiked = c.likes.includes(currentUser._id);
+              const newLikes = isLiked
+                ? c.likes.filter((id) => id !== currentUser._id)
+                : [...c.likes, currentUser._id];
+              return { ...c, likes: newLikes };
+            }
+            return c;
+          }),
+        };
+      });
+      return { previousPost };
     },
-    onError: (error) => {
-        console.error("Failed to like comment:", error);
-    }
+    onError: (_err, _commentId, context) => {
+      queryClient.setQueryData(queryKey, context?.previousPost);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
   });
 
   return {

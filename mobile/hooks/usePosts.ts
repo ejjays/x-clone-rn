@@ -1,60 +1,67 @@
 // mobile/hooks/usePosts.ts
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPosts, likePost as apiLikePost, unlikePost as apiUnlikePost } from "@/utils/api";
-import { useCurrentUser } from "./useCurrentUser";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useApiClient, postApi } from "../utils/api";
+import type { Post, User } from "@/types";
+import { Alert } from "react-native";
 
-export const usePosts = () => {
+export const usePosts = (username?: string) => {
+  const api = useApiClient();
   const queryClient = useQueryClient();
-  const { currentUser } = useCurrentUser();
+  // This queryKey logic allows the hook to fetch all posts OR just a specific user's posts
+  const queryKey = username ? ["posts", username] : ["posts"];
 
+  // Reverted back to useQuery to correctly fetch posts
   const {
-    data,
+    data: posts,
     isLoading,
-    isError,
-    fetchNextPage,
-    hasNextPage,
+    error,
     refetch,
-    isRefetching,
-  } = useInfiniteQuery({
-    queryKey: ["posts"],
-    queryFn: ({ pageParam = 1 }) => getPosts(pageParam),
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.hasNextPage ? allPages.length + 1 : undefined;
+  } = useQuery<Post[]>({
+    queryKey,
+    queryFn: async () => {
+      const response = username ? await postApi.getUserPosts(api, username) : await postApi.getPosts(api);
+      return response.data.posts;
     },
-    initialPageParam: 1, // Add this line
   });
 
-  const likePostMutation = useMutation({
-    mutationFn: apiLikePost,
+  // This handles liking/unliking a post
+  const toggleLikeMutation = useMutation({
+    mutationFn: (postId: string) => postApi.likePost(api, postId),
+    // THE REAL-TIME FIX: After a like succeeds, invalidate the ['posts'] query to refetch data
     onSuccess: () => {
-      // THE FIX: This tells the feed to refresh after a like.
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey });
     },
-    onError: (error) => {
-      console.error("Failed to like post:", error);
-    }
+    onError: (err) => {
+      console.error("Like error:", err);
+      Alert.alert("Error", "Could not like the post.");
+    },
   });
 
-  const unlikePostMutation = useMutation({
-    mutationFn: apiUnlikePost,
+  // This handles deleting a post
+  const deletePostMutation = useMutation({
+    mutationFn: (postId: string) => postApi.deletePost(api, postId),
     onSuccess: () => {
-      // THE FIX: This tells the feed to refresh after an unlike.
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey });
     },
-    onError: (error) => {
-      console.error("Failed to unlike post:", error);
-    }
+    onError: (err) => {
+      console.error("Delete error:", err);
+      Alert.alert("Error", "Could not delete the post.");
+    },
   });
+
+  // This helper function checks if the current user has liked a post
+  const checkIsLiked = (likes: string[], currentUser: User | null | undefined) => {
+    if (!currentUser) return false;
+    return likes.includes(currentUser._id);
+  };
 
   return {
-    posts: data?.pages.flatMap((page) => page.posts) ?? [],
+    posts: posts || [],
     isLoading,
-    isError,
-    fetchNextPage,
-    hasNextPage,
+    error,
     refetch,
-    isRefetching,
-    likePost: likePostMutation.mutate,
-    unlikePost: unlikePostMutation.mutate,
+    toggleLike: toggleLikeMutation.mutate,
+    deletePost: deletePostMutation.mutate,
+    checkIsLiked,
   };
 };
