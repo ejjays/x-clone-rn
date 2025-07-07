@@ -91,7 +91,6 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
       const text = reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
       const colorClass = reactionTextColor[reactionType] || 'text-gray-500';
 
-      // If the reaction is 'like', use the custom SVG icon instead of the emoji
       if (reactionType === 'like') {
         return (
           <View className="flex-row items-center">
@@ -103,7 +102,6 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
         );
       }
       
-      // For all other reactions, show the emoji
       return (
         <View className="flex-row items-center">
           <Text className="text-xl">{emoji}</Text>
@@ -114,7 +112,6 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
       );
     }
     
-    // Default state: No reaction from user
     return (
       <View className="flex-row items-center">
         <LikeIcon size={22} color="#657786" />
@@ -148,19 +145,33 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
         {/* Post Image */}
         {post.image && <Image source={{ uri: post.image }} className="w-full h-72" resizeMode="cover" />}
         
-        {/* Reactions Count */}
-        {post.reactions.length > 0 && (
-          <View className="flex-row items-center px-4 pt-3 pb-1">
-            <View className="flex-row">
-              {topReactions.map((emoji, index) => (
-                <Text key={index} className="text-lg" style={{ transform: [{translateX: -index * 4}]}}>{emoji}</Text>
-              ))}
-            </View>
-            <Text className="text-gray-500 text-base ml-1">{formatNumber(post.reactions.length)}</Text>
+        {/* Reactions and Comments Count */}
+        {(post.reactions.length > 0 || post.comments.length > 0) && (
+          <View className="flex-row justify-between items-center px-4 pt-3 pb-1">
+            {/* Left side: Reactions */}
+            {post.reactions.length > 0 ? (
+              <View className="flex-row items-center">
+                <View className="flex-row">
+                  {topReactions.map((emoji, index) => (
+                    <Text key={index} className="text-lg" style={{ transform: [{translateX: -index * 4}]}}>{emoji}</Text>
+                  ))}
+                </View>
+                <Text className="text-gray-500 text-base ml-2">{formatNumber(post.reactions.length)}</Text>
+              </View>
+            ) : (
+                <View /> 
+            )}
+
+            {/* Right side: Comments Count */}
+            {post.comments.length > 0 && (
+              <Text className="text-gray-500 text-base">
+                {formatNumber(post.comments.length)} {post.comments.length === 1 ? 'comment' : 'comments'}
+              </Text>
+            )}
           </View>
         )}
 
-        {/* Post Actions with updated spacing */}
+        {/* Post Actions */}
         <View className="flex-row justify-around py-1 border-t border-gray-100 mt-2">
           <Pressable
             ref={likeButtonRef}
