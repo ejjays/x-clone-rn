@@ -13,7 +13,7 @@ import {
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ArrowLeft, Send } from "lucide-react-native"
-import { usePost } from "@/hooks/usePost"
+import { usePost } from "@/hooks/usePosts" // Changed from usePost to usePosts
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import PostCard from "@/components/PostCard"
 import CommentCard from "@/components/CommentCard"
