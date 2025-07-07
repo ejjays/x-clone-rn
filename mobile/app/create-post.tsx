@@ -6,7 +6,6 @@ import { Image as ImageIcon, Send, Trash, X } from "lucide-react-native"
 import {
   View,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   TextInput,
@@ -15,14 +14,17 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from "react-native"
+// This is the new import that will help us fix the overlap
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 const CreatePostScreen = () => {
   const { currentUser } = useCurrentUser()
   const { content, setContent, selectedImage, isCreating, pickImageFromGallery, removeImage, createPost } =
     useCreatePost()
+  // We get the device's safe area dimensions here
+  const insets = useSafeAreaInsets()
 
   const handleCreatePost = () => {
-    // We pass a callback to the createPost function to handle navigation on success
     createPost(() => {
       router.back()
     })
@@ -31,11 +33,13 @@ const CreatePostScreen = () => {
   const isPostButtonDisabled = (!content.trim() && !selectedImage) || isCreating
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    // We replaced SafeAreaView with a standard View
+    <View className="flex-1 bg-white">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -150}
+        // And apply the top and bottom padding here. This is the main fix!
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
@@ -56,7 +60,7 @@ const CreatePostScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="flex-1">
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
           <View className="p-4">
             {/* User Info */}
             <View className="flex-row items-center mb-4">
@@ -107,7 +111,7 @@ const CreatePostScreen = () => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   )
 }
 
