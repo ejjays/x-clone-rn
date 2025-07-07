@@ -94,9 +94,9 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
       // If the reaction is 'like', use the custom SVG icon instead of the emoji
       if (reactionType === 'like') {
         return (
-          <View className="flex-row items-center space-x-2">
+          <View className="flex-row items-center">
             <LikeIcon size={22} color="#1877F2" />
-            <Text className={`font-semibold capitalize ${colorClass}`}>
+            <Text className={`font-semibold capitalize ml-1.5 ${colorClass}`}>
               {text}
             </Text>
           </View>
@@ -105,9 +105,9 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
       
       // For all other reactions, show the emoji
       return (
-        <View className="flex-row items-center space-x-2">
+        <View className="flex-row items-center">
           <Text className="text-xl">{emoji}</Text>
-          <Text className={`font-semibold capitalize ${colorClass}`}>
+          <Text className={`font-semibold capitalize ml-1.5 ${colorClass}`}>
             {text}
           </Text>
         </View>
@@ -116,9 +116,9 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
     
     // Default state: No reaction from user
     return (
-      <View className="flex-row items-center space-x-2">
+      <View className="flex-row items-center">
         <LikeIcon size={22} color="#657786" />
-        <Text className="text-gray-500 font-semibold">Like</Text>
+        <Text className="text-gray-500 font-semibold ml-1.5">Like</Text>
       </View>
     );
   };
@@ -171,14 +171,14 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
             <ReactionButton />
           </Pressable>
 
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center space-x-2 py-2.5" onPress={() => onComment(post._id)}>
+          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5" onPress={() => onComment(post._id)}>
             <CommentIcon size={22} color="#657786" />
-            <Text className="text-gray-500 font-semibold">Comment</Text>
+            <Text className="text-gray-500 font-semibold ml-1.5">Comment</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center space-x-2 py-2.5">
+          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
             <ShareIcon size={22} color="#657786" />
-            <Text className="text-gray-500 font-semibold">Share</Text>
+            <Text className="text-gray-500 font-semibold ml-1.5">Share</Text>
           </TouchableOpacity>
         </View>
       </View>
