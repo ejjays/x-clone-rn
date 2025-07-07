@@ -1,94 +1,29 @@
-import { useCreatePost } from "@/hooks/useCreatePost";
-import { useUser } from "@clerk/clerk-expo";
-import { Image as ImageIcon, Send, X } from "lucide-react-native"; // Replaced Feather
-import { useState } from "react";
-import {
-  View,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+// mobile/components/PostComposer.tsx
+import { useUser } from "@clerk/clerk-expo"
+import { router } from "expo-router"
+import { Image as ImageIcon } from "lucide-react-native"
+import { View, Image, Text, TouchableOpacity } from "react-native"
 
 const PostComposer = () => {
-  const { user } = useUser();
-  const [isTextInputFocused, setIsTextInputFocused] = useState(false);
-
-  // --- We are bringing back the hook that contains all our logic ---
-  const {
-    content,
-    setContent,
-    selectedImage,
-    isCreating,
-    pickImageFromGallery,
-    removeImage,
-    createPost,
-  } = useCreatePost();
-  // ----------------------------------------------------------------
-
-  // A wrapper function to handle the post creation and reset focus
-  const handleCreatePost = () => {
-    createPost();
-    setIsTextInputFocused(false);
-  };
+  const { user } = useUser()
 
   return (
     <View className="p-4 bg-white">
       <View className="flex-row items-center">
-        <Image
-          source={{ uri: user?.imageUrl }}
-          className="w-10 h-10 rounded-full mr-3"
-        />
-        <View className="flex-1 bg-gray-100 rounded-full px-4 py-2">
-          <TextInput
-            placeholder="What's on your mind?"
-            placeholderTextColor="#657786"
-            className="text-base"
-            // --- Connecting the TextInput to our hook's state ---
-            value={content}
-            onChangeText={setContent}
-            onFocus={() => setIsTextInputFocused(true)}
-            // We don't use onBlur, so focus stays until post is sent or user taps away
-            multiline
-          />
-        </View>
-
-        {/* --- This is our new, intelligent button --- */}
+        <Image source={{ uri: user?.imageUrl }} className="w-10 h-10 rounded-full mr-3" />
         <TouchableOpacity
-          className="ml-4"
-          // If the input is focused, the button calls 'handleCreatePost'.
-          // Otherwise, it calls 'pickImageFromGallery'.
-          onPress={isTextInputFocused ? handleCreatePost : pickImageFromGallery}
-          disabled={isCreating}
+          onPress={() => router.push("/create-post")}
+          className="flex-1 bg-gray-100 rounded-full px-4 py-3"
+          activeOpacity={0.7}
         >
-          {isCreating ? (
-            <ActivityIndicator size="small" />
-          ) : isTextInputFocused ? (
-            <Send size={24} color={"#1877F2"} />
-          ) : (
-            <ImageIcon size={24} color={"#4CAF50"} />
-          )}
+          <Text className="text-base text-gray-500">What's on your mind?</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/create-post")} className="ml-4">
+          <ImageIcon size={24} color={"#4CAF50"} />
         </TouchableOpacity>
       </View>
-
-      {/* --- Restoring the image preview section --- */}
-      {selectedImage && (
-        <View className="mt-4 relative">
-          <Image
-            source={{ uri: selectedImage }}
-            className="w-full h-48 rounded-lg"
-            resizeMode="cover"
-          />
-          <TouchableOpacity
-            className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-full"
-            onPress={removeImage}
-          >
-            <X size={18} color="white" />
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
-  );
-};
+  )
+}
 
-export default PostComposer;
+export default PostComposer
