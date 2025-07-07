@@ -1,5 +1,5 @@
 // mobile/app/post/[postId].tsx
-import { useLocalSearchParams, router } from "expo-router"
+import { useLocalSearchParams, router } from "expo-router";
 import {
   View,
   Text,
@@ -10,37 +10,47 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-} from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { ArrowLeft, Send } from "lucide-react-native"
-import { usePost } from "@/hooks/usePosts" // Changed from usePost to usePosts
-import { useCurrentUser } from "@/hooks/useCurrentUser"
-import PostCard from "@/components/PostCard"
-import CommentCard from "@/components/CommentCard"
-import { useState } from "react"
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ArrowLeft, Send } from "lucide-react-native";
+import { usePost } from "@/hooks/usePost"; // Corrected import path
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import PostCard from "@/components/PostCard";
+import CommentCard from "@/components/CommentCard";
+import { useState } from "react";
 
 const PostDetailsScreen = () => {
-  const { postId } = useLocalSearchParams<{ postId: string }>()
-  const insets = useSafeAreaInsets()
-  const { post, isLoading, error, refetch, createComment, isCreatingComment, likeComment } = usePost(postId)
-  const { currentUser } = useCurrentUser()
-  const [commentText, setCommentText] = useState("")
+  const { postId } = useLocalSearchParams<{ postId: string }>();
+  if (!postId) {
+    // Handle the case where postId is not available
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text>Post not found.</Text>
+      </View>
+    );
+  }
+
+  const insets = useSafeAreaInsets();
+  const { post, isLoading, error, refetch, createComment, isCreatingComment, likeComment } = usePost(postId);
+  const { currentUser } = useCurrentUser();
+  const [commentText, setCommentText] = useState("");
 
   const handleCreateComment = () => {
-    if (!commentText.trim()) return
+    if (!commentText.trim() || !createComment) return;
+    // @ts-ignore
     createComment(commentText.trim(), {
       onSuccess: () => {
-        setCommentText("") // Clear input after successful post
+        setCommentText(""); // Clear input after successful post
       },
-    })
-  }
+    });
+  };
 
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color="#1877F2" />
       </View>
-    )
+    );
   }
 
   if (error || !post) {
@@ -51,11 +61,11 @@ const PostDetailsScreen = () => {
           <Text className="text-white font-semibold">Try Again</Text>
         </TouchableOpacity>
       </View>
-    )
+    );
   }
 
   // A non-functional callback to prevent interactions on the main post card
-  const noOp = () => {}
+  const noOp = () => {};
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
@@ -76,7 +86,6 @@ const PostDetailsScreen = () => {
           className="flex-1"
           contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, flexGrow: 1 }}
           ListHeaderComponent={
-            // Render the main post at the top of the comment list
             <View className="mb-4 border-b border-gray-200 pb-4">
               <PostCard
                 post={post}
@@ -96,7 +105,6 @@ const PostDetailsScreen = () => {
           }
         />
 
-        {/* Comment Input Footer */}
         <View
           className="bg-white border-t border-gray-200"
           style={{ paddingBottom: insets.bottom === 0 ? 16 : insets.bottom, paddingTop: 16 }}
@@ -131,7 +139,7 @@ const PostDetailsScreen = () => {
         </View>
       </KeyboardAvoidingView>
     </View>
-  )
-}
+  );
+};
 
-export default PostDetailsScreen
+export default PostDetailsScreen;

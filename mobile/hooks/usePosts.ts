@@ -1,82 +1,61 @@
-// mobile/hooks/usePost.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useApiClient, postApi, commentApi } from "../utils/api"
-import type { Comment, Post } from "@/types"
+// mobile/hooks/usePosts.ts
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useApiClient, postApi } from "../utils/api";
+import type { Post, User } from "@/types";
+import { Alert } from "react-native";
 
-export const usePost = (postId: string) => {
-  const api = useApiClient()
-  const queryClient = useQueryClient()
-
-  const queryKey = ["post", postId]
+export const usePosts = (username?: string) => {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  const queryKey = username ? ["posts", username] : ["posts"];
 
   const {
-    data: post,
+    data: posts,
     isLoading,
     error,
     refetch,
-  } = useQuery<Post>({
+  } = useQuery<Post[]>({
     queryKey,
     queryFn: async () => {
-      const response = await postApi.getPost(api, postId)
-      return response.data.post
+      const response = username ? await postApi.getUserPosts(api, username) : await postApi.getPosts(api);
+      return response.data.posts;
     },
-    enabled: !!postId, // Only run the query if postId is available
-  })
+  });
 
-  const createCommentMutation = useMutation({
-    mutationFn: (content: string) => commentApi.createComment(api, postId, content),
-    onSuccess: (response) => {
-      const newComment = response.data.comment
-      queryClient.setQueryData(queryKey, (oldData: Post | undefined) => {
-        if (!oldData) return oldData
-        return {
-          ...oldData,
-          comments: [newComment, ...oldData.comments],
-        }
-      })
+  const toggleLikeMutation = useMutation({
+    mutationFn: (postId: string) => postApi.likePost(api, postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
-  })
+    onError: (err) => {
+      console.error("Like error:", err);
+      Alert.alert("Error", "Could not like the post.");
+    },
+  });
 
-  const likeCommentMutation = useMutation({
-    mutationFn: (commentId: string) => commentApi.likeComment(api, commentId),
-    onMutate: async (commentId) => {
-      await queryClient.cancelQueries({ queryKey })
-      const previousPost = queryClient.getQueryData<Post>(queryKey)
-      const currentUser = queryClient.getQueryData<any>(["authUser"])
+  const deletePostMutation = useMutation({
+    mutationFn: (postId: string) => postApi.deletePost(api, postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err) => {
+      console.error("Delete error:", err);
+      Alert.alert("Error", "Could not delete the post.");
+    },
+  });
 
-      queryClient.setQueryData<Post>(queryKey, (oldPost) => {
-        if (!oldPost) return undefined
-        return {
-          ...oldPost,
-          comments: oldPost.comments.map((c) => {
-            if (c._id === commentId) {
-              const isLiked = c.likes.includes(currentUser._id)
-              const newLikes = isLiked
-                ? c.likes.filter((id) => id !== currentUser._id)
-                : [...c.likes, currentUser._id]
-              return { ...c, likes: newLikes }
-            }
-            return c
-          }),
-        }
-      })
-      return { previousPost }
-    },
-    onError: (_err, _commentId, context) => {
-      queryClient.setQueryData(queryKey, context?.previousPost)
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey })
-    },
-  })
+  const checkIsLiked = (likes: string[], currentUser: User | null | undefined) => {
+    if (!currentUser) return false;
+    return likes.includes(currentUser._id);
+  };
 
   return {
-    post,
+    posts: posts || [],
     isLoading,
     error,
     refetch,
-    createComment: createCommentMutation.mutate,
-    isCreatingComment: createCommentMutation.isPending,
-    likeComment: likeCommentMutation.mutate,
-  }
-}
+    toggleLike: toggleLikeMutation.mutate,
+    deletePost: deletePostMutation.mutate,
+    checkIsLiked,
+  };
+};
