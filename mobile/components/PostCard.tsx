@@ -147,7 +147,7 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
         
         {/* Reactions and Comments Count */}
         {(post.reactions.length > 0 || post.comments.length > 0) && (
-          <View className="flex-row justify-between items-center px-4 py-2">
+          <View className="flex-row justify-between items-center px-4 py-0.5">
             {/* Left side: Reactions */}
             {post.reactions.length > 0 ? (
               <View className="flex-row items-center">
