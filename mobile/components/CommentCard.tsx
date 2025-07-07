@@ -1,35 +1,42 @@
-import type { Comment } from "@/types"
-import { formatDate } from "@/utils/formatters"
-import { Heart } from "lucide-react-native" // Replaced Feather
+// mobile/components/CommentCard.tsx
+import type { Comment, User } from "@/types"
+import { formatDate, formatNumber } from "@/utils/formatters"
+import { Heart } from "lucide-react-native"
 import { View, Text, Image, TouchableOpacity } from "react-native"
 
 interface CommentCardProps {
   comment: Comment
+  currentUser: User | undefined
+  onLike: (commentId: string) => void
 }
 
-const CommentCard = ({ comment }: CommentCardProps) => {
+const CommentCard = ({ comment, currentUser, onLike }: CommentCardProps) => {
+  const isLiked = currentUser ? comment.likes.includes(currentUser._id) : false
+
   return (
-    <View className="flex-row items-start space-x-3 mb-6">
-      <Image source={{ uri: comment.user.profilePicture }} className="w-10 h-10 rounded-full" />
+    <View className="flex-row items-start space-x-3 mb-4">
+      <Image
+        source={{ uri: comment.user.profilePicture || `https://ui-avatars.com/api/?name=${comment.user.firstName}` }}
+        className="w-10 h-10 rounded-full"
+      />
       <View className="flex-1">
-        <View className="bg-white rounded-2xl px-4 py-3 shadow-sm">
-          <View className="flex-row items-center space-x-2 mb-1">
-            <Text className="font-semibold text-gray-900 text-sm">
+        <View className="bg-gray-100 rounded-2xl px-4 py-2.5">
+          <View className="flex-row items-baseline space-x-2">
+            <Text className="font-semibold text-gray-900 text-base leading-tight">
               {comment.user.firstName} {comment.user.lastName}
             </Text>
             <Text className="text-gray-500 text-xs">@{comment.user.username}</Text>
           </View>
-          <Text className="text-gray-800 text-base leading-5">{comment.content}</Text>
+          <Text className="text-gray-800 text-base leading-6 mt-1">{comment.content}</Text>
         </View>
 
-        <View className="flex-row items-center space-x-6 mt-2 px-4">
+        <View className="flex-row items-center space-x-4 mt-1.5 px-3">
           <Text className="text-xs text-gray-500">{formatDate(comment.createdAt)}</Text>
-          <TouchableOpacity className="flex-row items-center space-x-1">
-            <Heart size={14} color="#9CA3AF" />
-            <Text className="text-xs text-gray-500 font-medium">Like</Text>
+          <TouchableOpacity onPress={() => onLike(comment._id)}>
+            <Text className={`font-bold text-xs ${isLiked ? "text-blue-500" : "text-gray-600"}`}>Like</Text>
           </TouchableOpacity>
-          <TouchableOpacity>
-            <Text className="text-xs text-gray-500 font-medium">Reply</Text>
+          <TouchableOpacity onPress={() => console.log("Reply to comment:", comment._id)}>
+            <Text className="font-bold text-xs text-gray-600">Reply</Text>
           </TouchableOpacity>
         </View>
       </View>
