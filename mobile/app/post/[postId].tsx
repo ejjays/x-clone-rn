@@ -10,6 +10,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Send, Heart, Trash } from "lucide-react-native";
@@ -25,7 +26,7 @@ const PostDetailsScreen = () => {
   const { postId } = useLocalSearchParams<{ postId: string }>();
   if (!postId) {
     return (
-      <View className="flex-1 items-center justify-center">
+      <View style={styles.containerCenter}>
         <Text>Post not found.</Text>
       </View>
     );
@@ -46,9 +47,11 @@ const PostDetailsScreen = () => {
     });
   };
 
+  const HEADER_HEIGHT = 60; // Approximate header height
+
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View style={styles.containerCenter}>
         <ActivityIndicator size="large" color="#1877F2" />
       </View>
     );
@@ -56,7 +59,7 @@ const PostDetailsScreen = () => {
 
   if (error || !post) {
     return (
-      <View className="flex-1 items-center justify-center bg-white p-4">
+      <View style={styles.containerCenter}>
         <Text className="text-red-500 mb-4">Could not load post.</Text>
         <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded-lg" onPress={() => refetch()}>
           <Text className="text-white font-semibold">Try Again</Text>
@@ -78,18 +81,21 @@ const PostDetailsScreen = () => {
         <Text className="text-xl font-bold text-gray-900 ml-4">{post.user.firstName}'s Post</Text>
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.flex1}
+        keyboardVerticalOffset={HEADER_HEIGHT + insets.top}
+      >
         <FlatList
           data={post.comments}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => <CommentCard comment={item} currentUser={currentUser} onLike={likeComment} />}
           showsVerticalScrollIndicator={false}
           className="flex-1"
-          contentContainerStyle={{ paddingTop: 16, flexGrow: 1 }}
+          contentContainerStyle={styles.listContentContainer}
           ListHeaderComponent={
             <View className="mb-4 border-b border-gray-200 pb-4">
               {/* --- POST HEADER --- */}
-              {/* I've reduced the top padding here from pt-3 to pt-2 */}
               <View className="flex-row px-4 pt-2 pb-2 items-center">
                 <Image source={{ uri: post.user.profilePicture || "" }} className="w-12 h-12 rounded-full mr-3" />
                 <View className="flex-1">
@@ -131,7 +137,7 @@ const PostDetailsScreen = () => {
             </View>
           }
           ListEmptyComponent={
-            <View className="items-center justify-center py-10">
+            <View style={styles.containerCenter}>
               <Text className="text-gray-500">No comments yet.</Text>
               <Text className="text-gray-400 text-sm">Be the first to comment!</Text>
             </View>
@@ -141,7 +147,7 @@ const PostDetailsScreen = () => {
         {/* Comment Input Footer */}
         <View
           className="bg-white border-t border-gray-200"
-          style={{ paddingBottom: insets.bottom === 0 ? 16 : insets.bottom, paddingTop: 16 }}
+          style={{ paddingBottom: insets.bottom, paddingTop: 16 }}
         >
           <View className="flex-row items-center px-4">
             <Image
@@ -175,5 +181,22 @@ const PostDetailsScreen = () => {
     </View>
   );
 };
+
+// --- FIX: Added a StyleSheet for cleaner code ---
+const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
+  containerCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+  },
+  listContentContainer: {
+    paddingTop: 16,
+    flexGrow: 1,
+  },
+});
 
 export default PostDetailsScreen;
