@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Send, Heart, Trash } from "lucide-react-native";
-import { usePost } from "@/hooks/usePost"; // Corrected import path
+import { usePost } from "@/hooks/usePost";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import CommentCard from "@/components/CommentCard";
 import { useState } from "react";
@@ -74,7 +74,7 @@ const PostDetailsScreen = () => {
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="flex-row items-center px-4 py-2 border-b border-gray-200">
+      <View className="flex-row items-center px-4 py-2 border-b border-gray-200" style={{ height: HEADER_HEIGHT }}>
         <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
           <ArrowLeft size={24} color="#1C1E21" />
         </TouchableOpacity>
@@ -84,7 +84,7 @@ const PostDetailsScreen = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex1}
-        keyboardVerticalOffset={HEADER_HEIGHT + insets.top}
+        keyboardVerticalOffset={Platform.OS === "ios" ? HEADER_HEIGHT : 0}
       >
         <FlatList
           data={post.comments}
@@ -147,7 +147,7 @@ const PostDetailsScreen = () => {
         {/* Comment Input Footer */}
         <View
           className="bg-white border-t border-gray-200"
-          style={{ paddingBottom: insets.bottom, paddingTop: 16 }}
+          style={{ paddingBottom: insets.bottom === 0 ? 16 : insets.bottom, paddingTop: 16 }}
         >
           <View className="flex-row items-center px-4">
             <Image
@@ -182,7 +182,6 @@ const PostDetailsScreen = () => {
   );
 };
 
-// --- FIX: Added a StyleSheet for cleaner code ---
 const styles = StyleSheet.create({
   flex1: {
     flex: 1,
