@@ -8,6 +8,7 @@ import ShareIcon from "../assets/icons/ShareIcon";
 import { useRef, useState } from "react";
 import PostReactionsPicker, { postReactions } from "./PostReactionsPicker";
 import * as Haptics from 'expo-haptics';
+import LikeIcon from "../assets/icons/LikeIcon"; // Import the new custom icon
 
 interface PostCardProps {
   post: Post;
@@ -51,9 +52,6 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
 
   const handleQuickPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // If there is a reaction, and it's not 'like', tapping changes it to 'like'.
-    // If the current reaction is 'like', it removes it.
-    // If there is no reaction, it adds a 'like'.
     const newReaction = currentUserReaction?.type === 'like' ? null : 'like';
     reactToPost({ postId: post._id, reactionType: newReaction || 'like' });
   }
@@ -87,18 +85,38 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
 
   const ReactionButton = () => {
     if (currentUserReaction) {
+      const reactionType = currentUserReaction.type;
+      const emoji = reactionEmojiMap[reactionType];
+      const text = reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
+      const colorClass = reactionTextColor[reactionType] || 'text-gray-500';
+
+      // If the reaction is 'like', use the custom SVG icon instead of the emoji
+      if (reactionType === 'like') {
+        return (
+          <View className="flex-row items-center space-x-1">
+            <LikeIcon size={22} color="#1877F2" />
+            <Text className={`font-semibold capitalize ${colorClass}`}>
+              {text}
+            </Text>
+          </View>
+        );
+      }
+      
+      // For all other reactions, show the emoji
       return (
-        <View className="flex-row items-center space-x-2">
-          <Text className="text-xl">{reactionEmojiMap[currentUserReaction.type]}</Text>
-          <Text className={`font-semibold capitalize ${reactionTextColor[currentUserReaction.type] || 'text-gray-500'}`}>
-            {currentUserReaction.type}
+        <View className="flex-row items-center space-x-1">
+          <Text className="text-xl">{emoji}</Text>
+          <Text className={`font-semibold capitalize ${colorClass}`}>
+            {text}
           </Text>
         </View>
       );
     }
+    
+    // Default state: No reaction from user
     return (
-      <View className="flex-row items-center space-x-2">
-        <Text className="text-xl">👍</Text>
+      <View className="flex-row items-center space-x-1">
+        <LikeIcon size={22} color="#657786" />
         <Text className="text-gray-500 font-semibold">Like</Text>
       </View>
     );
@@ -141,7 +159,7 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
           </View>
         )}
 
-        {/* Post Actions */}
+        {/* Post Actions with updated spacing */}
         <View className="flex-row justify-around py-1 border-t border-gray-100 mt-2">
           <Pressable
             ref={likeButtonRef}
@@ -152,12 +170,12 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
             <ReactionButton />
           </Pressable>
 
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center space-x-2 py-2.5" onPress={() => onComment(post._id)}>
+          <TouchableOpacity className="flex-1 flex-row items-center justify-center space-x-1 py-2.5" onPress={() => onComment(post._id)}>
             <CommentIcon size={22} color="#657786" />
             <Text className="text-gray-500 font-semibold">Comment</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center space-x-2 py-2.5">
+          <TouchableOpacity className="flex-1 flex-row items-center justify-center space-x-1 py-2.5">
             <ShareIcon size={22} color="#657786" />
             <Text className="text-gray-500 font-semibold">Share</Text>
           </TouchableOpacity>
