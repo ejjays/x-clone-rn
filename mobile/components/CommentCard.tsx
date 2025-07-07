@@ -22,27 +22,29 @@ const CommentCard = ({ comment, currentUser, onLike }: CommentCardProps) => {
       />
 
       {/* This container holds the comment bubble and the actions below it */}
+      {/* FIX: A left margin 'ml-3' creates a guaranteed space from the profile picture. */}
       <View className="flex-1 ml-3">
-        {/* The gray comment bubble with slightly adjusted padding */}
-        <View className="bg-gray-100 rounded-2xl px-3.5 py-2">
-          {/* Commenter's Name: Made bold and sized to match FB */}
-          <Text className="font-bold text-sm text-gray-800">
+
+        {/* The gray comment bubble with slightly more padding */}
+        <View className="bg-gray-100 rounded-2xl px-3.5 py-2.5">
+          {/* FIX: Name is now bold and text-sm (14px) */}
+          <Text className="font-bold text-sm text-gray-900">
             {comment.user.firstName} {comment.user.lastName}
           </Text>
-          {/* Comment Text: Increased size and line height for readability */}
-          <Text className="text-[15px] text-black leading-[21px] mt-0.5">{comment.content}</Text>
+          {/* FIX: Comment text is now larger (15px) with better line height */}
+          <Text className="text-[15px] text-gray-900 leading-[22px] mt-1">{comment.content}</Text>
         </View>
 
         {/* The action buttons below the bubble */}
-        <View className="flex-row items-center mt-1.5 px-3 space-x-4">
-          {/* Timestamp: Made larger and bolder */}
-          <Text className="text-sm font-semibold text-gray-500">{formatDate(comment.createdAt)}</Text>
-          {/* Like Button: Made larger and bolder */}
-          <TouchableOpacity onPress={() => onLike(comment._id)}>
+        {/* FIX: Using specific margins 'ml-4' on each button to FORCE the spacing. */}
+        <View className="flex-row items-center mt-1.5 px-3">
+          <Text className="text-sm font-semibold text-gray-600">{formatDate(comment.createdAt)}</Text>
+          
+          <TouchableOpacity onPress={() => onLike(comment._id)} className="ml-4">
             <Text className={`font-semibold text-sm ${isLiked ? "text-blue-500" : "text-gray-600"}`}>Like</Text>
           </TouchableOpacity>
-          {/* Reply Button: Made larger and bolder */}
-          <TouchableOpacity onPress={() => console.log("Reply to comment:", comment._id)}>
+          
+          <TouchableOpacity onPress={() => console.log("Reply to comment:", comment._id)} className="ml-4">
             <Text className="font-semibold text-sm text-gray-600">Reply</Text>
           </TouchableOpacity>
         </View>
