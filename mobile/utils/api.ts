@@ -81,4 +81,4 @@ export const streamApi = {
   createChannel: (api: AxiosInstance, data: { members: string[]; name?: string }) =>
     api.post("/stream/channel", data),
   getChannels: (api: AxiosInstance) => api.get("/stream/channels"),
-}
+} 
