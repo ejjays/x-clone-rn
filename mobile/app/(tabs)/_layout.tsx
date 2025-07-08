@@ -5,7 +5,7 @@ import { Redirect, usePathname, withLayoutContext } from "expo-router";
 import { useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import PeopleIcon from "@/assets/icons/PeopleIcon"; // <-- I've added this import
+import PeopleIcon from "@/assets/icons/PeopleIcon"; 
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
