@@ -192,9 +192,10 @@ const VideosScreen = () => {
     isAnimating.current = true
     const targetY = -index * SCREEN_HEIGHT
 
-    Animated.timing(translateY, {
+    Animated.spring(translateY, {
       toValue: targetY,
-      duration: 300,
+      tension: 100,
+      friction: 8,
       useNativeDriver: true,
     }).start(() => {
       isAnimating.current = false
@@ -204,30 +205,37 @@ const VideosScreen = () => {
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return Math.abs(gestureState.dy) > 10
+      return Math.abs(gestureState.dy) > 5
     },
     onPanResponderGrant: () => {
       // Do nothing on grant
     },
     onPanResponderMove: (evt, gestureState) => {
-      // Allow some visual feedback during drag
+      // Allow full visual feedback during drag
       const currentY = -currentIndex * SCREEN_HEIGHT
-      const newY = currentY + gestureState.dy * 0.3 // Reduced sensitivity
+      const newY = currentY + gestureState.dy
       translateY.setValue(newY)
     },
     onPanResponderRelease: (evt, gestureState) => {
-      const threshold = 50 // Minimum swipe distance
+      const threshold = 20 // Much lower threshold - just 20px
+      const velocity = Math.abs(gestureState.vy)
       let newIndex = currentIndex
 
-      if (gestureState.dy > threshold && currentIndex > 0) {
-        // Swipe down - previous video
+      // Check velocity first (for fast swipes)
+      if (velocity > 0.5) {
+        if (gestureState.dy > 0 && currentIndex > 0) {
+          newIndex = currentIndex - 1
+        } else if (gestureState.dy < 0 && currentIndex < mockVideos.length - 1) {
+          newIndex = currentIndex + 1
+        }
+      }
+      // Then check distance (for slow swipes)
+      else if (gestureState.dy > threshold && currentIndex > 0) {
         newIndex = currentIndex - 1
       } else if (gestureState.dy < -threshold && currentIndex < mockVideos.length - 1) {
-        // Swipe up - next video
         newIndex = currentIndex + 1
       }
 
-      // Always animate to a valid position
       animateToVideo(newIndex)
     },
   })
