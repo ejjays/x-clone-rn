@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar, FlatList } from "react-native"
-import { useRef, useState, useCallback } from "react"
+import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView } from "react-native"
+import { useRef, useState } from "react"
 import {
   Camera,
   Search,
@@ -182,100 +182,39 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
 const VideosScreen = () => {
   const insets = useSafeAreaInsets()
-  const flatListRef = useRef<FlatList>(null)
+  const scrollViewRef = useRef<ScrollView>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const isScrolling = useRef(false)
 
-  const handleScrollBeginDrag = useCallback(() => {
-    isScrolling.current = true
-  }, [])
+  const handleMomentumScrollEnd = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.y
+    const newIndex = Math.round(contentOffset / SCREEN_HEIGHT)
 
-  const handleScrollEndDrag = useCallback(
-    (event: any) => {
-      const { contentOffset, velocity } = event.nativeEvent
-      const currentOffset = contentOffset.y
-      const currentVideoIndex = Math.round(currentOffset / SCREEN_HEIGHT)
-
-      let targetIndex = currentIndex
-
-      // Determine direction based on velocity
-      if (velocity.y > 0.5) {
-        // Scrolling down (next video)
-        targetIndex = Math.min(currentIndex + 1, mockVideos.length - 1)
-      } else if (velocity.y < -0.5) {
-        // Scrolling up (previous video)
-        targetIndex = Math.max(currentIndex - 1, 0)
-      } else {
-        // Small velocity, snap to nearest
-        targetIndex = currentVideoIndex
-      }
-
-      // Ensure we don't go out of bounds
-      targetIndex = Math.max(0, Math.min(targetIndex, mockVideos.length - 1))
-
-      // Scroll to target index
-      if (targetIndex !== currentIndex) {
-        flatListRef.current?.scrollToIndex({
-          index: targetIndex,
-          animated: true,
-        })
-        setCurrentIndex(targetIndex)
-      }
-    },
-    [currentIndex],
-  )
-
-  const handleMomentumScrollEnd = useCallback(
-    (event: any) => {
-      const { contentOffset } = event.nativeEvent
-      const newIndex = Math.round(contentOffset.y / SCREEN_HEIGHT)
-
-      if (newIndex !== currentIndex) {
-        setCurrentIndex(newIndex)
-      }
-
-      isScrolling.current = false
-    },
-    [currentIndex],
-  )
-
-  const onScrollToIndexFailed = useCallback((info: any) => {
-    const wait = new Promise((resolve) => setTimeout(resolve, 500))
-    wait.then(() => {
-      flatListRef.current?.scrollToIndex({ index: info.index, animated: true })
-    })
-  }, [])
+    if (newIndex !== currentIndex && newIndex >= 0 && newIndex < mockVideos.length) {
+      setCurrentIndex(newIndex)
+    }
+  }
 
   return (
     <View className="flex-1 bg-black" style={{ marginTop: -insets.top - 60 }}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* Video List - Full Screen */}
-      <FlatList
-        ref={flatListRef}
-        data={mockVideos}
-        renderItem={({ item, index }) => <VideoItem item={item} index={index} />}
-        keyExtractor={(item) => item.id}
-        pagingEnabled={false}
+      <ScrollView
+        ref={scrollViewRef}
+        pagingEnabled={true}
         showsVerticalScrollIndicator={false}
         snapToInterval={SCREEN_HEIGHT}
         snapToAlignment="start"
         decelerationRate="fast"
-        onScrollBeginDrag={handleScrollBeginDrag}
-        onScrollEndDrag={handleScrollEndDrag}
         onMomentumScrollEnd={handleMomentumScrollEnd}
-        onScrollToIndexFailed={onScrollToIndexFailed}
-        getItemLayout={(data, index) => ({
-          length: SCREEN_HEIGHT,
-          offset: SCREEN_HEIGHT * index,
-          index,
-        })}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={2}
-        windowSize={3}
-        initialNumToRender={1}
+        bounces={false}
+        scrollEventThrottle={16}
         style={{ height: SCREEN_HEIGHT + insets.top + 60 }}
-      />
+      >
+        {mockVideos.map((item, index) => (
+          <VideoItem key={item.id} item={item} index={index} />
+        ))}
+      </ScrollView>
 
       {/* Fixed Header Overlay */}
       <View className="absolute top-0 left-0 right-0 z-30" style={{ paddingTop: insets.top + 60 }}>
