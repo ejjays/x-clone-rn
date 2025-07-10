@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar, FlatList } from "react-native"
-import { useRef, useState } from "react"
+import { useRef, useState, useCallback } from "react"
 import {
   Camera,
   Search,
@@ -184,19 +184,67 @@ const VideosScreen = () => {
   const insets = useSafeAreaInsets()
   const flatListRef = useRef<FlatList>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const isScrolling = useRef(false)
 
-  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      const visibleIndex = viewableItems[0].index
-      if (visibleIndex !== null && visibleIndex !== currentIndex) {
-        setCurrentIndex(visibleIndex)
+  const handleScrollBeginDrag = useCallback(() => {
+    isScrolling.current = true
+  }, [])
+
+  const handleScrollEndDrag = useCallback(
+    (event: any) => {
+      const { contentOffset, velocity } = event.nativeEvent
+      const currentOffset = contentOffset.y
+      const currentVideoIndex = Math.round(currentOffset / SCREEN_HEIGHT)
+
+      let targetIndex = currentIndex
+
+      // Determine direction based on velocity
+      if (velocity.y > 0.5) {
+        // Scrolling down (next video)
+        targetIndex = Math.min(currentIndex + 1, mockVideos.length - 1)
+      } else if (velocity.y < -0.5) {
+        // Scrolling up (previous video)
+        targetIndex = Math.max(currentIndex - 1, 0)
+      } else {
+        // Small velocity, snap to nearest
+        targetIndex = currentVideoIndex
       }
-    }
-  }).current
 
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50,
-  }).current
+      // Ensure we don't go out of bounds
+      targetIndex = Math.max(0, Math.min(targetIndex, mockVideos.length - 1))
+
+      // Scroll to target index
+      if (targetIndex !== currentIndex) {
+        flatListRef.current?.scrollToIndex({
+          index: targetIndex,
+          animated: true,
+        })
+        setCurrentIndex(targetIndex)
+      }
+    },
+    [currentIndex],
+  )
+
+  const handleMomentumScrollEnd = useCallback(
+    (event: any) => {
+      const { contentOffset } = event.nativeEvent
+      const newIndex = Math.round(contentOffset.y / SCREEN_HEIGHT)
+
+      if (newIndex !== currentIndex) {
+        setCurrentIndex(newIndex)
+      }
+
+      isScrolling.current = false
+    },
+    [currentIndex],
+  )
+
+  const onScrollToIndexFailed = useCallback((info: any) => {
+    const wait = new Promise((resolve) => setTimeout(resolve, 500))
+    wait.then(() => {
+      flatListRef.current?.scrollToIndex({ index: info.index, animated: true })
+    })
+  }, [])
 
   return (
     <View className="flex-1 bg-black" style={{ marginTop: -insets.top - 60 }}>
@@ -208,13 +256,15 @@ const VideosScreen = () => {
         data={mockVideos}
         renderItem={({ item, index }) => <VideoItem item={item} index={index} />}
         keyExtractor={(item) => item.id}
-        pagingEnabled={true}
+        pagingEnabled={false}
         showsVerticalScrollIndicator={false}
         snapToInterval={SCREEN_HEIGHT}
         snapToAlignment="start"
         decelerationRate="fast"
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
+        onScrollBeginDrag={handleScrollBeginDrag}
+        onScrollEndDrag={handleScrollEndDrag}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        onScrollToIndexFailed={onScrollToIndexFailed}
         getItemLayout={(data, index) => ({
           length: SCREEN_HEIGHT,
           offset: SCREEN_HEIGHT * index,
