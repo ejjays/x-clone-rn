@@ -1,68 +1,60 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { Bell, Home, Menu, MessageCircle, Plus, Search, Mail } from "lucide-react-native";
+import { Bell, Home, Menu, MessageCircle, Plus, Search, Mail, Video } from "lucide-react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { Redirect, usePathname, withLayoutContext } from "expo-router";
 import { useEffect } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import PeopleIcon from "@/assets/icons/PeopleIcon"; 
+import PeopleIcon from "@/assets/icons/PeopleIcon";
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
 
 const HEADER_HEIGHT = 60;
 const TAB_BAR_HEIGHT = 50;
+const TAB_ROUTES = ['/', '/search', '/videos', '/notifications', '/messages', '/profile'];
+const NUM_TABS = TAB_ROUTES.length;
 
 const TabsLayout = () => {
   const { isSignedIn } = useAuth();
   const pathname = usePathname();
+  const { width: screenWidth } = useWindowDimensions();
 
   // Animated values
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
-  const safeAreaPadding = useSharedValue(1); // 1 = show SafeAreaView, 0 = hide it
+  const safeAreaPadding = useSharedValue(1);
 
   const isHomeScreen = pathname === "/";
   const isProfileScreen = pathname === "/profile";
 
-  // Animate header, tab bar, and safe area based on current screen
   useEffect(() => {
-    // Header animation
-    headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, {
-      duration: 300,
-    });
-
-    // Tab bar animation - hide on profile, show on others
-    tabBarHeight.value = withTiming(isProfileScreen ? 0 : TAB_BAR_HEIGHT, {
-      duration: 300,
-    });
-
-    // Safe area animation - disable on profile to reclaim space
-    safeAreaPadding.value = withTiming(isProfileScreen ? 0 : 1, {
-      duration: 300,
-    });
+    headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, { duration: 300 });
+    tabBarHeight.value = withTiming(isProfileScreen ? 0 : TAB_BAR_HEIGHT, { duration: 300 });
+    safeAreaPadding.value = withTiming(isProfileScreen ? 0 : 1, { duration: 300 });
   }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight, safeAreaPadding]);
 
-  // Animated styles
-  const animatedHeaderStyle = useAnimatedStyle(() => {
-    return {
-      height: headerHeight.value,
-      opacity: headerHeight.value / HEADER_HEIGHT,
-      overflow: "hidden",
-    };
-  });
+  const animatedHeaderStyle = useAnimatedStyle(() => ({
+    height: headerHeight.value,
+    opacity: headerHeight.value / HEADER_HEIGHT,
+    overflow: "hidden",
+  }));
 
-  const animatedTabBarStyle = useAnimatedStyle(() => {
-    return {
-      height: tabBarHeight.value,
-      opacity: tabBarHeight.value / TAB_BAR_HEIGHT,
-      overflow: "hidden",
-    };
-  });
+  const animatedTabBarStyle = useAnimatedStyle(() => ({
+    height: tabBarHeight.value,
+    opacity: tabBarHeight.value / TAB_BAR_HEIGHT,
+    overflow: "hidden",
+  }));
 
-  const animatedSafeAreaStyle = useAnimatedStyle(() => {
+  const animatedSafeAreaStyle = useAnimatedStyle(() => ({
+    paddingTop: safeAreaPadding.value * 44,
+  }));
+
+  const activeIndex = TAB_ROUTES.indexOf(pathname);
+  const animatedIndicatorStyle = useAnimatedStyle(() => {
     return {
-      paddingTop: safeAreaPadding.value * 44, // 44 is typical status bar height
+      width: `${100 / NUM_TABS}%`,
+      transform: [{ translateX: withTiming(activeIndex * (screenWidth / NUM_TABS), { duration: 250 }) }],
     };
   });
 
@@ -70,10 +62,8 @@ const TabsLayout = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Animated Safe Area - only shows padding when NOT on profile */}
       <Animated.View style={animatedSafeAreaStyle} />
 
-      {/* Animated Header */}
       <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 h-full">
           <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
@@ -91,33 +81,10 @@ const TabsLayout = () => {
         </View>
       </Animated.View>
 
-      {/* Content Area */}
       <View className="flex-1">
         <MaterialTopTabs
           screenOptions={{
-            tabBarActiveTintColor: "#1877F2",
-            tabBarInactiveTintColor: "#657786",
-            tabBarIndicatorStyle: {
-              backgroundColor: "#1877F2",
-              height: 3,
-            },
-            tabBarStyle: {
-              backgroundColor: "#fff",
-              elevation: 0,
-              shadowOpacity: 0,
-              borderBottomWidth: 1,
-              borderBottomColor: "#E5E5E5",
-              paddingTop: 0,
-              marginTop: 0,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              zIndex: 1,
-            },
-            tabBarContentContainerStyle: {
-              paddingTop: 0,
-            },
+            tabBarShowLabel: false,
           }}
           tabBar={(props) => (
             <Animated.View style={animatedTabBarStyle}>
@@ -134,8 +101,14 @@ const TabsLayout = () => {
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("search")}
                   >
-                    {/* THIS IS THE CHANGE! */}
                     <PeopleIcon size={27} color={pathname === "/search" ? "#1877F2" : "#657786"} />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    className="flex-1 items-center justify-center h-full"
+                    onPress={() => props.navigation.navigate("videos")}
+                  >
+                    <Video size={24} color={pathname === "/videos" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -160,28 +133,8 @@ const TabsLayout = () => {
                   </TouchableOpacity>
                 </View>
 
-                {/* Active indicator */}
                 <View className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200">
-                  <Animated.View
-                    className="h-full bg-blue-500"
-                    style={{
-                      width: "20%",
-                      transform: [
-                        {
-                          translateX:
-                            pathname === "/"
-                              ? 0
-                              : pathname === "/search"
-                              ? 71.2
-                              : pathname === "/notifications"
-                              ? 142.4
-                              : pathname === "/messages"
-                              ? 213.6
-                              : 284.8,
-                        },
-                      ],
-                    }}
-                  />
+                  <Animated.View className="h-full bg-blue-500" style={animatedIndicatorStyle} />
                 </View>
               </View>
             </Animated.View>
@@ -189,6 +142,7 @@ const TabsLayout = () => {
         >
           <MaterialTopTabs.Screen name="index" />
           <MaterialTopTabs.Screen name="search" />
+          <MaterialTopTabs.Screen name="videos" />
           <MaterialTopTabs.Screen name="notifications" />
           <MaterialTopTabs.Screen name="messages" />
           <MaterialTopTabs.Screen name="profile" />
