@@ -62,18 +62,18 @@ const mockVideos = [
 const VideoItem = ({ item, index }: { item: any; index: number }) => {
   return (
     <View style={{ height: SCREEN_HEIGHT, width: SCREEN_WIDTH }} className="relative">
-      {/* Video Background */}
+      {/* Video Background - Full Screen */}
       <View className="absolute inset-0 bg-gray-900">
         <Image source={{ uri: item.thumbnail }} className="w-full h-full" resizeMode="cover" />
       </View>
 
       {/* Right Side Actions */}
-      <View className="absolute right-4 bottom-32 z-20">
-        <View className="space-y-4">
+      <View className="absolute right-3 bottom-24 z-20">
+        <View className="space-y-6">
           {/* Like */}
           <TouchableOpacity className="items-center">
             <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <Heart size={26} color="white" fill="white" />
+              <Heart size={28} color="white" fill="white" />
             </View>
             <Text className="text-white text-xs font-semibold mt-1">{item.likes}</Text>
           </TouchableOpacity>
@@ -81,7 +81,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
           {/* Comment */}
           <TouchableOpacity className="items-center">
             <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <MessageCircle size={26} color="white" />
+              <MessageCircle size={28} color="white" />
             </View>
             <Text className="text-white text-xs font-semibold mt-1">{item.comments}</Text>
           </TouchableOpacity>
@@ -89,7 +89,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
           {/* Share */}
           <TouchableOpacity className="items-center">
             <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <Share size={26} color="white" />
+              <Share size={28} color="white" />
             </View>
             <Text className="text-white text-xs font-semibold mt-1">{item.shares}</Text>
           </TouchableOpacity>
@@ -97,7 +97,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
           {/* Send */}
           <TouchableOpacity className="items-center">
             <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <Send size={26} color="white" />
+              <Send size={28} color="white" />
             </View>
             <Text className="text-white text-xs font-semibold mt-1">Send</Text>
           </TouchableOpacity>
@@ -105,7 +105,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
           {/* More */}
           <TouchableOpacity className="items-center">
             <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <MoreHorizontal size={26} color="white" />
+              <MoreHorizontal size={28} color="white" />
             </View>
           </TouchableOpacity>
         </View>
@@ -113,7 +113,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
       {/* Bottom Overlay */}
       <View className="absolute bottom-0 left-0 right-0 z-20">
-        <View className="bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pb-8">
+        <View className="bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pt-8 pb-6">
           {/* Send Gift Button */}
           <TouchableOpacity className="flex-row items-center bg-black/50 rounded-full px-4 py-2 mb-4 self-start">
             <Gift size={16} color="white" />
@@ -156,27 +156,9 @@ const VideosScreen = () => {
 
   return (
     <View className="flex-1 bg-black">
-      <StatusBar barStyle="light-content" backgroundColor="black" />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Fixed Header */}
-      <View className="absolute top-0 left-0 right-0 z-30 bg-black/20" style={{ paddingTop: insets.top }}>
-        <View className="flex-row justify-between items-center px-4 py-3">
-          <Text className="text-2xl font-bold text-white">Reels</Text>
-          <View className="flex-row items-center space-x-1">
-            <TouchableOpacity className="p-2 rounded-full">
-              <Camera size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity className="p-2 rounded-full">
-              <Search size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity className="p-2 rounded-full">
-              <UserCircle size={24} color="white" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Video List */}
+      {/* Video List - Full Screen */}
       <FlatList
         data={mockVideos}
         renderItem={({ item, index }) => <VideoItem item={item} index={index} />}
@@ -198,6 +180,24 @@ const VideosScreen = () => {
         maxToRenderPerBatch={2}
         windowSize={3}
       />
+
+      {/* Fixed Header Overlay */}
+      <View className="absolute top-0 left-0 right-0 z-30" style={{ paddingTop: insets.top }}>
+        <View className="flex-row justify-between items-center px-4 py-3 bg-gradient-to-b from-black/60 to-transparent">
+          <Text className="text-2xl font-bold text-white">Reels</Text>
+          <View className="flex-row items-center space-x-1">
+            <TouchableOpacity className="p-2 rounded-full">
+              <Camera size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity className="p-2 rounded-full">
+              <Search size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity className="p-2 rounded-full">
+              <UserCircle size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
     </View>
   )
 }
