@@ -185,43 +185,18 @@ const VideosScreen = () => {
   const flatListRef = useRef<FlatList>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  const handleMomentumScrollEnd = (event: any) => {
-    const contentOffset = event.nativeEvent.contentOffset.y
-    const newIndex = Math.round(contentOffset / SCREEN_HEIGHT)
-
-    if (newIndex !== currentIndex) {
-      setCurrentIndex(newIndex)
-    }
-  }
-
-  const handleScrollEndDrag = (event: any) => {
-    const contentOffset = event.nativeEvent.contentOffset.y
-    const velocity = event.nativeEvent.velocity.y
-
-    // Calculate which video should be shown based on scroll position
-    let targetIndex = Math.round(contentOffset / SCREEN_HEIGHT)
-
-    // If there's significant velocity, move to next/previous video
-    if (Math.abs(velocity) > 0.5) {
-      if (velocity > 0 && targetIndex < mockVideos.length - 1) {
-        targetIndex = Math.min(currentIndex + 1, mockVideos.length - 1)
-      } else if (velocity < 0 && targetIndex > 0) {
-        targetIndex = Math.max(currentIndex - 1, 0)
+  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+    if (viewableItems.length > 0) {
+      const visibleIndex = viewableItems[0].index
+      if (visibleIndex !== null && visibleIndex !== currentIndex) {
+        setCurrentIndex(visibleIndex)
       }
     }
+  }).current
 
-    // Ensure we don't go out of bounds
-    targetIndex = Math.max(0, Math.min(targetIndex, mockVideos.length - 1))
-
-    // Scroll to the target video
-    if (targetIndex !== currentIndex) {
-      flatListRef.current?.scrollToIndex({
-        index: targetIndex,
-        animated: true,
-      })
-      setCurrentIndex(targetIndex)
-    }
-  }
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current
 
   return (
     <View className="flex-1 bg-black" style={{ marginTop: -insets.top - 60 }}>
@@ -233,25 +208,22 @@ const VideosScreen = () => {
         data={mockVideos}
         renderItem={({ item, index }) => <VideoItem item={item} index={index} />}
         keyExtractor={(item) => item.id}
-        pagingEnabled={false}
+        pagingEnabled={true}
         showsVerticalScrollIndicator={false}
         snapToInterval={SCREEN_HEIGHT}
         snapToAlignment="start"
         decelerationRate="fast"
-        onMomentumScrollEnd={handleMomentumScrollEnd}
-        onScrollEndDrag={handleScrollEndDrag}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         getItemLayout={(data, index) => ({
           length: SCREEN_HEIGHT,
           offset: SCREEN_HEIGHT * index,
           index,
         })}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
-        }}
         removeClippedSubviews={true}
-        maxToRenderPerBatch={3}
-        windowSize={5}
-        initialNumToRender={2}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        initialNumToRender={1}
         style={{ height: SCREEN_HEIGHT + insets.top + 60 }}
       />
 
