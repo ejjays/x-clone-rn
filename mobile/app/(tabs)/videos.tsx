@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView } from "react-native"
+import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar, Animated, PanResponder } from "react-native"
 import { useRef, useState } from "react"
 import {
   Camera,
@@ -182,29 +182,72 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
 const VideosScreen = () => {
   const insets = useSafeAreaInsets()
-  const scrollViewRef = useRef<ScrollView>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const translateY = useRef(new Animated.Value(0)).current
+  const isAnimating = useRef(false)
+
+  const animateToVideo = (index: number) => {
+    if (isAnimating.current) return
+
+    isAnimating.current = true
+    const targetY = -index * SCREEN_HEIGHT
+
+    Animated.timing(translateY, {
+      toValue: targetY,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      isAnimating.current = false
+      setCurrentIndex(index)
+    })
+  }
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dy) > 10
+    },
+    onPanResponderGrant: () => {
+      // Do nothing on grant
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      // Allow some visual feedback during drag
+      const currentY = -currentIndex * SCREEN_HEIGHT
+      const newY = currentY + gestureState.dy * 0.3 // Reduced sensitivity
+      translateY.setValue(newY)
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      const threshold = 50 // Minimum swipe distance
+      let newIndex = currentIndex
+
+      if (gestureState.dy > threshold && currentIndex > 0) {
+        // Swipe down - previous video
+        newIndex = currentIndex - 1
+      } else if (gestureState.dy < -threshold && currentIndex < mockVideos.length - 1) {
+        // Swipe up - next video
+        newIndex = currentIndex + 1
+      }
+
+      // Always animate to a valid position
+      animateToVideo(newIndex)
+    },
+  })
 
   return (
     <View className="flex-1 bg-black" style={{ marginTop: -insets.top - 60 }}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Video List - Full Screen */}
-      <ScrollView
-        ref={scrollViewRef}
-        pagingEnabled={true}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={SCREEN_HEIGHT}
-        snapToAlignment="start"
-        decelerationRate="normal"
-        bounces={false}
-        scrollEventThrottle={16}
-        style={{ height: SCREEN_HEIGHT + insets.top + 60 }}
-      >
-        {mockVideos.map((item, index) => (
-          <VideoItem key={item.id} item={item} index={index} />
-        ))}
-      </ScrollView>
+      <View {...panResponder.panHandlers} style={{ flex: 1 }}>
+        <Animated.View
+          style={{
+            transform: [{ translateY }],
+            height: mockVideos.length * SCREEN_HEIGHT,
+          }}
+        >
+          {mockVideos.map((item, index) => (
+            <VideoItem key={item.id} item={item} index={index} />
+          ))}
+        </Animated.View>
+      </View>
 
       {/* Fixed Header Overlay */}
       <View className="absolute top-0 left-0 right-0 z-30" style={{ paddingTop: insets.top + 60 }}>
