@@ -155,7 +155,7 @@ const VideosScreen = () => {
   const insets = useSafeAreaInsets()
 
   return (
-    <View className="flex-1 bg-black">
+    <View className="flex-1 bg-black" style={{ marginTop: -insets.top - 60 }}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* Video List - Full Screen */}
@@ -179,10 +179,11 @@ const VideosScreen = () => {
         removeClippedSubviews={true}
         maxToRenderPerBatch={2}
         windowSize={3}
+        style={{ height: SCREEN_HEIGHT + insets.top + 60 }}
       />
 
       {/* Fixed Header Overlay */}
-      <View className="absolute top-0 left-0 right-0 z-30" style={{ paddingTop: insets.top }}>
+      <View className="absolute top-0 left-0 right-0 z-30" style={{ paddingTop: insets.top + 60 }}>
         <View className="flex-row justify-between items-center px-4 py-3 bg-gradient-to-b from-black/60 to-transparent">
           <Text className="text-2xl font-bold text-white">Reels</Text>
           <View className="flex-row items-center space-x-1">
