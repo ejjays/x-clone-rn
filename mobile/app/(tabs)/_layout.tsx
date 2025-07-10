@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { Bell, Home, Menu, MessageCircle, Plus, Search, Mail, Video } from "lucide-react-native";
+import { Bell, Home, Menu, MessageCircle, Plus, Search, Mail, TvMinimalPlay } from "lucide-react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { Redirect, usePathname, withLayoutContext } from "expo-router";
 import { useEffect } from "react";
@@ -101,14 +101,14 @@ const TabsLayout = () => {
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("search")}
                   >
-                    <PeopleIcon size={27} color={pathname === "/search" ? "#1877F2" : "#657786"} />
+                    <PeopleIcon size={25} color={pathname === "/search" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("videos")}
                   >
-                    <Video size={24} color={pathname === "/videos" ? "#1877F2" : "#657786"} />
+                    <TvMinimalPlay size={24} color={pathname === "/videos" ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
