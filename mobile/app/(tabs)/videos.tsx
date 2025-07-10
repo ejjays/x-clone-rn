@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native"
+import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar } from "react-native"
+import { FlashList } from "@shopify/flash-list"
 import {
   Camera,
   Search,
@@ -12,199 +13,193 @@ import {
 } from "lucide-react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
-const VideosScreen = () => {
-  const insets = useSafeAreaInsets()
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window")
 
+const mockVideos = [
+  {
+    id: "1",
+    user: {
+      name: "Muk-Station",
+      avatar: "/placeholder.svg?height=40&width=40",
+      verified: true,
+      following: true,
+    },
+    title: "Beginner scales part 2",
+    likes: "5.8k",
+    comments: "289",
+    shares: "333",
+    thumbnail: "/placeholder.svg?height=800&width=400",
+  },
+  {
+    id: "2",
+    user: {
+      name: "CreativeUser",
+      avatar: "/placeholder.svg?height=40&width=40",
+      verified: false,
+      following: false,
+    },
+    title: "Amazing guitar tutorial for beginners",
+    likes: "2.1k",
+    comments: "156",
+    shares: "89",
+    thumbnail: "/placeholder.svg?height=800&width=400",
+  },
+  {
+    id: "3",
+    user: {
+      name: "MusicMaster",
+      avatar: "/placeholder.svg?height=40&width=40",
+      verified: true,
+      following: true,
+    },
+    title: "Advanced chord progressions",
+    likes: "8.2k",
+    comments: "445",
+    shares: "567",
+    thumbnail: "/placeholder.svg?height=800&width=400",
+  },
+]
+
+const VideoItem = ({ item, index }: { item: any; index: number }) => {
   return (
-    <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View
-        className="absolute top-0 left-0 right-0 z-10 flex-row justify-between items-center px-4 py-2"
-        style={{ paddingTop: insets.top }}
-      >
-        <Text className="text-2xl font-bold text-white">Reels</Text>
-        <View className="flex-row items-center space-x-3">
-          <TouchableOpacity className="p-2">
-            <Camera size={24} color="white" />
+    <View style={{ height: SCREEN_HEIGHT, width: SCREEN_WIDTH }} className="relative">
+      {/* Video Background */}
+      <View className="absolute inset-0 bg-gray-900">
+        <Image source={{ uri: item.thumbnail }} className="w-full h-full" resizeMode="cover" />
+      </View>
+
+      {/* Right Side Actions */}
+      <View className="absolute right-4 bottom-32 z-20">
+        <View className="space-y-4">
+          {/* Like */}
+          <TouchableOpacity className="items-center">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+              <Heart size={26} color="white" fill="white" />
+            </View>
+            <Text className="text-white text-xs font-semibold mt-1">{item.likes}</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <Search size={24} color="white" />
+
+          {/* Comment */}
+          <TouchableOpacity className="items-center">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+              <MessageCircle size={26} color="white" />
+            </View>
+            <Text className="text-white text-xs font-semibold mt-1">{item.comments}</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <UserCircle size={24} color="white" />
+
+          {/* Share */}
+          <TouchableOpacity className="items-center">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+              <Share size={26} color="white" />
+            </View>
+            <Text className="text-white text-xs font-semibold mt-1">{item.shares}</Text>
+          </TouchableOpacity>
+
+          {/* Send */}
+          <TouchableOpacity className="items-center">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+              <Send size={26} color="white" />
+            </View>
+            <Text className="text-white text-xs font-semibold mt-1">Send</Text>
+          </TouchableOpacity>
+
+          {/* More */}
+          <TouchableOpacity className="items-center">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+              <MoreHorizontal size={26} color="white" />
+            </View>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Video Content Area */}
-      <ScrollView
-        className="flex-1"
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        snapToInterval={800}
-        decelerationRate="fast"
-      >
-        {/* Video Item */}
-        <View className="h-screen relative">
-          {/* Background Video Placeholder */}
-          <View className="absolute inset-0 bg-gray-800">
-            <Image
-              source={{ uri: "/placeholder.svg?height=800&width=400" }}
-              className="w-full h-full"
-              resizeMode="cover"
-            />
-          </View>
+      {/* Bottom Overlay */}
+      <View className="absolute bottom-0 left-0 right-0 z-20">
+        <View className="bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pb-8">
+          {/* Send Gift Button */}
+          <TouchableOpacity className="flex-row items-center bg-black/50 rounded-full px-4 py-2 mb-4 self-start backdrop-blur-sm">
+            <Gift size={16} color="white" />
+            <Text className="text-white text-sm font-medium ml-2">Send a gift</Text>
+          </TouchableOpacity>
 
-          {/* Right Side Actions */}
-          <View className="absolute right-3 bottom-32 space-y-6">
-            {/* Like */}
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <Heart size={28} color="white" />
-              </View>
-              <Text className="text-white text-xs font-semibold mt-1">5.8k</Text>
-            </TouchableOpacity>
-
-            {/* Comment */}
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <MessageCircle size={28} color="white" />
-              </View>
-              <Text className="text-white text-xs font-semibold mt-1">289</Text>
-            </TouchableOpacity>
-
-            {/* Share */}
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <Share size={28} color="white" />
-              </View>
-              <Text className="text-white text-xs font-semibold mt-1">333</Text>
-            </TouchableOpacity>
-
-            {/* Send */}
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <Send size={28} color="white" />
-              </View>
-              <Text className="text-white text-xs font-semibold mt-1">Send</Text>
-            </TouchableOpacity>
-
-            {/* More */}
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <MoreHorizontal size={28} color="white" />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Bottom Overlay */}
-          <View className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-            {/* Send Gift Button */}
-            <TouchableOpacity className="flex-row items-center bg-black/40 rounded-full px-4 py-2 mb-4 self-start">
-              <Gift size={16} color="white" />
-              <Text className="text-white text-sm font-medium ml-2">Send a gift</Text>
-            </TouchableOpacity>
-
-            {/* User Info */}
-            <View className="flex-row items-center mb-2">
-              <View className="w-10 h-10 rounded-full bg-gray-600 mr-3">
-                <Image source={{ uri: "/placeholder.svg?height=40&width=40" }} className="w-full h-full rounded-full" />
-              </View>
-              <View className="flex-1">
-                <View className="flex-row items-center">
-                  <Text className="text-white font-semibold text-base">Muk-Station</Text>
+          {/* User Info */}
+          <View className="flex-row items-center mb-3">
+            <View className="w-10 h-10 rounded-full bg-gray-600 mr-3 overflow-hidden">
+              <Image source={{ uri: item.user.avatar }} className="w-full h-full" resizeMode="cover" />
+            </View>
+            <View className="flex-1">
+              <View className="flex-row items-center">
+                <Text className="text-white font-semibold text-base">{item.user.name}</Text>
+                {item.user.verified && (
                   <View className="w-4 h-4 bg-blue-500 rounded-full ml-2 items-center justify-center">
                     <Text className="text-white text-xs">✓</Text>
                   </View>
-                  <Text className="text-white/70 text-sm ml-2">• Following</Text>
-                </View>
+                )}
+                <Text className="text-white/70 text-sm ml-2">• {item.user.following ? "Following" : "Follow"}</Text>
               </View>
             </View>
+          </View>
 
-            {/* Video Title */}
-            <Text className="text-white text-base font-medium mb-2">Beginner scales part 2</Text>
+          {/* Video Title */}
+          <Text className="text-white text-base font-medium mb-3">{item.title}</Text>
 
-            {/* Progress Bar */}
-            <View className="w-full h-1 bg-white/20 rounded-full">
-              <View className="w-1/3 h-full bg-white rounded-full" />
-            </View>
+          {/* Progress Bar */}
+          <View className="w-full h-1 bg-white/20 rounded-full">
+            <View className="w-1/3 h-full bg-white rounded-full" />
           </View>
         </View>
+      </View>
+    </View>
+  )
+}
 
-        {/* Additional Video Items */}
-        <View className="h-screen relative">
-          <View className="absolute inset-0 bg-gray-700">
-            <Image
-              source={{ uri: "/placeholder.svg?height=800&width=400" }}
-              className="w-full h-full"
-              resizeMode="cover"
-            />
-          </View>
+const VideosScreen = () => {
+  const insets = useSafeAreaInsets()
 
-          {/* Right Side Actions */}
-          <View className="absolute right-3 bottom-32 space-y-6">
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <Heart size={28} color="white" />
-              </View>
-              <Text className="text-white text-xs font-semibold mt-1">2.1k</Text>
+  return (
+    <View className="flex-1 bg-black">
+      <StatusBar barStyle="light-content" backgroundColor="black" />
+
+      {/* Fixed Header */}
+      <View
+        className="absolute top-0 left-0 right-0 z-30 bg-black/20 backdrop-blur-md"
+        style={{ paddingTop: insets.top }}
+      >
+        <View className="flex-row justify-between items-center px-4 py-3">
+          <Text className="text-2xl font-bold text-white">Reels</Text>
+          <View className="flex-row items-center space-x-1">
+            <TouchableOpacity className="p-2 rounded-full">
+              <Camera size={24} color="white" />
             </TouchableOpacity>
-
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <MessageCircle size={28} color="white" />
-              </View>
-              <Text className="text-white text-xs font-semibold mt-1">156</Text>
+            <TouchableOpacity className="p-2 rounded-full">
+              <Search size={24} color="white" />
             </TouchableOpacity>
-
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <Share size={28} color="white" />
-              </View>
-              <Text className="text-white text-xs font-semibold mt-1">89</Text>
+            <TouchableOpacity className="p-2 rounded-full">
+              <UserCircle size={24} color="white" />
             </TouchableOpacity>
-
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <Send size={28} color="white" />
-              </View>
-              <Text className="text-white text-xs font-semibold mt-1">Send</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="items-center">
-              <View className="w-12 h-12 rounded-full bg-black/20 items-center justify-center">
-                <MoreHorizontal size={28} color="white" />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Bottom Overlay */}
-          <View className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-            <TouchableOpacity className="flex-row items-center bg-black/40 rounded-full px-4 py-2 mb-4 self-start">
-              <Gift size={16} color="white" />
-              <Text className="text-white text-sm font-medium ml-2">Send a gift</Text>
-            </TouchableOpacity>
-
-            <View className="flex-row items-center mb-2">
-              <View className="w-10 h-10 rounded-full bg-gray-600 mr-3">
-                <Image source={{ uri: "/placeholder.svg?height=40&width=40" }} className="w-full h-full rounded-full" />
-              </View>
-              <View className="flex-1">
-                <View className="flex-row items-center">
-                  <Text className="text-white font-semibold text-base">CreativeUser</Text>
-                  <Text className="text-white/70 text-sm ml-2">• Follow</Text>
-                </View>
-              </View>
-            </View>
-
-            <Text className="text-white text-base font-medium mb-2">Amazing guitar tutorial for beginners</Text>
-
-            <View className="w-full h-1 bg-white/20 rounded-full">
-              <View className="w-2/3 h-full bg-white rounded-full" />
-            </View>
           </View>
         </View>
-      </ScrollView>
+      </View>
+
+      {/* Video List */}
+      <FlashList
+        data={mockVideos}
+        renderItem={({ item, index }) => <VideoItem item={item} index={index} />}
+        keyExtractor={(item) => item.id}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        snapToInterval={SCREEN_HEIGHT}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        getItemLayout={(data, index) => ({
+          length: SCREEN_HEIGHT,
+          offset: SCREEN_HEIGHT * index,
+          index,
+        })}
+        estimatedItemSize={SCREEN_HEIGHT}
+        viewabilityConfig={{
+          itemVisiblePercentThreshold: 50,
+        }}
+      />
     </View>
   )
 }
