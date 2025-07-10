@@ -182,22 +182,87 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
 const VideosScreen = () => {
   const insets = useSafeAreaInsets()
+  const scrollViewRef = useRef<ScrollView>(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const isScrollingRef = useRef(false)
+
+  const scrollToVideo = (index: number) => {
+    if (scrollViewRef.current && index >= 0 && index < mockVideos.length) {
+      scrollViewRef.current.scrollTo({
+        y: index * SCREEN_HEIGHT,
+        animated: true,
+      })
+      setCurrentIndex(index)
+    }
+  }
+
+  const handleScrollBeginDrag = () => {
+    isScrollingRef.current = true
+  }
+
+  const handleScrollEndDrag = (event: any) => {
+    const { contentOffset, velocity } = event.nativeEvent
+    const currentOffset = contentOffset.y
+
+    // Determine direction based on velocity
+    let targetIndex = currentIndex
+
+    if (velocity.y > 0.3) {
+      // Scrolling down - next video
+      targetIndex = Math.min(currentIndex + 1, mockVideos.length - 1)
+    } else if (velocity.y < -0.3) {
+      // Scrolling up - previous video
+      targetIndex = Math.max(currentIndex - 1, 0)
+    } else {
+      // Low velocity - snap to nearest
+      targetIndex = Math.round(currentOffset / SCREEN_HEIGHT)
+      targetIndex = Math.max(0, Math.min(targetIndex, mockVideos.length - 1))
+    }
+
+    // Force scroll to exact target
+    setTimeout(() => {
+      scrollToVideo(targetIndex)
+    }, 50)
+  }
+
+  const handleMomentumScrollEnd = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.y
+    const newIndex = Math.round(contentOffset / SCREEN_HEIGHT)
+
+    if (newIndex !== currentIndex && newIndex >= 0 && newIndex < mockVideos.length) {
+      setCurrentIndex(newIndex)
+    }
+
+    isScrollingRef.current = false
+  }
 
   return (
-    <View className="flex-1 bg-black" style={{ marginTop: -insets.top }}>
+    <View className="flex-1 bg-black" style={{ marginTop: -insets.top - 60 }}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+      {/* Video List - Full Screen */}
       <ScrollView
-        pagingEnabled
+        ref={scrollViewRef}
+        pagingEnabled={false}
         showsVerticalScrollIndicator={false}
         snapToInterval={SCREEN_HEIGHT}
+        snapToAlignment="start"
         decelerationRate="fast"
+        onScrollBeginDrag={handleScrollBeginDrag}
+        onScrollEndDrag={handleScrollEndDrag}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        bounces={false}
+        scrollEventThrottle={16}
+        style={{ height: SCREEN_HEIGHT + insets.top + 60 }}
       >
         {mockVideos.map((item, index) => (
           <VideoItem key={item.id} item={item} index={index} />
         ))}
       </ScrollView>
-      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-        <View className="flex-row justify-between items-center px-4 py-3 bg-gradient-to-b from-black/40 to-transparent">
+
+      {/* Fixed Header Overlay */}
+      <View className="absolute top-0 left-0 right-0 z-30" style={{ paddingTop: insets.top + 60 }}>
+        <View className="flex-row justify-between items-center px-4 py-3 bg-gradient-to-b from-black/60 to-transparent">
           <Text className="text-2xl font-bold text-white">Reels</Text>
           <View className="flex-row items-center space-x-1">
             <TouchableOpacity className="p-2 rounded-full">
