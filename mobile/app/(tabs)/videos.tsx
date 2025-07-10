@@ -1,5 +1,4 @@
-import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar } from "react-native"
-import { FlashList } from "@shopify/flash-list"
+import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar, FlatList } from "react-native"
 import {
   Camera,
   Search,
@@ -73,7 +72,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
         <View className="space-y-4">
           {/* Like */}
           <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
               <Heart size={26} color="white" fill="white" />
             </View>
             <Text className="text-white text-xs font-semibold mt-1">{item.likes}</Text>
@@ -81,7 +80,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
           {/* Comment */}
           <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
               <MessageCircle size={26} color="white" />
             </View>
             <Text className="text-white text-xs font-semibold mt-1">{item.comments}</Text>
@@ -89,7 +88,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
           {/* Share */}
           <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
               <Share size={26} color="white" />
             </View>
             <Text className="text-white text-xs font-semibold mt-1">{item.shares}</Text>
@@ -97,7 +96,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
           {/* Send */}
           <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
               <Send size={26} color="white" />
             </View>
             <Text className="text-white text-xs font-semibold mt-1">Send</Text>
@@ -105,7 +104,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
           {/* More */}
           <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm">
+            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
               <MoreHorizontal size={26} color="white" />
             </View>
           </TouchableOpacity>
@@ -116,7 +115,7 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
       <View className="absolute bottom-0 left-0 right-0 z-20">
         <View className="bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pb-8">
           {/* Send Gift Button */}
-          <TouchableOpacity className="flex-row items-center bg-black/50 rounded-full px-4 py-2 mb-4 self-start backdrop-blur-sm">
+          <TouchableOpacity className="flex-row items-center bg-black/50 rounded-full px-4 py-2 mb-4 self-start">
             <Gift size={16} color="white" />
             <Text className="text-white text-sm font-medium ml-2">Send a gift</Text>
           </TouchableOpacity>
@@ -160,10 +159,7 @@ const VideosScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="black" />
 
       {/* Fixed Header */}
-      <View
-        className="absolute top-0 left-0 right-0 z-30 bg-black/20 backdrop-blur-md"
-        style={{ paddingTop: insets.top }}
-      >
+      <View className="absolute top-0 left-0 right-0 z-30 bg-black/20" style={{ paddingTop: insets.top }}>
         <View className="flex-row justify-between items-center px-4 py-3">
           <Text className="text-2xl font-bold text-white">Reels</Text>
           <View className="flex-row items-center space-x-1">
@@ -181,7 +177,7 @@ const VideosScreen = () => {
       </View>
 
       {/* Video List */}
-      <FlashList
+      <FlatList
         data={mockVideos}
         renderItem={({ item, index }) => <VideoItem item={item} index={index} />}
         keyExtractor={(item) => item.id}
@@ -195,10 +191,12 @@ const VideosScreen = () => {
           offset: SCREEN_HEIGHT * index,
           index,
         })}
-        estimatedItemSize={SCREEN_HEIGHT}
         viewabilityConfig={{
           itemVisiblePercentThreshold: 50,
         }}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={2}
+        windowSize={3}
       />
     </View>
   )
