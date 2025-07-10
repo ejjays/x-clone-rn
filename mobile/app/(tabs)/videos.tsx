@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar, FlatList } from "react-native"
+import { useRef, useState } from "react"
 import {
   Camera,
   Search,
@@ -55,6 +56,34 @@ const mockVideos = [
     likes: "8.2k",
     comments: "445",
     shares: "567",
+    thumbnail: "/placeholder.svg?height=800&width=400",
+  },
+  {
+    id: "4",
+    user: {
+      name: "GuitarPro",
+      avatar: "/placeholder.svg?height=40&width=40",
+      verified: false,
+      following: false,
+    },
+    title: "Fingerpicking techniques",
+    likes: "3.4k",
+    comments: "198",
+    shares: "245",
+    thumbnail: "/placeholder.svg?height=800&width=400",
+  },
+  {
+    id: "5",
+    user: {
+      name: "MelodyMaker",
+      avatar: "/placeholder.svg?height=40&width=40",
+      verified: true,
+      following: true,
+    },
+    title: "Song composition basics",
+    likes: "6.7k",
+    comments: "334",
+    shares: "456",
     thumbnail: "/placeholder.svg?height=800&width=400",
   },
 ]
@@ -153,6 +182,46 @@ const VideoItem = ({ item, index }: { item: any; index: number }) => {
 
 const VideosScreen = () => {
   const insets = useSafeAreaInsets()
+  const flatListRef = useRef<FlatList>(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  const handleMomentumScrollEnd = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.y
+    const newIndex = Math.round(contentOffset / SCREEN_HEIGHT)
+
+    if (newIndex !== currentIndex) {
+      setCurrentIndex(newIndex)
+    }
+  }
+
+  const handleScrollEndDrag = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.y
+    const velocity = event.nativeEvent.velocity.y
+
+    // Calculate which video should be shown based on scroll position
+    let targetIndex = Math.round(contentOffset / SCREEN_HEIGHT)
+
+    // If there's significant velocity, move to next/previous video
+    if (Math.abs(velocity) > 0.5) {
+      if (velocity > 0 && targetIndex < mockVideos.length - 1) {
+        targetIndex = Math.min(currentIndex + 1, mockVideos.length - 1)
+      } else if (velocity < 0 && targetIndex > 0) {
+        targetIndex = Math.max(currentIndex - 1, 0)
+      }
+    }
+
+    // Ensure we don't go out of bounds
+    targetIndex = Math.max(0, Math.min(targetIndex, mockVideos.length - 1))
+
+    // Scroll to the target video
+    if (targetIndex !== currentIndex) {
+      flatListRef.current?.scrollToIndex({
+        index: targetIndex,
+        animated: true,
+      })
+      setCurrentIndex(targetIndex)
+    }
+  }
 
   return (
     <View className="flex-1 bg-black" style={{ marginTop: -insets.top - 60 }}>
@@ -160,14 +229,17 @@ const VideosScreen = () => {
 
       {/* Video List - Full Screen */}
       <FlatList
+        ref={flatListRef}
         data={mockVideos}
         renderItem={({ item, index }) => <VideoItem item={item} index={index} />}
         keyExtractor={(item) => item.id}
-        pagingEnabled
+        pagingEnabled={false}
         showsVerticalScrollIndicator={false}
         snapToInterval={SCREEN_HEIGHT}
         snapToAlignment="start"
         decelerationRate="fast"
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        onScrollEndDrag={handleScrollEndDrag}
         getItemLayout={(data, index) => ({
           length: SCREEN_HEIGHT,
           offset: SCREEN_HEIGHT * index,
@@ -177,8 +249,9 @@ const VideosScreen = () => {
           itemVisiblePercentThreshold: 50,
         }}
         removeClippedSubviews={true}
-        maxToRenderPerBatch={2}
-        windowSize={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+        initialNumToRender={2}
         style={{ height: SCREEN_HEIGHT + insets.top + 60 }}
       />
 
