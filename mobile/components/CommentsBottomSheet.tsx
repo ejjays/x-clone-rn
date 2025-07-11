@@ -1,7 +1,6 @@
-// mobile/components/CommentsBottomSheet.tsx
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop } from '@gorhom/react-native-bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 
 const mockComments = [
   { id: '1', user: 'Jane Doe', avatar: 'https://randomuser.me/api/portraits/women/4.jpg', text: 'This is amazing! 🤩' },
