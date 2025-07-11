@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
@@ -19,11 +20,11 @@ const TabsLayout = () => {
   const { isSignedIn } = useAuth();
   const pathname = usePathname();
   const { width: screenWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets(); // Get safe area insets
 
   // Animated values
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
-  const safeAreaPadding = useSharedValue(1);
 
   const isHomeScreen = pathname === "/";
   const isProfileScreen = pathname === "/profile";
@@ -31,8 +32,7 @@ const TabsLayout = () => {
   useEffect(() => {
     headerHeight.value = withTiming(isHomeScreen ? HEADER_HEIGHT : 0, { duration: 300 });
     tabBarHeight.value = withTiming(isProfileScreen ? 0 : TAB_BAR_HEIGHT, { duration: 300 });
-    safeAreaPadding.value = withTiming(isProfileScreen ? 0 : 1, { duration: 300 });
-  }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight, safeAreaPadding]);
+  }, [isHomeScreen, isProfileScreen, headerHeight, tabBarHeight]);
 
   const animatedHeaderStyle = useAnimatedStyle(() => ({
     height: headerHeight.value,
@@ -46,10 +46,6 @@ const TabsLayout = () => {
     overflow: "hidden",
   }));
 
-  const animatedSafeAreaStyle = useAnimatedStyle(() => ({
-    paddingTop: safeAreaPadding.value * 44,
-  }));
-
   const activeIndex = TAB_ROUTES.indexOf(pathname);
   const animatedIndicatorStyle = useAnimatedStyle(() => {
     return {
@@ -61,8 +57,8 @@ const TabsLayout = () => {
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
   return (
-    <View className="flex-1 bg-white">
-      <Animated.View style={animatedSafeAreaStyle} />
+    // Use a View with padding that respects the safe area insets
+    <View style={{ flex: 1, paddingTop: isProfileScreen ? 0 : insets.top, backgroundColor: 'white' }}>
 
       <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 h-full">

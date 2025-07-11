@@ -1,12 +1,13 @@
 // mobile/app/(tabs)/videos.tsx
 import React, { useRef, useState, useCallback } from 'react';
-// REMOVED: StatusBar is no longer imported here from 'react-native'
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CommentsBottomSheet from '@/components/CommentsBottomSheet';
+import { StatusBar } from 'expo-status-bar';
+import { useFocusEffect } from 'expo-router';
 
 const mockVideos = [
     {
@@ -92,7 +93,7 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
                 />
             </Pressable>
 
-            {/* FIX: The overlay now uses `insets` to correctly position content away from edges */}
+            {/* The overlay now uses `insets` to correctly position content away from edges */}
             <View style={[styles.overlay, { paddingBottom: insets.bottom + 80, paddingLeft: insets.left + 15, paddingRight: insets.right + 15 }]}>
                 <View style={styles.leftContainer}>
                     <View style={styles.userInfo}>
@@ -106,7 +107,6 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
                         <Ionicons name="heart" size={30} color="white" />
                         <Text style={styles.iconText}>{item.likes}</Text>
                     </TouchableOpacity>
-                    {/* MODIFIED: This TouchableOpacity now calls onCommentPress */}
                     <TouchableOpacity style={styles.iconContainer} onPress={onCommentPress}>
                         <Ionicons name="chatbubble-ellipses" size={30} color="white" />
                         <Text style={styles.iconText}>{item.comments}</Text>
@@ -132,6 +132,19 @@ export default function VideosScreen() {
     const handleCloseComments = () => {
         bottomSheetRef.current?.close();
     };
+    
+    // This hook will set the status bar style to "light" when the screen is focused
+    useFocusEffect(
+      useCallback(() => {
+        StatusBar.setBarStyle('light');
+        // On Android, make sure the status bar is not translucent
+        Platform.OS === 'android' && StatusBar.setTranslucent(true);
+        // On iOS, when we leave the screen, we can revert to the default
+        return () => {
+          StatusBar.setBarStyle('dark');
+        }
+      }, [])
+    );
 
     const viewabilityConfig = {
       itemVisiblePercentThreshold: 50
@@ -148,7 +161,6 @@ export default function VideosScreen() {
 
     return (
         <View style={styles.container}>
-            {/* REMOVED: The <StatusBar barStyle="light-content" /> component is now gone */}
             <FlatList
                 data={mockVideos}
                 renderItem={renderItem}
