@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable, StatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 
@@ -42,33 +43,33 @@ const mockVideos = [
     },
 ];
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 // A component for a single video item in the list
 const VideoItem = ({ item, isVisible }) => {
-    const videoRef = useRef(null);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const videoRef = useRef<Video>(null);
+    const [isPaused, setIsPaused] = useState(true);
+    const insets = useSafeAreaInsets();
 
     const onPlayPausePress = () => {
         if (videoRef.current) {
-            if (isPlaying) {
-                videoRef.current.pauseAsync();
-            } else {
+            if (isPaused) {
                 videoRef.current.playAsync();
+            } else {
+                videoRef.current.pauseAsync();
             }
-            setIsPlaying(!isPlaying);
+            setIsPaused(!isPaused);
         }
     };
 
     React.useEffect(() => {
-        if (isVisible && !isPlaying) {
-             onPlayPausePress();
+        if (isVisible && isPaused) {
+            onPlayPausePress();
         }
-        if (!isVisible && isPlaying) {
-             onPlayPausePress();
+        if (!isVisible && !isPaused) {
+            onPlayPausePress();
         }
     }, [isVisible]);
-
 
     return (
         <View style={styles.videoContainer}>
@@ -78,17 +79,17 @@ const VideoItem = ({ item, isVisible }) => {
                     source={{ uri: item.videoUrl }}
                     style={styles.video}
                     resizeMode={ResizeMode.COVER}
-                    shouldPlay={false}
                     isLooping
                     onPlaybackStatusUpdate={(status) => {
                         if (status.isLoaded) {
-                            setIsPlaying(status.isPlaying);
+                            setIsPaused(!status.isPlaying);
                         }
                     }}
                 />
             </Pressable>
 
-            <View style={styles.overlay}>
+            {/* FIX: The overlay now uses `insets` to correctly position content away from edges */}
+            <View style={[styles.overlay, { paddingBottom: insets.bottom + 80, paddingLeft: insets.left + 15, paddingRight: insets.right + 15 }]}>
                 <View style={styles.leftContainer}>
                     <View style={styles.userInfo}>
                         <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
@@ -116,14 +117,15 @@ const VideoItem = ({ item, isVisible }) => {
 };
 
 export default function VideosScreen() {
-    const [viewableItems, setViewableItems] = useState([]);
+    const [viewableItems, setViewableItems] = useState<string[]>([]);
+    const insets = useSafeAreaInsets();
 
     const viewabilityConfig = {
-      itemVisiblePercentThreshold: 50 // Item is considered visible when 50% of it is visible
+      itemVisiblePercentThreshold: 50
     };
 
     const onViewableItemsChanged = useCallback(({ viewableItems: newViewableItems }) => {
-        setViewableItems(newViewableItems.map(item => item.key));
+        setViewableItems(newViewableItems.map(item => item.key as string));
     }, []);
     
     const renderItem = useCallback(
@@ -133,6 +135,7 @@ export default function VideosScreen() {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" />
             <FlatList
                 data={mockVideos}
                 renderItem={renderItem}
@@ -141,29 +144,27 @@ export default function VideosScreen() {
                 showsVerticalScrollIndicator={false}
                 onViewableItemsChanged={onViewableItemsChanged}
                 viewabilityConfig={viewabilityConfig}
-                getItemLayout={(data, index) => (
-                    {length: height, offset: height * index, index}
-                )}
+                snapToInterval={height}
+                decelerationRate="fast"
+                disableIntervalMomentum
             />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
+    // FIX: Using absoluteFill to ensure the container covers the whole screen
     container: {
-        flex: 1,
+        ...StyleSheet.absoluteFillObject,
         backgroundColor: 'black',
     },
     videoContainer: {
-        width: '100%',
+        width: width,
         height: height,
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: 'black',
     },
     videoPressable: {
-        width: '100%',
-        height: '100%',
-        position: 'absolute',
+        ...StyleSheet.absoluteFillObject,
     },
     video: {
         ...StyleSheet.absoluteFillObject,
@@ -172,18 +173,18 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        padding: 15,
-        paddingBottom: 80, // Adjust this to avoid tab bar overlap
     },
     leftContainer: {
         flex: 1,
         justifyContent: 'flex-end',
         alignItems: 'flex-start',
+        padding: 15,
     },
     rightContainer: {
         justifyContent: 'center',
         alignItems: 'center',
-        paddingLeft: 10,
+        paddingHorizontal: 10,
+        paddingBottom: 60, // Space for the bottom part of the overlay
     },
     userInfo: {
         flexDirection: 'row',
