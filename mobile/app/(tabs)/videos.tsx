@@ -1,8 +1,11 @@
+// mobile/app/(tabs)/videos.tsx
 import React, { useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
+import BottomSheet from '@gorhom/react-native-bottom-sheet';
+import CommentsBottomSheet from '@/components/CommentsBottomSheet'; // Import the new component
 
 const mockVideos = [
     {
@@ -46,7 +49,7 @@ const mockVideos = [
 const { height, width } = Dimensions.get('window');
 
 // A component for a single video item in the list
-const VideoItem = ({ item, isVisible }) => {
+const VideoItem = ({ item, isVisible, onCommentPress }) => {
     const videoRef = useRef<Video>(null);
     const [isPaused, setIsPaused] = useState(true);
     const insets = useSafeAreaInsets();
@@ -102,7 +105,8 @@ const VideoItem = ({ item, isVisible }) => {
                         <Ionicons name="heart" size={30} color="white" />
                         <Text style={styles.iconText}>{item.likes}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconContainer}>
+                    {/* MODIFIED: This TouchableOpacity now calls onCommentPress */}
+                    <TouchableOpacity style={styles.iconContainer} onPress={onCommentPress}>
                         <Ionicons name="chatbubble-ellipses" size={30} color="white" />
                         <Text style={styles.iconText}>{item.comments}</Text>
                     </TouchableOpacity>
@@ -118,7 +122,15 @@ const VideoItem = ({ item, isVisible }) => {
 
 export default function VideosScreen() {
     const [viewableItems, setViewableItems] = useState<string[]>([]);
-    const insets = useSafeAreaInsets();
+    const bottomSheetRef = useRef<BottomSheet>(null);
+
+    const handleOpenComments = () => {
+        bottomSheetRef.current?.expand();
+    };
+
+    const handleCloseComments = () => {
+        bottomSheetRef.current?.close();
+    };
 
     const viewabilityConfig = {
       itemVisiblePercentThreshold: 50
@@ -129,7 +141,7 @@ export default function VideosScreen() {
     }, []);
     
     const renderItem = useCallback(
-      ({ item }) => <VideoItem item={item} isVisible={viewableItems.includes(item.id)} />,
+      ({ item }) => <VideoItem item={item} isVisible={viewableItems.includes(item.id)} onCommentPress={handleOpenComments} />,
       [viewableItems]
     );
 
@@ -148,12 +160,12 @@ export default function VideosScreen() {
                 decelerationRate="fast"
                 disableIntervalMomentum
             />
+            <CommentsBottomSheet bottomSheetRef={bottomSheetRef} onClose={handleCloseComments} />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    // FIX: Using absoluteFill to ensure the container covers the whole screen
     container: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'black',
@@ -184,7 +196,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 10,
-        paddingBottom: 60, // Space for the bottom part of the overlay
+        paddingBottom: 60,
     },
     userInfo: {
         flexDirection: 'row',
