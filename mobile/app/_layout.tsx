@@ -4,14 +4,14 @@ import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack, router } from "expo-router";
 import "../global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View } from "react-native";
 import { OverlayProvider, Chat } from "stream-chat-react-native";
 import { streamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
-import { useEffect } from "react"; 
+import { useEffect } from "react";
+// NOTE: We have removed `import { StatusBar } from "expo-status-bar";`
 
 const queryClient = new QueryClient();
 
@@ -68,7 +68,6 @@ export default function RootLayout() {
               <InitialLayout />
             </StreamChatProvider>
           </ClerkProvider>
-          <StatusBar style="dark" />
         </QueryClientProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>

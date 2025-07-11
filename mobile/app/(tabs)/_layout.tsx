@@ -7,6 +7,7 @@ import { Text, TouchableOpacity, View, useWindowDimensions } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar"; // Import StatusBar here
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
@@ -20,13 +21,13 @@ const TabsLayout = () => {
   const { isSignedIn } = useAuth();
   const pathname = usePathname();
   const { width: screenWidth } = useWindowDimensions();
-  const insets = useSafeAreaInsets(); // Get safe area insets
+  const insets = useSafeAreaInsets();
 
-  // Animated values
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
 
   const isHomeScreen = pathname === "/";
+  const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
 
   useEffect(() => {
@@ -57,8 +58,9 @@ const TabsLayout = () => {
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
   return (
-    // Use a View with padding that respects the safe area insets
     <View style={{ flex: 1, paddingTop: isProfileScreen ? 0 : insets.top, backgroundColor: 'white' }}>
+      {/* This StatusBar now controls the style for all tab screens */}
+      <StatusBar style={isVideosScreen ? "light" : "dark"} />
 
       <Animated.View style={animatedHeaderStyle}>
         <View className="flex-row justify-between items-center px-4 h-full">

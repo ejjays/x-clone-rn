@@ -1,11 +1,11 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CommentsBottomSheet from '@/components/CommentsBottomSheet';
-import { StatusBar } from 'expo-status-bar';
+// NOTE: We have removed `import { StatusBar } from "expo-status-bar";`
 
 const mockVideos = [
     {
@@ -48,7 +48,6 @@ const mockVideos = [
 
 const { height, width } = Dimensions.get('window');
 
-// A component for a single video item in the list
 const VideoItem = ({ item, isVisible, onCommentPress }) => {
     const videoRef = useRef<Video>(null);
     const [isPaused, setIsPaused] = useState(true);
@@ -129,7 +128,7 @@ export default function VideosScreen() {
     const handleCloseComments = () => {
         bottomSheetRef.current?.close();
     };
-    
+
     const viewabilityConfig = {
       itemVisiblePercentThreshold: 50
     };
@@ -145,9 +144,6 @@ export default function VideosScreen() {
 
     return (
         <View style={styles.container}>
-            {/* THIS IS THE FIX: Render the StatusBar component with the 'light' style */}
-            <StatusBar style="light" />
-            
             <FlatList
                 data={mockVideos}
                 renderItem={renderItem}
