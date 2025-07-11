@@ -1,281 +1,219 @@
-import { View, Text, TouchableOpacity, Image, Dimensions, StatusBar, Animated, PanResponder } from "react-native"
-import { useRef, useState } from "react"
-import {
-  Camera,
-  Search,
-  UserCircle,
-  Heart,
-  MessageCircle,
-  Share,
-  Send,
-  Gift,
-  MoreHorizontal,
-} from "lucide-react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window")
+import React, { useRef, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Video, ResizeMode } from 'expo-av';
 
 const mockVideos = [
-  {
-    id: "1",
-    user: {
-      name: "Muk-Station",
-      avatar: "/placeholder.svg?height=40&width=40",
-      verified: true,
-      following: true,
+    {
+        id: '1',
+        videoUrl: 'http://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4',
+        user: {
+            name: 'John Doe',
+            avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
+        },
+        caption: 'This is a beautiful buck! #nature #bunny',
+        likes: '123K',
+        comments: '456',
+        shares: '789',
     },
-    title: "Beginner scales part 2",
-    likes: "5.8k",
-    comments: "289",
-    shares: "333",
-    thumbnail: "/placeholder.svg?height=800&width=400",
-  },
-  {
-    id: "2",
-    user: {
-      name: "CreativeUser",
-      avatar: "/placeholder.svg?height=40&width=40",
-      verified: false,
-      following: false,
+    {
+        id: '2',
+        videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        user: {
+            name: 'Jane Smith',
+            avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
+        },
+        caption: 'Having fun with the team! #work #fun',
+        likes: '245K',
+        comments: '1.2K',
+        shares: '987',
     },
-    title: "Amazing guitar tutorial for beginners",
-    likes: "2.1k",
-    comments: "156",
-    shares: "89",
-    thumbnail: "/placeholder.svg?height=800&width=400",
-  },
-  {
-    id: "3",
-    user: {
-      name: "MusicMaster",
-      avatar: "/placeholder.svg?height=40&width=40",
-      verified: true,
-      following: true,
+    {
+        id: '3',
+        videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        user: {
+            name: 'Sam Wilson',
+            avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
+        },
+        caption: 'Elephants are majestic creatures. #wildlife #elephants',
+        likes: '500K',
+        comments: '3.1K',
+        shares: '2.5K',
     },
-    title: "Advanced chord progressions",
-    likes: "8.2k",
-    comments: "445",
-    shares: "567",
-    thumbnail: "/placeholder.svg?height=800&width=400",
-  },
-  {
-    id: "4",
-    user: {
-      name: "GuitarPro",
-      avatar: "/placeholder.svg?height=40&width=40",
-      verified: false,
-      following: false,
-    },
-    title: "Fingerpicking techniques",
-    likes: "3.4k",
-    comments: "198",
-    shares: "245",
-    thumbnail: "/placeholder.svg?height=800&width=400",
-  },
-  {
-    id: "5",
-    user: {
-      name: "MelodyMaker",
-      avatar: "/placeholder.svg?height=40&width=40",
-      verified: true,
-      following: true,
-    },
-    title: "Song composition basics",
-    likes: "6.7k",
-    comments: "334",
-    shares: "456",
-    thumbnail: "/placeholder.svg?height=800&width=400",
-  },
-]
+];
 
-const VideoItem = ({ item, index }: { item: any; index: number }) => {
-  return (
-    <View style={{ height: SCREEN_HEIGHT, width: SCREEN_WIDTH }} className="relative">
-      {/* Video Background - Full Screen */}
-      <View className="absolute inset-0 bg-gray-900">
-        <Image source={{ uri: item.thumbnail }} className="w-full h-full" resizeMode="cover" />
-      </View>
+const { height } = Dimensions.get('window');
 
-      {/* Right Side Actions */}
-      <View className="absolute right-3 bottom-24 z-20">
-        <View className="space-y-6">
-          {/* Like */}
-          <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <Heart size={28} color="white" fill="white" />
-            </View>
-            <Text className="text-white text-xs font-semibold mt-1">{item.likes}</Text>
-          </TouchableOpacity>
+// A component for a single video item in the list
+const VideoItem = ({ item, isVisible }) => {
+    const videoRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
 
-          {/* Comment */}
-          <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <MessageCircle size={28} color="white" />
-            </View>
-            <Text className="text-white text-xs font-semibold mt-1">{item.comments}</Text>
-          </TouchableOpacity>
-
-          {/* Share */}
-          <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <Share size={28} color="white" />
-            </View>
-            <Text className="text-white text-xs font-semibold mt-1">{item.shares}</Text>
-          </TouchableOpacity>
-
-          {/* Send */}
-          <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <Send size={28} color="white" />
-            </View>
-            <Text className="text-white text-xs font-semibold mt-1">Send</Text>
-          </TouchableOpacity>
-
-          {/* More */}
-          <TouchableOpacity className="items-center">
-            <View className="w-12 h-12 rounded-full bg-black/30 items-center justify-center">
-              <MoreHorizontal size={28} color="white" />
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Bottom Overlay */}
-      <View className="absolute bottom-0 left-0 right-0 z-20">
-        <View className="bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pt-8 pb-6">
-          {/* Send Gift Button */}
-          <TouchableOpacity className="flex-row items-center bg-black/50 rounded-full px-4 py-2 mb-4 self-start">
-            <Gift size={16} color="white" />
-            <Text className="text-white text-sm font-medium ml-2">Send a gift</Text>
-          </TouchableOpacity>
-
-          {/* User Info */}
-          <View className="flex-row items-center mb-3">
-            <View className="w-10 h-10 rounded-full bg-gray-600 mr-3 overflow-hidden">
-              <Image source={{ uri: item.user.avatar }} className="w-full h-full" resizeMode="cover" />
-            </View>
-            <View className="flex-1">
-              <View className="flex-row items-center">
-                <Text className="text-white font-semibold text-base">{item.user.name}</Text>
-                {item.user.verified && (
-                  <View className="w-4 h-4 bg-blue-500 rounded-full ml-2 items-center justify-center">
-                    <Text className="text-white text-xs">✓</Text>
-                  </View>
-                )}
-                <Text className="text-white/70 text-sm ml-2">• {item.user.following ? "Following" : "Follow"}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Video Title */}
-          <Text className="text-white text-base font-medium mb-3">{item.title}</Text>
-
-          {/* Progress Bar */}
-          <View className="w-full h-1 bg-white/20 rounded-full">
-            <View className="w-1/3 h-full bg-white rounded-full" />
-          </View>
-        </View>
-      </View>
-    </View>
-  )
-}
-
-const VideosScreen = () => {
-  const insets = useSafeAreaInsets()
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const translateY = useRef(new Animated.Value(0)).current
-  const isAnimating = useRef(false)
-
-  const animateToVideo = (index: number) => {
-    if (isAnimating.current) return
-
-    isAnimating.current = true
-    const targetY = -index * SCREEN_HEIGHT
-
-    Animated.spring(translateY, {
-      toValue: targetY,
-      tension: 100,
-      friction: 8,
-      useNativeDriver: true,
-    }).start(() => {
-      isAnimating.current = false
-      setCurrentIndex(index)
-    })
-  }
-
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return Math.abs(gestureState.dy) > 5
-    },
-    onPanResponderGrant: () => {
-      // Do nothing on grant
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      // Allow full visual feedback during drag
-      const currentY = -currentIndex * SCREEN_HEIGHT
-      const newY = currentY + gestureState.dy
-      translateY.setValue(newY)
-    },
-    onPanResponderRelease: (evt, gestureState) => {
-      const threshold = 20 // Much lower threshold - just 20px
-      const velocity = Math.abs(gestureState.vy)
-      let newIndex = currentIndex
-
-      // Check velocity first (for fast swipes)
-      if (velocity > 0.5) {
-        if (gestureState.dy > 0 && currentIndex > 0) {
-          newIndex = currentIndex - 1
-        } else if (gestureState.dy < 0 && currentIndex < mockVideos.length - 1) {
-          newIndex = currentIndex + 1
+    const onPlayPausePress = () => {
+        if (videoRef.current) {
+            if (isPlaying) {
+                videoRef.current.pauseAsync();
+            } else {
+                videoRef.current.playAsync();
+            }
+            setIsPlaying(!isPlaying);
         }
-      }
-      // Then check distance (for slow swipes)
-      else if (gestureState.dy > threshold && currentIndex > 0) {
-        newIndex = currentIndex - 1
-      } else if (gestureState.dy < -threshold && currentIndex < mockVideos.length - 1) {
-        newIndex = currentIndex + 1
-      }
+    };
 
-      animateToVideo(newIndex)
-    },
-  })
+    React.useEffect(() => {
+        if (isVisible && !isPlaying) {
+             onPlayPausePress();
+        }
+        if (!isVisible && isPlaying) {
+             onPlayPausePress();
+        }
+    }, [isVisible]);
 
-  return (
-    <View className="flex-1 bg-black" style={{ marginTop: -insets.top - 60 }}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      <View {...panResponder.panHandlers} style={{ flex: 1 }}>
-        <Animated.View
-          style={{
-            transform: [{ translateY }],
-            height: mockVideos.length * SCREEN_HEIGHT,
-          }}
-        >
-          {mockVideos.map((item, index) => (
-            <VideoItem key={item.id} item={item} index={index} />
-          ))}
-        </Animated.View>
-      </View>
+    return (
+        <View style={styles.videoContainer}>
+            <Pressable onPress={onPlayPausePress} style={styles.videoPressable}>
+                 <Video
+                    ref={videoRef}
+                    source={{ uri: item.videoUrl }}
+                    style={styles.video}
+                    resizeMode={ResizeMode.COVER}
+                    shouldPlay={false}
+                    isLooping
+                    onPlaybackStatusUpdate={(status) => {
+                        if (status.isLoaded) {
+                            setIsPlaying(status.isPlaying);
+                        }
+                    }}
+                />
+            </Pressable>
 
-      {/* Fixed Header Overlay */}
-      <View className="absolute top-0 left-0 right-0 z-30" style={{ paddingTop: insets.top + 60 }}>
-        <View className="flex-row justify-between items-center px-4 py-3 bg-gradient-to-b from-black/60 to-transparent">
-          <Text className="text-2xl font-bold text-white">Reels</Text>
-          <View className="flex-row items-center space-x-1">
-            <TouchableOpacity className="p-2 rounded-full">
-              <Camera size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity className="p-2 rounded-full">
-              <Search size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity className="p-2 rounded-full">
-              <UserCircle size={24} color="white" />
-            </TouchableOpacity>
-          </View>
+            <View style={styles.overlay}>
+                <View style={styles.leftContainer}>
+                    <View style={styles.userInfo}>
+                        <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
+                        <Text style={styles.username}>{item.user.name}</Text>
+                    </View>
+                    <Text style={styles.caption}>{item.caption}</Text>
+                </View>
+                <View style={styles.rightContainer}>
+                    <TouchableOpacity style={styles.iconContainer}>
+                        <Ionicons name="heart" size={30} color="white" />
+                        <Text style={styles.iconText}>{item.likes}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.iconContainer}>
+                        <Ionicons name="chatbubble-ellipses" size={30} color="white" />
+                        <Text style={styles.iconText}>{item.comments}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.iconContainer}>
+                        <Ionicons name="share-social" size={30} color="white" />
+                        <Text style={styles.iconText}>{item.shares}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </View>
-      </View>
-    </View>
-  )
+    );
+};
+
+export default function VideosScreen() {
+    const [viewableItems, setViewableItems] = useState([]);
+
+    const viewabilityConfig = {
+      itemVisiblePercentThreshold: 50 // Item is considered visible when 50% of it is visible
+    };
+
+    const onViewableItemsChanged = useCallback(({ viewableItems: newViewableItems }) => {
+        setViewableItems(newViewableItems.map(item => item.key));
+    }, []);
+    
+    const renderItem = useCallback(
+      ({ item }) => <VideoItem item={item} isVisible={viewableItems.includes(item.id)} />,
+      [viewableItems]
+    );
+
+    return (
+        <View style={styles.container}>
+            <FlatList
+                data={mockVideos}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+                pagingEnabled
+                showsVerticalScrollIndicator={false}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
+                getItemLayout={(data, index) => (
+                    {length: height, offset: height * index, index}
+                )}
+            />
+        </View>
+    );
 }
 
-export default VideosScreen
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'black',
+    },
+    videoContainer: {
+        width: '100%',
+        height: height,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    videoPressable: {
+        width: '100%',
+        height: '100%',
+        position: 'absolute',
+    },
+    video: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: 15,
+        paddingBottom: 80, // Adjust this to avoid tab bar overlap
+    },
+    leftContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        alignItems: 'flex-start',
+    },
+    rightContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingLeft: 10,
+    },
+    userInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'white',
+        marginRight: 10,
+    },
+    username: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    caption: {
+        color: 'white',
+        fontSize: 14,
+    },
+    iconContainer: {
+        alignItems: 'center',
+        marginBottom: 25,
+    },
+    iconText: {
+        color: 'white',
+        fontSize: 12,
+        marginTop: 5,
+    },
+});
