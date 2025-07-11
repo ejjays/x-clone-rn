@@ -1,11 +1,12 @@
 // mobile/app/(tabs)/videos.tsx
 import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable, StatusBar } from 'react-native';
+// REMOVED: StatusBar is no longer imported here from 'react-native'
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
-import BottomSheet from '@gorhom/react-native-bottom-sheet';
-import CommentsBottomSheet from '@/components/CommentsBottomSheet'; // Import the new component
+import BottomSheet from '@gorhom/bottom-sheet';
+import CommentsBottomSheet from '@/components/CommentsBottomSheet';
 
 const mockVideos = [
     {
@@ -147,7 +148,7 @@ export default function VideosScreen() {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" />
+            {/* REMOVED: The <StatusBar barStyle="light-content" /> component is now gone */}
             <FlatList
                 data={mockVideos}
                 renderItem={renderItem}
