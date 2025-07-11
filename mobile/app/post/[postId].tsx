@@ -33,7 +33,7 @@ const PostDetailsScreen = () => {
   }
 
   const insets = useSafeAreaInsets();
-  const { post, isLoading, error, refetch, createComment, isCreatingComment, likeComment } = usePost(postId);
+  const { post, isLoading, error, refetch, createComment, isCreatingComment, likeComment, reactToPost } = usePost(postId);
   const { currentUser } = useCurrentUser();
   const [commentText, setCommentText] = useState("");
 
@@ -47,7 +47,13 @@ const PostDetailsScreen = () => {
     });
   };
 
-  const HEADER_HEIGHT = 60; // Approximate header height
+  const handleLikePost = () => {
+    if (post) {
+      reactToPost({ postId: post._id, reactionType: 'like' });
+    }
+  };
+
+  const HEADER_HEIGHT = 60;
 
   if (isLoading) {
     return (
@@ -69,7 +75,9 @@ const PostDetailsScreen = () => {
   }
 
   const isOwnPost = post.user._id === currentUser?._id;
-  const isLiked = post.likes.includes(currentUser?._id ?? "");
+  const currentUserReaction = post.reactions.find(r => r.user?._id === currentUser?._id);
+  const isLiked = currentUserReaction?.type === 'like';
+  const likeCount = post.reactions.filter(r => r.type === 'like').length;
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
@@ -119,12 +127,12 @@ const PostDetailsScreen = () => {
               
               {/* --- POST ACTIONS --- */}
               <View className="flex-row justify-around py-3 mt-2 px-4">
-                <View className="flex-row items-center space-x-2">
+                <TouchableOpacity onPress={handleLikePost} className="flex-row items-center space-x-2">
                   <Heart size={22} color={isLiked ? "#E0245E" : "#657786"} fill={isLiked ? "#E0245E" : "none"} />
                   <Text className={`font-medium ml-1 ${isLiked ? "text-red-500" : "text-gray-500"}`}>
-                    {formatNumber(post.likes?.length || 0)} Like
+                    {formatNumber(likeCount)} Like
                   </Text>
-                </View>
+                </TouchableOpacity>
                 <View className="flex-row items-center space-x-2">
                   <CommentIcon size={22} color="#657786" />
                   <Text className="text-gray-500 font-medium ml-1">{formatNumber(post.comments?.length || 0)} Comment</Text>
