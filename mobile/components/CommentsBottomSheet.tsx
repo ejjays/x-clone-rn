@@ -1,17 +1,15 @@
 // mobile/components/CommentsBottomSheet.tsx
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 
 const mockComments = [
-  { id: '1', user: 'Jane Doe', avatar: 'https://randomuser.me/api/portraits/women/4.jpg', text: 'This is amazing! 🤩' },
-  { id: '2', user: 'John Smith', avatar: 'https://randomuser.me/api/portraits/men/5.jpg', text: 'Great content, keep it up!' },
-  { id: '3', user: 'Alex Johnson', avatar: 'https://randomuser.me/api/portraits/men/6.jpg', text: 'Love this! ❤️ This is a slightly longer comment to see how the text wrapping looks within the new message bubble style that we are implementing. It should wrap nicely and look great.' },
+  { id: '1', user: 'Joey Aromin', avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=100&h=100&fit=crop&crop=face', text: 'one thing I disagree sa mga sinabi mo. yung mga dati pang reports ng mga aliens ay totoo maaring hindi lahat pero totoo ito. hindi nga lang sila ‘aliens’ rather the correct term is devil. angels and demons have always been here around us' },
+  { id: '2', user: 'soshabby.ph', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face', text: 'Finally waiting for someone to talk about this here in the Phils' },
+  { id: '3', user: 'Anthony Bautista Asoy', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face', text: 'Yes Lord!! I am very excited for your coming lord. I OFFER you my life and I will follow you till the end.' },
   { id: '4', user: 'Sarah Lee', avatar: 'https://randomuser.me/api/portraits/women/7.jpg', text: 'So inspiring!' },
   { id: '5', user: 'Mike Brown', avatar: 'https://randomuser.me/api/portraits/men/8.jpg', text: 'Wow, I never knew this.' },
   { id: '6', user: 'Emily White', avatar: 'https://randomuser.me/api/portraits/women/9.jpg', text: 'Can\'t wait for the next one!' },
-  { id: '7', user: 'Chris Green', avatar: 'https://randomuser.me/api/portraits/men/10.jpg', text: 'Absolutely fantastic work.' },
-  { id: '8', user: 'Jessica Blue', avatar: 'https://randomuser.me/api/portraits/women/11.jpg', text: 'This made my day.' },
 ];
 
 interface CommentsBottomSheetProps {
@@ -42,10 +40,11 @@ const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetPro
       backdropComponent={(props) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
       )}
+      handleIndicatorStyle={styles.handleIndicator}
       backgroundStyle={styles.bottomSheetBackground}
     >
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>Comments ({mockComments.length})</Text>
+        <Text style={styles.headerText}>Comments</Text>
       </View>
       <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
         {mockComments.map((comment) => (
@@ -60,29 +59,35 @@ const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetPro
 
 const styles = StyleSheet.create({
   bottomSheetBackground: {
-    backgroundColor: '#F0F2F5', // A light grey, similar to messenger
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  handleIndicator: {
+    backgroundColor: '#E0E0E0',
+    width: 40,
   },
   headerContainer: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     alignItems: 'center',
-    backgroundColor: '#F0F2F5',
+    // FIX: Reduced vertical padding to make header more compact
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1C1E21',
   },
   contentContainer: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 20,
     paddingBottom: 40,
   },
   commentContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   avatar: {
     width: 40,
@@ -91,30 +96,22 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   commentBubble: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F0F2F5', // Facebook's comment bubble color
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    flex: 1, // Allow the bubble to take remaining space
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2.22,
-    elevation: 3,
+    flex: 1, 
   },
   commentUser: {
     fontWeight: '600',
     fontSize: 14,
     color: '#050505',
-    marginBottom: 2,
+    marginBottom: 1,
   },
   commentText: {
     fontSize: 15,
     color: '#050505',
-    lineHeight: 20, // Improved line spacing for readability
+    lineHeight: 20,
   },
 });
 
