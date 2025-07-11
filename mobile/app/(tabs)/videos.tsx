@@ -1,13 +1,11 @@
-// mobile/app/(tabs)/videos.tsx
 import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CommentsBottomSheet from '@/components/CommentsBottomSheet';
 import { StatusBar } from 'expo-status-bar';
-import { useFocusEffect } from 'expo-router';
 
 const mockVideos = [
     {
@@ -93,7 +91,6 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
                 />
             </Pressable>
 
-            {/* The overlay now uses `insets` to correctly position content away from edges */}
             <View style={[styles.overlay, { paddingBottom: insets.bottom + 80, paddingLeft: insets.left + 15, paddingRight: insets.right + 15 }]}>
                 <View style={styles.leftContainer}>
                     <View style={styles.userInfo}>
@@ -133,19 +130,6 @@ export default function VideosScreen() {
         bottomSheetRef.current?.close();
     };
     
-    // This hook will set the status bar style to "light" when the screen is focused
-    useFocusEffect(
-      useCallback(() => {
-        StatusBar.setBarStyle('light');
-        // On Android, make sure the status bar is not translucent
-        Platform.OS === 'android' && StatusBar.setTranslucent(true);
-        // On iOS, when we leave the screen, we can revert to the default
-        return () => {
-          StatusBar.setBarStyle('dark');
-        }
-      }, [])
-    );
-
     const viewabilityConfig = {
       itemVisiblePercentThreshold: 50
     };
@@ -161,6 +145,9 @@ export default function VideosScreen() {
 
     return (
         <View style={styles.container}>
+            {/* THIS IS THE FIX: Render the StatusBar component with the 'light' style */}
+            <StatusBar style="light" />
+            
             <FlatList
                 data={mockVideos}
                 renderItem={renderItem}
