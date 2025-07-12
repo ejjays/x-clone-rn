@@ -1,5 +1,6 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable } from 'react-native';
+// mobile/app/(tabs)/videos.tsx
+import React, { useRef, useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
@@ -7,49 +8,14 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import CommentsBottomSheet from '@/components/CommentsBottomSheet';
 import PostReactionsPicker, { postReactions } from '@/components/PostReactionsPicker';
 import * as Haptics from 'expo-haptics';
-
-const mockVideos = [
-    {
-        id: '1',
-        videoUrl: 'http://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4',
-        user: {
-            name: 'John Doe',
-            avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-        },
-        caption: 'This is a beautiful buck! #nature #bunny',
-        likes: '123K',
-        comments: '456',
-        shares: '789',
-    },
-    {
-        id: '2',
-        videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-        user: {
-            name: 'Jane Smith',
-            avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-        },
-        caption: 'Having fun with the team! #work #fun',
-        likes: '245K',
-        comments: '1.2K',
-        shares: '987',
-    },
-    {
-        id: '3',
-        videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-        user: {
-            name: 'Sam Wilson',
-            avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-        },
-        caption: 'Elephants are majestic creatures. #wildlife #elephants',
-        likes: '500K',
-        comments: '3.1K',
-        shares: '2.5K',
-    },
-];
+import { usePosts } from '@/hooks/usePosts';
+import type { Post } from '@/types';
+import { formatNumber } from '@/utils/formatters';
 
 const { height, width } = Dimensions.get('window');
 
-const VideoItem = ({ item, isVisible, onCommentPress }) => {
+// VideoItem component remains largely the same, but now accepts a 'Post' object
+const VideoItem = ({ item, isVisible, onCommentPress }: { item: Post, isVisible: boolean, onCommentPress: () => void }) => {
     const videoRef = useRef<Video>(null);
     const [isPaused, setIsPaused] = useState(true);
     const insets = useSafeAreaInsets();
@@ -99,12 +65,14 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
             <Pressable onPress={onPlayPausePress} style={styles.videoPressable}>
                  <Video
                     ref={videoRef}
-                    source={{ uri: item.videoUrl }}
+                    source={{ uri: item.video! }}
                     style={styles.video}
                     resizeMode={ResizeMode.COVER}
                     isLooping
                     onPlaybackStatusUpdate={(status) => {
+                        // @ts-ignore
                         if (status.isLoaded) {
+                            // @ts-ignore
                             setIsPaused(!status.isPlaying);
                         }
                     }}
@@ -114,10 +82,10 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
             <View style={[styles.overlay, { paddingBottom: insets.bottom + 80, paddingLeft: insets.left + 15, paddingRight: insets.right + 15 }]}>
                 <View style={styles.leftContainer}>
                     <View style={styles.userInfo}>
-                        <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
-                        <Text style={styles.username}>{item.user.name}</Text>
+                        <Image source={{ uri: item.user.profilePicture }} style={styles.avatar} />
+                        <Text style={styles.username}>{item.user.firstName} {item.user.lastName}</Text>
                     </View>
-                    <Text style={styles.caption}>{item.caption}</Text>
+                    <Text style={styles.caption}>{item.content}</Text>
                 </View>
                 <View style={styles.rightContainer}>
                     <TouchableOpacity
@@ -126,15 +94,15 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
                         onLongPress={handleLongPress}
                         style={styles.iconContainer}>
                         <Text style={{fontSize: 30}}>{selectedReaction ? selectedReaction.emoji : '🤍'}</Text>
-                        <Text style={styles.iconText}>{item.likes}</Text>
+                        <Text style={styles.iconText}>{formatNumber(item.reactions.length)}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.iconContainer} onPress={onCommentPress}>
                         <Ionicons name="chatbubble-ellipses" size={30} color="white" />
-                        <Text style={styles.iconText}>{item.comments}</Text>
+                        <Text style={styles.iconText}>{formatNumber(item.comments.length)}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.iconContainer}>
                         <Ionicons name="share-social" size={30} color="white" />
-                        <Text style={styles.iconText}>{item.shares}</Text>
+                        <Text style={styles.iconText}>0</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -142,6 +110,7 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
                 isVisible={pickerVisible}
                 onClose={() => setPickerVisible(false)}
                 onSelect={handleReactionSelect}
+                // @ts-ignore
                 anchorMeasurements={anchorMeasurements}
             />
         </View>
@@ -149,8 +118,14 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
 };
 
 export default function VideosScreen() {
+    const { posts, isLoading, error, refetch } = usePosts();
     const [viewableItems, setViewableItems] = useState<string[]>([]);
     const bottomSheetRef = useRef<BottomSheet>(null);
+
+    // Filter posts to only include those with videos
+    const videoPosts = useMemo(() => {
+        return posts.filter(post => post.video && post.video.trim() !== '');
+    }, [posts]);
 
     const handleOpenComments = () => {
         bottomSheetRef.current?.expand();
@@ -164,21 +139,50 @@ export default function VideosScreen() {
       itemVisiblePercentThreshold: 50
     };
 
-    const onViewableItemsChanged = useCallback(({ viewableItems: newViewableItems }) => {
+    const onViewableItemsChanged = useCallback(({ viewableItems: newViewableItems }: { viewableItems: Array<{ item: Post; key: string }> }) => {
         setViewableItems(newViewableItems.map(item => item.key as string));
     }, []);
 
     const renderItem = useCallback(
-      ({ item }) => <VideoItem item={item} isVisible={viewableItems.includes(item.id)} onCommentPress={handleOpenComments} />,
+      ({ item }: { item: Post }) => <VideoItem item={item} isVisible={viewableItems.includes(item._id)} onCommentPress={handleOpenComments} />,
       [viewableItems]
     );
+
+    if (isLoading) {
+        return (
+            <View style={styles.centered}>
+                <ActivityIndicator size="large" color="#FFF" />
+                <Text style={styles.infoText}>Loading videos...</Text>
+            </View>
+        )
+    }
+
+    if (error) {
+        return (
+            <View style={styles.centered}>
+                <Text style={styles.infoText}>Could not load videos.</Text>
+                <TouchableOpacity onPress={() => refetch()}>
+                    <Text style={[styles.infoText, { color: '#1877F2' }]}>Retry</Text>
+                </TouchableOpacity>
+            </View>
+        )
+    }
+    
+    if (videoPosts.length === 0) {
+        return (
+            <View style={styles.centered}>
+                 <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
+                <Text style={styles.infoText}>No videos have been posted yet.</Text>
+            </View>
+        )
+    }
 
     return (
         <View style={styles.container}>
             <FlatList
-                data={mockVideos}
+                data={videoPosts}
                 renderItem={renderItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item._id}
                 pagingEnabled
                 showsVerticalScrollIndicator={false}
                 onViewableItemsChanged={onViewableItemsChanged}
@@ -187,6 +191,7 @@ export default function VideosScreen() {
                 decelerationRate="fast"
                 disableIntervalMomentum
             />
+            {/* The user requested to keep the mock comments sheet for now */}
             <CommentsBottomSheet bottomSheetRef={bottomSheetRef} onClose={handleCloseComments} />
         </View>
     );
@@ -196,6 +201,17 @@ const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'black',
+    },
+    centered: {
+        flex: 1,
+        backgroundColor: 'black',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    infoText: {
+        color: 'white',
+        fontSize: 16,
+        marginTop: 10,
     },
     videoContainer: {
         width: width,
