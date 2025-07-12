@@ -36,58 +36,55 @@ export const useCreatePost = () => {
       Alert.alert("Error", errorMessage);
     },
   });
-  
+
   const uploadMediaToCloudinary = async (media: { uri: string; type: 'image' | 'video' }): Promise<string | null> => {
-      const formData = new FormData();
-      formData.append('file', {
-        uri: media.uri,
-        type: media.type === 'image' ? 'image/jpeg' : 'video/mp4',
-        name: `upload.${media.type === 'image' ? 'jpg' : 'mp4'}`,
-      } as any);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      
-      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
-      
-      try {
-        const response = await axios.post(cloudinaryUrl, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return response.data.secure_url;
-      } catch (e) {
-        console.error("Cloudinary upload failed:", e);
-        Alert.alert("Upload Failed", "Could not upload your media. Please check your internet connection and try again.");
-        return null;
-      }
+    const formData = new FormData();
+    formData.append('file', {
+      uri: media.uri,
+      type: media.type === 'image' ? 'image/jpeg' : 'video/mp4',
+      name: `upload.${media.type === 'image' ? 'jpg' : 'mp4'}`,
+    } as any);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    // FIX: Explicitly set the resource_type for Cloudinary
+    formData.append('resource_type', media.type);
+
+    // FIX: Use the correct endpoint based on the media type
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${media.type}/upload`;
+
+    try {
+      console.log(`Uploading ${media.type} to Cloudinary...`);
+      const response = await axios.post(uploadUrl, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      console.log('Cloudinary upload successful:', response.data.secure_url);
+      return response.data.secure_url;
+    } catch (e: any) {
+      console.error("Cloudinary upload failed:", e.response?.data || e.message);
+      Alert.alert("Upload Failed", "Could not upload your media. Please check your internet connection and try again.");
+      return null;
+    }
   };
 
   const handleMediaPicker = async () => {
     try {
-      console.log("Requesting media library permissions...");
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (permissionResult.status !== "granted") {
-        console.log("Permission denied.");
         Alert.alert("Permission Required", `We need permission to access your media. Please grant access in your phone's settings.`);
         return;
       }
       
-      console.log("Permission granted. Launching image library...");
       const pickerOptions: ImagePicker.ImagePickerOptions = {
-        // FIX: The value should be the string 'All', not an enum.
-        mediaTypes: 'All', 
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: false,
         quality: 1,
       };
 
       const result = await ImagePicker.launchImageLibraryAsync(pickerOptions);
-      console.log("Image picker result:", result);
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        console.log("Asset selected:", asset);
         setSelectedMedia({ uri: asset.uri, type: asset.type as "image" | "video" });
-      } else {
-          console.log("Image picker was canceled or no asset was selected.");
       }
     } catch (error) {
         console.error("Error in handleMediaPicker:", error);
