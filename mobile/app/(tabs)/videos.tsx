@@ -142,7 +142,7 @@ export default function VideosScreen() {
   const { posts, isLoading, error, refetch } = usePosts();
   const [viewableItems, setViewableItems] = useState<string[]>([]);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const insets = useSafeAreaInsets(); // Correctly get insets here
+  const insets = useSafeAreaInsets();
 
   const videoPosts = useMemo(() => {
     return posts.filter((post) => post.video && post.video.trim() !== "");
@@ -176,7 +176,7 @@ export default function VideosScreen() {
         insets={insets}
       />
     ),
-    [viewableItems, insets], // Pass `insets` and add to dependency array
+    [viewableItems, insets],
   );
 
   if (isLoading) {
