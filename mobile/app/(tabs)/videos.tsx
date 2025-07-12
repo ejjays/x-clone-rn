@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets, type EdgeInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { Video, ResizeMode, AVPlaybackStatusSuccess } from "expo-av";
+import { Video, ResizeMode, AVPlaybackStatus, AVPlaybackStatusSuccess } from "expo-av";
 import BottomSheet from "@gorhom/bottom-sheet";
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
 import PostReactionsPicker, { postReactions } from "@/components/PostReactionsPicker";
@@ -43,10 +43,32 @@ const VideoItem = ({
   const [status, setStatus] = useState<AVPlaybackStatusSuccess | null>(null);
 
   useEffect(() => {
-    if (!isVisible && videoRef.current) {
-      videoRef.current.unloadAsync();
+    const video = videoRef.current;
+    if (!video) {
+      return;
     }
-  }, [isVisible]);
+
+    const manageVideo = async () => {
+      if (isVisible) {
+        // When the video becomes visible, load and play it.
+        try {
+          await video.loadAsync({ uri: item.video! }, { shouldPlay: true });
+        } catch (e) {
+          console.error(`Error loading video for post ${item._id}:`, e);
+        }
+      } else {
+        // When the video is no longer visible, unload it to save resources.
+        await video.unloadAsync();
+      }
+    };
+
+    manageVideo();
+
+    return () => {
+      // Cleanup: unload the video when the component is unmounted.
+      video.unloadAsync();
+    };
+  }, [isVisible, item.video]);
 
   const onPlayPausePress = () => {
     if (status?.isPlaying) {
@@ -70,22 +92,31 @@ const VideoItem = ({
     setPickerVisible(false);
   };
 
+  const handlePlaybackStatusUpdate = (newStatus: AVPlaybackStatus) => {
+      if (newStatus.isLoaded) {
+          setStatus(newStatus);
+      } else {
+          // If the status is not loaded, it might be due to an error or unloading
+          setStatus(null);
+      }
+  }
+
   return (
     <View style={styles.videoContainer}>
       <Pressable onPress={onPlayPausePress} style={styles.videoPressable}>
         <Video
           ref={videoRef}
-          source={{ uri: item.video! }}
           style={styles.video}
           resizeMode={ResizeMode.COVER}
           isLooping
-          shouldPlay={isVisible}
-          onPlaybackStatusUpdate={(s) => {
-            if (s.isLoaded) {
-              setStatus(s);
-            }
-          }}
+          onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+          onError={(error) => console.log(`Video Error for post ${item._id}:`, error)}
         />
+        {status === null && isVisible && (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#FFF" />
+            </View>
+        )}
       </Pressable>
 
       <View
@@ -221,6 +252,9 @@ export default function VideosScreen() {
         snapToInterval={height}
         decelerationRate="fast"
         disableIntervalMomentum
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={2}
       />
       <CommentsBottomSheet bottomSheetRef={bottomSheetRef} onClose={handleCloseComments} />
     </View>
@@ -247,12 +281,19 @@ const styles = StyleSheet.create({
     width: width,
     height: height,
     backgroundColor: "black",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   videoPressable: {
     ...StyleSheet.absoluteFillObject,
   },
   video: {
     ...StyleSheet.absoluteFillObject,
+  },
+   loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
