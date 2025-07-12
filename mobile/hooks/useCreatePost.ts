@@ -19,7 +19,7 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   const createPostMutation = useMutation({
-    mutationFn: async (postData: { content: string; mediaUrl?: string; mediaType?: "image" | "video" }) => {
+    mutationFn: async (postData: { content: string; mediaUrl?: string; mediaType?: "image" | "video"; onSuccess?: () => void; }) => {
       return api.post("/posts", postData);
     },
     onSuccess: (_, variables) => {
@@ -45,14 +45,23 @@ export const useCreatePost = () => {
       name: `upload.${media.type === 'image' ? 'jpg' : 'mp4'}`,
     } as any);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    // FIX: Explicitly set the resource_type for Cloudinary
-    formData.append('resource_type', media.type);
+    
+    // -- START OF FIX --
+    // If the media is a video, add transformation parameters to make it web-friendly.
+    if (media.type === 'video') {
+        // This tells Cloudinary to convert the video to a standard mp4 format,
+        // limit the resolution to 1080p, and use an efficient codec (h.264).
+        formData.append(
+          "transformation",
+          "f_auto,w_1080,h_1080,c_limit,q_auto/f_mp4,vc_h264,ac_aac"
+        );
+    }
+    // -- END OF FIX --
 
-    // FIX: Use the correct endpoint based on the media type
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${media.type}/upload`;
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
 
     try {
-      console.log(`Uploading ${media.type} to Cloudinary...`);
+      console.log(`Uploading ${media.type} to Cloudinary with optimizations...`);
       const response = await axios.post(uploadUrl, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
       });
