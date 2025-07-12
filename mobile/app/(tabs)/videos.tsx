@@ -11,7 +11,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets, type EdgeInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Video, ResizeMode, AVPlaybackStatusSuccess } from "expo-av";
 import BottomSheet from "@gorhom/bottom-sheet";
@@ -28,10 +28,12 @@ const VideoItem = ({
   item,
   isVisible,
   onCommentPress,
+  insets,
 }: {
   item: Post;
   isVisible: boolean;
   onCommentPress: () => void;
+  insets: EdgeInsets;
 }) => {
   const videoRef = useRef<Video>(null);
   const likeButtonRef = useRef<TouchableOpacity>(null);
@@ -40,7 +42,6 @@ const VideoItem = ({
   const [selectedReaction, setSelectedReaction] = useState(null);
   const [status, setStatus] = useState<AVPlaybackStatusSuccess | null>(null);
 
-  // This effect unloads the video when it's not visible to save memory and prevent potential playback issues.
   useEffect(() => {
     if (!isVisible && videoRef.current) {
       videoRef.current.unloadAsync();
@@ -77,8 +78,8 @@ const VideoItem = ({
           source={{ uri: item.video! }}
           style={styles.video}
           resizeMode={ResizeMode.COVER}
-          isLooping // Ensures the video loops as requested.
-          shouldPlay={isVisible} // This enables autoplay when the video is visible.
+          isLooping
+          shouldPlay={isVisible}
           onPlaybackStatusUpdate={(s) => {
             if (s.isLoaded) {
               setStatus(s);
@@ -141,8 +142,8 @@ export default function VideosScreen() {
   const { posts, isLoading, error, refetch } = usePosts();
   const [viewableItems, setViewableItems] = useState<string[]>([]);
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const insets = useSafeAreaInsets(); // Correctly get insets here
 
-  // Filter posts to only include those with videos
   const videoPosts = useMemo(() => {
     return posts.filter((post) => post.video && post.video.trim() !== "");
   }, [posts]);
@@ -168,9 +169,14 @@ export default function VideosScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: Post }) => (
-      <VideoItem item={item} isVisible={viewableItems.includes(item._id)} onCommentPress={handleOpenComments} />
+      <VideoItem
+        item={item}
+        isVisible={viewableItems.includes(item._id)}
+        onCommentPress={handleOpenComments}
+        insets={insets}
+      />
     ),
-    [viewableItems],
+    [viewableItems, insets], // Pass `insets` and add to dependency array
   );
 
   if (isLoading) {
@@ -216,7 +222,6 @@ export default function VideosScreen() {
         decelerationRate="fast"
         disableIntervalMomentum
       />
-      {/* The user requested to keep the mock comments sheet for now */}
       <CommentsBottomSheet bottomSheetRef={bottomSheetRef} onClose={handleCloseComments} />
     </View>
   );
