@@ -5,7 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CommentsBottomSheet from '@/components/CommentsBottomSheet';
-// NOTE: We have removed `import { StatusBar } from "expo-status-bar";`
+import PostReactionsPicker, { postReactions } from '@/components/PostReactionsPicker';
+import * as Haptics from 'expo-haptics';
 
 const mockVideos = [
     {
@@ -53,6 +54,11 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
     const [isPaused, setIsPaused] = useState(true);
     const insets = useSafeAreaInsets();
 
+    const likeButtonRef = useRef<TouchableOpacity>(null);
+    const [pickerVisible, setPickerVisible] = useState(false);
+    const [anchorMeasurements, setAnchorMeasurements] = useState(null);
+    const [selectedReaction, setSelectedReaction] = useState(null);
+
     const onPlayPausePress = () => {
         if (videoRef.current) {
             if (isPaused) {
@@ -72,6 +78,21 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
             onPlayPausePress();
         }
     }, [isVisible]);
+
+
+    const handleLongPress = () => {
+        likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
+          // @ts-ignore
+          setAnchorMeasurements({ pageX, pageY });
+          setPickerVisible(true);
+        });
+      };
+    
+      const handleReactionSelect = (reaction: any) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setSelectedReaction(reaction);
+        setPickerVisible(false);
+      };
 
     return (
         <View style={styles.videoContainer}>
@@ -99,8 +120,12 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
                     <Text style={styles.caption}>{item.caption}</Text>
                 </View>
                 <View style={styles.rightContainer}>
-                    <TouchableOpacity style={styles.iconContainer}>
-                        <Ionicons name="heart" size={30} color="white" />
+                    <TouchableOpacity
+                        ref={likeButtonRef}
+                        onPress={() => handleReactionSelect(selectedReaction ? null : postReactions.find(r => r.type === 'like'))}
+                        onLongPress={handleLongPress}
+                        style={styles.iconContainer}>
+                        <Text style={{fontSize: 30}}>{selectedReaction ? selectedReaction.emoji : '🤍'}</Text>
                         <Text style={styles.iconText}>{item.likes}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.iconContainer} onPress={onCommentPress}>
@@ -113,6 +138,12 @@ const VideoItem = ({ item, isVisible, onCommentPress }) => {
                     </TouchableOpacity>
                 </View>
             </View>
+            <PostReactionsPicker
+                isVisible={pickerVisible}
+                onClose={() => setPickerVisible(false)}
+                onSelect={handleReactionSelect}
+                anchorMeasurements={anchorMeasurements}
+            />
         </View>
     );
 };
@@ -136,7 +167,7 @@ export default function VideosScreen() {
     const onViewableItemsChanged = useCallback(({ viewableItems: newViewableItems }) => {
         setViewableItems(newViewableItems.map(item => item.key as string));
     }, []);
-    
+
     const renderItem = useCallback(
       ({ item }) => <VideoItem item={item} isVisible={viewableItems.includes(item.id)} onCommentPress={handleOpenComments} />,
       [viewableItems]
