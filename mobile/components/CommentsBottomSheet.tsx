@@ -18,7 +18,8 @@ interface CommentsBottomSheetProps {
 }
 
 const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetProps) => {
-  const snapPoints = useMemo(() => ['50%', '85%'], []);
+  // FIX: Changed snap points to give a height similar to Facebook Reels
+  const snapPoints = useMemo(() => ['65%'], []);
 
   const renderComment = ({ item }: { item: typeof mockComments[0] }) => (
     <View style={styles.commentContainer}>
@@ -69,7 +70,6 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
-    // FIX: Reduced vertical padding to make header more compact
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   commentBubble: {
-    backgroundColor: '#F0F2F5', // Facebook's comment bubble color
+    backgroundColor: '#F0F2F5',
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,

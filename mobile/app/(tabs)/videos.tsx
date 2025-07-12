@@ -201,6 +201,9 @@ export default function VideosScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={[styles.header, { top: insets.top }]}>
+        <Text style={styles.headerTitle}>Reels</Text>
+      </View>
       <FlatList
         data={videoPosts}
         renderItem={renderItem}
@@ -225,6 +228,19 @@ const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "black",
+  },
+  header: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    zIndex: 10,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
   },
   centered: {
     flex: 1,

@@ -7,7 +7,7 @@ import { Text, TouchableOpacity, View, useWindowDimensions } from "react-native"
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar"; // Import StatusBar here
+import { StatusBar } from "expo-status-bar"; 
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);

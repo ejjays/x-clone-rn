@@ -1,4 +1,3 @@
-// mobile/components/PostComposer.tsx
 import { useUser } from "@clerk/clerk-expo"
 import { router } from "expo-router"
 import { Image as ImageIcon } from "lucide-react-native"
