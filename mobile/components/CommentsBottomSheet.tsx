@@ -18,7 +18,7 @@ interface CommentsBottomSheetProps {
 }
 
 const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetProps) => {
-  // FIX: Changed snap points to give a height similar to Facebook Reels
+  // FIX: Using a single snap point which will be activated by snapToIndex(0)
   const snapPoints = useMemo(() => ['65%'], []);
 
   const renderComment = ({ item }: { item: typeof mockComments[0] }) => (
@@ -34,7 +34,7 @@ const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetPro
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={-1}
+      index={-1} // Start closed
       snapPoints={snapPoints}
       enablePanDownToClose
       onClose={onClose}
@@ -96,11 +96,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   commentBubble: {
-    backgroundColor: '#F0F2F5', // Facebook's comment bubble color
+    backgroundColor: '#F0F2F5',
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    flex: 1, 
+    flex: 1,
   },
   commentUser: {
     fontWeight: '600',
