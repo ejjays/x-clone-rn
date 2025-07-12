@@ -6,10 +6,10 @@ import * as ImagePicker from "expo-image-picker";
 import axios from 'axios';
 import { useApiClient } from "../utils/api";
 
-// --- IMPORTANT: REPLACE THESE VALUES ---
+// --- IMPORTANT: MAKE SURE THESE VALUES ARE CORRECT ---
 const CLOUDINARY_CLOUD_NAME = "dtna5t2em";
 const CLOUDINARY_UPLOAD_PRESET = "aivq0snq";
-// ------------------------------------
+// ----------------------------------------------------
 
 export const useCreatePost = () => {
   const [content, setContent] = useState("");
@@ -20,7 +20,6 @@ export const useCreatePost = () => {
 
   const createPostMutation = useMutation({
     mutationFn: async (postData: { content: string; mediaUrl?: string; mediaType?: "image" | "video" }) => {
-      // This sends the media URL to our backend, not the file itself
       return api.post("/posts", postData);
     },
     onSuccess: (_, variables) => {
@@ -62,23 +61,36 @@ export const useCreatePost = () => {
   };
 
   const handleMediaPicker = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.status !== "granted") {
-      Alert.alert("Permission Required", `We need permission to access your media to continue.`);
-      return;
-    }
+    try {
+      console.log("Requesting media library permissions...");
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    const pickerOptions: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ImagePicker.MediaType.All, // FIX: Use new enum
-      allowsEditing: false,
-      quality: 1,
-    };
+      if (permissionResult.status !== "granted") {
+        console.log("Permission denied.");
+        Alert.alert("Permission Required", `We need permission to access your media. Please grant access in your phone's settings.`);
+        return;
+      }
+      
+      console.log("Permission granted. Launching image library...");
+      const pickerOptions: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ImagePicker.MediaType.All,
+        allowsEditing: false,
+        quality: 1,
+      };
 
-    const result = await ImagePicker.launchImageLibraryAsync(pickerOptions);
+      const result = await ImagePicker.launchImageLibraryAsync(pickerOptions);
+      console.log("Image picker result:", result);
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-      setSelectedMedia({ uri: asset.uri, type: asset.type as "image" | "video" });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        console.log("Asset selected:", asset);
+        setSelectedMedia({ uri: asset.uri, type: asset.type as "image" | "video" });
+      } else {
+          console.log("Image picker was canceled or no asset was selected.");
+      }
+    } catch (error) {
+        console.error("Error in handleMediaPicker:", error);
+        Alert.alert("Error", "Could not open the media gallery. Please try again.");
     }
   };
 
