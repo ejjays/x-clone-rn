@@ -3,11 +3,10 @@ import asyncHandler from "express-async-handler";
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
 import { getAuth } from "@clerk/express";
-import cloudinary from "../config/cloudinary.js";
-
 import Notification from "../models/notification.model.js";
 import Comment from "../models/comment.model.js";
 
+// --- HELPER TO POPULATE POSTS ---
 const populatePost = (query) =>
   query
     .populate("user", "username firstName lastName profilePicture")
@@ -23,6 +22,7 @@ const populatePost = (query) =>
       select: "username firstName lastName profilePicture",
     });
 
+// --- CONTROLLERS ---
 export const getPosts = asyncHandler(async (req, res) => {
   const posts = await populatePost(Post.find().sort({ createdAt: -1 }));
   res.status(200).json({ posts });
@@ -49,10 +49,10 @@ export const getUserPosts = asyncHandler(async (req, res) => {
 
 export const createPost = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
-  const { content, mediaType } = req.body;
-  const mediaFile = req.file;
+  // FIX: We now receive mediaUrl and mediaType from the body, not a file.
+  const { content, mediaUrl, mediaType } = req.body;
 
-  if (!content && !mediaFile) {
+  if (!content && !mediaUrl) {
     return res.status(400).json({ error: "Post must contain either text or media" });
   }
 
@@ -61,39 +61,12 @@ export const createPost = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: "User not found" });
   }
 
-  let mediaUrl = "";
-
-  if (mediaFile) {
-    try {
-      const base64Media = `data:${mediaFile.mimetype};base64,${mediaFile.buffer.toString("base64")}`;
-      
-      const uploadOptions = {
-        folder: "social_media_posts",
-        resource_type: "auto",
-        transformation: []
-      };
-
-      if (mediaType === 'image') {
-        uploadOptions.transformation.push(
-            { width: 800, height: 600, crop: "limit" }, 
-            { quality: "auto" }, 
-            { format: "auto" }
-        );
-      }
-
-      const uploadResponse = await cloudinary.uploader.upload(base64Media, uploadOptions);
-      mediaUrl = uploadResponse.secure_url;
-    } catch (uploadError) {
-      console.error("Cloudinary upload error:", uploadError);
-      return res.status(400).json({ error: "Failed to upload media" });
-    }
-  }
-
   const newPostData = {
     user: user._id,
     content: content || "",
   };
 
+  // FIX: No more Cloudinary logic. Just save the URL provided by the client.
   if (mediaUrl && mediaType) {
     if (mediaType === 'image') {
       newPostData.image = mediaUrl;
