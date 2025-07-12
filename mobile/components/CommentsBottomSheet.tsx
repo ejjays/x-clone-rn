@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   commentBubble: {
-    backgroundColor: '#F0F2F5',
+    backgroundColor: '#F0F2F5', // Facebook's comment bubble color
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,

@@ -193,6 +193,9 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <View style={styles.centered}>
+        <View style={[styles.header, { top: insets.top }]}>
+           <Text style={styles.headerTitle}>Reels</Text>
+        </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
         <Text style={styles.infoText}>No videos have been posted yet.</Text>
       </View>
@@ -201,7 +204,8 @@ export default function VideosScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { top: insets.top }]}>
+       {/* FIX: Removed the `top: insets.top` style to prevent double padding. */}
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
       <FlatList
@@ -233,6 +237,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
+    top: 0, // Let the parent safe area handle top padding
     paddingHorizontal: 16,
     paddingVertical: 10,
     zIndex: 10,
