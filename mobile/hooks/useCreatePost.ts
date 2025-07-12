@@ -19,7 +19,7 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   const createPostMutation = useMutation({
-    mutationFn: async (postData: { content: string; mediaUrl?: string; mediaType?: "image" | "video"; onSuccess?: () => void; }) => {
+    mutationFn: async (postData: { content: string; mediaUrl?: string; mediaType?: "image" | "video", onSuccess?: () => void }) => {
       return api.post("/posts", postData);
     },
     onSuccess: (_, variables) => {
@@ -36,50 +36,45 @@ export const useCreatePost = () => {
       Alert.alert("Error", errorMessage);
     },
   });
-
+  
   const uploadMediaToCloudinary = async (media: { uri: string; type: 'image' | 'video' }): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append('file', {
-      uri: media.uri,
-      type: media.type === 'image' ? 'image/jpeg' : 'video/mp4',
-      name: `upload.${media.type === 'image' ? 'jpg' : 'mp4'}`,
-    } as any);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    
-    // NOTE: Transformation parameters are NOT allowed during an unsigned upload.
-    // They will be added to the URL for on-the-fly transformation upon delivery.
-
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
-
-    try {
-      console.log(`Uploading ${media.type} to Cloudinary...`);
-      const response = await axios.post(uploadUrl, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const formData = new FormData();
+      formData.append('file', {
+        uri: media.uri,
+        type: media.type === 'image' ? 'image/jpeg' : 'video/mp4',
+        name: `upload.${media.type === 'image' ? 'jpg' : 'mp4'}`,
+      } as any);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
       
-      let secureUrl = response.data.secure_url;
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
+      
+      try {
+        console.log(`Uploading ${media.type} to Cloudinary...`);
+        const response = await axios.post(uploadUrl, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        
+        let secureUrl = response.data.secure_url;
 
-      // -- START OF FIX --
-      // If the uploaded media is a video, we will modify the returned URL 
-      // to include transformation parameters for playback compatibility.
-      if (media.type === 'video' && secureUrl) {
-          const transformation = "w_1080,h_1920,c_limit,f_mp4,vc_h264:main:4.0,ac_aac,q_auto";
-          const urlParts = secureUrl.split('/upload/');
-          if (urlParts.length === 2) {
-              secureUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
-              console.log('Applying on-the-fly transformation. New URL:', secureUrl);
-          }
+        // If the uploaded media is a video, we will modify the returned URL 
+        // to include transformation parameters for playback compatibility.
+        if (media.type === 'video' && secureUrl) {
+            const transformation = "w_1080,h_1920,c_limit,f_mp4,vc_h264:main:4.0,ac_aac,q_auto";
+            const urlParts = secureUrl.split('/upload/');
+            if (urlParts.length === 2) {
+                secureUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
+                console.log('Applying on-the-fly transformation. New URL:', secureUrl);
+            }
+        }
+        
+        console.log('Cloudinary upload successful. Final URL:', secureUrl);
+        return secureUrl;
+
+      } catch (e: any) {
+        console.error("Cloudinary upload failed:", e.response?.data || e.message);
+        Alert.alert("Upload Failed", "Could not upload your media. Please check your internet connection and try again.");
+        return null;
       }
-      // -- END OF FIX --
-      
-      console.log('Cloudinary upload successful. Final URL:', secureUrl);
-      return secureUrl;
-
-    } catch (e: any) {
-      console.error("Cloudinary upload failed:", e.response?.data || e.message);
-      Alert.alert("Upload Failed", "Could not upload your media. Please check your internet connection and try again.");
-      return null;
-    }
   };
 
   const handleMediaPicker = async () => {
