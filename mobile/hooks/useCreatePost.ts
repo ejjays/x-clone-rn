@@ -46,27 +46,35 @@ export const useCreatePost = () => {
     } as any);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     
-    // -- START OF FIX --
-    // If the media is a video, add transformation parameters to make it web-friendly.
-    if (media.type === 'video') {
-        // This tells Cloudinary to convert the video to a standard mp4 format,
-        // limit the resolution to 1080p, and use an efficient codec (h.264).
-        formData.append(
-          "transformation",
-          "f_auto,w_1080,h_1080,c_limit,q_auto/f_mp4,vc_h264,ac_aac"
-        );
-    }
-    // -- END OF FIX --
+    // NOTE: Transformation parameters are NOT allowed during an unsigned upload.
+    // They will be added to the URL for on-the-fly transformation upon delivery.
 
     const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
 
     try {
-      console.log(`Uploading ${media.type} to Cloudinary with optimizations...`);
+      console.log(`Uploading ${media.type} to Cloudinary...`);
       const response = await axios.post(uploadUrl, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
       });
-      console.log('Cloudinary upload successful:', response.data.secure_url);
-      return response.data.secure_url;
+      
+      let secureUrl = response.data.secure_url;
+
+      // -- START OF FIX --
+      // If the uploaded media is a video, we will modify the returned URL 
+      // to include transformation parameters for playback compatibility.
+      if (media.type === 'video' && secureUrl) {
+          const transformation = "w_1080,h_1920,c_limit,f_mp4,vc_h264:main:4.0,ac_aac,q_auto";
+          const urlParts = secureUrl.split('/upload/');
+          if (urlParts.length === 2) {
+              secureUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
+              console.log('Applying on-the-fly transformation. New URL:', secureUrl);
+          }
+      }
+      // -- END OF FIX --
+      
+      console.log('Cloudinary upload successful. Final URL:', secureUrl);
+      return secureUrl;
+
     } catch (e: any) {
       console.error("Cloudinary upload failed:", e.response?.data || e.message);
       Alert.alert("Upload Failed", "Could not upload your media. Please check your internet connection and try again.");
