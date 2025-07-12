@@ -73,7 +73,8 @@ export const useCreatePost = () => {
       
       console.log("Permission granted. Launching image library...");
       const pickerOptions: ImagePicker.ImagePickerOptions = {
-        mediaTypes: ImagePicker.MediaType.All,
+        // FIX: The value should be the string 'All', not an enum.
+        mediaTypes: 'All', 
         allowsEditing: false,
         quality: 1,
       };
