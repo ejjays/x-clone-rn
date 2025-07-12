@@ -193,7 +193,7 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <View style={styles.centered}>
-         <View style={[styles.header, { paddingTop: insets.top + 10, paddingBottom: 10 }]}>
+         <View style={[styles.header, { paddingTop: insets.top }]}>
            <Text style={styles.headerTitle}>Reels</Text>
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
@@ -204,7 +204,7 @@ export default function VideosScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10, paddingBottom: 10 }]}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
       <FlatList
@@ -238,8 +238,8 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     paddingHorizontal: 16,
+    paddingBottom: 10,
     zIndex: 10,
-    // FIX: Removed vertical padding and background color for a cleaner look
   },
   headerTitle: {
     fontSize: 28,

@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const mockComments = [
   { id: '1', user: 'Joey Aromin', avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=100&h=100&fit=crop&crop=face', text: 'one thing I disagree sa mga sinabi mo. yung mga dati pang reports ng mga aliens ay totoo maaring hindi lahat pero totoo ito. hindi nga lang sila ‘aliens’ rather the correct term is devil. angels and demons have always been here around us' },
@@ -18,8 +19,9 @@ interface CommentsBottomSheetProps {
 }
 
 const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetProps) => {
-  // FIX: Provide a second snap point to define a maximum height.
-  // This stops the sheet from expanding to full screen on over-scroll.
+  const { top: topInset } = useSafeAreaInsets();
+  
+  // This snap point setup is correct. 80% for initial open, 95% is the max it can expand to.
   const snapPoints = useMemo(() => ['80%', '95%'], []);
 
   const renderComment = ({ item }: { item: typeof mockComments[0] }) => (
@@ -39,6 +41,8 @@ const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetPro
       snapPoints={snapPoints}
       enablePanDownToClose
       onClose={onClose}
+      // FIX: Added topInset to respect the device's safe area (e.g., status bar)
+      topInset={topInset}
       backdropComponent={(props) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
       )}
