@@ -1,3 +1,4 @@
+// backend/src/controllers/post.controller.js
 import asyncHandler from "express-async-handler";
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
@@ -7,7 +8,6 @@ import cloudinary from "../config/cloudinary.js";
 import Notification from "../models/notification.model.js";
 import Comment from "../models/comment.model.js";
 
-// --- HELPER TO POPULATE POSTS ---
 const populatePost = (query) =>
   query
     .populate("user", "username firstName lastName profilePicture")
@@ -23,7 +23,6 @@ const populatePost = (query) =>
       select: "username firstName lastName profilePicture",
     });
 
-// --- CONTROLLERS ---
 export const getPosts = asyncHandler(async (req, res) => {
   const posts = await populatePost(Post.find().sort({ createdAt: -1 }));
   res.status(200).json({ posts });
@@ -50,11 +49,11 @@ export const getUserPosts = asyncHandler(async (req, res) => {
 
 export const createPost = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
-  const { content } = req.body;
-  const imageFile = req.file;
+  const { content, mediaType } = req.body;
+  const mediaFile = req.file;
 
-  if (!content && !imageFile) {
-    return res.status(400).json({ error: "Post must contain either text or image" });
+  if (!content && !mediaFile) {
+    return res.status(400).json({ error: "Post must contain either text or media" });
   }
 
   const user = await User.findOne({ clerkId: userId });
@@ -62,28 +61,48 @@ export const createPost = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: "User not found" });
   }
 
-  let imageUrl = "";
+  let mediaUrl = "";
 
-  if (imageFile) {
+  if (mediaFile) {
     try {
-      const base64Image = `data:${imageFile.mimetype};base64,${imageFile.buffer.toString("base64")}`;
-      const uploadResponse = await cloudinary.uploader.upload(base64Image, {
+      const base64Media = `data:${mediaFile.mimetype};base64,${mediaFile.buffer.toString("base64")}`;
+      
+      const uploadOptions = {
         folder: "social_media_posts",
-        resource_type: "image",
-        transformation: [{ width: 800, height: 600, crop: "limit" }, { quality: "auto" }, { format: "auto" }],
-      });
-      imageUrl = uploadResponse.secure_url;
+        resource_type: "auto",
+        transformation: []
+      };
+
+      if (mediaType === 'image') {
+        uploadOptions.transformation.push(
+            { width: 800, height: 600, crop: "limit" }, 
+            { quality: "auto" }, 
+            { format: "auto" }
+        );
+      }
+
+      const uploadResponse = await cloudinary.uploader.upload(base64Media, uploadOptions);
+      mediaUrl = uploadResponse.secure_url;
     } catch (uploadError) {
       console.error("Cloudinary upload error:", uploadError);
-      return res.status(400).json({ error: "Failed to upload image" });
+      return res.status(400).json({ error: "Failed to upload media" });
     }
   }
 
-  const newPost = await Post.create({
+  const newPostData = {
     user: user._id,
     content: content || "",
-    image: imageUrl,
-  });
+  };
+
+  if (mediaUrl && mediaType) {
+    if (mediaType === 'image') {
+      newPostData.image = mediaUrl;
+    } else if (mediaType === 'video') {
+      newPostData.video = mediaUrl;
+    }
+  }
+
+  const newPost = await Post.create(newPostData);
 
   const populatedPost = await populatePost(Post.findById(newPost._id));
   res.status(201).json({ post: populatedPost });
@@ -110,30 +129,24 @@ export const reactToPost = asyncHandler(async (req, res) => {
 
   if (existingReactionIndex > -1) {
     if (post.reactions[existingReactionIndex].type === reactionType) {
-      // User is removing their reaction
       post.reactions.splice(existingReactionIndex, 1);
     } else {
-      // User is changing their reaction
       post.reactions[existingReactionIndex].type = reactionType;
     }
   } else {
-    // User is adding a new reaction
     post.reactions.push({ user: user._id, type: reactionType });
-    // Create notification only for new reactions and not on own post
     if (post.user.toString() !== user._id.toString()) {
       await Notification.create({
         from: user._id,
         to: post.user,
-        type: "like", // Re-using 'like' for any reaction notification
+        type: "like",
         post: postId,
       });
     }
   }
 
   await post.save();
-
   const updatedPost = await populatePost(Post.findById(postId));
-
   res.status(200).json({ post: updatedPost, message: "Reaction updated successfully" });
 });
 

@@ -1,3 +1,4 @@
+// backend/src/models/post.model.js
 import mongoose from "mongoose";
 
 const reactionSchema = new mongoose.Schema({
@@ -28,7 +29,11 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    reactions: [reactionSchema], // Replaces the 'likes' array
+    video: {
+      type: String,
+      default: "",
+    },
+    reactions: [reactionSchema],
     comments: [
       {
         type: mongoose.Schema.Types.ObjectId,

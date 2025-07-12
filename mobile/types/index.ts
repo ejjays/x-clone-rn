@@ -1,3 +1,4 @@
+// mobile/types/index.ts
 export interface User {
   _id: string;
   clerkId: string;
@@ -32,9 +33,10 @@ export interface Post {
   _id: string;
   content: string;
   image?: string;
+  video?: string;
   createdAt: string;
   user: User;
-  reactions: Reaction[]; // Replaced 'likes' with 'reactions'
+  reactions: Reaction[];
   comments: Comment[];
 }
 

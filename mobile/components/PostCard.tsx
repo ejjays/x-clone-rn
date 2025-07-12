@@ -7,9 +7,10 @@ import { View, Text, Alert, Image, TouchableOpacity, View as RNView, Pressable }
 import CommentIcon from "../assets/icons/Comment";
 import ShareIcon from "../assets/icons/ShareIcon";
 import { useRef, useState } from "react";
-import PostReactionsPicker, { postReactions } from "./PostReactionsPicker";
+import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from 'expo-haptics';
-import LikeIcon from "../assets/icons/LikeIcon"; // Import the new custom icon
+import LikeIcon from "../assets/icons/LikeIcon";
+import { Video, ResizeMode } from 'expo-av';
 
 interface PostCardProps {
   post: Post;
@@ -59,7 +60,6 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
 
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
-      // @ts-ignore
       setAnchorMeasurements({ pageX, pageY });
       setPickerVisible(true);
     });
@@ -142,13 +142,21 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
         {/* Post Content */}
         {post.content && <Text className="text-gray-900 text-base leading-5 px-4 mb-3">{post.content}</Text>}
 
-        {/* Post Image */}
+        {/* Media Display */}
         {post.image && <Image source={{ uri: post.image }} className="w-full h-72" resizeMode="cover" />}
+        {post.video && (
+           <Video
+             source={{ uri: post.video }}
+             style={{ width: '100%', height: 300 }}
+             useNativeControls
+             resizeMode={ResizeMode.CONTAIN}
+             isLooping
+           />
+        )}
         
         {/* Reactions and Comments Count */}
         {(post.reactions.length > 0 || post.comments.length > 0) && (
           <View className="flex-row justify-between items-center px-4 py-0.5">
-            {/* Left side: Reactions */}
             {post.reactions.length > 0 ? (
               <View className="flex-row items-center">
                 <View className="flex-row">
@@ -162,7 +170,6 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
                 <View /> 
             )}
 
-            {/* Right side: Comments Count */}
             {post.comments.length > 0 && (
               <Text className="text-gray-500 text-base">
                 {formatNumber(post.comments.length)} {post.comments.length === 1 ? 'comment' : 'comments'}
@@ -197,6 +204,7 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
         isVisible={pickerVisible}
         onClose={() => setPickerVisible(false)}
         onSelect={handleReactionSelect}
+        // @ts-ignore
         anchorMeasurements={anchorMeasurements}
       />
     </>
