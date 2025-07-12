@@ -18,8 +18,9 @@ interface CommentsBottomSheetProps {
 }
 
 const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetProps) => {
-  // FIX: Using a single snap point which will be activated by snapToIndex(0)
-  const snapPoints = useMemo(() => ['80%'], []);
+  // FIX: Provide a second snap point to define a maximum height.
+  // This stops the sheet from expanding to full screen on over-scroll.
+  const snapPoints = useMemo(() => ['80%', '95%'], []);
 
   const renderComment = ({ item }: { item: typeof mockComments[0] }) => (
     <View style={styles.commentContainer}>

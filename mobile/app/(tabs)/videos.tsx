@@ -140,7 +140,6 @@ export default function VideosScreen() {
   }, [posts]);
 
   const handleOpenComments = () => {
-    // FIX: Changed from .expand() to .snapToIndex(0) for precise height control
     bottomSheetRef.current?.snapToIndex(0);
   };
 
@@ -194,7 +193,7 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <View style={styles.centered}>
-        <View style={[styles.header, { paddingTop: insets.top }]}>
+         <View style={[styles.header, { paddingTop: insets.top + 10, paddingBottom: 10 }]}>
            <Text style={styles.headerTitle}>Reels</Text>
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
@@ -205,7 +204,7 @@ export default function VideosScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 10, paddingBottom: 10 }]}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
       <FlatList
@@ -239,9 +238,8 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     paddingHorizontal: 16,
-    paddingVertical: 10,
     zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.2)', // Slight background for title visibility
+    // FIX: Removed vertical padding and background color for a cleaner look
   },
   headerTitle: {
     fontSize: 28,
