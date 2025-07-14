@@ -32,7 +32,7 @@ export default function Register() {
         <View className="mb-6">
           <View className="relative">
             <TextInput
-              className="bg-gray-100 rounded-2xl px-6 py-5 text-base border-2 border-blue-600 pr-12"
+              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12 border-2 border-gray-200 focus:border-blue-600 text-gray-800"
               placeholder="Email"
               placeholderTextColor="#9CA3AF"
               value={email}
@@ -50,7 +50,7 @@ export default function Register() {
         <View className="mb-6">
           <View className="relative">
             <TextInput
-              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12"
+              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12 text-gray-800 border-2 border-gray-200 focus:border-blue-600"
               placeholder="Password"
               placeholderTextColor="#9CA3AF"
               value={password}
@@ -67,7 +67,7 @@ export default function Register() {
         <View className="mb-10">
           <View className="relative">
             <TextInput
-              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12"
+              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12 text-gray-800 border-2 border-gray-200 focus:border-blue-600" // Ensure this class is applied
               placeholder="Confirm Password"
               placeholderTextColor="#9CA3AF"
               value={confirmPassword}
@@ -123,7 +123,7 @@ export default function Register() {
             {isLoading ? (
               <ActivityIndicator size="small" color="#4285F4" />
             ) : (
-              <Image source={require("../../assets/images/google.png")} className="w-8 h-8" resizeMode="contain" />
+              <Image source={require("../../assets/images/google.png")} className="w-12 h-12" resizeMode="contain" />
             )}
           </TouchableOpacity>
 
@@ -156,7 +156,7 @@ export default function Register() {
               elevation: 3,
             }}
           >
-            <Ionicons name="logo-facebook" size={24} color="#1877F2" />
+            <Ionicons name="logo-facebook" size={30} color="#1877F2" />
           </TouchableOpacity>
         </View>
       </View>

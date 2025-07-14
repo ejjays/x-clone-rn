@@ -16,18 +16,18 @@ export default function Welcome() {
 
         {/* TITLE */}
         <View className="mb-12">
-          <Text className="text-4xl font-bold text-blue-600 text-center leading-tight mb-6">
-            Connect with Your{"\n"}Faith Community
+          <Text className="text-4xl font-poppins-bold text-blue-600 text-center leading-tight mb-6 text-3xl">
+            <Text className="font-poppins-extra-bold">Pag-ibig Christian Ministries</Text>
           </Text>
-          <Text className="text-center text-gray-700 text-base px-4 leading-6">
-            Join PCMI Infanta and stay connected with{"\n"}sermons, events, and your church family
+          <Text className="text-center text-gray-700 text-lg font-poppins-regular px-4 leading-7">
+            Welcome to PCMI - Infanta's Official Application. Login or register to continue.
           </Text>
         </View>
 
         {/* BUTTONS */}
         <View className="flex-row gap-4 mt-8">
           <TouchableOpacity
-            className="flex-1 bg-blue-600 rounded-2xl py-4 shadow-lg"
+            className="flex-1 bg-blue-600 rounded-2xl py-4 shadow-lg"a
             style={{
               shadowColor: "#3B82F6",
               shadowOffset: { width: 0, height: 4 },

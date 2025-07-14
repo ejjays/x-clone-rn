@@ -20,7 +20,7 @@ export default function Login() {
       <View className="flex-1 px-8 justify-center">
         {/* TITLE */}
         <View className="mb-12">
-          <Text className="text-4xl font-bold text-blue-600 text-center mb-6">Login here</Text>
+          <Text className="text-4xl font-bold text-blue-800 text-center mb-6">Login here</Text>
           <Text className="text-center text-gray-800 text-base font-medium leading-6">
             Welcome back you've{"\n"}been missed!
           </Text>
@@ -30,7 +30,7 @@ export default function Login() {
         <View className="mb-6">
           <View className="relative">
             <TextInput
-              className="bg-gray-100 rounded-2xl px-6 py-5 text-base border-2 border-blue-600 pr-12"
+              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12 border border-gray-300 focus:border-blue-600 text-gray-800"
               placeholder="Email"
               placeholderTextColor="#9CA3AF"
               value={email}
@@ -47,8 +47,8 @@ export default function Login() {
         {/* PASSWORD INPUT */}
         <View className="mb-4">
           <View className="relative">
-            <TextInput
-              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12"
+            <TextInput 
+              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12 text-gray-800 border border-gray-300 focus:border-blue-600"
               placeholder="Password"
               placeholderTextColor="#9CA3AF"
               value={password}
@@ -87,7 +87,12 @@ export default function Login() {
         </TouchableOpacity>
 
         {/* OR CONTINUE WITH */}
-        <Text className="text-center text-blue-600 text-base font-medium mb-8">Or continue with</Text>
+        <View className="flex-row items-center mb-8">
+             <View className="flex-1 h-px bg-gray-300 mr-2" />
+            <Text className="text-center text-gray-500 text-base font-medium">Or continue with</Text>
+             <View className="flex-1 h-px bg-gray-300 ml-2" />
+         </View>
+
 
         {/* SOCIAL AUTH BUTTONS */}
         <View className="flex-row justify-center gap-6">
@@ -106,7 +111,7 @@ export default function Login() {
             {isLoading ? (
               <ActivityIndicator size="small" color="#4285F4" />
             ) : (
-              <Image source={require("../../assets/images/google.png")} className="w-8 h-8" resizeMode="contain" />
+              <Image source={require("../../assets/images/google.png")} className="w-12 h-12" resizeMode="contain" />
             )}
           </TouchableOpacity>
 
@@ -139,7 +144,7 @@ export default function Login() {
               elevation: 3,
             }}
           >
-            <Ionicons name="logo-facebook" size={24} color="#1877F2" />
+            <Ionicons name="logo-facebook" size={30} color="#1877F2" />
           </TouchableOpacity>
         </View>
       </View>
