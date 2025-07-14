@@ -100,11 +100,15 @@ export default function Register() {
 
         {/* ALREADY HAVE ACCOUNT LINK */}
         <TouchableOpacity className="mb-10" onPress={() => router.push("/(auth)/login")}>
-          <Text className="text-center text-gray-700 text-base font-medium">Already have an account</Text>
+          <Text className="text-center text-blue-600 text-base font-medium">Already have an account</Text>
         </TouchableOpacity>
 
         {/* OR CONTINUE WITH */}
-        <Text className="text-center text-blue-600 text-base font-medium mb-8">Or continue with</Text>
+        <View className="flex-row items-center mb-8">
+             <View className="flex-1 h-px bg-gray-300 mr-2" />
+            <Text className="text-center text-gray-500 text-base font-medium">Or continue with</Text>
+             <View className="flex-1 h-px bg-gray-300 ml-2" />
+         </View>
 
         {/* SOCIAL AUTH BUTTONS */}
         <View className="flex-row justify-center gap-6">
@@ -155,6 +159,8 @@ export default function Register() {
               shadowRadius: 4,
               elevation: 3,
             }}
+            onPress={() => handleSocialAuth("oauth_facebook")}
+            disabled={isLoading}
           >
             <Ionicons name="logo-facebook" size={30} color="#1877F2" />
           </TouchableOpacity>

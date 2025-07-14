@@ -83,14 +83,14 @@ export default function Login() {
 
         {/* CREATE ACCOUNT LINK */}
         <TouchableOpacity className="mb-10" onPress={() => router.push("/(auth)/register")}>
-          <Text className="text-center text-gray-700 text-base font-medium">Create new account</Text>
+          <Text className="text-center text-blue-600 text-base font-medium">Create new account</Text>
         </TouchableOpacity>
 
         {/* OR CONTINUE WITH */}
         <View className="flex-row items-center mb-8">
-             <View className="flex-1 h-px bg-gray-300 mr-2" />
-            <Text className="text-center text-gray-500 text-base font-medium">Or continue with</Text>
-             <View className="flex-1 h-px bg-gray-300 ml-2" />
+ <View className="flex-1 h-px bg-gray-300 mr-2" />
+ <Text className="text-center text-gray-500 text-base font-medium">Or continue with</Text>
+ <View className="flex-1 h-px bg-gray-300 ml-2" />
          </View>
 
 
@@ -143,6 +143,8 @@ export default function Login() {
               shadowRadius: 4,
               elevation: 3,
             }}
+            onPress={() => handleSocialAuth("oauth_facebook")}
+            
           >
             <Ionicons name="logo-facebook" size={30} color="#1877F2" />
           </TouchableOpacity>
