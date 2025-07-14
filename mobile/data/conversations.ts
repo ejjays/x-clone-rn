@@ -16,7 +16,7 @@ export type ConversationType = {
     name: string
     username: string
     avatar: string
-    verified: boolean
+    verified: boolean 
   }
   lastMessage: string
   time: string
