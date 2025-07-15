@@ -22,8 +22,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Animated, { Layout } from "react-native-reanimated";
-
 import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
+
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>();
   const { client, isConnected, isConnecting } = useStreamChat();
@@ -120,8 +120,9 @@ export default function ChatScreen() {
         const mediaUrl = await uploadMediaToCloudinary(selectedMedia);
         if (mediaUrl) {
           messageData.attachments = [{
-            type: selectedMedia.type === 'image' ? 'image' : 'video', // Use 'image' or 'video'
-            image_url: mediaUrl, // Or 'asset_url' depending on Stream's attachment structure
+            type: selectedMedia.type,
+            asset_url: mediaUrl,
+            thumb_url: mediaUrl,
           }];
         } else {
           Alert.alert("Upload Failed", "Could not upload your media. Message not sent.");
@@ -220,6 +221,7 @@ export default function ChatScreen() {
   const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
     const isFromCurrentUser = message.user?.id === currentUser?.clerkId;
     const hasReactions = message.latest_reactions && message.latest_reactions.length > 0;
+    const attachment = message.attachments?.[0];
 
     const messageAbove = index < messages.length - 1 ? messages[index + 1] : null;
     const messageBelow = index > 0 ? messages[index - 1] : null;
@@ -292,9 +294,15 @@ export default function ChatScreen() {
                     isFromCurrentUser ? "bg-blue-500 shadow-sm" : "bg-gray-200"
                   }`}
                 >
-                  <Text className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
-                    {message.text}
-                  </Text>
+                  {attachment && attachment.type === 'image' && (
+                    <Image source={{ uri: attachment.asset_url || attachment.thumb_url }} className="w-48 h-48 rounded-lg mb-2" />
+                  )}
+
+                  {message.text && (
+                    <Text className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
+                      {message.text}
+                    </Text>
+                  )}
                 </View>
                 <ReactionComponent />
               </TouchableOpacity>
@@ -419,14 +427,14 @@ export default function ChatScreen() {
             </View>
             <TouchableOpacity
               onPress={sendMessage}
-              disabled={!newMessage.trim() || sending}
-              className={`p-3 rounded-full ${newMessage.trim() && !sending ? "bg-blue-500" : "bg-gray-300"}`}
+              disabled={!newMessage.trim() && !selectedMedia || sending}
+              className={`p-3 rounded-full ${(!newMessage.trim() && !selectedMedia) || sending ? "bg-gray-300" : "bg-blue-500"}`}
               style={{ marginBottom: 2 }}
             >
               {sending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Ionicons name="send" size={20} color={newMessage.trim() && !sending ? "white" : "gray"} />
+                <Ionicons name="send" size={20} color={(!newMessage.trim() && !selectedMedia) ? "gray" : "white"} />
               )}
             </TouchableOpacity>
           </View>
