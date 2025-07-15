@@ -29,7 +29,7 @@ export default function NewMessageScreen() {
       const response = await userApi.getAllUsers(api)
       console.log("📦 Raw API response:", response.data)
 
-      const allUsers = response.data?.users || []
+      const allUsers = response.data || []
       console.log("👥 Processed users:", allUsers.length)
 
       const otherUsers = allUsers.filter((user: User) => user.clerkId !== currentUser?.clerkId)

@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query"
-import { useApiClient } from "../utils/api"
+import { useQuery } from "@tanstack/react-query";
+import { useApiClient } from "../utils/api";
 
 export const useAllUsers = () => {
-  const api = useApiClient()
+  const api = useApiClient();
 
   const {
     data: usersData,
@@ -12,13 +12,13 @@ export const useAllUsers = () => {
   } = useQuery({
     queryKey: ["allUsers"],
     queryFn: () => api.get("/users/all"),
-    select: (response) => response.data.users,
-  })
+    select: (response) => response.data,
+  });
 
   return {
     users: usersData || [],
     isLoading,
     error,
     refetch,
-  }
-}
+  };
+};
