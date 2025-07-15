@@ -3,20 +3,21 @@ import { ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View, Aler
 import { router } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useSignUp } from "@clerk/clerk-expo"; // Import useSignUp
+import { useSignUp } from "@clerk/clerk-expo";
 
 export default function Register() {
   const { handleSocialAuth, isLoading } = useSocialAuth();
-  const { isLoaded, signUp, setActive } = useSignUp(); // Initialize useSignUp
+  const { isLoaded, signUp, setActive } = useSignUp();
 
-  const [emailAddress, setEmailAddress] = useState(""); // Renamed to match Clerk's terminology
-  const [password, setPassword] = useState(""); // Keep password state
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  const handleEmailRegister = async () => { // Made async
-    if (!isLoaded) {
+  const handleEmailRegister = async () => {
+    if (!isLoaded || isRegistering) {
       return;
     }
 
@@ -25,24 +26,38 @@ export default function Register() {
       return;
     }
 
+    setIsRegistering(true);
+
     try {
-      await signUp.create({
+      // Create the user in Clerk
+      const signUpAttempt = await signUp.create({
         emailAddress,
         password,
       });
 
-      // User successfully created in Clerk.
-      console.log("User successfully registered with email and password!");
-
-      // Automatically sign in the user after successful registration
-      // This assumes you have autoSignIn: true configured in your Clerk setup
-      // If not, you might need to explicitly call signIn here
-
-      // Redirect to the home page after successful registration
-      router.replace("/(tabs)");
+      // This is the critical step: check if the sign-up was successful
+      // and a session was created, then set it as active.
+      if (signUpAttempt.createdSessionId) {
+        await setActive({ session: signUpAttempt.createdSessionId });
+        console.log("✅ User registered and session activated successfully!");
+        // Now it's safe to redirect to the main app
+        router.replace("/(tabs)");
+      } else {
+        // This case might happen if email verification is turned on
+        // and the session isn't immediately created.
+        console.error("Sign up did not create a session ID.");
+        Alert.alert(
+          "Verification Needed",
+          "Please check your email to verify your account before logging in."
+        );
+        router.push("/(auth)/login");
+      }
     } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      Alert.alert("Error", err.errors[0].message);
+      console.error("Registration Error:", JSON.stringify(err, null, 2));
+      const errorMessage = err.errors?.[0]?.message || "An unknown error occurred during registration.";
+      Alert.alert("Registration Failed", errorMessage);
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -96,7 +111,7 @@ export default function Register() {
         <View className="mb-10">
           <View className="relative">
             <TextInput
-              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12 text-gray-800 border-2 border-gray-200 focus:border-blue-600" // Ensure this class is applied
+              className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12 text-gray-800 border-2 border-gray-200 focus:border-blue-600"
               placeholder="Confirm Password"
               placeholderTextColor="#9CA3AF"
               value={confirmPassword}
@@ -112,9 +127,9 @@ export default function Register() {
           </View>
         </View>
 
-        {/* SIGN UP BUTTON */}\
+        {/* SIGN UP BUTTON */}
         <TouchableOpacity
-          className="bg-blue-600 rounded-2xl py-5 mb-8"
+          className="bg-blue-600 rounded-2xl py-5 mb-8 flex-row items-center justify-center"
           style={{
             shadowColor: "#3B82F6",
             shadowOffset: { width: 0, height: 4 },
@@ -123,23 +138,28 @@ export default function Register() {
             elevation: 8,
           }}
           onPress={handleEmailRegister}
+          disabled={isRegistering}
         >
-          <Text className="text-white font-bold text-lg text-center">Sign up</Text>
+          {isRegistering ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white font-bold text-lg text-center">Sign up</Text>
+          )}
         </TouchableOpacity>
 
-        {/* ALREADY HAVE ACCOUNT LINK */}\
+        {/* ALREADY HAVE ACCOUNT LINK */}
         <TouchableOpacity className="mb-10" onPress={() => router.push("/(auth)/login")}>
           <Text className="text-center text-blue-600 text-base font-medium">Already have an account</Text>
         </TouchableOpacity>
 
-        {/* OR CONTINUE WITH */}\
+        {/* OR CONTINUE WITH */}
         <View className="flex-row items-center mb-8">
           <View className="flex-1 h-px bg-gray-300 mr-2" />
           <Text className="text-center text-gray-500 text-base font-medium">Or continue with</Text>
           <View className="flex-1 h-px bg-gray-300 ml-2" />
         </View>
 
-        {/* SOCIAL AUTH BUTTONS */}\
+        {/* SOCIAL AUTH BUTTONS */}
         <View className="flex-row justify-center gap-6">
           <TouchableOpacity
             className="bg-white rounded-2xl p-4 w-16 h-16 items-center justify-center"
