@@ -6,7 +6,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSignUp } from "@clerk/clerk-expo";
 
 export default function Register() {
-  const { handleSocialAuth, isLoading: isSocialAuthLoading } = useSocialAuth();
+  // This now correctly uses the more specific `isSocialAuthLoading` from our updated hook.
+  const { handleSocialAuth, isSocialAuthLoading } = useSocialAuth();
   const { isLoaded, signUp, setActive } = useSignUp();
 
   const [firstName, setFirstName] = useState("");
@@ -16,14 +17,15 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
+  
+  // This state is only for the email registration button.
+  const [isEmailRegistering, setIsEmailRegistering] = useState(false);
 
   const handleEmailRegister = async () => {
-    if (!isLoaded || isRegistering) {
+    if (!isLoaded || isEmailRegistering) {
       return;
     }
 
-    // --- FORM VALIDATION ---
     if (!firstName || !lastName || !emailAddress || !password) {
       Alert.alert("Missing Fields", "Please fill out all fields to register.");
       return;
@@ -34,10 +36,9 @@ export default function Register() {
       return;
     }
 
-    setIsRegistering(true);
+    setIsEmailRegistering(true);
 
     try {
-      // Create the user in Clerk with first name and last name
       const signUpAttempt = await signUp.create({
         firstName,
         lastName,
@@ -50,7 +51,6 @@ export default function Register() {
         console.log("✅ User registered and session activated successfully!");
         router.replace("/(tabs)");
       } else {
-        // This case might happen if email verification is turned on
         console.error("Sign up did not create a session ID.");
         Alert.alert(
           "Verification Needed",
@@ -63,14 +63,15 @@ export default function Register() {
       const errorMessage = err.errors?.[0]?.message || "An unknown error occurred during registration.";
       Alert.alert("Registration Failed", errorMessage);
     } finally {
-      setIsRegistering(false);
+      setIsEmailRegistering(false);
     }
   };
+
+  const isLoading = isEmailRegistering || isSocialAuthLoading;
 
   return (
     <View className="flex-1 bg-gray-50">
       <View className="flex-1 px-8 justify-center">
-        {/* TITLE */}
         <View className="mb-10">
           <Text className="text-4xl font-bold text-blue-600 text-center mb-6">Create Account</Text>
           <Text className="text-center text-gray-800 text-base font-medium leading-6 px-4">
@@ -78,7 +79,6 @@ export default function Register() {
           </Text>
         </View>
 
-        {/* --- NAME INPUTS --- */}
         <View className="flex-row gap-4 mb-6">
           <View className="flex-1">
             <TextInput
@@ -100,7 +100,6 @@ export default function Register() {
           </View>
         </View>
 
-        {/* EMAIL INPUT */}
         <View className="mb-6">
           <View className="relative">
             <TextInput
@@ -115,7 +114,6 @@ export default function Register() {
           </View>
         </View>
 
-        {/* PASSWORD INPUT */}
         <View className="mb-6">
           <View className="relative">
             <TextInput
@@ -132,7 +130,6 @@ export default function Register() {
           </View>
         </View>
 
-        {/* CONFIRM PASSWORD INPUT */}
         <View className="mb-10">
           <View className="relative">
             <TextInput
@@ -152,7 +149,6 @@ export default function Register() {
           </View>
         </View>
 
-        {/* SIGN UP BUTTON */}
         <TouchableOpacity
           className="bg-blue-600 rounded-2xl py-5 mb-8 flex-row items-center justify-center"
           style={{
@@ -163,28 +159,25 @@ export default function Register() {
             elevation: 8,
           }}
           onPress={handleEmailRegister}
-          disabled={isRegistering}
+          disabled={isLoading}
         >
-          {isRegistering ? (
+          {isEmailRegistering ? (
             <ActivityIndicator color="white" />
           ) : (
             <Text className="text-white font-bold text-lg text-center">Sign up</Text>
           )}
         </TouchableOpacity>
 
-        {/* ALREADY HAVE ACCOUNT LINK */}
         <TouchableOpacity className="mb-10" onPress={() => router.push("/(auth)/login")}>
           <Text className="text-center text-blue-600 text-base font-medium">Already have an account</Text>
         </TouchableOpacity>
         
-        {/* OR CONTINUE WITH */}
         <View className="flex-row items-center mb-8">
           <View className="flex-1 h-px bg-gray-300 mr-2" />
           <Text className="text-center text-gray-500 text-base font-medium">Or continue with</Text>
           <View className="flex-1 h-px bg-gray-300 ml-2" />
         </View>
 
-        {/* SOCIAL AUTH BUTTONS */}
         <View className="flex-row justify-center gap-6">
           <TouchableOpacity
             className="bg-white rounded-2xl p-4 w-16 h-16 items-center justify-center"
@@ -198,7 +191,7 @@ export default function Register() {
             onPress={() => handleSocialAuth("oauth_google")}
             disabled={isLoading}
           >
-            {isLoading ? (
+            {isSocialAuthLoading ? (
               <ActivityIndicator size="small" color="#4285F4" />
             ) : (
               <Image source={require("../../assets/images/google.png")} className="w-12 h-12" resizeMode="contain" />
@@ -217,7 +210,7 @@ export default function Register() {
             onPress={() => handleSocialAuth("oauth_apple")}
             disabled={isLoading}
           >
-            {isLoading ? (
+            {isSocialAuthLoading ? (
               <ActivityIndicator size="small" color="#000" />
             ) : (
               <Image source={require("../../assets/images/apple.png")} className="w-6 h-8" resizeMode="contain" />
@@ -236,7 +229,11 @@ export default function Register() {
             onPress={() => handleSocialAuth("oauth_facebook")}
             disabled={isLoading}
           >
-            <Ionicons name="logo-facebook" size={30} color="#1877F2" />
+            {isSocialAuthLoading ? (
+              <ActivityIndicator size="small" color="#1877F2" />
+            ) : (
+             <Ionicons name="logo-facebook" size={30} color="#1877F2" />
+            )}
           </TouchableOpacity>
         </View>
       </View>
