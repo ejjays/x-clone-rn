@@ -1,5 +1,6 @@
-import { Image, Text, TouchableOpacity, View } from "react-native"
-import { router } from "expo-router"
+// mobile/app/(auth)/welcome.tsx
+import { Image, Text, TouchableOpacity, View } from "react-native";
+import { router } from "expo-router";
 
 export default function Welcome() {
   return (
@@ -16,8 +17,8 @@ export default function Welcome() {
 
         {/* TITLE */}
         <View className="mb-12">
-          <Text className="text-4xl font-poppins-bold text-blue-600 text-center leading-tight mb-6 text-3xl">
-            <Text className="font-poppins-extra-bold">Pag-ibig Christian Ministries</Text>
+          <Text className="text-3xl font-poppins-black text-gray-800 text-center leading-tight mb-6">
+            Pag-ibig Christian Ministries
           </Text>
           <Text className="text-center text-gray-700 text-lg font-poppins-regular px-4 leading-7">
             Welcome to PCMI - Infanta's Official Application. Login or register to continue.
@@ -27,7 +28,7 @@ export default function Welcome() {
         {/* BUTTONS */}
         <View className="flex-row gap-4 mt-8">
           <TouchableOpacity
-            className="flex-1 bg-blue-600 rounded-2xl py-4 shadow-lg"a
+            className="flex-1 bg-blue-600 rounded-2xl py-4 shadow-lg"
             style={{
               shadowColor: "#3B82F6",
               shadowOffset: { width: 0, height: 4 },
@@ -46,5 +47,5 @@ export default function Welcome() {
         </View>
       </View>
     </View>
-  )
+  );
 }
