@@ -1,21 +1,50 @@
-import { useSocialAuth } from "@/hooks/useSocialAuth"
-import { ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View } from "react-native"
-import { router } from "expo-router"
-import { useState } from "react"
-import { Ionicons } from "@expo/vector-icons"
+import { useSocialAuth } from "@/hooks/useSocialAuth";
+import { ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
+import { router } from "expo-router";
+import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useSignUp } from "@clerk/clerk-expo"; // Import useSignUp
 
 export default function Register() {
-  const { handleSocialAuth, isLoading } = useSocialAuth()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const { handleSocialAuth, isLoading } = useSocialAuth();
+  const { isLoaded, signUp, setActive } = useSignUp(); // Initialize useSignUp
 
-  const handleEmailRegister = () => {
-    // TODO: Implement email registration functionality
-    console.log("Email register:", { email, password, confirmPassword })
-  }
+  const [emailAddress, setEmailAddress] = useState(""); // Renamed to match Clerk's terminology
+  const [password, setPassword] = useState(""); // Keep password state
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleEmailRegister = async () => { // Made async
+    if (!isLoaded) {
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    try {
+      await signUp.create({
+        emailAddress,
+        password,
+      });
+
+      // User successfully created in Clerk.
+      console.log("User successfully registered with email and password!");
+
+      // Automatically sign in the user after successful registration
+      // This assumes you have autoSignIn: true configured in your Clerk setup
+      // If not, you might need to explicitly call signIn here
+
+      // Redirect to the home page after successful registration
+      router.replace("/(tabs)");
+    } catch (err: any) {
+      console.error(JSON.stringify(err, null, 2));
+      Alert.alert("Error", err.errors[0].message);
+    }
+  };
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -35,8 +64,8 @@ export default function Register() {
               className="bg-gray-100 rounded-2xl px-6 py-5 text-base pr-12 border-2 border-gray-200 focus:border-blue-600 text-gray-800"
               placeholder="Email"
               placeholderTextColor="#9CA3AF"
-              value={email}
-              onChangeText={setEmail}
+              value={emailAddress}
+              onChangeText={setEmailAddress}
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -83,7 +112,7 @@ export default function Register() {
           </View>
         </View>
 
-        {/* SIGN UP BUTTON */}
+        {/* SIGN UP BUTTON */}\
         <TouchableOpacity
           className="bg-blue-600 rounded-2xl py-5 mb-8"
           style={{
@@ -98,19 +127,19 @@ export default function Register() {
           <Text className="text-white font-bold text-lg text-center">Sign up</Text>
         </TouchableOpacity>
 
-        {/* ALREADY HAVE ACCOUNT LINK */}
+        {/* ALREADY HAVE ACCOUNT LINK */}\
         <TouchableOpacity className="mb-10" onPress={() => router.push("/(auth)/login")}>
           <Text className="text-center text-blue-600 text-base font-medium">Already have an account</Text>
         </TouchableOpacity>
 
-        {/* OR CONTINUE WITH */}
+        {/* OR CONTINUE WITH */}\
         <View className="flex-row items-center mb-8">
-             <View className="flex-1 h-px bg-gray-300 mr-2" />
-            <Text className="text-center text-gray-500 text-base font-medium">Or continue with</Text>
-             <View className="flex-1 h-px bg-gray-300 ml-2" />
-         </View>
+          <View className="flex-1 h-px bg-gray-300 mr-2" />
+          <Text className="text-center text-gray-500 text-base font-medium">Or continue with</Text>
+          <View className="flex-1 h-px bg-gray-300 ml-2" />
+        </View>
 
-        {/* SOCIAL AUTH BUTTONS */}
+        {/* SOCIAL AUTH BUTTONS */}\
         <View className="flex-row justify-center gap-6">
           <TouchableOpacity
             className="bg-white rounded-2xl p-4 w-16 h-16 items-center justify-center"
@@ -167,5 +196,5 @@ export default function Register() {
         </View>
       </View>
     </View>
-  )
+  );
 }
