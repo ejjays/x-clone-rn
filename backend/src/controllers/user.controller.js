@@ -1,7 +1,7 @@
-import User from "../models/user.model.js";
-import Post from "../models/post.model.js";
-import { clerkClient } from "@clerk/clerk-sdk-node";
-import { streamClient } from "../config/stream.js";
+import User from \"../models/user.model.js\";
+import Post from \"../models/post.model.js\";
+import { clerkClient } from \"@clerk/clerk-sdk-node\";
+import { streamClient } from \"../config/stream.js\";
 
 /**
  * @description Sync user from Clerk to the database and Stream
@@ -9,8 +9,8 @@ import { streamClient } from "../config/stream.js";
  */
 export const syncUser = async (req, res) => {
 	if (!req.auth || !req.auth.userId) {
-		console.error("Sync Error: Unauthorized - No auth object or userId on request.");
-		return res.status(401).json({ message: "Unauthorized" });
+		console.error(\"Sync Error: Unauthorized - No auth object or userId on request.\");
+		return res.status(401).json({ message: \"Unauthorized\" });
 	}
 
 	const { userId } = req.auth;
@@ -20,7 +20,7 @@ export const syncUser = async (req, res) => {
 
 		if (!clerkUser) {
 			console.error(`Sync Error: Clerk user with ID ${userId} not found.`);
-			return res.status(404).json({ message: "User not found in Clerk" });
+			return res.status(404).json({ message: \"User not found in Clerk\" });
 		}
 
 		const email = clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress;
@@ -49,8 +49,8 @@ export const syncUser = async (req, res) => {
 		console.log(`✅ User synced successfully: ${dbUser.username} (${dbUser.clerkId})`);
 		res.status(200).json(dbUser);
 	} catch (error) {
-		console.error("❌ Error syncing user:", error);
-		res.status(500).json({ message: "Something went wrong during user sync!" });
+		console.error(\"❌ Error syncing user:\", error);
+		res.status(500).json({ message: \"Something went wrong during user sync!\" });
 	}
 };
 
@@ -75,7 +75,7 @@ export const getUserById = async (req, res) => {
 	try {
 		const user = await User.findOne({ clerkId: req.params.userId });
 		if (!user) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(404).json({ message: \"User not found\" });
 		}
 		const posts = await Post.find({ user: user._id }).sort({ createdAt: -1 });
 
@@ -93,7 +93,7 @@ export const getCurrentUser = async (req, res) => {
 	try {
 		const user = await User.findOne({ clerkId: req.auth.userId });
 		if (!user) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(404).json({ message: \"User not found\" });
 		}
 		res.status(200).json(user);
 	} catch (error) {
@@ -111,23 +111,25 @@ export const followUnfollowUser = async (req, res) => {
 		const currentUser = await User.findOne({ clerkId: req.auth.userId });
 
 		if (!userToFollow || !currentUser) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(404).json({ message: \"User not found\" });
 		}
 
 		if (req.params.userId === req.auth.userId) {
-			return res.status(400).json({ message: "You cannot follow yourself" });
+			return res.status(400).json({ message: \"You cannot follow yourself\" });
 		}
 
 		const isFollowing = currentUser.following.includes(userToFollow._id);
 
 		if (isFollowing) {
+			// Unfollow user
 			await User.updateOne({ _id: currentUser._id }, { $pull: { following: userToFollow._id } });
 			await User.updateOne({ _id: userToFollow._id }, { $pull: { followers: currentUser._id } });
-			res.status(200).json({ message: "User unfollowed successfully" });
+			res.status(200).json({ message: \"User unfollowed successfully\" });
 		} else {
+			// Follow user
 			await User.updateOne({ _id: currentUser._id }, { $push: { following: userToFollow._id } });
 			await User.updateOne({ _id: userToFollow._id }, { $push: { followers: currentUser._id } });
-			res.status(200).json({ message: "User followed successfully" });
+			res.status(200).json({ message: \"User followed successfully\" });
 		}
 	} catch (error) {
 		res.status(500).json({ message: error.message });
@@ -144,7 +146,7 @@ export const updateUserProfile = async (req, res) => {
 	try {
 		const user = await User.findOne({ clerkId: req.auth.userId });
 		if (!user) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(404).json({ message: \"User not found\" });
 		}
 
 		user.username = username || user.username;
