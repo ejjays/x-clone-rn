@@ -21,7 +21,7 @@ export default function Welcome() {
             Pag-ibig Christian Ministries
           </Text>
           <Text className="text-center text-gray-700 text-lg font-poppins-regular px-4 leading-7">
-            Welcome to PCMI - Infanta's Official Application. Login or register to continue.
+          Welcome Kapatid! 👋 Glad to see you here. Login or create an account to continue.
           </Text>
         </View>
 
