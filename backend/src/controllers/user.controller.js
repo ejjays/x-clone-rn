@@ -1,118 +1,185 @@
-import asyncHandler from "express-async-handler"
-import User from "../models/user.model.js"
-import Notification from "../models/notification.model.js"
+import User from "../models/user.model.js";
+import Post from "../models/post.model.js";
+import { clerkClient } from "@clerk/clerk-sdk-node";
+import { streamClient } from "../config/stream.js";
 
-import { getAuth } from "@clerk/express"
-import { clerkClient } from "@clerk/express"
+/**
+ * @description Sync user from Clerk to the database
+ * @route POST /api/users/sync
+ */
+export const syncUser = async (req, res) => {
+	if (!req.auth || !req.auth.userId) {
+		console.error("Sync Error: Unauthorized - No auth object or userId on request.");
+		return res.status(401).json({ message: "Unauthorized" });
+	}
 
-export const getUserProfile = asyncHandler(async (req, res) => {
-  const { username } = req.params
-  const user = await User.findOne({ username })
-  if (!user) return res.status(404).json({ error: "User not found" })
+	const { userId } = req.auth;
 
-  res.status(200).json({ user })
-})
+	try {
+		// Fetch the full user object from Clerk's API
+		const clerkUser = await clerkClient.users.getUser(userId);
 
-export const getAllUsers = asyncHandler(async (req, res) => {
-  console.log("🔄 Getting all users...")
+		if (!clerkUser) {
+			console.error(`Sync Error: Clerk user with ID ${userId} not found.`);
+			return res.status(404).json({ message: "User not found in Clerk" });
+		}
 
-  const users = await User.find({})
-    .select("firstName lastName username profilePicture email bio location createdAt clerkId")
-    .sort({ createdAt: -1 })
+		// Extract the primary email address
+		const email = clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress;
 
-  console.log("✅ Found users:", users.length)
+		// Create a fallback username if none exists
+		const username = clerkUser.username || `user_${userId.slice(5, 12)}`;
+		const profileImage = clerkUser.imageUrl;
 
-  res.status(200).json({
-    success: true,
-    users: users,
-    count: users.length,
-  })
-})
+		// Use findOneAndUpdate with upsert to create or update the user in your DB
+		const dbUser = await User.findOneAndUpdate(
+			{ clerkId: userId },
+			{
+				$set: {
+					clerkId: userId,
+					email,
+					username,
+					profileImage,
+				},
+			},
+			{ upsert: true, new: true, setDefaultsOnInsert: true }
+		);
 
-export const updateProfile = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req)
+		// Upsert user to Stream
+		await streamClient.upsertUser({
+			id: userId,
+			name: username,
+			image: profileImage,
+		});
 
-  const user = await User.findOneAndUpdate({ clerkId: userId }, req.body, { new: true })
+		console.log(`✅ User synced successfully: ${dbUser.username} (${dbUser.clerkId})`);
+		res.status(200).json(dbUser);
+	} catch (error) {
+		console.error("❌ Error syncing user:", error);
+		res.status(500).json({ message: "Something went wrong during user sync!" });
+	}
+};
 
-  if (!user) return res.status(404).json({ error: "User not found" })
+/**
+ * @description Get all users
+ * @route GET /api/users
+ */
+export const getAllUsers = async (req, res) => {
+	try {
+		const users = await User.find({ clerkId: { $ne: req.auth.userId } });
+		res.status(200).json(users);
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
 
-  res.status(200).json({ user })
-})
+/**
+ * @description Get user by ID
+ * @route GET /api/users/:userId
+ */
+export const getUserById = async (req, res) => {
+	try {
+		const user = await User.findOne({ clerkId: req.params.userId });
+		if (!user) {
+			return res.status(404).json({ message: "User not found" });
+		}
+		const posts = await Post.find({ user: user._id }).sort({ createdAt: -1 });
 
-export const syncUser = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req)
+		res.status(200).json({ user, posts });
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
 
-  // check if user already exists in mongodb
-  const existingUser = await User.findOne({ clerkId: userId })
-  if (existingUser) {
-    return res.status(200).json({ user: existingUser, message: "User already exists" })
-  }
+/**
+ * @description Get current user
+ * @route GET /api/users/me
+ */
+export const getCurrentUser = async (req, res) => {
+	try {
+		const user = await User.findOne({ clerkId: req.auth.userId });
+		if (!user) {
+			return res.status(404).json({ message: "User not found" });
+		}
+		res.status(200).json(user);
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
 
-  // create new user from Clerk data
-  const clerkUser = await clerkClient.users.getUser(userId)
+/**
+ * @description Follow/unfollow user
+ * @route POST /api/users/follow/:userId
+ */
+export const followUnfollowUser = async (req, res) => {
+	try {
+		const userToFollow = await User.findOne({ clerkId: req.params.userId });
+		const currentUser = await User.findOne({ clerkId: req.auth.userId });
 
-  const userData = {
-    clerkId: userId,
-    email: clerkUser.emailAddresses[0].emailAddress,
-    firstName: clerkUser.firstName || "",
-    lastName: clerkUser.lastName || "",
-    username: clerkUser.emailAddresses[0].emailAddress.split("@")[0],
-    profilePicture: clerkUser.imageUrl || "",
-  }
+		if (!userToFollow || !currentUser) {
+			return res.status(404).json({ message: "User not found" });
+		}
 
-  const user = await User.create(userData)
+		if (req.params.userId === req.auth.userId) {
+			return res.status(400).json({ message: "You cannot follow yourself" });
+		}
 
-  res.status(201).json({ user, message: "User created successfully" })
-})
+		const isFollowing = currentUser.following.includes(userToFollow._id);
 
-export const getCurrentUser = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req)
-  const user = await User.findOne({ clerkId: userId })
+		if (isFollowing) {
+			// Unfollow user
+			await User.updateOne({ _id: currentUser._id }, { $pull: { following: userToFollow._id } });
+			await User.updateOne({ _id: userToFollow._id }, { $pull: { followers: currentUser._id } });
+			res.status(200).json({ message: "User unfollowed successfully" });
+		} else {
+			// Follow user
+			await User.updateOne({ _id: currentUser._id }, { $push: { following: userToFollow._id } });
+			await User.updateOne({ _id: userToFollow._id }, { $push: { followers: currentUser._id } });
+			res.status(200).json({ message: "User followed successfully" });
+		}
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
 
-  if (!user) return res.status(404).json({ error: "User not found" })
+/**
+ * @description Update user profile
+ * @route PUT /api/users/profile
+ */
+export const updateUserProfile = async (req, res) => {
+	const { username, bio, profileImage: newProfileImage, coverImage: newCoverImage } = req.body;
 
-  res.status(200).json({ user })
-})
+	try {
+		const user = await User.findOne({ clerkId: req.auth.userId });
+		if (!user) {
+			return res.status(404).json({ message: "User not found" });
+		}
 
-export const followUser = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req)
-  const { targetUserId } = req.params
+		user.username = username || user.username;
+		user.bio = bio || user.bio;
+		user.profileImage = newProfileImage || user.profileImage;
+		user.coverImage = newCoverImage || user.coverImage;
 
-  if (userId === targetUserId) return res.status(400).json({ error: "You cannot follow yourself" })
+		await user.save();
 
-  const currentUser = await User.findOne({ clerkId: userId })
-  const targetUser = await User.findById(targetUserId)
+		// also update clerk user
+		const clerkUser = await clerkClient.users.updateUser(req.auth.userId, {
+			username: user.username,
+			publicMetadata: {
+				bio: user.bio,
+			},
+		});
 
-  if (!currentUser || !targetUser) return res.status(404).json({ error: "User not found" })
+		// also update stream user
+		await streamClient.partialUpdateUser({
+			id: req.auth.userId,
+			set: {
+				name: user.username,
+			},
+		});
 
-  const isFollowing = currentUser.following.includes(targetUserId)
-
-  if (isFollowing) {
-    // unfollow
-    await User.findByIdAndUpdate(currentUser._id, {
-      $pull: { following: targetUserId },
-    })
-    await User.findByIdAndUpdate(targetUserId, {
-      $pull: { followers: currentUser._id },
-    })
-  } else {
-    // follow
-    await User.findByIdAndUpdate(currentUser._id, {
-      $push: { following: targetUserId },
-    })
-    await User.findByIdAndUpdate(targetUserId, {
-      $push: { followers: currentUser._id },
-    })
-
-    // create notification
-    await Notification.create({
-      from: currentUser._id,
-      to: targetUserId,
-      type: "follow",
-    })
-  }
-
-  res.status(200).json({
-    message: isFollowing ? "User unfollowed successfully" : "User followed successfully",
-  })
-})
+		res.status(200).json(user);
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
