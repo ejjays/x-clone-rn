@@ -39,11 +39,11 @@ export const uploadMediaToCloudinary = async (media: Media): Promise<string | nu
     type: `${media.type}/${media.uri.split('.').pop()}`,
     name: `${media.type}.${media.uri.split('.').pop()}`,
   } as any); // Type assertion might be needed depending on the exact FormData type definition
-  formData.append('upload_preset', 'your_upload_preset'); // Replace with your Cloudinary upload preset
+  formData.append('aivq0snq'); // Replace with your Cloudinary upload preset
 
   try {
     const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/your_cloud_name/${media.type}/upload`, // Replace with your Cloudinary cloud name
+      `https://api.cloudinary.com/v1_1/dtna5t2em/${media.type}/upload`, // Replace with your Cloudinary cloud name
       formData,
       {
         headers: {
