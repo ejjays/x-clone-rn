@@ -4,7 +4,7 @@ import { clerkClient } from "@clerk/clerk-sdk-node";
 import { streamClient } from "../config/stream.js";
 
 /**
- * @description Sync user from Clerk to the database
+ * @description Sync user from Clerk to the database and Stream
  * @route POST /api/users/sync
  */
 export const syncUser = async (req, res) => {
@@ -16,7 +16,6 @@ export const syncUser = async (req, res) => {
 	const { userId } = req.auth;
 
 	try {
-		// Fetch the full user object from Clerk's API
 		const clerkUser = await clerkClient.users.getUser(userId);
 
 		if (!clerkUser) {
@@ -24,14 +23,10 @@ export const syncUser = async (req, res) => {
 			return res.status(404).json({ message: "User not found in Clerk" });
 		}
 
-		// Extract the primary email address
 		const email = clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress;
-
-		// Create a fallback username if none exists
 		const username = clerkUser.username || `user_${userId.slice(5, 12)}`;
 		const profileImage = clerkUser.imageUrl;
 
-		// Use findOneAndUpdate with upsert to create or update the user in your DB
 		const dbUser = await User.findOneAndUpdate(
 			{ clerkId: userId },
 			{
@@ -45,7 +40,6 @@ export const syncUser = async (req, res) => {
 			{ upsert: true, new: true, setDefaultsOnInsert: true }
 		);
 
-		// Upsert user to Stream
 		await streamClient.upsertUser({
 			id: userId,
 			name: username,
@@ -127,12 +121,10 @@ export const followUnfollowUser = async (req, res) => {
 		const isFollowing = currentUser.following.includes(userToFollow._id);
 
 		if (isFollowing) {
-			// Unfollow user
 			await User.updateOne({ _id: currentUser._id }, { $pull: { following: userToFollow._id } });
 			await User.updateOne({ _id: userToFollow._id }, { $pull: { followers: currentUser._id } });
 			res.status(200).json({ message: "User unfollowed successfully" });
 		} else {
-			// Follow user
 			await User.updateOne({ _id: currentUser._id }, { $push: { following: userToFollow._id } });
 			await User.updateOne({ _id: userToFollow._id }, { $push: { followers: currentUser._id } });
 			res.status(200).json({ message: "User followed successfully" });
@@ -162,15 +154,13 @@ export const updateUserProfile = async (req, res) => {
 
 		await user.save();
 
-		// also update clerk user
-		const clerkUser = await clerkClient.users.updateUser(req.auth.userId, {
+		await clerkClient.users.updateUser(req.auth.userId, {
 			username: user.username,
 			publicMetadata: {
 				bio: user.bio,
 			},
 		});
 
-		// also update stream user
 		await streamClient.partialUpdateUser({
 			id: req.auth.userId,
 			set: {
