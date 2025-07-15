@@ -1,3 +1,4 @@
+// mobile/utils/mediaPicker.ts
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { Platform } from 'react-native';
@@ -23,11 +24,11 @@ export const pickMedia = async (): Promise<Media | null> => {
     quality: 1,
   });
 
-  if (!result.canceled) {
-    const uri = result.assets[0].uri;
-    const type = result.assets[0].type;
-    return { uri, type };
+  if (!result.canceled && result.assets && result.assets.length > 0) {
+    const asset = result.assets[0];
+    return { uri: asset.uri, type: asset.type as 'image' | 'video' };
   }
+
 
   return null;
 };
@@ -39,7 +40,9 @@ export const uploadMediaToCloudinary = async (media: Media): Promise<string | nu
     type: `${media.type}/${media.uri.split('.').pop()}`,
     name: `${media.type}.${media.uri.split('.').pop()}`,
   } as any); // Type assertion might be needed depending on the exact FormData type definition
-  formData.append('aivq0snq'); // Replace with your Cloudinary upload preset
+  
+  // FIX: The 'upload_preset' key was missing here.
+  formData.append('upload_preset', 'aivq0snq'); // Replace with your Cloudinary upload preset
 
   try {
     const response = await axios.post(
