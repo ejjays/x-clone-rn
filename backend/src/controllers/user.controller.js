@@ -25,6 +25,10 @@ export const syncUser = async (req, res) => {
 
 		const email = clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress;
 		const username = clerkUser.username || `user_${userId.slice(5, 12)}`;
+		
+		// --- FIX: Extract first and last name from Clerk user object ---
+		const firstName = clerkUser.firstName;
+		const lastName = clerkUser.lastName;
 		const profileImage = clerkUser.imageUrl;
 
 		const dbUser = await User.findOneAndUpdate(
@@ -34,6 +38,9 @@ export const syncUser = async (req, res) => {
 					clerkId: userId,
 					email,
 					username,
+					// --- FIX: Add firstName and lastName to the database record ---
+					firstName,
+					lastName,
 					profileImage,
 				},
 			},
@@ -42,7 +49,7 @@ export const syncUser = async (req, res) => {
 
 		await streamClient.upsertUser({
 			id: userId,
-			name: username,
+			name: `${firstName} ${lastName}`, // Use full name for Stream Chat
 			image: profileImage,
 		});
 
@@ -53,6 +60,7 @@ export const syncUser = async (req, res) => {
 		res.status(500).json({ message: "Something went wrong during user sync!" });
 	}
 };
+
 
 /**
  * @description Get all users

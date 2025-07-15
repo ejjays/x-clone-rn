@@ -6,9 +6,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSignUp } from "@clerk/clerk-expo";
 
 export default function Register() {
-  const { handleSocialAuth, isLoading } = useSocialAuth();
+  const { handleSocialAuth, isLoading: isSocialAuthLoading } = useSocialAuth();
   const { isLoaded, signUp, setActive } = useSignUp();
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,6 +23,12 @@ export default function Register() {
       return;
     }
 
+    // --- FORM VALIDATION ---
+    if (!firstName || !lastName || !emailAddress || !password) {
+      Alert.alert("Missing Fields", "Please fill out all fields to register.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
       return;
@@ -29,22 +37,20 @@ export default function Register() {
     setIsRegistering(true);
 
     try {
-      // Create the user in Clerk
+      // Create the user in Clerk with first name and last name
       const signUpAttempt = await signUp.create({
+        firstName,
+        lastName,
         emailAddress,
         password,
       });
 
-      // This is the critical step: check if the sign-up was successful
-      // and a session was created, then set it as active.
       if (signUpAttempt.createdSessionId) {
         await setActive({ session: signUpAttempt.createdSessionId });
         console.log("✅ User registered and session activated successfully!");
-        // Now it's safe to redirect to the main app
         router.replace("/(tabs)");
       } else {
         // This case might happen if email verification is turned on
-        // and the session isn't immediately created.
         console.error("Sign up did not create a session ID.");
         Alert.alert(
           "Verification Needed",
@@ -65,11 +71,33 @@ export default function Register() {
     <View className="flex-1 bg-gray-50">
       <View className="flex-1 px-8 justify-center">
         {/* TITLE */}
-        <View className="mb-12">
+        <View className="mb-10">
           <Text className="text-4xl font-bold text-blue-600 text-center mb-6">Create Account</Text>
           <Text className="text-center text-gray-800 text-base font-medium leading-6 px-4">
             Create an account so you can connect with{"\n"}your faith community at PCMI Infanta
           </Text>
+        </View>
+
+        {/* --- NAME INPUTS --- */}
+        <View className="flex-row gap-4 mb-6">
+          <View className="flex-1">
+            <TextInput
+              className="bg-gray-100 rounded-2xl px-6 py-5 text-base border-2 border-gray-200 focus:border-blue-600 text-gray-800"
+              placeholder="First Name"
+              placeholderTextColor="#9CA3AF"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+          </View>
+          <View className="flex-1">
+            <TextInput
+              className="bg-gray-100 rounded-2xl px-6 py-5 text-base border-2 border-gray-200 focus:border-blue-600 text-gray-800"
+              placeholder="Last Name"
+              placeholderTextColor="#9CA3AF"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
         </View>
 
         {/* EMAIL INPUT */}
@@ -84,9 +112,6 @@ export default function Register() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            <View className="absolute right-4 top-5">
-              <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
-            </View>
           </View>
         </View>
 
@@ -151,7 +176,7 @@ export default function Register() {
         <TouchableOpacity className="mb-10" onPress={() => router.push("/(auth)/login")}>
           <Text className="text-center text-blue-600 text-base font-medium">Already have an account</Text>
         </TouchableOpacity>
-
+        
         {/* OR CONTINUE WITH */}
         <View className="flex-row items-center mb-8">
           <View className="flex-1 h-px bg-gray-300 mr-2" />
