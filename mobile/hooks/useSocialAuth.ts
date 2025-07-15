@@ -3,20 +3,23 @@ import { useState } from "react";
 import { Alert } from "react-native";
 
 export const useSocialAuth = () => {
-  // We use `isSocialAuthLoading` to be explicit about what this state controls.
   const [isSocialAuthLoading, setIsSocialAuthLoading] = useState(false);
   const { startSSOFlow } = useSSO();
 
   const handleSocialAuth = async (strategy: "oauth_google" | "oauth_apple" | "oauth_facebook") => {
     setIsSocialAuthLoading(true);
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
-        redirectUrl: "/(auth)/login", // Make sure this matches your Clerk redirect settings
+      // By removing `redirectUrl`, Clerk will automatically use the first redirect URL
+      // you have configured in your Clerk Dashboard. This is the recommended approach.
+      const ssoFlow = await startSSOFlow({
         strategy,
       });
 
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
+      if (ssoFlow.createdSessionId && ssoFlow.setActive) {
+        await ssoFlow.setActive({ session: ssoFlow.createdSessionId });
+      } else if (ssoFlow.externalVerificationRedirectURL) {
+        // This case handles external verification steps if needed.
+        // For standard social auth, this might not be hit often.
       }
     } catch (err: any) {
       console.log("Error in social auth", JSON.stringify(err, null, 2));
@@ -28,6 +31,5 @@ export const useSocialAuth = () => {
     }
   };
 
-  // The hook now returns `isSocialAuthLoading` instead of a generic `isLoading`.
   return { isSocialAuthLoading, handleSocialAuth };
 };
