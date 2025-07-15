@@ -14,6 +14,7 @@
   "dependencies": {
     "@arcjet/inspect": "^1.0.0-beta.8",
     "@arcjet/node": "^1.0.0-beta.8",
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "@clerk/express": "^1.7.0",
     "cloudinary": "^2.0.0",
     "cors": "^2.8.5",
