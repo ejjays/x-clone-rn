@@ -92,35 +92,35 @@ const TabsLayout = () => {
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("index")}
                   >
-                    <Home size={24} color={pathname === "/" ? "#1877F2" : "#657786"} />
+                    <Home size={24} color={isVideosScreen ? "#000" : (pathname === "/" ? "#1877F2" : "#657786")} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("search")}
                   >
-                    <PeopleIcon size={25} color={pathname === "/search" ? "#1877F2" : "#657786"} />
+                    <PeopleIcon size={25} color={isVideosScreen ? "#000" : (pathname === "/search" ? "#1877F2" : "#657786")} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("videos")}
                   >
-                    <TvMinimalPlay size={24} color={pathname === "/videos" ? "#1877F2" : "#657786"} />
+                    <TvMinimalPlay size={24} color={isVideosScreen ? "#1877F2" : "#657786"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("notifications")}
                   >
-                    <Bell size={24} color={pathname === "/notifications" ? "#1877F2" : "#657786"} />
+                    <Bell size={24} color={isVideosScreen ? "#000" : (pathname === "/notifications" ? "#1877F2" : "#657786")} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     className="flex-1 items-center justify-center h-full"
                     onPress={() => props.navigation.navigate("messages")}
                   >
-                    <Mail size={24} color={pathname === "/messages" ? "#1877F2" : "#657786"} />
+ <Mail size={24} color={isVideosScreen ? "#000" : (pathname === "/messages" ? "#1877F2" : "#657786")} />
                   </TouchableOpacity>
 
                   <TouchableOpacity

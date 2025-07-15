@@ -23,6 +23,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import * as Haptics from "expo-haptics";
 import Animated, { Layout } from "react-native-reanimated";
 
+import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>();
   const { client, isConnected, isConnecting } = useStreamChat();
@@ -35,6 +36,7 @@ export default function ChatScreen() {
   const [otherUser, setOtherUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: 'image' | 'video' } | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null);
@@ -107,16 +109,42 @@ export default function ChatScreen() {
     }
   }, [])
 
-  const sendMessage = async () => {
-    if (!channel || !newMessage.trim() || sending) return
-    setSending(true)
+ const sendMessage = async () => {
+    if (!channel || (!newMessage.trim() && !selectedMedia) || sending) return;
+
+    setSending(true);
     try {
-      await channel.sendMessage({ text: newMessage.trim() })
-      setNewMessage("")
+      let messageData: any = { text: newMessage.trim() };
+
+      if (selectedMedia) {
+        const mediaUrl = await uploadMediaToCloudinary(selectedMedia);
+        if (mediaUrl) {
+          messageData.attachments = [{
+            type: selectedMedia.type === 'image' ? 'image' : 'video', // Use 'image' or 'video'
+            image_url: mediaUrl, // Or 'asset_url' depending on Stream's attachment structure
+          }];
+        } else {
+          Alert.alert("Upload Failed", "Could not upload your media. Message not sent.");
+          setSending(false);
+          return; // Stop sending if upload failed
+        }
+      }
+
+      if (!messageData.text && (!messageData.attachments || messageData.attachments.length === 0)) {
+         // Prevent sending empty message if media upload failed and no text
+         setSending(false);
+         return;
+      }
+
+      await channel.sendMessage(messageData);
+
     } catch (error) {
-      console.error("❌ Error sending message:", error)
-      Alert.alert("Error", "Failed to send message.")
+      console.error("❌ Error sending message:", error);
+      Alert.alert("Error", "Failed to send message.");
     } finally {
+      // Always clear input and selected media after attempting to send
+      setNewMessage("");
+      setSelectedMedia(null);
       setSending(false)
     }
   }
@@ -365,6 +393,16 @@ export default function ChatScreen() {
               marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
             }}
           >
+            {/* Image Picker Button */}
+ {selectedMedia ? (
+ <TouchableOpacity onPress={() => setSelectedMedia(null)} className="p-3 rounded-full bg-red-500 mr-2 mb-2">
+ <Ionicons name="close" size={24} color="white" />
+ </TouchableOpacity>
+ ) : (
+ <TouchableOpacity onPress={async () => { const media = await pickMedia(); setSelectedMedia(media); }} className="p-3 rounded-full bg-gray-200 mr-2 mb-2">
+ <Ionicons name="image-outline" size={24} color="#374151" />
+ </TouchableOpacity>
+ )}
             <View className="flex-1 mr-3">
               <TextInput
                 value={newMessage}

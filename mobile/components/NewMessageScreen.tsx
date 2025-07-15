@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, ActivityIndicator } from "react-native"
+import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, ActivityIndicator, SafeAreaView } from "react-native"
 import { MessageCircle, Search, Users, X } from "lucide-react-native" // Replaced Feather
 import { useAllUsers } from "@/hooks/useAllUsers"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
@@ -33,8 +33,8 @@ const NewMessageScreen = ({ onSelectUser, onClose }: NewMessageScreenProps) => {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Header */}
+    <SafeAreaView className="flex-1 bg-white">
+      {/* Removed marginTop style */}
       <View className="flex-row items-center px-4 py-4 border-b border-gray-100">
         <TouchableOpacity onPress={onClose} className="mr-4">
           <X size={24} color="#1C1E21" />
@@ -140,7 +140,7 @@ const NewMessageScreen = ({ onSelectUser, onClose }: NewMessageScreenProps) => {
           <Text className="text-xs text-gray-500 text-center">Tap on a person to start a conversation</Text>
         </View>
       )}
-    </View>
+    </SafeAreaView>
   )
 }
 

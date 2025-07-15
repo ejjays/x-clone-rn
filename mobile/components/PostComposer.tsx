@@ -15,7 +15,7 @@ const PostComposer = () => {
           className="flex-1 bg-gray-100 rounded-full px-4 py-3"
           activeOpacity={0.7}
         >
-          <Text className="text-base text-gray-500">What's on your mind?</Text>
+          <Text className="text-base text-gray-500">Share us your thoughts..</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push("/create-post")} className="ml-4">
           <ImageIcon size={24} color={"#4CAF50"} />

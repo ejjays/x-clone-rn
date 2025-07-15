@@ -71,7 +71,7 @@ const CreatePostScreen = () => {
 
             {/* Text Input */}
             <TextInput
-              placeholder="What's on your mind?"
+ placeholder="Share us your thoughts.."
               placeholderTextColor="#9CA3AF"
               value={content}
               onChangeText={setContent}
