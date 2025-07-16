@@ -1,6 +1,7 @@
 import type { Notification } from "@/types"
 import { Bell, Heart, MessageCircle, MoreHorizontal, UserPlus } from "lucide-react-native" // Replaced Feather
 import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
+import { ALERT_TYPE, Dialog } from "react-native-alert-notification";
 
 interface NotificationCardProps {
   notification: Notification
@@ -69,14 +70,21 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
   }
 
   const handleDelete = () => {
-    Alert.alert("Delete Notification", "Are you sure you want to delete this notification?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => onDelete(notification._id),
-      },
-    ])
+    Dialog.show({
+      type: ALERT_TYPE.DANGER,
+      title: 'Delete Notification',
+      textBody: 'Are you sure you want to delete this notification?',
+      button: [
+        {
+          text: 'Cancel',
+          onPress: () => Dialog.hide(),
+        },
+        {
+          text: 'Delete',
+          onPress: () => onDelete(notification._id), type: 'danger'
+        },
+      ],
+    });
   }
 
   const formatNotificationDate = (dateString: string) => {

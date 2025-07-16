@@ -1,15 +1,31 @@
 import { useClerk } from "@clerk/clerk-expo";
-import { Alert } from "react-native";
+import { ALERT_TYPE, Dialog } from "react-native-alert-notification";
 
 export const useSignOut = () => {
   const { signOut } = useClerk();
 
   const handleSignOut = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
+ Dialog.show({
+ type: ALERT_TYPE.WARNING,
+ title: 'Logout',
+ textBody: 'Are you sure you want to logout?',
+ button: [
+        {
+ text: 'Cancel',
+ onPress: () => Dialog.hide(),
+        },
+        {
+      type: ALERT_TYPE.WARNING,
+      title: "Logout",
+      textBody: "Are you sure you want to logout?",
+      button: [
+        {
+          text: "Cancel",
+          onPress: () => Dialog.hide(),
+        },
+        {
+ text: 'Logout',
+
         onPress: () => signOut(),
       },
     ]);

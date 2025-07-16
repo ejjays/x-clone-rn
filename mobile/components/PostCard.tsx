@@ -3,7 +3,7 @@ import type { Post, User, Reaction } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
 import { router } from "expo-router";
 import { Trash } from "lucide-react-native";
-import { View, Text, Alert, Image, TouchableOpacity, View as RNView, Pressable } from "react-native";
+import { View, Text, Image, TouchableOpacity, View as RNView, Pressable } from "react-native";
 import CommentIcon from "../assets/icons/Comment";
 import ShareIcon from "../assets/icons/ShareIcon";
 import { useRef, useState } from "react";
@@ -11,6 +11,7 @@ import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from 'expo-haptics';
 import LikeIcon from "../assets/icons/LikeIcon";
 import { Video, ResizeMode } from 'expo-av';
+import { ALERT_TYPE, Dialog } from "react-native-alert-notification";
 
 interface PostCardProps {
   post: Post;
@@ -46,10 +47,20 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
   const [anchorMeasurements, setAnchorMeasurements] = useState(null);
 
   const handleDelete = () => {
-    Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => onDelete(post._id) },
-    ]);
+ Dialog.show({
+      type: ALERT_TYPE.DANGER,
+      title: "Delete Post",
+      textBody: "Are you sure you want to delete this post?",
+      button: [
+        {
+          text: "Cancel",
+        },
+        {
+ text: "Delete",
+ onPress: () => onDelete(post._id),
+        },
+      ],
+    });
   };
 
   const handleQuickPress = () => {
