@@ -28,7 +28,7 @@ export const useSignOut = () => {
 
   const SignOutDialog = () => {
     return (
-      // The fix is the space between onClose and size
+      // PLEASE CHECK THIS LINE CAREFULLY. THERE MUST BE SPACES BETWEEN EACH PROP.
       <AlertDialog isOpen={isOpen} onClose={closeDialog} size="md">
         <AlertDialogBackdrop />
         <AlertDialogContent>
