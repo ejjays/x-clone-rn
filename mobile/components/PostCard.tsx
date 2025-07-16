@@ -1,7 +1,6 @@
 // mobile/components/PostCard.tsx
 import type { Post, User, Reaction } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
-import { router } from "expo-router";
 import { Trash } from "lucide-react-native";
 import { View, Text, Image, TouchableOpacity, View as RNView, Pressable } from "react-native";
 import CommentIcon from "../assets/icons/Comment";
@@ -11,7 +10,18 @@ import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from 'expo-haptics';
 import LikeIcon from "../assets/icons/LikeIcon";
 import { Video, ResizeMode } from 'expo-av';
-import { ALERT_TYPE, Dialog } from "react-native-alert-notification";
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  Button,
+  ButtonGroup,
+  ButtonText,
+  Heading,
+} from '@gluestack-ui/themed';
 
 interface PostCardProps {
   post: Post;
@@ -23,21 +33,11 @@ interface PostCardProps {
 }
 
 const reactionEmojiMap: Record<string, string> = {
-  like: "👍",
-  love: "❤️",
-  haha: "😂",
-  wow: "😮",
-  sad: "😢",
-  angry: "😡",
+  like: "👍", love: "❤️", haha: "😂", wow: "😮", sad: "😢", angry: "😡",
 };
 
 const reactionTextColor: Record<string, string> = {
-  like: "text-blue-500",
-  love: "text-red-500",
-  haha: "text-yellow-500",
-  wow: "text-yellow-500",
-  sad: "text-yellow-500",
-  angry: "text-red-600",
+  like: "text-blue-500", love: "text-red-500", haha: "text-yellow-500", wow: "text-yellow-500", sad: "text-yellow-500", angry: "text-red-600",
 };
 
 const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, currentUserReaction }: PostCardProps) => {
@@ -45,18 +45,11 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
   const likeButtonRef = useRef<RNView>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number } | null>(null);
+  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
 
-  const handleDelete = () => {
-    Dialog.show({
-      type: ALERT_TYPE.DANGER,
-      title: "Delete Post",
-      textBody: "Are you sure you want to delete this post?",
-      // NOTE: This property 'buttons' is correct
-      buttons: [
-        { text: "Cancel", onPress: () => Dialog.hide() },
-        { text: "Delete", onPress: () => { onDelete(post._id); Dialog.hide(); } },
-      ],
-    });
+  const handleDeleteConfirm = () => {
+    onDelete(post._id);
+    setDeleteAlertOpen(false);
   };
 
   const handleQuickPress = () => {
@@ -140,7 +133,7 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
             <Text className="text-gray-500 text-sm">{formatDate(post.createdAt)}</Text>
           </View>
           {isOwnPost && (
-            <TouchableOpacity onPress={handleDelete} className="p-2">
+            <TouchableOpacity onPress={() => setDeleteAlertOpen(true)} className="p-2">
               <Trash size={20} color="#657786" />
             </TouchableOpacity>
           )}
@@ -187,32 +180,43 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
 
         {/* Post Actions */}
         <View className="flex-row justify-around py-1 border-t border-gray-100 mt-2">
-          <Pressable
-            ref={likeButtonRef}
-            onPress={handleQuickPress}
-            onLongPress={handleLongPress}
-            className="flex-1 items-center py-2.5"
-          >
+          <Pressable ref={likeButtonRef} onPress={handleQuickPress} onLongPress={handleLongPress} className="flex-1 items-center py-2.5">
             <ReactionButton />
           </Pressable>
-
           <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5" onPress={() => onComment(post._id)}>
             <CommentIcon size={22} color="#657786" />
             <Text className="text-gray-500 font-semibold ml-1.5">Comment</Text>
           </TouchableOpacity>
-
           <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
             <ShareIcon size={22} color="#657786" />
             <Text className="text-gray-500 font-semibold ml-1.5">Share</Text>
           </TouchableOpacity>
         </View>
       </View>
-      <PostReactionsPicker
-        isVisible={pickerVisible}
-        onClose={() => setPickerVisible(false)}
-        onSelect={handleReactionSelect}
-        anchorMeasurements={anchorMeasurements}
-      />
+
+      <PostReactionsPicker isVisible={pickerVisible} onClose={() => setPickerVisible(false)} onSelect={handleReactionSelect} anchorMeasurements={anchorMeasurements}/>
+
+      <AlertDialog isOpen={isDeleteAlertOpen} onClose={() => setDeleteAlertOpen(false)} size="md">
+        <AlertDialogBackdrop />
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <Heading size="lg">Delete Post</Heading>
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            <Text size="sm">Are you sure you want to delete this post? This action cannot be undone.</Text>
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <ButtonGroup space="lg">
+              <Button variant="outline" action="secondary" onPress={() => setDeleteAlertOpen(false)}>
+                <ButtonText>Cancel</ButtonText>
+              </Button>
+              <Button bg="$error600" action="negative" onPress={handleDeleteConfirm}>
+                <ButtonText>Delete</ButtonText>
+              </Button>
+            </ButtonGroup>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

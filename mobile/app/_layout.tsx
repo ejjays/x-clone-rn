@@ -1,77 +1,70 @@
 // mobile/app/_layout.tsx
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
-import { Stack, router } from "expo-router";
-import "../global.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ActivityIndicator, View } from "react-native";
-import { OverlayProvider, Chat } from "stream-chat-react-native";
-import { streamChatTheme } from "@/utils/StreamChatTheme";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
-import { useEffect } from "react";
-import { AlertNotificationRoot } from "react-native-alert-notification";
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { Slot, useRouter, useSegments } from 'expo-router';
+import { useEffect } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { StreamChatContextProvider } from '@/context/StreamChatContext';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { GluestackUIProvider } from '@gluestack-ui/themed';
+import { config } from '../config/gluestack-ui.config';
 
 const queryClient = new QueryClient();
 
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY as string;
+
+const tokenCache = {
+  async getToken(key: string) {
+    try {
+      return SecureStore.getItemAsync(key);
+    } catch (err) {
+      return null;
+    }
+  },
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value);
+    } catch (err) {
+      return;
+    }
+  },
+};
+
 const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
-  const { client } = useStreamChat();
+  const segments = useSegments();
+  const router = useRouter();
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/(auth)");
-    } else if (isLoaded && isSignedIn) {
-      router.push("/(tabs)");
+    if (!isLoaded) return;
+
+    const inTabsGroup = segments[0] === '(tabs)';
+
+    if (isSignedIn && !inTabsGroup) {
+      router.replace('/(tabs)');
+    } else if (!isSignedIn) {
+      router.replace('/(auth)');
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isSignedIn, isLoaded]);
 
-
-  if (!isLoaded || !client) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#1DA1F2" />
-      </View>
-    );
-  }
-
-  return (
-    <OverlayProvider value={{ style: streamChatTheme }}>
-      <Chat client={client}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="create-post" options={{ presentation: "modal" }} />
-          <Stack.Screen name="post/[postId]" />
-          <Stack.Screen name="chat/[channelId]" />
-          <Stack.Screen name="new-message" />
-        </Stack>
-      </Chat>
-    </OverlayProvider>
-  );
+  return <Slot />;
 };
 
 export default function RootLayout() {
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-  if (!publishableKey) {
-    throw new Error("Missing Clerk Publishable Key");
-  }
-
   return (
-    <AlertNotificationRoot>
-      <ErrorBoundary>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <QueryClientProvider client={queryClient}>
-            <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-              <StreamChatProvider>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <QueryClientProvider client={queryClient}>
+        <GluestackUIProvider config={config}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              <StreamChatContextProvider>
                 <InitialLayout />
-              </StreamChatProvider>
-            </ClerkProvider>
-          </QueryClientProvider>
-        </GestureHandlerRootView>
-      </ErrorBoundary>
-    </AlertNotificationRoot>
+              </StreamChatContextProvider>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+        </GluestackUIProvider>
+      </QueryClientProvider>
+    </ClerkProvider>
   );
 }

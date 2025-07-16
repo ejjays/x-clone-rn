@@ -1,7 +1,20 @@
+// mobile/components/NotificationCard.tsx
 import type { Notification } from "@/types"
-import { Bell, Heart, MessageCircle, MoreHorizontal, UserPlus } from "lucide-react-native" // Replaced Feather
-import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
-import { ALERT_TYPE, Dialog } from "react-native-alert-notification";
+import { Bell, Heart, MessageCircle, MoreHorizontal, UserPlus } from "lucide-react-native"
+import { View, Text, Image, TouchableOpacity } from "react-native"
+import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  Button,
+  ButtonGroup,
+  ButtonText,
+  Heading,
+} from '@gluestack-ui/themed';
 
 interface NotificationCardProps {
   notification: Notification
@@ -9,6 +22,13 @@ interface NotificationCardProps {
 }
 
 const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => {
+  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
+
+  const handleDeleteConfirm = () => {
+    onDelete(notification._id);
+    setDeleteAlertOpen(false);
+  }
+
   const getNotificationText = () => {
     const name = `${notification.from.firstName} ${notification.from.lastName}`
     switch (notification.type) {
@@ -69,24 +89,6 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
     }
   }
 
-  const handleDelete = () => {
-    Dialog.show({
-      type: ALERT_TYPE.DANGER,
-      title: 'Delete Notification',
-      textBody: 'Are you sure you want to delete this notification?',
-      button: [
-        {
-          text: 'Cancel',
-          onPress: () => Dialog.hide(),
-        },
-        {
-          text: 'Delete',
-          onPress: () => onDelete(notification._id), type: 'danger'
-        },
-      ],
-    });
-  }
-
   const formatNotificationDate = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -95,76 +97,81 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
 
     if (diffInHours < 1) return "Just now"
     if (diffInHours < 24) {
-      return date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })
+      return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
     }
     if (diffInDays === 1) {
-      return `Yesterday at ${date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })}`
+      return `Yesterday at ${date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`
     }
     if (diffInDays < 7) {
-      return date.toLocaleDateString("en-US", {
-        weekday: "long",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })
+      return date.toLocaleDateString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit", hour12: true })
     }
 
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    })
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true })
   }
 
   return (
-    <TouchableOpacity className="bg-white px-4 py-4" activeOpacity={0.7}>
-      <View className="flex-row">
-        {/* Profile Picture with Badge - Made Bigger */}
-        <View className="relative mr-4">
-          <Image source={{ uri: notification.from.profilePicture }} className="w-16 h-16 rounded-full" />
-          {getNotificationIcon()}
+    <>
+      <TouchableOpacity className="bg-white px-4 py-4" activeOpacity={0.7}>
+        <View className="flex-row">
+          {/* Profile Picture with Badge - Made Bigger */}
+          <View className="relative mr-4">
+            <Image source={{ uri: notification.from.profilePicture }} className="w-16 h-16 rounded-full" />
+            {getNotificationIcon()}
+          </View>
+
+          {/* Content */}
+          <View className="flex-1 mr-3">
+            {getNotificationText()}
+
+            {/* Post Preview (if applicable) */}
+            {notification.post && (
+              <View className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <Text className="text-gray-700 text-sm" numberOfLines={2}>
+                  {notification.post.content}
+                </Text>
+                {notification.post.image && (
+                  <Image
+                    source={{ uri: notification.post.image }}
+                    className="w-full h-28 rounded-md mt-2"
+                    resizeMode="cover"
+                  />
+                )}
+              </View>
+            )}
+
+            {/* Timestamp with better formatting */}
+            <Text className="text-gray-500 text-sm mt-2">{formatNotificationDate(notification.createdAt)}</Text>
+          </View>
+
+          {/* More Options */}
+          <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={() => setDeleteAlertOpen(true)}>
+            <MoreHorizontal size={22} color="#65676B" />
+          </TouchableOpacity>
         </View>
+      </TouchableOpacity>
 
-        {/* Content */}
-        <View className="flex-1 mr-3">
-          {getNotificationText()}
-
-          {/* Post Preview (if applicable) */}
-          {notification.post && (
-            <View className="mt-3 p-3 bg-gray-50 rounded-lg">
-              <Text className="text-gray-700 text-sm" numberOfLines={2}>
-                {notification.post.content}
-              </Text>
-              {notification.post.image && (
-                <Image
-                  source={{ uri: notification.post.image }}
-                  className="w-full h-28 rounded-md mt-2"
-                  resizeMode="cover"
-                />
-              )}
-            </View>
-          )}
-
-          {/* Timestamp with better formatting */}
-          <Text className="text-gray-500 text-sm mt-2">{formatNotificationDate(notification.createdAt)}</Text>
-        </View>
-
-        {/* More Options */}
-        <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleDelete}>
-          <MoreHorizontal size={22} color="#65676B" />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+      <AlertDialog isOpen={isDeleteAlertOpen} onClose={() => setDeleteAlertOpen(false)} size="md">
+        <AlertDialogBackdrop />
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <Heading size="lg">Delete Notification</Heading>
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            <Text size="sm">Are you sure you want to delete this notification?</Text>
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <ButtonGroup space="lg">
+              <Button variant="outline" action="secondary" onPress={() => setDeleteAlertOpen(false)}>
+                <ButtonText>Cancel</ButtonText>
+              </Button>
+              <Button bg="$error600" action="negative" onPress={handleDeleteConfirm}>
+                <ButtonText>Delete</ButtonText>
+              </Button>
+            </ButtonGroup>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
