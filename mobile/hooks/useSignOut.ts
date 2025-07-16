@@ -13,6 +13,7 @@ import {
   Heading,
   Text,
 } from '@gluestack-ui/themed';
+import React from 'react'; 
 
 export const useSignOut = () => {
   const { signOut } = useClerk();
@@ -21,14 +22,21 @@ export const useSignOut = () => {
   const openDialog = () => setIsOpen(true);
   const closeDialog = () => setIsOpen(false);
 
-  const handleSignOut = () => {
-    closeDialog();
-    signOut();
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      closeDialog();
+    } catch (err) {
+      console.error("Error signing out: ", err);
+    }
   };
 
   const SignOutDialog = () => {
+    if (!isOpen) {
+      return null;
+    }
+
     return (
-      // PLEASE CHECK THIS LINE CAREFULLY. THERE MUST BE SPACES BETWEEN EACH PROP.
       <AlertDialog isOpen={isOpen} onClose={closeDialog} size="md">
         <AlertDialogBackdrop />
         <AlertDialogContent>
