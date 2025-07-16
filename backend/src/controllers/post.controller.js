@@ -116,7 +116,7 @@ export const reactToPost = asyncHandler(async (req, res) => {
         post: postId,
       });
     }
-  }
+  } 
 
   await post.save();
   const updatedPost = await populatePost(Post.findById(postId));
