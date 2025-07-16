@@ -1,4 +1,3 @@
-// mobile/hooks/useSignOut.ts
 import { useState } from 'react';
 import { useClerk } from '@clerk/clerk-expo';
 import {
@@ -29,6 +28,7 @@ export const useSignOut = () => {
 
   const SignOutDialog = () => {
     return (
+      // The fix is the space between onClose and size
       <AlertDialog isOpen={isOpen} onClose={closeDialog} size="md">
         <AlertDialogBackdrop />
         <AlertDialogContent>
