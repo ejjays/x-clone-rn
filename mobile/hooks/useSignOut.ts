@@ -27,29 +27,31 @@ export const useSignOut = () => {
     signOut();
   };
 
-  const SignOutDialog = () => (
-    <AlertDialog isOpen={isOpen} onClose={closeDialog} size="md">
-      <AlertDialogBackdrop />
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <Heading size="lg">Logout</Heading>
-        </AlertDialogHeader>
-        <AlertDialogBody>
-          <Text size="sm">Are you sure you want to logout?</Text>
-        </AlertDialogBody>
-        <AlertDialogFooter>
-          <ButtonGroup space="lg">
-            <Button variant="outline" action="secondary" onPress={closeDialog}>
-              <ButtonText>Cancel</ButtonText>
-            </Button>
-            <Button bg="$error600" action="negative" onPress={handleSignOut}>
-              <ButtonText>Logout</ButtonText>
-            </Button>
-          </ButtonGroup>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
+  const SignOutDialog = () => {
+    return (
+      <AlertDialog isOpen={isOpen} onClose={closeDialog} size="md">
+        <AlertDialogBackdrop />
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <Heading size="lg">Logout</Heading>
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            <Text size="sm">Are you sure you want to logout?</Text>
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <ButtonGroup space="lg">
+              <Button variant="outline" action="secondary" onPress={closeDialog}>
+                <ButtonText>Cancel</ButtonText>
+              </Button>
+              <Button bg="$error600" action="negative" onPress={handleSignOut}>
+                <ButtonText>Logout</ButtonText>
+              </Button>
+            </ButtonGroup>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  };
 
   return { openSignOutDialog: openDialog, SignOutDialog };
 };
