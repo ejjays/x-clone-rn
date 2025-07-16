@@ -15,7 +15,7 @@ import { ALERT_TYPE, Dialog } from "react-native-alert-notification";
 
 interface PostCardProps {
   post: Post;
-  reactToPost: (args: { postId: string; reactionType: string }) => void;
+  reactToPost: (args: { postId: string; reactionType: string | null }) => void;
   onDelete: (postId: string) => void;
   onComment: (postId: string) => void;
   currentUser: User;
@@ -44,13 +44,14 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
   const isOwnPost = post.user._id === currentUser._id;
   const likeButtonRef = useRef<RNView>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
-  const [anchorMeasurements, setAnchorMeasurements] = useState(null);
+  const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number } | null>(null);
 
   const handleDelete = () => {
     Dialog.show({
       type: ALERT_TYPE.DANGER,
       title: "Delete Post",
       textBody: "Are you sure you want to delete this post?",
+      // NOTE: This property 'buttons' is correct
       buttons: [
         { text: "Cancel", onPress: () => Dialog.hide() },
         { text: "Delete", onPress: () => { onDelete(post._id); Dialog.hide(); } },
@@ -61,12 +62,11 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
   const handleQuickPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const newReaction = currentUserReaction?.type === 'like' ? null : 'like';
-    reactToPost({ postId: post._id, reactionType: newReaction || 'like' });
+    reactToPost({ postId: post._id, reactionType: newReaction });
   }
 
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
-      // @ts-ignore
       setAnchorMeasurements({ pageX, pageY });
       setPickerVisible(true);
     });
@@ -80,7 +80,7 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
   const getTopReactions = (reactions: Reaction[], max = 3) => {
     const counts: Record<string, number> = {};
     reactions.forEach(r => {
-        counts[r.type] = (counts[r.type] || 0) + 1;
+        if (r.type) counts[r.type] = (counts[r.type] || 0) + 1;
     });
 
     return Object.entries(counts)
@@ -211,7 +211,6 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
         isVisible={pickerVisible}
         onClose={() => setPickerVisible(false)}
         onSelect={handleReactionSelect}
-        // @ts-ignore
         anchorMeasurements={anchorMeasurements}
       />
     </>

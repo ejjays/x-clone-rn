@@ -10,6 +10,7 @@ export const useSignOut = () => {
       type: ALERT_TYPE.WARNING,
       title: 'Logout',
       textBody: 'Are you sure you want to logout?',
+      // FIX: Changed 'button' to 'buttons'
       buttons: [
         {
           text: 'Cancel',
