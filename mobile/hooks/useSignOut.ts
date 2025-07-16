@@ -1,3 +1,4 @@
+// mobile/hooks/useSignOut.ts
 import { useState } from 'react';
 import { useClerk } from '@clerk/clerk-expo';
 import {
@@ -13,7 +14,6 @@ import {
   Heading,
   Text,
 } from '@gluestack-ui/themed';
-import React from 'react'; 
 
 export const useSignOut = () => {
   const { signOut } = useClerk();
@@ -22,20 +22,12 @@ export const useSignOut = () => {
   const openDialog = () => setIsOpen(true);
   const closeDialog = () => setIsOpen(false);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      closeDialog();
-    } catch (err) {
-      console.error("Error signing out: ", err);
-    }
+  const handleSignOut = () => {
+    closeDialog();
+    signOut();
   };
 
   const SignOutDialog = () => {
-    if (!isOpen) {
-      return null;
-    }
-
     return (
       <AlertDialog isOpen={isOpen} onClose={closeDialog} size="md">
         <AlertDialogBackdrop />
