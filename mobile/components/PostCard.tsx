@@ -47,17 +47,21 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
   const [anchorMeasurements, setAnchorMeasurements] = useState(null);
 
   const handleDelete = () => {
- Dialog.show({
+    Dialog.show({
       type: ALERT_TYPE.DANGER,
       title: "Delete Post",
       textBody: "Are you sure you want to delete this post?",
       button: [
         {
           text: "Cancel",
+          onPress: () => Dialog.hide(),
         },
         {
- text: "Delete",
- onPress: () => onDelete(post._id),
+          text: "Delete",
+          onPress: () => {
+            onDelete(post._id);
+            Dialog.hide();
+          },
         },
       ],
     });
