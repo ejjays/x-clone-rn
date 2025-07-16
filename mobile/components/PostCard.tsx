@@ -51,18 +51,9 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
       type: ALERT_TYPE.DANGER,
       title: "Delete Post",
       textBody: "Are you sure you want to delete this post?",
-      button: [
-        {
-          text: "Cancel",
-          onPress: () => Dialog.hide(),
-        },
-        {
-          text: "Delete",
-          onPress: () => {
-            onDelete(post._id);
-            Dialog.hide();
-          },
-        },
+      buttons: [
+        { text: "Cancel", onPress: () => Dialog.hide() },
+        { text: "Delete", onPress: () => { onDelete(post._id); Dialog.hide(); } },
       ],
     });
   };
