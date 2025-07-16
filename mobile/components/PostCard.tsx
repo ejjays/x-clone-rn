@@ -66,6 +66,7 @@ const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, current
 
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
+      // @ts-ignore
       setAnchorMeasurements({ pageX, pageY });
       setPickerVisible(true);
     });

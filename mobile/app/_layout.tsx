@@ -11,7 +11,7 @@ import { streamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
-// NOTE: We have removed `import { StatusBar } from "expo-status-bar";`
+import { AlertNotificationRoot } from "react-native-alert-notification";
 
 const queryClient = new QueryClient();
 
@@ -60,16 +60,18 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <QueryClientProvider client={queryClient}>
-          <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-            <StreamChatProvider>
-              <InitialLayout />
-            </StreamChatProvider>
-          </ClerkProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
-    </ErrorBoundary>
+    <AlertNotificationRoot>
+      <ErrorBoundary>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <QueryClientProvider client={queryClient}>
+            <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+              <StreamChatProvider>
+                <InitialLayout />
+              </StreamChatProvider>
+            </ClerkProvider>
+          </QueryClientProvider>
+        </GestureHandlerRootView>
+      </ErrorBoundary>
+    </AlertNotificationRoot>
   );
 }
