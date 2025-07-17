@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useClerk } from '@clerk/clerk-expo';
 import {
   Button,
-  ButtonText,
+  ButtonText, 
   Heading,
 } from '@gluestack-ui/themed';
 import { Text } from 'react-native'; // Import Text from react-native instead
