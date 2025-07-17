@@ -1,223 +1,199 @@
-// mobile/components/PostCard.tsx
-import type { Post, User, Reaction } from "@/types";
-import { formatDate, formatNumber } from "@/utils/formatters";
-import { Trash } from "lucide-react-native";
-import { View, Text, Image, TouchableOpacity, View as RNView, Pressable } from "react-native";
-import CommentIcon from "../assets/icons/Comment";
-import ShareIcon from "../assets/icons/ShareIcon";
-import { useRef, useState } from "react";
-import PostReactionsPicker from "./PostReactionsPicker";
-import * as Haptics from 'expo-haptics';
-import LikeIcon from "../assets/icons/LikeIcon";
-import { Video, ResizeMode } from 'expo-av';
+import React, { useCallback, useMemo, useRef } from "react";
 import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogBody,
-  AlertDialogFooter,
-  Button,
-  ButtonGroup,
-  ButtonText,
-  Heading,
-} from '@gluestack-ui/themed';
+  Avatar,
+  AvatarFallbackText,
+  AvatarImage,
+  Box,
+  HStack,
+  Pressable,
+  Text,
+  VStack,
+} from "@gluestack-ui/themed";
+import { IPost } from "../types";
+import { formatDistanceToNowStrict } from "date-fns";
+import {
+  Icon,
+  MessageCircle,
+  Repeat,
+  Heart,
+  Share,
+  MoreHorizontal,
+} from "lucide-react-native";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import PostReactionsPicker from "./PostReactionsPicker";
+import CommentsBottomSheet from "./CommentsBottomSheet";
+import { usePost } from "../hooks/usePost";
+import { useAuth } from "@clerk/clerk-expo";
+import { useRouter } from "expo-router";
 
-interface PostCardProps {
-  post: Post;
-  reactToPost: (args: { postId: string; reactionType: string | null }) => void;
-  onDelete: (postId: string) => void;
-  onComment: (postId: string) => void;
-  currentUser: User;
-  currentUserReaction: Reaction | null;
-}
-
-const reactionEmojiMap: Record<string, string> = {
-  like: "👍", love: "❤️", haha: "😂", wow: "😮", sad: "😢", angry: "😡",
+type PostCardProps = {
+  post: IPost;
+  isReply?: boolean;
 };
 
-const reactionTextColor: Record<string, string> = {
-  like: "text-blue-500", love: "text-red-500", haha: "text-yellow-500", wow: "text-yellow-500", sad: "text-yellow-500", angry: "text-red-600",
-};
+const PostCard = ({ post, isReply = false }: PostCardProps) => {
+  const { userId } = useAuth();
+  const router = useRouter();
+  const {
+    isLiked,
+    isReposted,
+    likePost,
+    unlikePost,
+    repost,
+    unrepost,
+    likesCount,
+    repostsCount,
+    commentsCount,
+  } = usePost({
+    postId: post.id,
+    userId: userId!,
+  });
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const commentsBottomSheetRef = useRef<BottomSheetModal>(null);
 
-const PostCard = ({ currentUser, onDelete, reactToPost, post, onComment, currentUserReaction }: PostCardProps) => {
-  const isOwnPost = post.user._id === currentUser._id;
-  const likeButtonRef = useRef<RNView>(null);
-  const [pickerVisible, setPickerVisible] = useState(false);
-  const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number } | null>(null);
-  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
+  const handlePresentModal = useCallback(() => {
+    bottomSheetRef.current?.present();
+  }, []);
 
-  const handleDeleteConfirm = () => {
-    onDelete(post._id);
-    setDeleteAlertOpen(false);
+  const handlePresentComments = useCallback(() => {
+    commentsBottomSheetRef.current?.present();
+  }, []);
+
+  const handleOnPostPress = () => {
+    router.push(`/post/${post.id}`);
   };
 
-  const handleQuickPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const newReaction = currentUserReaction?.type === 'like' ? null : 'like';
-    reactToPost({ postId: post._id, reactionType: newReaction });
-  }
-
-  const handleLongPress = () => {
-    likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
-      setAnchorMeasurements({ pageX, pageY });
-      setPickerVisible(true);
-    });
-  };
-
-  const handleReactionSelect = (reactionType: string) => {
-    reactToPost({ postId: post._id, reactionType });
-    setPickerVisible(false);
-  };
-  
-  const getTopReactions = (reactions: Reaction[], max = 3) => {
-    const counts: Record<string, number> = {};
-    reactions.forEach(r => {
-        if (r.type) counts[r.type] = (counts[r.type] || 0) + 1;
-    });
-
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, max)
-      .map(([type]) => reactionEmojiMap[type]);
-  }
-
-  const topReactions = getTopReactions(post.reactions);
-
-  const ReactionButton = () => {
-    if (currentUserReaction) {
-      const reactionType = currentUserReaction.type;
-      const emoji = reactionEmojiMap[reactionType];
-      const text = reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
-      const colorClass = reactionTextColor[reactionType] || 'text-gray-500';
-
-      if (reactionType === 'like') {
-        return (
-          <View className="flex-row items-center">
-            <LikeIcon size={22} color="#1877F2" />
-            <Text className={`font-semibold capitalize ml-1.5 ${colorClass}`}>
-              {text}
-            </Text>
-          </View>
-        );
-      }
-      
-      return (
-        <View className="flex-row items-center">
-          <Text className="text-xl">{emoji}</Text>
-          <Text className={`font-semibold capitalize ml-1.5 ${colorClass}`}>
-            {text}
-          </Text>
-        </View>
-      );
-    }
-    
-    return (
-      <View className="flex-row items-center">
-        <LikeIcon size={22} color="#657786" />
-        <Text className="text-gray-500 font-semibold ml-1.5">Like</Text>
-      </View>
-    );
-  };
-
+  const snapPoints = useMemo(() => ["25%", "50%"], []);
   return (
-    <>
-      <View className="bg-white">
-        {/* Post Header */}
-        <View className="flex-row p-4 items-center">
-          <Image source={{ uri: post.user.profilePicture || "" }} className="w-12 h-12 rounded-full mr-3" />
-          <View className="flex-1">
-            <Text className="font-bold text-gray-900 text-base">
-              {post.user.firstName} {post.user.lastName}
+    <Pressable onPress={handleOnPostPress}>
+      <Box
+        borderBottomWidth="$1"
+        borderColor="$borderDark800"
+        py="$4"
+        px="$4"
+        bg="$black"
+      >
+        {isReply && (
+          <HStack alignItems="center" space="md" mb="$2">
+            <Text color="$textDark400" fontSize="$sm">
+              Replying to @{post.parent?.author.username}
             </Text>
-            <Text className="text-gray-500 text-sm">{formatDate(post.createdAt)}</Text>
-          </View>
-          {isOwnPost && (
-            <TouchableOpacity onPress={() => setDeleteAlertOpen(true)} className="p-2">
-              <Trash size={20} color="#657786" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Post Content */}
-        {post.content && <Text className="text-gray-900 text-base leading-5 px-4 mb-3">{post.content}</Text>}
-
-        {/* Media Display */}
-        {post.image && <Image source={{ uri: post.image }} className="w-full h-72" resizeMode="cover" />}
-        {post.video && (
-           <Video
-             source={{ uri: post.video }}
-             style={{ width: '100%', height: 300 }}
-             useNativeControls
-             resizeMode={ResizeMode.CONTAIN}
-             isLooping
-           />
+          </HStack>
         )}
-        
-        {/* Reactions and Comments Count */}
-        {(post.reactions.length > 0 || post.comments.length > 0) && (
-          <View className="flex-row justify-between items-center px-4 py-0.5">
-            {post.reactions.length > 0 ? (
-              <View className="flex-row items-center">
-                <View className="flex-row">
-                  {topReactions.map((emoji, index) => (
-                    <Text key={index} className="text-lg" style={{ transform: [{translateX: -index * 4}]}}>{emoji}</Text>
-                  ))}
-                </View>
-                <Text className="text-gray-500 text-base ml-2">{formatNumber(post.reactions.length)}</Text>
-              </View>
-            ) : (
-                <View /> 
+        <HStack space="md">
+          <Avatar size="md" borderRadius="$full">
+            <AvatarImage
+              source={{
+                uri:
+                  post.author.avatar_url ||
+                  `https://api.dicebear.com/8.x/lorelei/png?seed=${post.author.username}`,
+              }}
+              alt={post.author.username}
+            />
+            <AvatarFallbackText>{post.author.username}</AvatarFallbackText>
+          </Avatar>
+          <VStack flex={1}>
+            <HStack
+              justifyContent="space-between"
+              alignItems="center"
+              flex={1}
+            >
+              <HStack alignItems="center" space="sm">
+                <Text color="$white" fontWeight="$bold" fontSize="$md">
+                  {post.author.full_name}
+                </Text>
+                <Text color="$textDark400" fontSize="$md">
+                  @{post.author.username}
+                </Text>
+                <Text color="$textDark400" fontSize="$md">
+                  ·{" "}
+                  {formatDistanceToNowStrict(new Date(post.created_at), {
+                    addSuffix: false,
+                  })}
+                </Text>
+              </HStack>
+              <Pressable onPress={handlePresentModal}>
+                <Icon as={MoreHorizontal} color="$textDark400" />
+              </Pressable>
+            </HStack>
+            <Text color="$white" fontSize="$md">
+              {post.text}
+            </Text>
+            {post.image_url && (
+              <Box mt="$3" borderRadius="$md" overflow="hidden">
+                <AvatarImage
+                  source={{ uri: post.image_url }}
+                  alt="post image"
+                  style={{
+                    width: "100%",
+                    height: 300,
+                  }}
+                />
+              </Box>
             )}
 
-            {post.comments.length > 0 && (
-              <Text className="text-gray-500 text-base">
-                {formatNumber(post.comments.length)} {post.comments.length === 1 ? 'comment' : 'comments'}
-              </Text>
-            )}
-          </View>
-        )}
-
-        {/* Post Actions */}
-        <View className="flex-row justify-around py-1 border-t border-gray-100 mt-2">
-          <Pressable ref={likeButtonRef} onPress={handleQuickPress} onLongPress={handleLongPress} className="flex-1 items-center py-2.5">
-            <ReactionButton />
-          </Pressable>
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5" onPress={() => onComment(post._id)}>
-            <CommentIcon size={22} color="#657786" />
-            <Text className="text-gray-500 font-semibold ml-1.5">Comment</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
-            <ShareIcon size={22} color="#657786" />
-            <Text className="text-gray-500 font-semibold ml-1.5">Share</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <PostReactionsPicker isVisible={pickerVisible} onClose={() => setPickerVisible(false)} onSelect={handleReactionSelect} anchorMeasurements={anchorMeasurements}/>
-
-      <AlertDialog isOpen={isDeleteAlertOpen} onClose={() => setDeleteAlertOpen(false)} size="md">
-        <AlertDialogBackdrop />
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <Heading size="lg">Delete Post</Heading>
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            <Text size="sm">Are you sure you want to delete this post? This action cannot be undone.</Text>
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <ButtonGroup space="lg">
-              <Button variant="outline" action="secondary" onPress={() => setDeleteAlertOpen(false)}>
-                <ButtonText>Cancel</ButtonText>
-              </Button>
-              <Button bg="$error600" action="negative" onPress={handleDeleteConfirm}>
-                <ButtonText>Delete</ButtonText>
-              </Button>
-            </ButtonGroup>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+            <HStack mt="$4" justifyContent="space-between">
+              <HStack alignItems="center" space="md">
+                <Pressable onPress={handlePresentComments}>
+                  <Icon as={MessageCircle} color="$textDark400" size={20} />
+                </Pressable>
+                <Text color="$textDark400" fontSize="$sm">
+                  {commentsCount}
+                </Text>
+              </HStack>
+              <HStack alignItems="center" space="md">
+                <Pressable onPress={isReposted ? unrepost : repost}>
+                  <Icon
+                    as={Repeat}
+                    color={isReposted ? "$green500" : "$textDark400"}
+                    size={20}
+                  />
+                </Pressable>
+                <Text
+                  color={isReposted ? "$green500" : "$textDark400"}
+                  fontSize="$sm"
+                >
+                  {repostsCount}
+                </Text>
+              </HStack>
+              <HStack alignItems="center" space="md">
+                <Pressable onPress={isLiked ? unlikePost : likePost}>
+                  <Icon
+                    as={Heart}
+                    color={isLiked ? "$red500" : "$textDark400"}
+                    fill={isLiked ? "$red500" : "transparent"}
+                    size={20}
+                  />
+                </Pressable>
+                <Text
+                  color={isLiked ? "$red500" : "$textDark400"}
+                  fontSize="$sm"
+                >
+                  {likesCount}
+                </Text>
+              </HStack>
+              <HStack alignItems="center" space="md">
+                <Icon as={Share} color="$textDark400" size={20} />
+              </HStack>
+            </HStack>
+          </VStack>
+        </HStack>
+        <BottomSheetModal
+          ref={bottomSheetRef}
+          index={1}
+          snapPoints={snapPoints}
+          backgroundStyle={{
+            backgroundColor: "#171717",
+          }}
+          handleIndicatorStyle={{
+            backgroundColor: "#404040",
+          }}
+        >
+          <PostReactionsPicker />
+        </BottomSheetModal>
+        <CommentsBottomSheet ref={commentsBottomSheetRef} post={post} />
+      </Box>
+    </Pressable>
   );
 };
 
