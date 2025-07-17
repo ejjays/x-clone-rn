@@ -12,8 +12,8 @@ import {
   ButtonGroup,
   ButtonText,
   Heading,
-  Text,
 } from '@gluestack-ui/themed';
+import { Text } from 'react-native'; // Import Text from react-native instead
 
 export const useSignOut = () => {
   const { signOut } = useClerk();
@@ -29,7 +29,7 @@ export const useSignOut = () => {
 
   const SignOutDialog = () => {
     return (
-      <AlertDialog isOpen={isOpen} onClose={closeDialog} size="md">
+      <AlertDialog isOpen={isOpen} onClose={closeDialog}, size="md">
         <AlertDialogBackdrop />
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -38,7 +38,7 @@ export const useSignOut = () => {
           <AlertDialogBody>
             <Text size="sm">Are you sure you want to logout?</Text>
           </AlertDialogBody>
-          <AlertDialogFooter>
+          <AlertDialogFooter> 
             <ButtonGroup space="lg">
               <Button variant="outline" action="secondary" onPress={closeDialog}>
                 <ButtonText>Cancel</ButtonText>
