@@ -4,7 +4,7 @@ import { LogOut } from 'lucide-react-native';
 import { TouchableOpacity, Text } from 'react-native';
 
 const SignOutButton = () => {
-  const { openSignOutDialog, SignOutDialog } = useSignOut();
+  const { openSignOutDialog } = useSignOut();
 
   return (
     <>
@@ -12,7 +12,6 @@ const SignOutButton = () => {
         <LogOut color="red" size={20} />
         <Text className="text-red-500 text-base ml-4">Sign Out</Text>
       </TouchableOpacity>
-      <SignOutDialog />
     </>
   );
 };
