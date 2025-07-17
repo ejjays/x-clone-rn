@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useClerk } from '@clerk/clerk-expo';
 import {
-  Button,
+  Button, 
   ButtonText, 
   Heading,
 } from '@gluestack-ui/themed';
