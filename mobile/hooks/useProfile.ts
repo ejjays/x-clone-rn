@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Alert } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useApiClient, userApi } from "../utils/api";
+import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useApiClient, userApi, postApi } from "../utils/api";
 import { useCurrentUser } from "./useCurrentUser";
+import { Post } from "../types";
 
-export const useProfile = () => {
+export const useProfile = (userId: string) => {
   const api = useApiClient();
 
   const queryClient = useQueryClient();
@@ -16,6 +17,24 @@ export const useProfile = () => {
     location: "",
   });
   const { currentUser } = useCurrentUser();
+
+  const {
+    data: postsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingPosts,
+    error: postsError,
+    refetch: refetchPosts,
+  } = useInfiniteQuery({
+    queryKey: ["userPosts", userId],
+    queryFn: ({ pageParam = 1 }) => postApi.getUserPosts(api, userId, pageParam),
+    getNextPageParam: (lastPage) => (lastPage.posts.length > 0 ? lastPage.currentPage + 1 : undefined),
+    initialPageParam: 1,
+    enabled: !!userId, // Only fetch if userId is available
+  });
+
+  const posts = postsData?.pages.flatMap((page) => page.posts) ?? [];
 
   const updateProfileMutation = useMutation({
     mutationFn: (profileData: any) => userApi.updateProfile(api, profileData),
@@ -54,5 +73,13 @@ export const useProfile = () => {
     updateFormField,
     isUpdating: updateProfileMutation.isPending,
     refetch: () => queryClient.invalidateQueries({ queryKey: ["authUser"] }),
+  };
+
+  return {
+    ...profileActions, // Spread the profile actions
+    posts,
+    isLoadingPosts,
+    fetchNextPagePosts: fetchNextPage,
+    hasNextPagePosts: hasNextPage,
   };
 };
