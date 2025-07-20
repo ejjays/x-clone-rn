@@ -75,7 +75,7 @@ export default function Register() {
         <View className="mb-10">
           <Text className="text-4xl font-bold text-blue-600 text-center mb-6">Create Account</Text>
           <Text className="text-center text-gray-800 text-base font-medium leading-6 px-4">
-            Create an account so you can connect with{"\n"}your faith community at PCMI Infanta
+            Fill in the details to connect with others.
           </Text>
         </View>
 

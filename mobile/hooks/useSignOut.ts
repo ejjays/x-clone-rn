@@ -1,30 +1,20 @@
 // mobile/hooks/useSignOut.ts
 import { useClerk } from "@clerk/clerk-expo";
-import { ALERT_TYPE, Dialog } from "react-native-alert-notification";
+import { Alert } from "react-native";
 
 export const useSignOut = () => {
   const { signOut } = useClerk();
 
   const handleSignOut = () => {
-    Dialog.show({
-      type: ALERT_TYPE.WARNING,
-      title: 'Logout',
-      textBody: 'Are you sure you want to logout?',
-      // FIX: Changed 'button' to 'buttons'
-      buttons: [
-        {
-          text: 'Cancel',
-          onPress: () => Dialog.hide(),
-        },
-        {
-          text: 'Logout',
-          onPress: () => {
-            signOut();
-            Dialog.hide();
-          },
-        },
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', onPress: () => signOut() },
       ],
-    });
+      { cancelable: true }
+    );
   };
 
   return { handleSignOut };

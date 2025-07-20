@@ -18,7 +18,7 @@ export default function Welcome() {
         {/* TITLE */}
         <View className="mb-12">
           <Text className="text-3xl font-poppins-black text-blue-600 text-center leading-tight mb-6">
-            Pag-ibig Christian Ministries
+            Pag-ibig Christian Ministries Inc.
           </Text>
           <Text className="text-center text-gray-700 text-lg font-poppins-regular px-4 leading-7">
           Welcome Kapatid! 👋 Glad to see you here. Login or create an account to continue.

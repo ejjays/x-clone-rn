@@ -21,7 +21,7 @@ const NoNotificationsFound = () => {
       // Cleanup when screen loses focus
       return () => {
         clearInterval(interval)
-        animationRef.current?.reset() // Reset animation when leaving screen
+        animationRef.current?.reset() 
       }
     }, []),
   )
@@ -39,7 +39,7 @@ const NoNotificationsFound = () => {
               height: "100%",
             }}
             loop={false}
-            autoPlay={false} // Don't auto-play, we control it manually
+            autoPlay={false} 
             speed={1.0}
             resizeMode="contain"
           />
@@ -47,7 +47,7 @@ const NoNotificationsFound = () => {
 
         <Text className="text-2xl font-bold text-gray-900 mb-4">No notifications yet</Text>
         <Text className="text-gray-500 text-center text-base leading-6 max-w-sm">
-          When people like, comment, or follow you, you'll see it here.
+          When people like, comment, or follow you, it will appear here.
         </Text>
       </View>
     </View>

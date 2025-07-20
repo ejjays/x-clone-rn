@@ -37,7 +37,7 @@ export default function Login() {
       <View className="flex-1 px-8 justify-center">
         {/* TITLE */}
         <View className="mb-12">
-          <Text className="text-4xl font-bold text-blue-800 text-center mb-6">Login here</Text>
+          <Text className="text-4xl font-bold text-blue-800 text-center mb-6"> Login here 🔥</Text>
           <Text className="text-center text-gray-800 text-base font-medium leading-6">
             Welcome back you've{"\n"}been missed!
           </Text>

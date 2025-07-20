@@ -70,7 +70,7 @@ export default function CustomChannelList({
 
       const messagesArray = Array.isArray(channel.state.messages)
         ? channel.state.messages
-        : Object.values(channel.state.messages || []);
+        : Object.values(channel.state.messages || {});
 
       const lastMessage = messagesArray[messagesArray.length - 1];
 
@@ -167,7 +167,12 @@ export default function CustomChannelList({
       keyExtractor={(item) => item.id}
       renderItem={renderChannelItem}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#2563EB"
+          colors={["#2563EB"]}
+        />
       }
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ flexGrow: 1 }}

@@ -11,7 +11,6 @@ import { streamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
-import { AlertNotificationRoot } from "react-native-alert-notification";
 
 const queryClient = new QueryClient();
 
@@ -60,18 +59,16 @@ export default function RootLayout() {
   }
 
   return (
-    <AlertNotificationRoot>
-      <ErrorBoundary>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <QueryClientProvider client={queryClient}>
-            <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-              <StreamChatProvider>
-                <InitialLayout />
-              </StreamChatProvider>
-            </ClerkProvider>
-          </QueryClientProvider>
-        </GestureHandlerRootView>
-      </ErrorBoundary>
-    </AlertNotificationRoot>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryClientProvider client={queryClient}>
+          <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+            <StreamChatProvider>
+              <InitialLayout />
+            </StreamChatProvider>
+          </ClerkProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
