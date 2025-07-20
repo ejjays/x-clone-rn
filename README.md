@@ -39,13 +39,3 @@ This application is built with a robust backend using Node.js, Express, and Mong
 *   Various libraries for image handling, video playback, and UI components.
 
 ---
-
-## 🛠️ Setup and Installation
-
-*(Add instructions here on how to set up and run the backend and mobile applications. This might involve steps like cloning the repository, installing dependencies, setting up environment variables, and running the development servers. I need more information or access to relevant files like a setup guide or more code to provide specific instructions.)*
-
----
-
-## 🤝 Contributing
-
-*(Add information on how others can contribute to the project if applicable.)*
