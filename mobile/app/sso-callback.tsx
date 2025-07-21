@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect } from "expo-router";
-import { Text, View, ActivityIndicator } from "react-native";
+import { Text, View } from "react-native";
+import LottieView from "lottie-react-native";
 
 export default function SSOCallback() {
   const { isSignedIn } = useAuth();
@@ -13,8 +14,12 @@ export default function SSOCallback() {
   // While Clerk is processing the authentication, you can show a loading indicator.
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color="#0000ff" />
-      <Text style={{ marginTop: 20 }}>Completing sign-in...</Text>
+      <LottieView
+        source={require('../assets/animations/loading-loader.json')}
+        autoPlay={true}
+        loop={true}
+        style={{ width: 200, height: 200 }}
+      />
     </View>
   );
 }
