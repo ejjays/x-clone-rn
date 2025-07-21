@@ -1,6 +1,7 @@
 // mobile/app/(tabs)/index.tsx
 import PostsList from "@/components/PostsList"
 import PostComposer from "@/components/PostComposer"
+import Stories from "@/components/Stories"
 import { usePosts } from "@/hooks/usePosts"
 import { useUserSync } from "@/hooks/useUserSync"
 import { router } from "expo-router"
@@ -34,6 +35,7 @@ const HomeScreen = () => {
     >
       <View className="bg-white">
         <PostComposer />
+        <Stories />
       </View>
       <View className="h-1.5 bg-gray-200" />
       <PostsList onOpenComments={handleOpenComments} />

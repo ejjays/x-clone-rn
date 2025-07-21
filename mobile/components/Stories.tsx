@@ -1,89 +1,122 @@
 import { useUser } from "@clerk/clerk-expo";
 import { Plus } from "lucide-react-native"; // Replaced Feather
-import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
-
-// Mock data for stories
-const MOCK_STORIES = [
-  {
-    id: 1,
-    name: "Jhomar Reyes",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
-    storyImage:
-      "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=400&q=80",
-  },
-  {
-    id: 2,
-    name: "Aquila",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
-    storyImage:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
-  },
-  {
-    id: 3,
-    name: "Logan Wood",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    storyImage:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80",
-  },
-  {
-    id: 4,
-    name: "James Doe",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-    storyImage:
-      "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&q=80",
-  },
-];
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
 
 const Stories = () => {
   const { user } = useUser();
 
+  const stories = [
+    {
+      id: 0,
+      username: "Create story",
+      avatar: user?.imageUrl || "https://randomuser.me/api/portraits/men/0.jpg", // Use user's avatar or a placeholder
+      storyImage: user?.imageUrl || "https://picsum.photos/seed/0/200/300", // Use user's avatar or a placeholder for story background
+    },
+    {
+      id: 1,
+      username: "Jeremy Alloso",
+      avatar: "https://randomuser.me/api/portraits/men/1.jpg",
+      storyImage: "https://picsum.photos/seed/1/200/300",
+    },
+    {
+      id: 2,
+      username: "Mae Maban",
+      avatar: "https://randomuser.me/api/portraits/women/2.jpg",
+      storyImage: "https://picsum.photos/seed/2/200/300",
+    },
+    {
+      id: 3,
+      username: "Cassel Wilson",
+      avatar: "https://randomuser.me/api/portraits/men/3.jpg",
+      storyImage: "https://picsum.photos/seed/3/200/300",
+    },
+    {
+      id: 4,
+      username: "Jaica Armada",
+      avatar: "https://randomuser.me/api/portraits/women/4.jpg",
+      storyImage: "https://picsum.photos/seed/4/200/300",
+    },
+    {
+      id: 5,
+      username: "James Marlon Alloso",
+      avatar: "https://randomuser.me/api/portraits/men/5.jpg",
+      storyImage: "https://picsum.photos/seed/5/200/300",
+    },
+    {
+      id: 6,
+      username: "Ashley Hernandez",
+      avatar: "https://randomuser.me/api/portraits/women/6.jpg",
+      storyImage: "https://picsum.photos/seed/6/200/300",
+    },
+    {
+      id: 7,
+      username: "Christ Son Alloso",
+      avatar: "https://randomuser.me/api/portraits/men/7.jpg",
+      storyImage: "https://picsum.photos/seed/7/200/300",
+    },
+    {
+      id: 8,
+      username: "Zaidel Garcia",
+      avatar: "https://randomuser.me/api/portraits/women/8.jpg",
+      storyImage: "https://picsum.photos/seed/8/200/300",
+    },
+    {
+      id: 9,
+      username: "Manny Dimasaka",
+      avatar: "https://randomuser.me/api/portraits/men/9.jpg",
+      storyImage: "https://picsum.photos/seed/9/200/300",
+    },
+    {
+      id: 10,
+      username: "Von Hernandez",
+      avatar: "https://randomuser.me/api/portraits/women/10.jpg",
+      storyImage: "https://picsum.photos/seed/10/200/300",
+    },
+  ];
+
   return (
     <View className="bg-white py-3 border-y border-gray-200">
-      <ScrollView
+      <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-      >
-        {/* Create Story Card */}
-        <TouchableOpacity className="w-28 h-48 rounded-xl overflow-hidden border border-gray-200">
-          <Image
-            source={{ uri: user?.imageUrl }}
-            className="w-full h-32"
-            resizeMode="cover"
-          />
-          <View className="absolute bottom-0 w-full h-16 bg-white items-center justify-end pb-2">
-            <Text className="text-gray-800 font-semibold text-xs">
-              Create story
-            </Text>
-          </View>
-          <View className="absolute top-28 left-1/2 -ml-5 bg-blue-500 rounded-full w-10 h-10 items-center justify-center border-4 border-white">
-            <Plus size={24} color="white" />
-          </View>
-        </TouchableOpacity>
-
-        {/* Mock Stories */}
-        {MOCK_STORIES.map((story) => (
+        data={stories}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
           <TouchableOpacity
-             key={story.id}
-             className="w-28 h-48 rounded-xl overflow-hidden"
-             >
+            key={item.id}
+            className="w-28 h-48 rounded-xl overflow-hidden"
+          >
             <Image
-              source={{ uri: story.storyImage }}
+              source={{ uri: item.storyImage }}
               className="w-full h-full"
               resizeMode="cover"
             />
             <View className="absolute top-2 left-2 border-2 border-blue-500 rounded-full">
-              <Image
-                source={{ uri: story.avatar }}
-                className="w-9 h-9 rounded-full"
-              />
+              {item.id === 0 ? (
+                <View className="w-9 h-9 rounded-full bg-blue-500 items-center justify-center">
+                  <Plus size={24} color="white" />
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: item.avatar }}
+                  className="w-9 h-9 rounded-full"
+                />
+              )}
             </View>
             <Text className="absolute bottom-2 left-2 text-white font-bold text-sm">
-              {story.name}
+              {item.username}
             </Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+        )}
+      />
     </View>
   );
 };
