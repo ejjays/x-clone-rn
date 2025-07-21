@@ -8,19 +8,57 @@ import {
   Text,
   TouchableOpacity,
   Image,
+  TextInput,
   ScrollView,
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
+  Animated
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Video, ResizeMode } from "expo-av";
 import PostComposer from "@/components/PostComposer";
+import { useEffect, useState, useRef } from 'react';
 
 const CreatePostScreen = () => {
   const { currentUser } = useCurrentUser();
-  const { content, setContent, selectedMedia, isCreating, pickMedia, removeMedia, createPost } = useCreatePost();
+  const {
+    content,
+    setContent,
+    selectedMedia,
+    isCreating,
+    pickMedia,
+    removeMedia,
+    createPost,
+  } = useCreatePost();
   const insets = useSafeAreaInsets();
+
+  const placeholderTexts = [
+    "What are you grateful for? ✨",
+    "Encourage someone today! 🙌",
+    "What's in your heart ❤️..",
+  ];
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => {
+        setPlaceholderIndex(prevIndex => (prevIndex + 1) % placeholderTexts.length);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, [fadeAnim]);
 
   const handleCreatePost = () => {
     createPost(() => {
@@ -28,7 +66,8 @@ const CreatePostScreen = () => {
     });
   };
 
-  const isPostButtonDisabled = (!content.trim() && !selectedMedia) || isCreating;
+  const isPostButtonDisabled =
+    (!content.trim() && !selectedMedia) || isCreating;
 
   return (
     <View className="flex-1 bg-white">
@@ -60,7 +99,10 @@ const CreatePostScreen = () => {
           <View className="p-4">
             {/* User Info */}
             <View className="flex-row items-center mb-4">
-              <Image source={{ uri: currentUser?.profilePicture }} className="w-12 h-12 rounded-full mr-3" />
+              <Image
+                source={{ uri: currentUser?.profilePicture }}
+                className="w-12 h-12 rounded-full mr-3"
+              />
               <View>
                 <Text className="font-bold text-base text-gray-900">
                   {currentUser?.firstName} {currentUser?.lastName}
@@ -70,13 +112,33 @@ const CreatePostScreen = () => {
             </View>
 
             {/* Text Input */}
-             <PostComposer animatedPlaceholder={true} value={content} onChangeText={setContent} />
+            <Animated.View style={{ opacity: fadeAnim }}>
+              <TextInput
+                placeholder={placeholderTexts[placeholderIndex]}
+                placeholderTextColor="#9CA3AF"
+                value={content}
+                onChangeText={setContent}
+                multiline
+                autoFocus
+                className="text-xl leading-7 text-gray-900"
+                style={{
+                  minHeight: 120,
+                  maxHeight: 400,
+                  paddingTop: 10,
+                  paddingBottom: 10,
+                }}
+              />
+            </Animated.View>
 
             {/* Media Preview */}
             {selectedMedia && (
               <View className="mt-4 relative bg-gray-100 rounded-lg">
                 {selectedMedia.type === "image" ? (
-                  <Image source={{ uri: selectedMedia.uri }} className="w-full h-72 rounded-lg" resizeMode="cover" />
+                  <Image
+                    source={{ uri: selectedMedia.uri }}
+                    className="w-full h-72 rounded-lg"
+                    resizeMode="cover"
+                  />
                 ) : (
                   <Video
                     source={{ uri: selectedMedia.uri }}
@@ -86,7 +148,10 @@ const CreatePostScreen = () => {
                     isLooping
                   />
                 )}
-                <TouchableOpacity className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-full" onPress={removeMedia}>
+                <TouchableOpacity
+                  className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-full"
+                  onPress={removeMedia}
+                >
                   <Trash size={18} color="white" />
                 </TouchableOpacity>
               </View>
@@ -96,9 +161,14 @@ const CreatePostScreen = () => {
 
         {/* Footer Actions */}
         <View className="border-t border-gray-200 px-4 py-3">
-          <TouchableOpacity onPress={pickMedia} className="flex-row items-center bg-gray-100 p-3 rounded-lg">
+          <TouchableOpacity
+            onPress={pickMedia}
+            className="flex-row items-center bg-gray-100 p-3 rounded-lg"
+          >
             <ImageIcon size={24} color="#4CAF50" />
-            <Text className="ml-3 font-semibold text-base text-gray-800">Photos/videos</Text>
+            <Text className="ml-3 font-semibold text-base text-gray-800">
+              Photos/videos
+            </Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
