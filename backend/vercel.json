@@ -1,13 +1,13 @@
 {
   "version": 2,
   "git": {
-    "deploymentEnabled": false
-  },
+    "deploymentEnabled": true
+  }, 
   "builds": [
     {
       "src": "src/server.js",
       "use": "@vercel/node"
-    } 
+    }
   ],
   "routes": [
     {
