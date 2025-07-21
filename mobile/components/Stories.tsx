@@ -39,7 +39,7 @@ const Stories = () => {
     },
     {
       id: 4,
-      username: "Jaica Armada",
+      username: "Princess Leah Alloso",
       avatar: "https://randomuser.me/api/portraits/women/4.jpg",
       storyImage: "https://picsum.photos/seed/4/200/300",
     },
