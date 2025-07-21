@@ -8,7 +8,6 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  TextInput,
   ScrollView,
   ActivityIndicator,
   Platform,
@@ -16,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Video, ResizeMode } from "expo-av";
+import PostComposer from "@/components/PostComposer";
 
 const CreatePostScreen = () => {
   const { currentUser } = useCurrentUser();
@@ -70,16 +70,7 @@ const CreatePostScreen = () => {
             </View>
 
             {/* Text Input */}
-            <TextInput
- placeholder="Share your thoughts with us.."
-              placeholderTextColor="#9CA3AF"
-              value={content}
-              onChangeText={setContent}
-              multiline
-              autoFocus
-              className="text-xl leading-7 text-gray-900"
-              style={{ minHeight: 120, maxHeight: 400, paddingTop: 10, paddingBottom: 10 }}
-            />
+             <PostComposer animatedPlaceholder={true} value={content} onChangeText={setContent} />
 
             {/* Media Preview */}
             {selectedMedia && (

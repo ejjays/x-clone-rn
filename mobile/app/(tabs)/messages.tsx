@@ -1,5 +1,13 @@
 import { router } from "expo-router";
-import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, TextInput, Platform } from "react-native";
+import {
+  View,
+  Text,
+  SafeAreaView,
+  TouchableOpacity,
+  ActivityIndicator,
+  TextInput,
+  Platform,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext"; // 👈 Use the new context hook
 import CustomChannelList from "@/components/CustomChannelList";
@@ -7,7 +15,8 @@ import NoMessagesFound from "@/components/NoMessagesFound";
 import { useState } from "react";
 
 export default function MessagesScreen() {
-  const { isConnecting, isConnected, channels, client, refreshChannels } = useStreamChat(); // 👈 This now gets shared state
+  const { isConnecting, isConnected, channels, client, refreshChannels } =
+    useStreamChat(); // 👈 This now gets shared state
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleNewMessage = () => {
@@ -32,11 +41,17 @@ export default function MessagesScreen() {
       return (
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="cloud-offline-outline" size={64} color="#9CA3AF" />
-          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">Connection Issue</Text>
-          <Text className="text-gray-500 text-center">
-            Unable to connect to chat service. Please check your internet connection.
+          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">
+            Connection Issue
           </Text>
-          <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-lg mt-4" onPress={refreshChannels}>
+          <Text className="text-gray-500 text-center">
+            Unable to connect to chat service. Please check your internet
+            connection.
+          </Text>
+          <TouchableOpacity
+            className="bg-blue-500 px-6 py-3 rounded-lg mt-4"
+            onPress={refreshChannels}
+          >
             <Text className="text-white font-semibold">Retry Connection</Text>
           </TouchableOpacity>
         </View>
@@ -47,7 +62,12 @@ export default function MessagesScreen() {
       return <NoMessagesFound onRefresh={refreshChannels} />;
     }
 
-    return <CustomChannelList onRefresh={refreshChannels} searchQuery={searchQuery} />;
+    return (
+      <CustomChannelList
+        onRefresh={refreshChannels}
+        searchQuery={searchQuery}
+      />
+    );
   };
 
   return (

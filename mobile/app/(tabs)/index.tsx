@@ -34,7 +34,7 @@ const HomeScreen = () => {
       }
     >
       <View className="bg-white">
-        <PostComposer />
+        <PostComposer animatedPlaceholder={false} />
         <Stories />
       </View>
       <View className="h-1.5 bg-gray-200" />

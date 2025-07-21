@@ -11,7 +11,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useSafeAreaInsets, type EdgeInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets, type EdgeInsets, SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Video, ResizeMode } from "expo-av";
 import BottomSheet from "@gorhom/bottom-sheet";
@@ -172,38 +172,38 @@ export default function VideosScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <SafeAreaView style={styles.centered}>
         <ActivityIndicator size="large" color="#FFF" />
         <Text style={styles.infoText}>Loading videos...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
+      <SafeAreaView style={styles.centered}>
         <Text style={styles.infoText}>Could not load videos.</Text>
         <TouchableOpacity onPress={() => refetch()}>
           <Text style={[styles.infoText, { color: "#1877F2" }]}>Retry</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (videoPosts.length === 0) {
     return (
-      <View style={styles.centered}>
+      <SafeAreaView style={styles.centered}>
          <View style={[styles.header, { paddingTop: insets.top }]}>
            <Text style={styles.headerTitle}>Reels</Text>
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
         <Text style={styles.infoText}>No videos have been posted yet.</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
@@ -223,7 +223,7 @@ export default function VideosScreen() {
         windowSize={2}
       />
       <CommentsBottomSheet bottomSheetRef={bottomSheetRef} onClose={handleCloseComments} />
-    </View>
+    </SafeAreaView>
   );
 }
 

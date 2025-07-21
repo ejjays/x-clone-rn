@@ -1,8 +1,8 @@
 {
   "version": 2,
   "git": {
-    "deploymentEnabled": true
-  }, 
+    "deploymentEnabled": false
+  },
   "builds": [
     {
       "src": "src/server.js",
