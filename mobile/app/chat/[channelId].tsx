@@ -19,11 +19,13 @@ import {
   Image,
   Keyboard,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Animated, { Layout } from "react-native-reanimated";
 import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
-import LottieView from "lottie-react-native";
 
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>();
@@ -35,23 +37,29 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [otherUser, setOtherUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Initial state set to true
   const [sending, setSending] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: 'image' | 'video' } | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<{
+    uri: string;
+    type: "image" | "video";
+  } | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
-  const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null);
+  const [anchorMeasurements, setAnchorMeasurements] = useState<{
+    pageX: number;
+    pageY: number;
+    width: number;
+  } | null>(null);
   const messageRefs = useRef<{ [key: string]: View | null }>({});
 
   useEffect(() => {
     if (!client || !isConnected || !channelId || !currentUser) {
-      setLoading(false);
       return;
     }
 
     const initializeChannel = async () => {
       try {
-        setLoading(true);
+        setLoading(true); // Ensure loading is true when starting initialization
         const ch = client.channel("messaging", channelId);
         await ch.watch();
         setChannel(ch);
@@ -66,11 +74,13 @@ export default function ChatScreen() {
         if (otherMember?.user) {
           setOtherUser({
             name: otherMember.user.name || "Unknown User",
-            image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
+            image:
+              otherMember.user.image ||
+              `https://getstream.io/random_png/?name=${otherMember.user.name}`,
             online: otherMember.user.online || false,
           });
         }
-        
+
         const handleEvent = (event: any) => {
           const eventChannel = event.channel || ch;
           setMessages(eventChannel.state.messages.slice().reverse());
@@ -82,7 +92,9 @@ export default function ChatScreen() {
         ch.on("message.updated", handleEvent);
         ch.on("message.deleted", handleEvent);
 
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 500); // Show loader for at least 500ms
 
         return () => {
           ch.off("message.new", handleEvent);
@@ -92,7 +104,7 @@ export default function ChatScreen() {
       } catch (error) {
         console.error("❌ Error initializing channel:", error);
         Alert.alert("Error", "Failed to load chat. Please try again.");
-        setLoading(false);
+        setLoading(false); // Set false on error
       }
     };
 
@@ -100,17 +112,21 @@ export default function ChatScreen() {
   }, [client, isConnected, channelId, currentUser]);
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) =>
-      setKeyboardHeight(e.endCoordinates.height + 20),
-    )
-    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0))
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      (e) => setKeyboardHeight(e.endCoordinates.height + 20)
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => setKeyboardHeight(0)
+    );
     return () => {
-      keyboardDidShowListener?.remove()
-      keyboardDidHideListener?.remove()
-    }
-  }, [])
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
 
- const sendMessage = async () => {
+  const sendMessage = async () => {
     if (!channel || (!newMessage.trim() && !selectedMedia) || sending) return;
 
     setSending(true);
@@ -120,26 +136,33 @@ export default function ChatScreen() {
       if (selectedMedia) {
         const mediaUrl = await uploadMediaToCloudinary(selectedMedia);
         if (mediaUrl) {
-          messageData.attachments = [{
-            type: selectedMedia.type,
-            asset_url: mediaUrl,
-            thumb_url: mediaUrl,
-          }];
+          messageData.attachments = [
+            {
+              type: selectedMedia.type,
+              asset_url: mediaUrl,
+              thumb_url: mediaUrl,
+            },
+          ];
         } else {
-          Alert.alert("Upload Failed", "Could not upload your media. Message not sent.");
+          Alert.alert(
+            "Upload Failed",
+            "Could not upload your media. Message not sent."
+          );
           setSending(false);
           return; // Stop sending if upload failed
         }
       }
 
-      if (!messageData.text && (!messageData.attachments || messageData.attachments.length === 0)) {
-         // Prevent sending empty message if media upload failed and no text
-         setSending(false);
-         return;
+      if (
+        !messageData.text &&
+        (!messageData.attachments || messageData.attachments.length === 0)
+      ) {
+        // Prevent sending empty message if media upload failed and no text
+        setSending(false);
+        return;
       }
 
       await channel.sendMessage(messageData);
-
     } catch (error) {
       console.error("❌ Error sending message:", error);
       Alert.alert("Error", "Failed to send message.");
@@ -147,9 +170,9 @@ export default function ChatScreen() {
       // Always clear input and selected media after attempting to send
       setNewMessage("");
       setSelectedMedia(null);
-      setSending(false)
+      setSending(false);
     }
-  }
+  };
 
   // --- REACTION LOGIC FIX ---
   // This function now handles both adding and removing reactions with an optimistic update.
@@ -170,16 +193,20 @@ export default function ChatScreen() {
         if (existingReaction) {
           // Remove the reaction
           newReactions = newReactions.filter(
-            (r) => !(r.type === reactionType && r.user_id === currentUser.clerkId)
+            (r) =>
+              !(r.type === reactionType && r.user_id === currentUser.clerkId)
           );
         } else {
           // Add the new reaction
-          newReactions.push({ type: reactionType, user_id: currentUser.clerkId });
+          newReactions.push({
+            type: reactionType,
+            user_id: currentUser.clerkId,
+          });
         }
         return { ...msg, latest_reactions: newReactions };
       })
     );
-    
+
     setSelectedMessage(null); // Hide picker immediately
 
     try {
@@ -198,72 +225,105 @@ export default function ChatScreen() {
   };
 
   const handleLongPress = (message: any) => {
-    const ref = messageRefs.current[message.id]
+    const ref = messageRefs.current[message.id];
     if (ref) {
       ref.measure((_x, _y, width, height, pageX, pageY) => {
-        setAnchorMeasurements({ pageX, pageY, width })
-        setSelectedMessage(message)
-      })
+        setAnchorMeasurements({ pageX, pageY, width });
+        setSelectedMessage(message);
+      });
     }
-  }
+  };
 
   const formatMessageTime = (date: Date) => {
-    if (isToday(date)) return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`
-    if (isYesterday(date)) return `YESTERDAY AT ${format(date, "d MMM 'AT' h:mm a").toUpperCase()}`
-    return format(date, "d MMM yyyy 'AT' h:mm a").toUpperCase()
-  }
+    if (isToday(date))
+      return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`;
+    if (isYesterday(date))
+      return `YESTERDAY AT ${format(date, "d MMM 'AT' h:mm a").toUpperCase()}`;
+    return format(date, "d MMM yyyy 'AT' h:mm a").toUpperCase();
+  };
 
   const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
-    if (!previousMessage) return true
-    const timeDiff = new Date(currentMessage.created_at).getTime() - new Date(previousMessage.created_at).getTime()
-    return timeDiff > 30 * 60 * 1000
-  }
+    if (!previousMessage) return true;
+    const timeDiff =
+      new Date(currentMessage.created_at).getTime() -
+      new Date(previousMessage.created_at).getTime();
+    return timeDiff > 30 * 60 * 1000;
+  };
 
-  const renderMessage = ({ item: message, index }: { item: any; index: number }) => {
+  const renderMessage = ({
+    item: message,
+    index,
+  }: {
+    item: any;
+    index: number;
+  }) => {
     const isFromCurrentUser = message.user?.id === currentUser?.clerkId;
-    const hasReactions = message.latest_reactions && message.latest_reactions.length > 0;
+    const hasReactions =
+      message.latest_reactions && message.latest_reactions.length > 0;
     const attachment = message.attachments?.[0];
 
-    const messageAbove = index < messages.length - 1 ? messages[index + 1] : null;
+    const messageAbove =
+      index < messages.length - 1 ? messages[index + 1] : null;
     const messageBelow = index > 0 ? messages[index - 1] : null;
 
-    const showTimestamp = shouldShowTimestamp(message, messageAbove)
-    const isFirstInGroup = showTimestamp || !messageAbove || messageAbove.user?.id !== message.user.id
-    const isLastInGroup = !messageBelow || messageBelow.user?.id !== message.user.id || shouldShowTimestamp(messageBelow, message)
-    const showAvatar = isLastInGroup
+    const showTimestamp = shouldShowTimestamp(message, messageAbove);
+    const isFirstInGroup =
+      showTimestamp ||
+      !messageAbove ||
+      messageAbove.user?.id !== message.user.id;
+    const isLastInGroup =
+      !messageBelow ||
+      messageBelow.user?.id !== message.user.id ||
+      shouldShowTimestamp(messageBelow, message);
+    const showAvatar = isLastInGroup;
 
     const getBubbleStyle = () => {
-      let style = "rounded-3xl"
-      if (isFirstInGroup && isLastInGroup) return style
+      let style = "rounded-3xl";
+      if (isFirstInGroup && isLastInGroup) return style;
       if (isFromCurrentUser) {
-        if (isFirstInGroup) style += " rounded-br-lg"
-        else if (isLastInGroup) style += " rounded-tr-lg"
-        else style += " rounded-tr-lg rounded-br-lg"
+        if (isFirstInGroup) style += " rounded-br-lg";
+        else if (isLastInGroup) style += " rounded-tr-lg";
+        else style += " rounded-tr-lg rounded-br-lg";
       } else {
-        if (isFirstInGroup) style += " rounded-bl-lg"
-        else if (isLastInGroup) style += " rounded-tl-lg"
-        else style += " rounded-tl-lg rounded-bl-lg"
+        if (isFirstInGroup) style += " rounded-bl-lg";
+        else if (isLastInGroup) style += " rounded-tl-lg";
+        else style += " rounded-tl-lg rounded-bl-lg";
       }
-      return style
-    }
+      return style;
+    };
 
     const ReactionComponent = () => {
-      if (!hasReactions) return null
+      if (!hasReactions) return null;
 
-      const emojiMap: { [key: string]: string } = { love: "❤️", haha: "😂", wow: "😮", kissing_heart: "😘", enraged: "😡", thumbsup: "👍" }
-      const reactionEmojis = message.latest_reactions.map((r: any) => emojiMap[r.type]).filter(Boolean)
+      const emojiMap: { [key: string]: string } = {
+        love: "❤️",
+        haha: "😂",
+        wow: "😮",
+        kissing_heart: "😘",
+        enraged: "😡",
+        thumbsup: "👍",
+      };
+      const reactionEmojis = message.latest_reactions
+        .map((r: any) => emojiMap[r.type])
+        .filter(Boolean);
       const uniqueEmojis = [...new Set(reactionEmojis)];
 
-      if (!uniqueEmojis.length) return null
-      
+      if (!uniqueEmojis.length) return null;
+
       return (
         <View className="absolute -bottom-2.5 -right-2 bg-white rounded-full p-0.5 shadow flex-row">
-           {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
-             <Text key={idx} className="text-sm" style={{ transform: [{ translateX: -idx * 4 }] }}>{emoji}</Text>
-           ))}
+          {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
+            <Text
+              key={idx}
+              className="text-sm"
+              style={{ transform: [{ translateX: -idx * 4 }] }}
+            >
+              {emoji}
+            </Text>
+          ))}
         </View>
-      )
-    }
+      );
+    };
 
     return (
       <Animated.View layout={Layout.duration(200)}>
@@ -277,11 +337,20 @@ export default function ChatScreen() {
           </View>
         )}
 
-        <View className={`flex-row items-end ${isLastInGroup ? "mb-2" : "mb-0.5"}`}>
-          <View className={`flex-1 flex-row items-end ${isFromCurrentUser ? "justify-end pr-1" : "justify-start pl-1"}`}>
+        <View
+          className={`flex-row items-end ${isLastInGroup ? "mb-2" : "mb-0.5"}`}
+        >
+          <View
+            className={`flex-1 flex-row items-end ${isFromCurrentUser ? "justify-end pr-1" : "justify-start pl-1"}`}
+          >
             {!isFromCurrentUser && (
               <View className="mr-2" style={{ width: 32 }}>
-                {showAvatar && otherUser?.image && <Image source={{ uri: otherUser.image }} className="w-8 h-8 rounded-full" />}
+                {showAvatar && otherUser?.image && (
+                  <Image
+                    source={{ uri: otherUser.image }}
+                    className="w-8 h-8 rounded-full"
+                  />
+                )}
               </View>
             )}
 
@@ -289,18 +358,29 @@ export default function ChatScreen() {
               className={`max-w-[80%] ${hasReactions ? "pb-4" : ""}`}
               ref={(el) => (messageRefs.current[message.id] = el)}
             >
-              <TouchableOpacity onLongPress={() => handleLongPress(message)} delayLongPress={200} activeOpacity={0.8}>
+              <TouchableOpacity
+                onLongPress={() => handleLongPress(message)}
+                delayLongPress={200}
+                activeOpacity={0.8}
+              >
                 <View
                   className={`px-4 py-2.5 ${getBubbleStyle()} ${
                     isFromCurrentUser ? "bg-blue-500 shadow-sm" : "bg-gray-200"
                   }`}
                 >
-                  {attachment && attachment.type === 'image' && (
-                    <Image source={{ uri: attachment.asset_url || attachment.thumb_url }} className="w-48 h-48 rounded-lg mb-2" />
+                  {attachment && attachment.type === "image" && (
+                    <Image
+                      source={{
+                        uri: attachment.asset_url || attachment.thumb_url,
+                      }}
+                      className="w-48 h-48 rounded-lg mb-2"
+                    />
                   )}
 
                   {message.text && (
-                    <Text className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}>
+                    <Text
+                      className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}
+                    >
                       {message.text}
                     </Text>
                   )}
@@ -313,20 +393,17 @@ export default function ChatScreen() {
           </View>
         </View>
       </Animated.View>
-    )
-  }
+    );
+  };
 
+  // Only show the loader if explicitly connecting (Stream Chat client) or if channel-specific loading is true.
+  // The `isConnecting` from `useStreamChat` will handle the initial connection to Stream.
+  // The `loading` state here handles the channel-specific data fetching.
   if (isConnecting || loading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
-          <LottieView
-            source={require("@/assets/animations/loading-loader.json")}
-            autoPlay
-            loop
-            className="w-24 h-24"
-            onLoadError={(error) => console.error('Lottie animation failed to load', error)}
-          />
+          <ActivityIndicator size="50" color="#1DA1F2" />
         </View>
       </SafeAreaView>
     );
@@ -337,9 +414,12 @@ export default function ChatScreen() {
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="cloud-offline-outline" size={64} color="#9CA3AF" />
-          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">Connection Issue</Text>
+          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">
+            Connection Issue
+          </Text>
           <Text className="text-gray-500 text-center">
-            Unable to connect to chat service. Please check your internet connection.
+            Unable to connect to chat service. Please check your internet
+            connection.
           </Text>
         </View>
       </SafeAreaView>
@@ -355,17 +435,28 @@ export default function ChatScreen() {
         </TouchableOpacity>
         {otherUser?.image && (
           <View className="relative mr-3">
-            <Image source={{ uri: otherUser.image }} className="w-12 h-12 rounded-full" />
+            <Image
+              source={{ uri: otherUser.image }}
+              className="w-12 h-12 rounded-full"
+            />
             {otherUser.online && (
               <View className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white" />
             )}
           </View>
         )}
         <View className="flex-1 min-w-0">
-          <Text className="font-semibold text-gray-900 text-xl" numberOfLines={1} ellipsizeMode="tail">
+          <Text
+            className="font-semibold text-gray-900 text-xl"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {otherUser?.name || "Chat"}
           </Text>
-          {otherUser && <Text className="text-gray-500 text-sm">{otherUser.online ? "Online" : "Offline"}</Text>}
+          {otherUser && (
+            <Text className="text-gray-500 text-sm">
+              {otherUser.online ? "Online" : "Offline"}
+            </Text>
+          )}
         </View>
         <TouchableOpacity className="p-2">
           <Ionicons name="call-outline" size={24} color="#374151" />
@@ -386,13 +477,16 @@ export default function ChatScreen() {
             renderItem={renderMessage}
             keyExtractor={(item) => item.id}
             className="flex-1 bg-white px-2"
-            contentContainerStyle={{ paddingTop: 16, paddingBottom: keyboardHeight > 0 ? 20 : 16 }}
+            contentContainerStyle={{
+              paddingTop: 16,
+              paddingBottom: keyboardHeight > 0 ? 20 : 16,
+            }}
             inverted
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             onScrollBeginDrag={() => {
-              Keyboard.dismiss()
-              setSelectedMessage(null)
+              Keyboard.dismiss();
+              setSelectedMessage(null);
             }}
           />
 
@@ -406,15 +500,24 @@ export default function ChatScreen() {
             }}
           >
             {/* Image Picker Button */}
- {selectedMedia ? (
- <TouchableOpacity onPress={() => setSelectedMedia(null)} className="p-3 rounded-full bg-red-500 mr-2 mb-2">
- <Ionicons name="close" size={24} color="white" />
- </TouchableOpacity>
- ) : (
- <TouchableOpacity onPress={async () => { const media = await pickMedia(); setSelectedMedia(media); }} className="p-3 rounded-full bg-gray-200 mr-2 mb-2">
- <Ionicons name="image-outline" size={24} color="#374151" />
- </TouchableOpacity>
- )}
+            {selectedMedia ? (
+              <TouchableOpacity
+                onPress={() => setSelectedMedia(null)}
+                className="p-3 rounded-full bg-red-500 mr-2 mb-2"
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={async () => {
+                  const media = await pickMedia();
+                  setSelectedMedia(media);
+                }}
+                className="p-3 rounded-full bg-gray-200 mr-2 mb-2"
+              >
+                <Ionicons name="image-outline" size={24} color="#374151" />
+              </TouchableOpacity>
+            )}
             <View className="flex-1 mr-3">
               <TextInput
                 value={newMessage}
@@ -431,14 +534,20 @@ export default function ChatScreen() {
             </View>
             <TouchableOpacity
               onPress={sendMessage}
-              disabled={!newMessage.trim() && !selectedMedia || sending}
+              disabled={(!newMessage.trim() && !selectedMedia) || sending}
               className={`p-3 rounded-full ${(!newMessage.trim() && !selectedMedia) || sending ? "bg-gray-300" : "bg-blue-500"}`}
               style={{ marginBottom: 2 }}
             >
               {sending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Ionicons name="send" size={20} color={(!newMessage.trim() && !selectedMedia) ? "gray" : "white"} />
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={
+                    !newMessage.trim() && !selectedMedia ? "gray" : "white"
+                  }
+                />
               )}
             </TouchableOpacity>
           </View>
@@ -452,5 +561,5 @@ export default function ChatScreen() {
         anchorMeasurements={anchorMeasurements}
       />
     </View>
-  )
+  );
 }
