@@ -4,7 +4,6 @@ import {
   Text,
   SafeAreaView,
   TouchableOpacity,
-  ActivityIndicator,
   TextInput,
   Platform,
 } from "react-native";
@@ -13,6 +12,7 @@ import { useStreamChat } from "@/context/StreamChatContext"; // 👈 Use the new
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
 import { useState } from "react";
+import LottieView from "lottie-react-native";
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } =
@@ -31,8 +31,13 @@ export default function MessagesScreen() {
     if (isConnecting && !client) {
       return (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#1877F2" />
-          <Text className="text-gray-500 mt-2">Connecting to chat...</Text>
+          <LottieView
+            source={require("@/assets/animations/loading-loader.json")}
+            autoPlay
+            loop
+            className="w-24 h-24"
+          />
+          <Text className="text-gray-500 mt-2">Loading conversations...</Text>
         </View>
       );
     }

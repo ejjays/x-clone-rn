@@ -23,6 +23,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import * as Haptics from "expo-haptics";
 import Animated, { Layout } from "react-native-reanimated";
 import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
+import LottieView from "lottie-react-native";
 
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>();
@@ -319,10 +320,13 @@ export default function ChatScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3B82F6" />
-          <Text className="text-gray-500 mt-2">
-            {isConnecting ? "Connecting to chat..." : "Loading conversation..."}
-          </Text>
+          <LottieView
+            source={require("@/assets/animations/loading-loader.json")}
+            autoPlay
+            loop
+            className="w-24 h-24"
+            onLoadError={(error) => console.error('Lottie animation failed to load', error)}
+          />
         </View>
       </SafeAreaView>
     );

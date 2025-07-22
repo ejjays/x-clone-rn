@@ -1,5 +1,5 @@
 // mobile/app/(tabs)/videos.tsx
-import React, { useRef, useState, useCallback, useMemo } from "react";
+import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,12 +11,18 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useSafeAreaInsets, type EdgeInsets, SafeAreaView } from "react-native-safe-area-context";
+import {
+  useSafeAreaInsets,
+  type EdgeInsets,
+  SafeAreaView,
+} from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Video, ResizeMode } from "expo-av";
 import BottomSheet from "@gorhom/bottom-sheet";
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
-import PostReactionsPicker, { postReactions } from "@/components/PostReactionsPicker";
+import PostReactionsPicker, {
+  postReactions,
+} from "@/components/PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
@@ -37,13 +43,37 @@ const VideoItem = ({
 }) => {
   const videoRef = useRef<Video>(null);
   const likeButtonRef = useRef<TouchableOpacity>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
+  // Set initial isPlaying to false, so it doesn't autoplay until explicitly in view.
+  const [isPlaying, setIsPlaying] = useState(false); 
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState(null);
   const [selectedReaction, setSelectedReaction] = useState(null);
 
-  const onPlayPausePress = () => {
-    setIsPlaying((prev) => !prev);
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isVisible) {
+        // When the video becomes visible, attempt to play it
+        // Set isPlaying to true if it was paused previously
+        videoRef.current.playAsync().then(() => setIsPlaying(true));
+        videoRef.current.setStatusAsync({ volume: 1 }); // Ensure volume is up
+      } else {
+        // When the video is not visible, pause it, reset to beginning, and mute
+        videoRef.current.pauseAsync();
+        videoRef.current.setStatusAsync({ positionMillis: 0, volume: 0 });
+        setIsPlaying(false); // Update internal state to paused
+      }
+    }
+  }, [isVisible]); // Only depend on isVisible
+
+  const onPlayPausePress = async () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        await videoRef.current.pauseAsync();
+      } else {
+        await videoRef.current.playAsync();
+      }
+      setIsPlaying((prev) => !prev);
+    }
   };
 
   const handleLongPress = () => {
@@ -69,10 +99,12 @@ const VideoItem = ({
           source={{ uri: item.video! }}
           resizeMode={ResizeMode.COVER}
           isLooping
-          shouldPlay={isVisible && isPlaying}
-          onError={(error) => console.log(`Video Error for post ${item._id}:`, error)}
+          // shouldPlay is now controlled by useEffect and onPlayPausePress
+          onError={(error) =>
+            console.log(`Video Error for post ${item._id}:`, error)
+          }
         />
-        {!isPlaying && isVisible && (
+        {!isPlaying && isVisible && ( // Only show play icon if visible and not playing
           <View style={styles.playIconContainer}>
             <Ionicons name="play" size={80} color="rgba(255, 255, 255, 0.7)" />
           </View>
@@ -91,7 +123,10 @@ const VideoItem = ({
       >
         <View style={styles.leftContainer}>
           <View style={styles.userInfo}>
-            <Image source={{ uri: item.user.profilePicture }} style={styles.avatar} />
+            <Image
+              source={{ uri: item.user.profilePicture }}
+              style={styles.avatar}
+            />
             <Text style={styles.username}>
               {item.user.firstName} {item.user.lastName}
             </Text>
@@ -101,16 +136,31 @@ const VideoItem = ({
         <View style={styles.rightContainer}>
           <TouchableOpacity
             ref={likeButtonRef}
-            onPress={() => handleReactionSelect(selectedReaction ? null : postReactions.find((r) => r.type === "like"))}
+            onPress={() =>
+              handleReactionSelect(
+                selectedReaction
+                  ? null
+                  : postReactions.find((r) => r.type === "like")
+              )
+            }
             onLongPress={handleLongPress}
             style={styles.iconContainer}
           >
-            <Text style={{ fontSize: 30 }}>{selectedReaction ? selectedReaction.emoji : "🤍"}</Text>
-            <Text style={styles.iconText}>{formatNumber(item.reactions.length)}</Text>
+            <Text style={{ fontSize: 30 }}>
+              {selectedReaction ? selectedReaction.emoji : "🤍"}
+            </Text>
+            <Text style={styles.iconText}>
+              {formatNumber(item.reactions.length)}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconContainer} onPress={onCommentPress}>
+          <TouchableOpacity
+            style={styles.iconContainer}
+            onPress={onCommentPress}
+          >
             <Ionicons name="chatbubble-ellipses" size={30} color="white" />
-            <Text style={styles.iconText}>{formatNumber(item.comments.length)}</Text>
+            <Text style={styles.iconText}>
+              {formatNumber(item.comments.length)}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconContainer}>
             <Ionicons name="share-social" size={30} color="white" />
@@ -152,10 +202,14 @@ export default function VideosScreen() {
   };
 
   const onViewableItemsChanged = useCallback(
-    ({ viewableItems: newViewableItems }: { viewableItems: Array<{ item: Post; key: string }> }) => {
+    ({
+      viewableItems: newViewableItems,
+    }: {
+      viewableItems: Array<{ item: Post; key: string }>;
+    }) => {
       setViewableItems(newViewableItems.map((item) => item.key as string));
     },
-    [],
+    []
   );
 
   const renderItem = useCallback(
@@ -167,7 +221,7 @@ export default function VideosScreen() {
         insets={insets}
       />
     ),
-    [viewableItems, insets],
+    [viewableItems, insets]
   );
 
   if (isLoading) {
@@ -193,8 +247,8 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <SafeAreaView style={styles.centered}>
-         <View style={[styles.header, { paddingTop: insets.top }]}>
-           <Text style={styles.headerTitle}>Reels</Text>
+        <View style={[styles.header, { paddingTop: insets.top }]}>
+          <Text style={styles.headerTitle}>Reels</Text>
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
         <Text style={styles.infoText}>No videos have been posted yet.</Text>
@@ -203,7 +257,7 @@ export default function VideosScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
@@ -222,7 +276,10 @@ export default function VideosScreen() {
         maxToRenderPerBatch={1}
         windowSize={2}
       />
-      <CommentsBottomSheet bottomSheetRef={bottomSheetRef} onClose={handleCloseComments} />
+      <CommentsBottomSheet
+        bottomSheetRef={bottomSheetRef}
+        onClose={handleCloseComments}
+      />
     </SafeAreaView>
   );
 }
@@ -233,7 +290,7 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
   },
   header: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     top: 0,
@@ -243,8 +300,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   centered: {
     flex: 1,
@@ -261,8 +318,8 @@ const styles = StyleSheet.create({
     width: width,
     height: height,
     backgroundColor: "black",
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   videoPressable: {
     ...StyleSheet.absoluteFillObject,
@@ -272,8 +329,8 @@ const styles = StyleSheet.create({
   },
   playIconContainer: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

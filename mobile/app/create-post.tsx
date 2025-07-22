@@ -13,12 +13,12 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
-  Animated
+  Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Video, ResizeMode } from "expo-av";
 import PostComposer from "@/components/PostComposer";
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from "react";
 
 const CreatePostScreen = () => {
   const { currentUser } = useCurrentUser();
@@ -36,29 +36,46 @@ const CreatePostScreen = () => {
   const placeholderTexts = [
     "What are you grateful for? ✨",
     "Encourage someone today! 🙌",
-    "What's in your heart ❤️..",
+    "What's in your heart? ❤️..",
   ];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
-        setPlaceholderIndex(prevIndex => (prevIndex + 1) % placeholderTexts.length);
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }).start();
-      });
-    }, 4000);
+    let intervalId: NodeJS.Timeout | null = null;
 
-    return () => clearInterval(intervalId);
-  }, [fadeAnim]);
+    if (content.length === 0) {
+      // Only run animation if input is empty
+      intervalId = setInterval(() => {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 505,
+          useNativeDriver: true,
+        }).start(() => {
+          setPlaceholderIndex(
+            (prevIndex) => (prevIndex + 1) % placeholderTexts.length
+          );
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }).start();
+        });
+      }, 4000);
+    } else {
+      // If content exists, ensure full opacity and stop animation
+      fadeAnim.setValue(1); // Instantly set to fully visible
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [fadeAnim, content, placeholderTexts.length]);
 
   const handleCreatePost = () => {
     createPost(() => {

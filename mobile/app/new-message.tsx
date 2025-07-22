@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { View, Text, SafeAreaView, TouchableOpacity, FlatList, TextInput, ActivityIndicator, Alert, Platform } from "react-native"
+import { View, Text, SafeAreaView, TouchableOpacity, FlatList, TextInput, ActivityIndicator, Alert, Platform, StatusBar, Image } from "react-native"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useApiClient, userApi } from "@/utils/api"
@@ -98,11 +98,15 @@ export default function NewMessageScreen() {
       onPress={() => handleUserSelect(item)}
       disabled={creating || !isConnected}
     >
-      <View className="w-12 h-12 rounded-full bg-blue-500 items-center justify-center mr-3">
-        <Text className="text-white font-semibold text-lg">
-          {item.firstName?.[0]?.toUpperCase() || item.username?.[0]?.toUpperCase() || "?"}
-        </Text>
-      </View>
+      {item.profilePicture ? (
+        <Image source={{ uri: item.profilePicture }} className="w-12 h-12 rounded-full mr-3" />
+      ) : (
+        <View className="w-12 h-12 rounded-full bg-blue-500 items-center justify-center mr-3">
+          <Text className="text-white font-semibold text-lg">
+            {item.firstName?.[0]?.toUpperCase() || item.username?.[0]?.toUpperCase() || "?"}
+          </Text>
+        </View>
+      )}
       <View className="flex-1">
         <Text className="text-lg font-semibold text-gray-900">
           {item.firstName} {item.lastName}
@@ -116,7 +120,10 @@ export default function NewMessageScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
-      <View className="flex-row items-center p-4 border-b border-gray-200">
+      <View
+        className="flex-row items-center p-4 border-b border-gray-200"
+        style={{ paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 }}
+      >
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Ionicons name="close" size={24} color="#000" />
         </TouchableOpacity>
@@ -130,6 +137,7 @@ export default function NewMessageScreen() {
           <TextInput
             className="flex-1 ml-2 text-base"
             placeholder="Search people"
+            placeholderTextColor="#666"
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
@@ -156,7 +164,7 @@ export default function NewMessageScreen() {
       ) : filteredUsers.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Ionicons name="people-outline" size={48} color="#ccc" />
-          <Text className="mt-2 text-gray-500">{searchQuery ? "No users found" : "No users available"}</Text>
+          <Text className="mt-2 text-gray-500">No users found</Text>
         </View>
       ) : (
         <FlatList
