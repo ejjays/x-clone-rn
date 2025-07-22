@@ -83,6 +83,13 @@ const TabsLayout = () => {
         <MaterialTopTabs
           screenOptions={{
             tabBarShowLabel: false,
+            lazy: false,
+            sceneContainerStyle: {
+              display: 'flex',
+              height: '100%',
+              width: '100%',
+              overflow: 'hidden',
+            },
           }}
           tabBar={(props) => (
             <Animated.View style={animatedTabBarStyle}>

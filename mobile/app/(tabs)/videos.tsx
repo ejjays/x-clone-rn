@@ -27,6 +27,7 @@ import * as Haptics from "expo-haptics";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
 import { formatNumber } from "@/utils/formatters";
+import { StatusBar } from "expo-status-bar";
 
 const { height, width } = Dimensions.get("window");
 
@@ -258,6 +259,7 @@ export default function VideosScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+      <StatusBar style="dark" />
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
