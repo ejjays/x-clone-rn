@@ -1,5 +1,10 @@
-// mobile/app/(tabs)/videos.tsx
-import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import {
   View,
   Text,
@@ -45,7 +50,7 @@ const VideoItem = ({
   const videoRef = useRef<Video>(null);
   const likeButtonRef = useRef<TouchableOpacity>(null);
   // Set initial isPlaying to false, so it doesn't autoplay until explicitly in view.
-  const [isPlaying, setIsPlaying] = useState(false); 
+  const [isPlaying, setIsPlaying] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState(null);
   const [selectedReaction, setSelectedReaction] = useState(null);
@@ -105,11 +110,16 @@ const VideoItem = ({
             console.log(`Video Error for post ${item._id}:`, error)
           }
         />
-        {!isPlaying && isVisible && ( // Only show play icon if visible and not playing
-          <View style={styles.playIconContainer}>
-            <Ionicons name="play" size={80} color="rgba(255, 255, 255, 0.7)" />
-          </View>
-        )}
+        {!isPlaying &&
+          isVisible && ( // Only show play icon if visible and not playing
+            <View style={styles.playIconContainer}>
+              <Ionicons
+                name="play"
+                size={80}
+                color="rgba(255, 255, 255, 0.7)"
+              />
+            </View>
+          )}
       </Pressable>
 
       <View
@@ -147,9 +157,12 @@ const VideoItem = ({
             onLongPress={handleLongPress}
             style={styles.iconContainer}
           >
-            <Text style={{ fontSize: 30 }}>
-              {selectedReaction ? selectedReaction.emoji : "🤍"}
-            </Text>
+            <Ionicons
+              name={selectedReaction ? "heart" : "heart-outline"}
+              size={30}
+              color="white"
+            />
+
             <Text style={styles.iconText}>
               {formatNumber(item.reactions.length)}
             </Text>
