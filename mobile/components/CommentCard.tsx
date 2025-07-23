@@ -51,7 +51,7 @@ const CommentCard = ({ comment, currentUser, onLike }: CommentCardProps) => {
             className="ml-4"
           >
             <Text
-              className={\`font-semibold text-sm \${isLiked ? "text-blue-500" : "text-gray-600"}\`}
+              className={`font-semibold text-sm ${isLiked ? "text-blue-500" : "text-gray-600"}`}
             >
               Like
             </Text>

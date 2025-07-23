@@ -1,8 +1,7 @@
 // mobile/components/PostCard.tsx
-import type { Post, User, Reaction } from "@/types";
+import type { Post, User, Reaction, ReactionName } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
 import { router } from "expo-router";
-import { Trash } from "lucide-react-native";
 import {
   View,
   Text,
@@ -20,6 +19,7 @@ import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
 import { Video, ResizeMode } from "expo-av";
+import { Trash } from "lucide-react-native";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -159,13 +159,13 @@ const PostCard = ({
     });
   };
 
-  const handleReactionSelect = (reactionType: string) => {
+  const handleReactionSelect = (reactionType: ReactionName) => {
     reactToPost({ postId: post._id, reactionType });
     setPickerVisible(false);
   };
 
   const getTopReactions = (reactions: Reaction[], max = 3) => {
-    const counts: Record<string, number> = {};
+    const counts: Record<ReactionName, number> = {};
     reactions.forEach((r) => {
       if (r.type) counts[r.type] = (counts[r.type] || 0) + 1;
     });

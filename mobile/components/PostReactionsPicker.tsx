@@ -1,35 +1,32 @@
-import {
-  Text,
-  TouchableOpacity,
-  View,
-  Modal,
-  useWindowDimensions,
-  Pressable,
-} from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
+import { Text, TouchableOpacity, View, Modal, useWindowDimensions, Pressable, } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming, } from "react-native-reanimated";
 import { useEffect } from "react";
 import * as Haptics from "expo-haptics";
-
-export const postReactions = [
-  { type: "like", emoji: "👍" },
-  { type: "love", emoji: "❤️" },
-  { type: "haha", emoji: "😂" },
-  { type: "wow", emoji: "😮" },
-  { type: "sad", emoji: "😢" },
-  { type: "angry", emoji: "😡" },
-];
+import LikeEmoji from "../assets/icons/reactions/LikeEmoji";
+import HeartEmoji from "../assets/icons/reactions/HeartEmoji";
+import CelebrateEmoji from "../assets/icons/reactions/CelebrateEmoji";
+import CareEmoji from "../assets/icons/reactions/WowEmoji";
+import LaughingEmoji from "../assets/icons/reactions/LaughingEmoji";
+import CryingEmoji from "../assets/icons/reactions/CryingEmoji";
+import AngryEmoji from "../assets/icons/reactions/AngryEmoji";
+import { ReactionName } from "../types";
 
 interface PostReactionsPickerProps {
   isVisible: boolean;
   onClose: () => void;
-  onSelect: (reactionType: string) => void;
+  onSelect: (reactionType: ReactionName) => void;
   anchorMeasurements: { pageX: number; pageY: number; width: number } | null;
 }
+
+const REACTIONS = [
+  { name: 'like', icon: LikeEmoji },
+  { name: 'heart', icon: HeartEmoji },
+  { name: 'celebrate', icon: CelebrateEmoji },
+  { name: 'care', icon: CareEmoji },
+  { name: 'laughing', icon: LaughingEmoji },
+  { name: 'crying', icon: CryingEmoji },
+  { name: 'angry', icon: AngryEmoji },
+];
 
 const PICKER_WIDTH = 320;
 const PICKER_HEIGHT = 60;
@@ -61,7 +58,7 @@ const PostReactionsPicker = ({
     };
   });
 
-  const handleSelect = (reactionType: string) => {
+  const handleSelect = (reactionType: ReactionName) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onSelect(reactionType);
     onClose();
@@ -93,15 +90,18 @@ const PostReactionsPicker = ({
           ]}
         >
           <View className="bg-white rounded-full p-2 shadow-lg flex-row items-center justify-around border border-gray-200">
-            {postReactions.map((reaction) => (
-              <TouchableOpacity
-                key={reaction.type}
-                onPress={() => handleSelect(reaction.type)}
-                className="p-1"
-              >
-                <Text className="text-4xl">{reaction.emoji}</Text>
-              </TouchableOpacity>
-            ))}
+            {REACTIONS.map((reaction) => {
+              const IconComponent = reaction.icon;
+              return (
+                <TouchableOpacity
+                  key={reaction.name}
+                  onPress={() => handleSelect(reaction.name)}
+                  className="p-1"
+                >
+                  <IconComponent width={32} height={32} />
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </Animated.View>
       </Pressable>

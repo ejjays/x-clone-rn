@@ -1,3 +1,5 @@
+export type ReactionName = 'like' | 'heart' | 'celebrate' | 'care' | 'laughing' | 'crying' | 'angry';
+
 // mobile/types/index.ts
 export interface User {
   _id: string;
@@ -18,7 +20,7 @@ export interface User {
 export interface Reaction {
   _id: string;
   user: User;
-  type: "like" | "love" | "haha" | "wow" | "sad" | "angry";
+  type: ReactionName;
 }
 
 export interface Comment {
@@ -36,7 +38,7 @@ export interface Post {
   video?: string;
   createdAt: string;
   user: User;
-  reactions: Reaction[];
+  reactions: { user: string; type: ReactionName }[];
   comments: Comment[];
 }
 
