@@ -2,7 +2,8 @@
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { router } from "expo-router";
-import { Image as ImageIcon, Trash, X } from "lucide-react-native";
+import { Image as ImageIcon, Trash } from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -20,7 +21,7 @@ import { Video, ResizeMode } from "expo-av";
 import PostComposer from "@/components/PostComposer";
 import { useEffect, useState, useRef } from "react";
 
-const CreatePostScreen = () => {
+const CreatePostScreen = () => { 
   const { currentUser } = useCurrentUser();
   const {
     content,
@@ -36,7 +37,7 @@ const CreatePostScreen = () => {
   const placeholderTexts = [
     "What are you grateful for? ✨",
     "Encourage someone today! 🙌",
-    "What's in your heart? ❤️..",
+    "What's in your heart? ❤️",
   ];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -95,10 +96,12 @@ const CreatePostScreen = () => {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-          <TouchableOpacity onPress={() => router.back()} className="p-2">
-            <X size={24} color="#1C1E21" />
-          </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900">Create post</Text>
+          <View className="flex-row items-center">
+            <TouchableOpacity onPress={() => router.back()} className="p-2">
+              <Ionicons name="chevron-back-sharp" size={24} color="#1C1E21" />
+            </TouchableOpacity>
+            <Text className="text-xl font-bold text-gray-900 ml-2">Create post</Text>
+          </View>
           <TouchableOpacity
             onPress={handleCreatePost}
             disabled={isPostButtonDisabled}
@@ -180,12 +183,24 @@ const CreatePostScreen = () => {
         <View className="border-t border-gray-200 px-4 py-3">
           <TouchableOpacity
             onPress={pickMedia}
-            className="flex-row items-center bg-gray-100 p-3 rounded-lg"
+            className="flex-row items-center bg-gray-100 p-3 rounded-lg mb-3"
           >
             <ImageIcon size={24} color="#4CAF50" />
             <Text className="ml-3 font-semibold text-base text-gray-800">
               Photos/videos
             </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleCreatePost}
+            disabled={isPostButtonDisabled}
+            className={`w-full py-3 rounded-lg items-center ${isPostButtonDisabled ? "bg-blue-300" : "bg-blue-500"}`}
+          >
+            {isCreating ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white font-bold text-base">Post</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
