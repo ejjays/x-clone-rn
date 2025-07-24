@@ -1,7 +1,6 @@
 // mobile/components/PostCard.tsx
 import type { Post, User, Reaction, ReactionName } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
-import { router } from "expo-router";
 import {
   View,
   Text,
@@ -10,16 +9,17 @@ import {
   View as RNView,
   Pressable,
   Alert,
-  Dimensions, 
+  Dimensions,
 } from "react-native";
 import CommentIcon from "../assets/icons/Comment";
 import ShareIcon from "../assets/icons/ShareIcon";
-import { useRef, useState, useEffect } from "react"; 
+import { useRef, useState, useEffect } from "react";
 import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
 import { Video, ResizeMode } from "expo-av";
 import { Trash } from "lucide-react-native";
+import { reactionComponents, reactionTextColor } from "@/utils/reactions";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -40,26 +40,7 @@ interface PostCardProps {
   currentUserReaction: Reaction | null;
 }
 
-const reactionEmojiMap: Record<string, string> = {
-  like: "👍",
-  love: "❤️",
-  haha: "😂",
-  wow: "😮",
-  sad: "😢",
-  angry: "😡",
-};
-
-const reactionTextColor: Record<string, string> = {
-  like: "text-blue-500",
-  love: "text-red-500",
-  haha: "text-yellow-500",
-  wow: "text-yellow-500",
-  sad: "text-yellow-500",
-  angry: "text-red-600",
-};
-
-
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 const PostCard = ({
   currentUser,
@@ -77,57 +58,52 @@ const PostCard = ({
     pageY: number;
   } | null>(null);
 
-  
   const [imageHeight, setImageHeight] = useState<number | null>(null);
   const [videoHeight, setVideoHeight] = useState<number | null>(null);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
 
-  
   useEffect(() => {
     if (post.image) {
       setIsMediaLoading(true);
-      Image.getSize(post.image, (width, height) => {
-        const calculatedHeight = (screenWidth / width) * height;
-        setImageHeight(calculatedHeight);
-        setIsMediaLoading(false);
-      }, (error) => {
-        console.error(`Couldn't get image size for ${post.image}:`, error);
-        setImageHeight(200); 
-        setIsMediaLoading(false);
-      });
+      Image.getSize(
+        post.image,
+        (width, height) => {
+          const calculatedHeight = (screenWidth / width) * height;
+          setImageHeight(calculatedHeight);
+          setIsMediaLoading(false);
+        },
+        (error) => {
+          console.error(`Couldn't get image size for ${post.image}:`, error);
+          setImageHeight(200);
+          setIsMediaLoading(false);
+        }
+      );
     } else if (post.video) {
       setIsMediaLoading(true);
-      // Set a default height immediately for the video component to render
-      setVideoHeight(screenWidth * 0.5); // Example: default to half screen width (16:9 like aspect ratio)
+      setVideoHeight(screenWidth * 0.5);
     } else {
-      setImageHeight(null); 
+      setImageHeight(null);
       setVideoHeight(null);
       setIsMediaLoading(false);
     }
   }, [post.image, post.video]);
 
-  
-  const handleVideoLoad = (playbackStatus: any) => { 
-    console.log('Video onLoad event fired. Playback Status:', playbackStatus);
-    if (playbackStatus.naturalSize) {
-      console.log('Video loaded, naturalSize:', playbackStatus.naturalSize);
+  const handleVideoLoad = (playbackStatus: any) => {
+    if (
+      playbackStatus &&
+      playbackStatus.isLoaded &&
+      playbackStatus.naturalSize
+    ) {
       const { width, height } = playbackStatus.naturalSize;
       const calculatedHeight = (screenWidth / width) * height;
       setVideoHeight(calculatedHeight);
-    } else {
-      console.log('Video loaded, but no naturalSize available. Keeping default height.', playbackStatus);
     }
-    setIsMediaLoading(false); // Video has loaded (or at least its metadata)
-  };
-
-  const handleVideoLoadStart = () => {
-    console.log('Video onLoadStart event fired.');
-    setIsMediaLoading(true);
+    setIsMediaLoading(false);
   };
 
   const handleVideoError = (error: any) => {
     console.error(`Video Error for post ${post._id} (${post.video}):`, error);
-    setIsMediaLoading(false); // Hide loading on error as well
+    setIsMediaLoading(false);
   };
 
   const handleDelete = () => {
@@ -164,52 +140,34 @@ const PostCard = ({
     setPickerVisible(false);
   };
 
-  const getTopReactions = (reactions: Reaction[], max = 3) => {
-    const counts: Record<ReactionName, number> = {};
-    reactions.forEach((r) => {
-      if (r.type) counts[r.type] = (counts[r.type] || 0) + 1;
-    });
+  const getTopThreeReactions = () => {
+    const reactionCounts = post.reactions.reduce(
+      (acc, reaction) => {
+        acc[reaction.type] = (acc[reaction.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<ReactionName, number>
+    );
 
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, max)
-      .map(([type]) => reactionEmojiMap[type]);
+    return Object.entries(reactionCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([type]) => type)
+      .slice(0, 3);
   };
 
-  const topReactions = getTopReactions(post.reactions);
-
   const ReactionButton = () => {
-    if (currentUserReaction && currentUserReaction.type) {
-      const reactionType = currentUserReaction.type;
-      const emoji = reactionEmojiMap[reactionType];
-      const text = reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
-      const colorClass = reactionTextColor[reactionType] || "text-gray-500";
-
-      if (reactionType === "like") {
-        return (
-          <View className="flex-row items-center">
-            <LikeIcon size={22} color="#1877F2" />
-            <Text className={`font-semibold capitalize ml-1.5 ${colorClass}`}>
-              {text}
-            </Text>
-          </View>
-        );
-      }
-
-      return (
-        <View className="flex-row items-center">
-          <Text className="text-xl">{emoji}</Text>
-          <Text className={`font-semibold capitalize ml-1.5 ${colorClass}`}>
-            {text}
-          </Text>
-        </View>
-      );
-    }
-
     return (
       <View className="flex-row items-center">
-        <LikeIcon size={22} color="#657786" />
-        <Text className="text-gray-500 font-semibold ml-1.5">Like</Text>
+        <LikeIcon userReaction={currentUserReaction?.type} size={22} />
+        <Text
+          className={`font-semibold capitalize ml-1.5 ${
+            currentUserReaction?.type
+              ? reactionTextColor[currentUserReaction.type]
+              : "text-gray-500"
+          }`}
+        >
+          {currentUserReaction?.type || "Like"}
+        </Text>
       </View>
     );
   };
@@ -253,8 +211,16 @@ const PostCard = ({
       </View>
 
       {/* Media Display */}
-      {(post.image || post.video) && isMediaLoading && (
-        <View style={{ width: screenWidth, height: 200, backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' }}>
+      {isMediaLoading && (post.image || post.video) && (
+        <View
+          style={{
+            width: screenWidth,
+            height: 200,
+            backgroundColor: "#e0e0e0",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Text>Loading media...</Text>
         </View>
       )}
@@ -273,7 +239,6 @@ const PostCard = ({
           useNativeControls
           resizeMode={ResizeMode.CONTAIN}
           isLooping
-          onLoadStart={handleVideoLoadStart}
           onLoad={handleVideoLoad}
           onError={handleVideoError}
         />
@@ -286,15 +251,16 @@ const PostCard = ({
             {post.reactions.length > 0 ? (
               <View className="flex-row items-center">
                 <View className="flex-row">
-                  {topReactions.map((emoji, index) => (
-                    <Text
-                      key={index}
-                      className="text-lg"
-                      style={{ transform: [{ translateX: -index * 4 }] }}
-                    >
-                      {emoji}
-                    </Text>
-                  ))}
+                  {getTopThreeReactions().map((reaction) => {
+                    const Emoji =
+                      reactionComponents[
+                        reaction as keyof typeof reactionComponents
+                      ];
+                    if (!Emoji) {
+                      return null;
+                    }
+                    return <Emoji key={reaction} width={20} height={20} />;
+                  })}
                 </View>
                 <Text className="text-gray-500 text-base ml-2">
                   {formatNumber(post.reactions.length)}
