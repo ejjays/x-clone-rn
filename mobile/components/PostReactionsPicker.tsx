@@ -1,109 +1,130 @@
-import { Text, TouchableOpacity, View, Modal, useWindowDimensions, Pressable, } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming, } from "react-native-reanimated";
-import { useEffect } from "react";
+import type React from "react";
+import {
+  View,
+  TouchableOpacity,
+  Modal,
+  Dimensions,
+  Pressable,
+} from "react-native";
+import type { ReactionName } from "@/types";
+import { reactionComponents } from "@/utils/reactions";
 import * as Haptics from "expo-haptics";
-import LikeEmoji from "../assets/icons/reactions/LikeEmoji";
-import HeartEmoji from "../assets/icons/reactions/HeartEmoji";
-import CelebrateEmoji from "../assets/icons/reactions/CelebrateEmoji";
-import CareEmoji from "../assets/icons/reactions/WowEmoji";
-import LaughingEmoji from "../assets/icons/reactions/LaughingEmoji";
-import CryingEmoji from "../assets/icons/reactions/CryingEmoji";
-import AngryEmoji from "../assets/icons/reactions/AngryEmoji";
-import { ReactionName } from "../types";
 
 interface PostReactionsPickerProps {
   isVisible: boolean;
   onClose: () => void;
   onSelect: (reactionType: ReactionName) => void;
-  anchorMeasurements: { pageX: number; pageY: number; width: number } | null;
+  anchorMeasurements: { pageX: number; pageY: number } | null;
 }
 
-const REACTIONS = [
-  { name: 'like', icon: LikeEmoji },
-  { name: 'heart', icon: HeartEmoji },
-  { name: 'celebrate', icon: CelebrateEmoji },
-  { name: 'care', icon: CareEmoji },
-  { name: 'laughing', icon: LaughingEmoji },
-  { name: 'crying', icon: CryingEmoji },
-  { name: 'angry', icon: AngryEmoji },
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+const reactions: { type: ReactionName; label: string }[] = [
+  { type: "like", label: "Like" },
+  { type: "love", label: "Love" },
+  { type: "celebrate", label: "Celebrate" },
+  { type: "wow", label: "Wow" },
+  { type: "haha", label: "Haha" },
+  { type: "sad", label: "Sad" },
+  { type: "angry", label: "Angry" },
 ];
 
-const PICKER_WIDTH = 320;
-const PICKER_HEIGHT = 60;
-
-const PostReactionsPicker = ({
+const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
   isVisible,
   onClose,
   onSelect,
   anchorMeasurements,
-}: PostReactionsPickerProps) => {
-  const scale = useSharedValue(0);
-  const { width: screenWidth } = useWindowDimensions();
-
-  useEffect(() => {
-    if (isVisible) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      scale.value = withSpring(1, { damping: 15, stiffness: 200 });
-    } else {
-      scale.value = withTiming(0, { duration: 150 });
-    }
-  }, [isVisible]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-      opacity: isVisible
-        ? withTiming(1, { duration: 100 })
-        : withTiming(0, { duration: 150 }),
-    };
-  });
-
-  const handleSelect = (reactionType: ReactionName) => {
+}) => {
+  const handleReactionPress = (reactionType: ReactionName) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onSelect(reactionType);
-    onClose();
   };
 
-  let pickerStyle = {};
-  if (anchorMeasurements) {
-    const { pageX, pageY } = anchorMeasurements;
-    let left = pageX - PICKER_WIDTH / 2 + 30; // Center it on the button
-    let top = pageY - PICKER_HEIGHT - 10; // Position above the button
-
-    // Ensure it doesn't go off-screen
-    if (left < 10) left = 10;
-    if (left + PICKER_WIDTH > screenWidth) {
-      left = screenWidth - PICKER_WIDTH - 10;
-    }
-
-    pickerStyle = { top, left };
+  if (!isVisible || !anchorMeasurements) {
+    return null;
   }
 
+  // Calculate dynamic pickerWidth based on content
+  const emojiDisplayWidth = 32 + 2 * 8; // 32px emoji + 8px padding on each side for TouchableOpacity = 48px
+  const numberOfEmojis = reactions.length;
+
+  // Calculate the total width needed for emojis and spacing.
+  // Using space-between means we need enough padding for the ends, and the space between will be distributed.
+  const minimumContentWidth = numberOfEmojis * emojiDisplayWidth;
+  const containerHorizontalPadding = 16 * 2; // Increased padding to 16px on each side = 32px total
+
+  const calculatedPickerWidth =
+    minimumContentWidth + containerHorizontalPadding;
+
+  // Ensure pickerWidth doesn't exceed screen width minus some margin
+  const screenMargin = 20; // 10px on each side for overall screen safety margin
+  const maxPickerWidth = screenWidth - screenMargin;
+
+  const pickerWidth = Math.min(calculatedPickerWidth, maxPickerWidth);
+
+  const pickerHeight = 60; // Still sufficient based on emoji height + padding
+
+  // Calculate position to center the picker above the button
+  let left = anchorMeasurements.pageX - pickerWidth / 2;
+  let top = anchorMeasurements.pageY - pickerHeight - 10;
+
+  // Ensure picker stays within screen bounds
+  if (left < 10) left = 10;
+  if (left + pickerWidth > screenWidth - 10)
+    left = screenWidth - pickerWidth - 10;
+  // If picker is too high, position it below the anchor
+  if (top < 50) top = anchorMeasurements.pageY + 50;
+
   return (
-    <Modal visible={isVisible} transparent animationType="none">
+    <Modal
+      visible={isVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <Pressable style={{ flex: 1 }} onPress={onClose}>
-        <Animated.View
-          style={[
-            { position: "absolute", width: PICKER_WIDTH },
-            animatedStyle,
-            pickerStyle,
-          ]}
+        <View
+          style={{
+            position: "absolute",
+            left,
+            top,
+            width: pickerWidth, // Use the dynamically calculated width
+            height: pickerHeight,
+            backgroundColor: "white",
+            borderRadius: 30,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center", // Changed to space-around for even distribution
+            paddingHorizontal: 16, // Increased padding to provide more buffer on sides
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+          }}
         >
-          <View className="bg-white rounded-full p-2 shadow-lg flex-row items-center justify-around border border-gray-200">
-            {REACTIONS.map((reaction) => {
-              const IconComponent = reaction.icon;
-              return (
-                <TouchableOpacity
-                  key={reaction.name}
-                  onPress={() => handleSelect(reaction.name)}
-                  className="p-1"
-                >
-                  <IconComponent width={32} height={32} />
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Animated.View>
+          {reactions.map((reaction) => {
+            const ReactionComponent = reactionComponents[reaction.type];
+            return (
+              <TouchableOpacity
+                key={reaction.type}
+                onPress={() => handleReactionPress(reaction.type)}
+                style={{
+                  padding: 8, // This padding is factored into emojiDisplayWidth
+                  borderRadius: 20,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                activeOpacity={0.7}
+              >
+                <ReactionComponent width={32} height={32} />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </Pressable>
     </Modal>
   );

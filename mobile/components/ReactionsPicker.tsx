@@ -1,111 +1,58 @@
-import {
-  Text,
-  TouchableOpacity,
-  View,
-  Modal,
-  useWindowDimensions,
-  Pressable,
-} from "react-native"
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated"
-import { useEffect } from "react"
-import * as Haptics from "expo-haptics"
-
-export const reactions = [
-  { type: "love", emoji: "❤️" },
-  { type: "haha", emoji: "😂" },
-  { type: "wow", emoji: "😮" },
-  { type: "kissing_heart", emoji: "😘" },
-  { type: "enraged", emoji: "😡" },
-  { type: "thumbsup", emoji: "👍" },
-]
+import type React from "react";
+import { View, TouchableOpacity } from "react-native";
+import type { ReactionName } from "@/types";
+import { reactionComponents } from "@/utils/reactions";
+import * as Haptics from "expo-haptics";
 
 interface ReactionsPickerProps {
-  isVisible: boolean
-  onClose: () => void
-  onSelect: (reactionType: string) => void
-  anchorMeasurements: { pageX: number; pageY: number; width: number } | null
+  onReactionSelect: (reactionType: ReactionName) => void;
+  selectedReaction?: ReactionName | null;
 }
 
-// --- FIX: Increased width from 280 to 300 for more spacing ---
-const PICKER_WIDTH = 300
-const PICKER_HEIGHT = 60
+const reactions: { type: ReactionName; label: string }[] = [
+  { type: "like", label: "Like" },
+  { type: "love", label: "Love" },
+  { type: "celebrate", label: "Celebrate" },
+  { type: "wow", label: "Wow" },
+  { type: "haha", label: "Haha" },
+  { type: "sad", label: "Sad" },
+  { type: "angry", label: "Angry" },
+];
 
-const ReactionsPicker = ({
-  isVisible,
-  onClose,
-  onSelect,
-  anchorMeasurements,
-}: ReactionsPickerProps) => {
-  const scale = useSharedValue(0)
-  const { width: screenWidth } = useWindowDimensions()
-
-  useEffect(() => {
-    if (isVisible) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      scale.value = withSpring(1, { damping: 15, stiffness: 200 })
-    } else {
-      scale.value = withTiming(0, { duration: 150 })
-    }
-  }, [isVisible])
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-      opacity: isVisible
-        ? withTiming(1, { duration: 100 })
-        : withTiming(0, { duration: 150 }),
-    }
-  })
-
-  const handleSelect = (reactionType: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    onSelect(reactionType)
-  }
-
-  let pickerStyle = {}
-  if (anchorMeasurements) {
-    const { pageX, pageY, width: anchorWidth } = anchorMeasurements
-    let left = pageX + anchorWidth / 2 - PICKER_WIDTH / 2
-    let top = pageY - PICKER_HEIGHT - 10
-
-    if (left < 10) left = 10
-    if (left + PICKER_WIDTH > screenWidth) {
-      left = screenWidth - PICKER_WIDTH - 10
-    }
-
-    pickerStyle = { top, left }
-  }
+const ReactionsPicker: React.FC<ReactionsPickerProps> = ({
+  onReactionSelect,
+  selectedReaction,
+}) => {
+  const handleReactionPress = (reactionType: ReactionName) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onReactionSelect(reactionType);
+  };
 
   return (
-    <Modal visible={isVisible} transparent animationType="none">
-      <Pressable style={{ flex: 1 }} onPress={onClose}>
-        <Animated.View
-          style={[
-            { position: "absolute", width: PICKER_WIDTH },
-            animatedStyle,
-            pickerStyle,
-          ]}
-        >
-          <View className="bg-gray-800/90 rounded-full p-2 shadow-lg flex-row items-center justify-center space-x-2">
-            {reactions.map((reaction) => (
-              <TouchableOpacity
-                key={reaction.type}
-                onPress={() => handleSelect(reaction.type)}
-                className="p-1"
-              >
-                <Text className="text-4xl">{reaction.emoji}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Animated.View>
-      </Pressable>
-    </Modal>
-  )
-}
+    <View className="flex-row justify-around items-center bg-white rounded-full py-2 px-4 shadow-lg">
+      {reactions.map((reaction) => {
+        const ReactionComponent = reactionComponents[reaction.type];
+        const isSelected = selectedReaction === reaction.type;
 
-export default ReactionsPicker
+        return (
+          <TouchableOpacity
+            key={reaction.type}
+            onPress={() => handleReactionPress(reaction.type)}
+            className={`p-2 rounded-full ${isSelected ? "bg-blue-100" : "bg-transparent"}`}
+            activeOpacity={0.7}
+          >
+            <ReactionComponent
+              width={28}
+              height={28}
+              style={{
+                transform: [{ scale: isSelected ? 1.2 : 1 }],
+              }}
+            />
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
+
+export default ReactionsPicker;

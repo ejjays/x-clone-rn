@@ -6,20 +6,20 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  View as RNView,
+  type View as RNView,
   Pressable,
   Alert,
   Dimensions,
 } from "react-native";
 import CommentIcon from "../assets/icons/Comment";
 import ShareIcon from "../assets/icons/ShareIcon";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
 import { Video, ResizeMode } from "expo-av";
-import { Trash } from "lucide-react-native";
 import { reactionComponents, reactionTextColor } from "@/utils/reactions";
+import { FontAwesome } from "@expo/vector-icons";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -61,6 +61,11 @@ const PostCard = ({
   const [imageHeight, setImageHeight] = useState<number | null>(null);
   const [videoHeight, setVideoHeight] = useState<number | null>(null);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
+  const [showTrashIcon, setShowTrashIcon] = useState(true); // Changed to true
+
+  const resetTrashIconTimeout = useCallback(() => {
+    setShowTrashIcon(true);
+  }, []);
 
   useEffect(() => {
     if (post.image) {
@@ -141,9 +146,15 @@ const PostCard = ({
   };
 
   const getTopThreeReactions = () => {
+    if (!post.reactions || post.reactions.length === 0) {
+      return [];
+    }
+
     const reactionCounts = post.reactions.reduce(
       (acc, reaction) => {
-        acc[reaction.type] = (acc[reaction.type] || 0) + 1;
+        if (reaction && reaction.type) {
+          acc[reaction.type] = (acc[reaction.type] || 0) + 1;
+        }
         return acc;
       },
       {} as Record<ReactionName, number>
@@ -160,7 +171,7 @@ const PostCard = ({
       <View className="flex-row items-center">
         <LikeIcon userReaction={currentUserReaction?.type} size={22} />
         <Text
-          className={`font-semibold capitalize ml-2 ${ // Changed ml-1.5 to ml-0
+          className={`font-semibold capitalize ml-2 ${
             currentUserReaction?.type
               ? reactionTextColor[currentUserReaction.type]
               : "text-gray-500"
@@ -173,7 +184,7 @@ const PostCard = ({
   };
 
   return (
-    <>
+    <Pressable onPress={resetTrashIconTimeout}>
       <View className="bg-white">
         {/* Post Header */}
         <View className="flex-row px-2 py-3 items-center">
@@ -189,9 +200,9 @@ const PostCard = ({
               {formatDate(post.createdAt)}
             </Text>
           </View>
-          {isOwnPost && (
+          {isOwnPost && showTrashIcon && (
             <TouchableOpacity onPress={handleDelete} className="p-2">
-              <Trash size={20} color="#657786" />
+              <FontAwesome name="trash-o" size={20} color="#657786" />
             </TouchableOpacity>
           )}
         </View>
@@ -246,9 +257,10 @@ const PostCard = ({
 
       <View className="bg-white">
         {/* Reactions and Comments Count */}
-        {(post.reactions.length > 0 || post.comments.length > 0) && (
+        {((post.reactions && post.reactions.length > 0) ||
+          (post.comments && post.comments.length > 0)) && (
           <View className="flex-row justify-between items-center px-4 py-0.5">
-            {post.reactions.length > 0 ? (
+            {post.reactions && post.reactions.length > 0 ? (
               <View className="flex-row items-center">
                 <View className="flex-row">
                   {getTopThreeReactions().map((reaction) => {
@@ -270,7 +282,7 @@ const PostCard = ({
               <View />
             )}
 
-            {post.comments.length > 0 && (
+            {post.comments && post.comments.length > 0 && (
               <Text className="text-gray-500 text-base">
                 {formatNumber(post.comments.length)}{" "}
                 {post.comments.length === 1 ? "comment" : "comments"}
@@ -310,7 +322,7 @@ const PostCard = ({
         onSelect={handleReactionSelect}
         anchorMeasurements={anchorMeasurements}
       />
-    </>
+    </Pressable>
   );
 };
 
