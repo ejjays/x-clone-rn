@@ -2,7 +2,7 @@
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { router } from "expo-router";
-import { Image as ImageIcon, Trash } from "lucide-react-native";
+import { Image as ImageIcon } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   View,
@@ -172,7 +172,7 @@ const CreatePostScreen = () => {
                   className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-full"
                   onPress={removeMedia}
                 >
-                  <Trash size={18} color="white" />
+                  <Ionicons name="trash-sharp" size={18} color="white" />
                 </TouchableOpacity>
               </View>
             )}
