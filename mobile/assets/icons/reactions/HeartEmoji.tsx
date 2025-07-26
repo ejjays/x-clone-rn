@@ -3,7 +3,7 @@ import Svg, { Path, G, Circle, LinearGradient, Stop } from 'react-native-svg';
 import { SvgProps } from 'react-native-svg';
 
 const HeartEmoji: React.FC<SvgProps> = (props) => (
-  <Svg height="2500" width="2500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" {...props}>
+  <Svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" {...props}>
     <LinearGradient id="a" x1="50%" x2="50%" y1="0%" y2="100%">
       <Stop offset={0} stopColor="#f65e7a"/>
       <Stop offset={0.051} stopColor="#f65e7a"/>

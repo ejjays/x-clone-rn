@@ -13,7 +13,7 @@ const LikeIcon = ({
     : null;
 
   if (ReactionComponent) {
-    return <ReactionComponent {...props} />;
+    return <ReactionComponent width={props.size} height={props.size} />;
   }
 
   return (

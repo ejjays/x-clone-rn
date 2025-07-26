@@ -1,13 +1,12 @@
 import * as React from "react";
 import Svg, { LinearGradient, Stop, Circle, Path } from "react-native-svg";
+import { SvgProps } from 'react-native-svg';
 
 const AngryEmoji: React.FC<SvgProps> = (props) => (
   <Svg
     id="Layer_1"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 1500 1500"
-    width={2500}
-    height={2500}
     {...props}
   >
     <LinearGradient

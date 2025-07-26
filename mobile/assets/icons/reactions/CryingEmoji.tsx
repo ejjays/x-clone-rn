@@ -3,7 +3,7 @@ import Svg, { Path, G, Circle, LinearGradient, RadialGradient, Defs, Stop, Ellip
 import { SvgProps } from 'react-native-svg';
 
 const CryingEmoji: React.FC<SvgProps> = (props) => (
-  <Svg height="2500" width="2500" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 192 192" {...props}>
+  <Svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 192 192" {...props}>
     <Defs>
       <RadialGradient id="a" cy="0%" gradientTransform="matrix(0 1 -1.26314 0 .5 -.5)" r="100%">
         <Stop offset={0} stopColor="#fce16b"/>

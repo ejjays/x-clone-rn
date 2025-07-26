@@ -160,7 +160,7 @@ const PostCard = ({
       <View className="flex-row items-center">
         <LikeIcon userReaction={currentUserReaction?.type} size={22} />
         <Text
-          className={`font-semibold capitalize ml-1.5 ${
+          className={`font-semibold capitalize ml-2 ${ // Changed ml-1.5 to ml-0
             currentUserReaction?.type
               ? reactionTextColor[currentUserReaction.type]
               : "text-gray-500"
