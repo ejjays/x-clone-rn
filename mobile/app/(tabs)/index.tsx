@@ -29,7 +29,11 @@ const HomeScreen = () => {
 
   const handleOpenPostMenu = (post: Post) => {
     setSelectedPostForMenu(post);
-    postActionBottomSheetRef.current?.open();
+    // Introduce a small delay to allow the state update and re-render to settle
+    // before initiating the modal open animation.
+    setTimeout(() => {
+      postActionBottomSheetRef.current?.open();
+    }, 50); // 50ms delay, adjust if needed
   };
 
   const handleCloseBottomSheet = () => {
@@ -41,14 +45,14 @@ const HomeScreen = () => {
   const handleDeletePost = () => {
     if (selectedPostForMenu) {
       deletePost(selectedPostForMenu._id);
-      handleCloseBottomSheet();
+      postActionBottomSheetRef.current?.close(); // Explicitly close after action
     }
   };
 
   // Temporarily make this a non-functional copy text option
   const handleCopyText = (text: string) => {
     Alert.alert("Copy Functionality", "This feature is temporarily disabled.");
-    handleCloseBottomSheet();
+    postActionBottomSheetRef.current?.close(); // Explicitly close after action
   };
 
   useUserSync()

@@ -53,9 +53,10 @@ const PostActionBottomSheet = forwardRef<PostActionBottomSheetRef, PostActionBot
       }
     };
 
-    // This handler will be called when the Modalize component itself closes (e.g., swipe down, programmatic close)
-    const handleModalizeClose = () => {
+    // This handler will be called *after* the Modalize component has fully closed
+    const handleModalizeClosed = () => {
       // Defer the onClose call to prevent scheduling updates during useInsertionEffect
+      // This ensures the parent's state update happens after the animation completes.
       setTimeout(() => onClose(), 0);
     };
 
@@ -69,7 +70,7 @@ const PostActionBottomSheet = forwardRef<PostActionBottomSheetRef, PostActionBot
         }}
         handlePosition="inside"
         adjustToContentHeight={true}
-        onClose={handleModalizeClose} // Use the internal handler here
+        onClosed={handleModalizeClosed} // *** Changed from onClose to onClosed ***
       >
         <View className="p-4">
           <TouchableOpacity
