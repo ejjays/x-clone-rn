@@ -1,31 +1,37 @@
 // mobile/app/(tabs)/index.tsx
-import PostsList from "@/components/PostsList"
-import PostComposer from "@/components/PostComposer"
-import Stories from "@/components/Stories"
-import { usePosts } from "@/hooks/usePosts"
-import { useUserSync } from "@/hooks/useUserSync"
-import { router } from "expo-router"
-import { useState, useRef } from "react"
-import { RefreshControl, ScrollView, View, Alert } from "react-native"
-import PostActionBottomSheet, { PostActionBottomSheetRef } from "@/components/PostActionBottomSheet";
-import { Post } from "@/types";
+import PostsList from "@/components/PostsList";
+import PostComposer from "@/components/PostComposer";
+import Stories from "@/components/Stories";
+import { usePosts } from "@/hooks/usePosts";
+import { useUserSync } from "@/hooks/useUserSync";
+import { router } from "expo-router";
+import { useState, useRef } from "react";
+import { RefreshControl, ScrollView, View, Alert } from "react-native";
+import PostActionBottomSheet, {
+  type PostActionBottomSheetRef,
+} from "@/components/PostActionBottomSheet";
+import type { Post } from "@/types";
+import { useScroll } from "@/context/ScrollContext";
 
 const HomeScreen = () => {
-  const [isRefetching, setIsRefetching] = useState(false)
-  const { refetch: refetchPosts, deletePost } = usePosts()
+  const [isRefetching, setIsRefetching] = useState(false);
+  const { refetch: refetchPosts, deletePost } = usePosts();
   const postActionBottomSheetRef = useRef<PostActionBottomSheetRef>(null);
-  const [selectedPostForMenu, setSelectedPostForMenu] = useState<Post | null>(null);
+  const [selectedPostForMenu, setSelectedPostForMenu] = useState<Post | null>(
+    null
+  );
+  const { handleScroll } = useScroll();
 
   // This function now just navigates
   const handleOpenComments = (postId: string) => {
-    router.push(`/post/${postId}`)
-  }
+    router.push(`/post/${postId}`);
+  };
 
   const handlePullToRefresh = async () => {
-    setIsRefetching(true)
-    await refetchPosts()
-    setIsRefetching(false)
-  }
+    setIsRefetching(true);
+    await refetchPosts();
+    setIsRefetching(false);
+  };
 
   const handleOpenPostMenu = (post: Post) => {
     setSelectedPostForMenu(post);
@@ -54,15 +60,22 @@ const HomeScreen = () => {
     postActionBottomSheetRef.current?.close(); // Explicitly close after action
   };
 
-  useUserSync()
+  useUserSync();
 
   return (
     <View className="flex-1">
       <ScrollView
         className="flex-1 bg-gray-100"
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={1}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={handlePullToRefresh} colors={["#1877F2"]} tintColor="#1877F2" />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={handlePullToRefresh}
+            colors={["#1877F2"]}
+            tintColor="#1877F2"
+          />
         }
       >
         <View className="bg-white">
@@ -70,7 +83,10 @@ const HomeScreen = () => {
           <Stories />
         </View>
         <View className="h-1.5 bg-gray-200" />
-        <PostsList onOpenComments={handleOpenComments} onOpenPostMenu={handleOpenPostMenu} />
+        <PostsList
+          onOpenComments={handleOpenComments}
+          onOpenPostMenu={handleOpenPostMenu}
+        />
       </ScrollView>
       <PostActionBottomSheet
         ref={postActionBottomSheetRef}
@@ -80,7 +96,7 @@ const HomeScreen = () => {
         postContent={selectedPostForMenu?.content}
       />
     </View>
-  )
-}
+  );
+};
 
-export default HomeScreen
+export default HomeScreen;
