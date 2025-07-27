@@ -29,11 +29,10 @@ const HomeScreen = () => {
 
   const handleOpenPostMenu = (post: Post) => {
     setSelectedPostForMenu(post);
-    // Introduce a small delay to allow the state update and re-render to settle
-    // before initiating the modal open animation.
+    // Reduce the delay to make the opening feel more immediate
     setTimeout(() => {
       postActionBottomSheetRef.current?.open();
-    }, 50); // 50ms delay, adjust if needed
+    }, 10); // Changed to 10ms
   };
 
   const handleCloseBottomSheet = () => {
