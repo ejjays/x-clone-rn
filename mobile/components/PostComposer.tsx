@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
-import { Image as ImageIcon } from "lucide-react-native";
+import { FileImage } from "lucide-react-native";
 import { View, Image, Text, TouchableOpacity, TextInput } from "react-native";
 
 const PostComposer = () => {
@@ -26,7 +26,7 @@ const PostComposer = () => {
           onPress={() => router.push("/create-post")}
           className="ml-4"
         >
-          <ImageIcon size={24} color={"#4CAF50"} />
+          <FileImage size={26} color={"#4CAF50"} />
         </TouchableOpacity>
       </View>
     </View>

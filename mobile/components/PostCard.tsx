@@ -23,11 +23,11 @@ import { FontAwesome } from "@expo/vector-icons";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
-    return "text-2xl font-bold";
+    return "text-2xl font-semibold";
   } else if (content.length > 60 && content.length <= 150) {
     return "text-xl font-semibold";
   } else {
-    return "text-base";
+    return "text-lg font-normal";
   }
 };
 
@@ -38,7 +38,7 @@ interface PostCardProps {
   onComment: (postId: string) => void;
   currentUser: User;
   currentUserReaction: Reaction | null;
-  onOpenPostMenu: (post: Post) => void; // New prop for opening the menu
+  onOpenPostMenu: (post: Post) => void; 
 }
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -50,7 +50,7 @@ const PostCard = ({
   post,
   onComment,
   currentUserReaction,
-  onOpenPostMenu, // Destructure new prop
+  onOpenPostMenu, 
 }: PostCardProps) => {
   const isOwnPost = post.user._id === currentUser._id;
   const likeButtonRef = useRef<RNView>(null);
@@ -148,7 +148,10 @@ const PostCard = ({
   };
 
   const ReactionButton = () => {
-    const reactionLabel = currentUserReaction?.type === "celebrate" ? "Yeyy" : (currentUserReaction?.type || "Like");
+    const reactionLabel =
+      currentUserReaction?.type === "celebrate"
+        ? "Yeyy"
+        : currentUserReaction?.type || "Like";
     return (
       <View className="flex-row items-center">
         <LikeIcon userReaction={currentUserReaction?.type} size={22} />
@@ -198,7 +201,7 @@ const PostCard = ({
             className={`my-3 text-gray-800 px-2 ${
               !post.image && !post.video
                 ? getDynamicPostTextStyle(post.content)
-                : "text-base"
+                : "text-lg font-normal"
             }`}
           >
             {post.content}

@@ -27,6 +27,7 @@ import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { ScrollProvider } from "@/context/ScrollContext";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
@@ -108,18 +109,18 @@ const TabsLayout = () => {
         <StatusBar style={isVideosScreen ? "light" : "dark"} />
 
         <Animated.View style={animatedHeaderStyle}>
-          <View className="flex-row justify-between items-center px-4 h-full">
+          <View className="flex-row justify-between items-center px-3 h-full">
             <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
             <View className="flex-row space-x-2">
-              <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-                <Plus size={22} color="#000" />
+              <TouchableOpacity className="p-2.5 rounded-full">
+                <Search size={28} color="#000" />
               </TouchableOpacity>
-              <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-                <Search size={22} color="#000" />
+              <TouchableOpacity className="p-2.5 rounded-full">
+                <Ionicons name="chatbubble-ellipses" size={28} color="#000" />
               </TouchableOpacity>
-              <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
+             {/* <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
                 <MessageCircle size={22} color="#000" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </Animated.View>
