@@ -8,9 +8,14 @@ import PostCardSkeleton from "./PostCardSkeleton";
 interface PostsListProps {
   username?: string;
   onOpenComments?: (postId: string) => void;
+  onOpenPostMenu: (post: Post) => void; // Add this new prop
 }
 
-const PostsList = ({ username, onOpenComments }: PostsListProps) => {
+const PostsList = ({
+  username,
+  onOpenComments,
+  onOpenPostMenu, // Destructure new prop
+}: PostsListProps) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
     posts,
@@ -46,7 +51,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
   if (!currentUser) {
     return null;
   }
-  
+
   if (posts.length === 0) {
     return (
       <View className="p-8 items-center">
@@ -66,6 +71,7 @@ const PostsList = ({ username, onOpenComments }: PostsListProps) => {
             onComment={onOpenComments || (() => {})}
             currentUser={currentUser}
             currentUserReaction={getCurrentUserReaction(post.reactions, currentUser)}
+            onOpenPostMenu={onOpenPostMenu} // Pass the new prop down to PostCard
           />
           {index < posts.length - 1 && <View className="h-1 bg-gray-200" />}
         </View>

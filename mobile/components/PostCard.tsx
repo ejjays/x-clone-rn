@@ -38,6 +38,7 @@ interface PostCardProps {
   onComment: (postId: string) => void;
   currentUser: User;
   currentUserReaction: Reaction | null;
+  onOpenPostMenu: (post: Post) => void; // New prop for opening the menu
 }
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -49,6 +50,7 @@ const PostCard = ({
   post,
   onComment,
   currentUserReaction,
+  onOpenPostMenu, // Destructure new prop
 }: PostCardProps) => {
   const isOwnPost = post.user._id === currentUser._id;
   const likeButtonRef = useRef<RNView>(null);
@@ -61,11 +63,6 @@ const PostCard = ({
   const [imageHeight, setImageHeight] = useState<number | null>(null);
   const [videoHeight, setVideoHeight] = useState<number | null>(null);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
-  const [showTrashIcon, setShowTrashIcon] = useState(true); // Changed to true
-
-  const resetTrashIconTimeout = useCallback(() => {
-    setShowTrashIcon(true);
-  }, []);
 
   useEffect(() => {
     if (post.image) {
@@ -109,22 +106,6 @@ const PostCard = ({
   const handleVideoError = (error: any) => {
     console.error(`Video Error for post ${post._id} (${post.video}):`, error);
     setIsMediaLoading(false);
-  };
-
-  const handleDelete = () => {
-    Alert.alert(
-      "Delete Post",
-      "Are you sure you want to delete this post?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          onPress: () => onDelete(post._id),
-          style: "destructive",
-        },
-      ],
-      { cancelable: true }
-    );
   };
 
   const handleQuickPress = () => {
@@ -184,8 +165,8 @@ const PostCard = ({
   };
 
   return (
-    <Pressable onPress={resetTrashIconTimeout}>
-      <View className="bg-white">
+    <>
+      <View>
         {/* Post Header */}
         <View className="flex-row px-2 py-3 items-center">
           <Image
@@ -200,9 +181,12 @@ const PostCard = ({
               {formatDate(post.createdAt)}
             </Text>
           </View>
-          {isOwnPost && showTrashIcon && (
-            <TouchableOpacity onPress={handleDelete} className="p-2">
-              <FontAwesome name="trash-o" size={20} color="#657786" />
+          {isOwnPost && (
+            <TouchableOpacity
+              onPress={() => onOpenPostMenu(post)} // Call the new prop
+              className="p-2"
+            >
+              <FontAwesome name="ellipsis-h" size={20} color="#657786" />
             </TouchableOpacity>
           )}
         </View>
@@ -322,7 +306,7 @@ const PostCard = ({
         onSelect={handleReactionSelect}
         anchorMeasurements={anchorMeasurements}
       />
-    </Pressable>
+    </>
   );
 };
 
