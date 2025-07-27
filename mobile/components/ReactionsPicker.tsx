@@ -12,7 +12,7 @@ interface ReactionsPickerProps {
 const reactions: { type: ReactionName; label: string }[] = [
   { type: "like", label: "Like" },
   { type: "love", label: "Love" },
-  { type: "celebrate", label: "Celebrate" },
+  { type: "celebrate", label: "Yeyy" }, // Changed label from "Celebrate" to "Yeyy"
   { type: "wow", label: "Wow" },
   { type: "haha", label: "Haha" },
   { type: "sad", label: "Sad" },

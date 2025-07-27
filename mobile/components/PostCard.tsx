@@ -148,6 +148,7 @@ const PostCard = ({
   };
 
   const ReactionButton = () => {
+    const reactionLabel = currentUserReaction?.type === "celebrate" ? "Yeyy" : (currentUserReaction?.type || "Like");
     return (
       <View className="flex-row items-center">
         <LikeIcon userReaction={currentUserReaction?.type} size={22} />
@@ -158,7 +159,7 @@ const PostCard = ({
               : "text-gray-500"
           }`}
         >
-          {currentUserReaction?.type || "Like"}
+          {reactionLabel}
         </Text>
       </View>
     );
