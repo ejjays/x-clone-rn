@@ -86,7 +86,7 @@ export const reactToPost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const { reactionType } = req.body;
 
-  const allowedReactions = ["like", "love", "haha", "wow", "sad", "angry"];
+  const allowedReactions = ["like", "love", "haha", "wow", "sad", "angry", "celebrate"];
   if (!reactionType || !allowedReactions.includes(reactionType)) {
     return res.status(400).json({ error: "Invalid reaction type" });
   }
