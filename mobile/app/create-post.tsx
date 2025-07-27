@@ -100,7 +100,9 @@ const CreatePostScreen = () => {
             <TouchableOpacity onPress={() => router.back()} className="p-2">
               <Ionicons name="chevron-back-sharp" size={24} color="#1C1E21" />
             </TouchableOpacity>
-            <Text className="text-xl font-bold text-gray-900 ml-2">Create post</Text>
+            <Text className="text-xl font-bold text-gray-900 ml-2">
+              Create post
+            </Text>
           </View>
           <TouchableOpacity
             onPress={handleCreatePost}
@@ -185,7 +187,7 @@ const CreatePostScreen = () => {
             onPress={pickMedia}
             className="flex-row items-center bg-gray-100 p-3 rounded-lg mb-3"
           >
-            <ImageIcon size={24} color="#4CAF50" />
+            <Ionicons name="images" size={24} color="#4CAF50" />
             <Text className="ml-3 font-semibold text-base text-gray-800">
               Photos/videos
             </Text>

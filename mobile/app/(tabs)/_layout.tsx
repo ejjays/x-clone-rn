@@ -3,8 +3,6 @@ import {
   Bell,
   Home,
   Menu,
-  MessageCircle,
-  Plus,
   Search,
   Mail,
   TvMinimalPlay,
@@ -118,7 +116,7 @@ const TabsLayout = () => {
               <TouchableOpacity className="p-2.5 rounded-full">
                 <Ionicons name="chatbubble-ellipses" size={28} color="#000" />
               </TouchableOpacity>
-             {/* <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
+              {/* <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
                 <MessageCircle size={22} color="#000" />
               </TouchableOpacity> */}
             </View>

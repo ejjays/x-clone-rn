@@ -1,45 +1,66 @@
-import type { User } from "@/types"
-import { MessageCircle, MoreHorizontal } from "lucide-react-native" // Replaced Feather
-import { View, Text, Image, TouchableOpacity, Alert } from "react-native"
+import type { User } from "@/types";
+import { MoreHorizontal } from "lucide-react-native";
+import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 interface UserCardProps {
-  user: User
-  onFollow?: (userId: string) => void
-  onMessage?: (user: User) => void
-  isFollowing?: boolean
-  showMessageButton?: boolean
+  user: User;
+  onFollow?: (userId: string) => void;
+  onMessage?: (user: User) => void;
+  isFollowing?: boolean;
+  showMessageButton?: boolean;
 }
 
-const UserCard = ({ user, onFollow, onMessage, isFollowing, showMessageButton = true }: UserCardProps) => {
+const UserCard = ({
+  user,
+  onFollow,
+  onMessage,
+  isFollowing,
+  showMessageButton = true,
+}: UserCardProps) => {
   const handleFollow = () => {
     if (onFollow) {
-      onFollow(user._id)
+      onFollow(user._id);
     }
-  }
+  };
 
   const handleMessage = () => {
     if (onMessage) {
-      onMessage(user)
+      onMessage(user);
     } else {
-      Alert.alert("Message", `Start a conversation with ${user.firstName} ${user.lastName}`)
+      Alert.alert(
+        "Message",
+        `Start a conversation with ${user.firstName} ${user.lastName}`
+      );
     }
-  }
+  };
 
   const handleMoreOptions = () => {
-    Alert.alert("Options", `More options for ${user.firstName} ${user.lastName}`, [
-      { text: "View Profile", onPress: () => console.log("View profile") },
-      { text: "Block User", style: "destructive", onPress: () => console.log("Block user") },
-      { text: "Cancel", style: "cancel" },
-    ])
-  }
+    Alert.alert(
+      "Options",
+      `More options for ${user.firstName} ${user.lastName}`,
+      [
+        { text: "View Profile", onPress: () => console.log("View profile") },
+        {
+          text: "Block User",
+          style: "destructive",
+          onPress: () => console.log("Block user"),
+        },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  };
 
   // Fallback profile picture if user doesn't have one
   const profilePicture =
     user.profilePicture ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`;
 
   return (
-    <TouchableOpacity className="flex-row items-center p-4 bg-white" activeOpacity={0.7}>
+    <TouchableOpacity
+      className="flex-row items-center p-4 bg-white"
+      activeOpacity={0.7}
+    >
       {/* Profile Picture */}
       <Image
         source={{ uri: profilePicture }}
@@ -66,19 +87,22 @@ const UserCard = ({ user, onFollow, onMessage, isFollowing, showMessageButton = 
       <View className="flex-row items-center space-x-2">
         {showMessageButton && (
           <TouchableOpacity
-            className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center"
+            className="w-12 h-12 bg-gray-600 rounded-full items-center justify-center"
             onPress={handleMessage}
           >
-            <MessageCircle size={18} color="white" />
+            <Ionicons name="chatbubble" size={29} color="white" />
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity className="w-8 h-8 items-center justify-center" onPress={handleMoreOptions}>
+        <TouchableOpacity
+          className="w-8 h-8 items-center justify-center"
+          onPress={handleMoreOptions}
+        >
           <MoreHorizontal size={20} color="#65676B" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
-export default UserCard
+export default UserCard;
