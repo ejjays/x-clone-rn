@@ -449,7 +449,7 @@ export default function ChatScreen() {
             className="font-semibold text-gray-900 text-xl"
             numberOfLines={1}
             ellipsizeMode="tail"
-          >
+         >
             {otherUser?.name || "Chat"}
           </Text>
           {otherUser && (

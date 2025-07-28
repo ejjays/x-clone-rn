@@ -8,7 +8,7 @@ import {
   TvMinimalPlay,
 } from "lucide-react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import { Redirect, usePathname, withLayoutContext } from "expo-router";
+import { Redirect, usePathname, withLayoutContext, router } from "expo-router";
 import { useEffect } from "react";
 import {
   Text,
@@ -110,7 +110,10 @@ const TabsLayout = () => {
           <View className="flex-row justify-between items-center px-3 h-full">
             <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
             <View className="flex-row space-x-2">
-              <TouchableOpacity className="p-2.5 rounded-full">
+              <TouchableOpacity
+                className="p-2.5 rounded-full"
+                onPress={() => router.push("/search-posts")}
+              >
                 <Search size={28} color="#000" />
               </TouchableOpacity>
               <TouchableOpacity className="p-2.5 rounded-full">
