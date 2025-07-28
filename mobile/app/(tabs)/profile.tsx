@@ -5,9 +5,6 @@ import { usePosts } from "@/hooks/usePosts";
 import { useProfile } from "@/hooks/useProfile";
 import { useSignOut } from "@/hooks/useSignOut";
 import {
-  Calendar,
-  Camera,
-  ChevronDown,
   LogOut,
   MapPin,
   UserX,
@@ -24,7 +21,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
 
 const ProfileScreens = () => {
   const { currentUser, isLoading } = useCurrentUser();
@@ -144,7 +141,7 @@ const ProfileScreens = () => {
                 className="w-40 h-40 rounded-full border-4 border-white shadow-lg"
               />
               <TouchableOpacity className="absolute bottom-2 right-2 w-10 h-10 bg-gray-100 rounded-full items-center justify-center border-2 border-white shadow-md">
-                <MaterialIcons name="photo-camera" size={18} color="#4B5563" />
+                <Entypo name="camera" size={18} color="#4B5563" />
               </TouchableOpacity>
             </View>
           </View>
@@ -157,13 +154,50 @@ const ProfileScreens = () => {
                 <Text className="text-2xl font-bold text-gray-800 mr-2">
                   {currentUser.firstName} {currentUser.lastName}
                 </Text>
+              </View>              
+
+              <View className="flex-row space-x-6 mt-2">
+                <TouchableOpacity className="mr-4">
+                  <Text className="text-gray-800">
+                    <Text className="font-bold text-lg">
+                      {currentUser.following?.length || 0}
+                    </Text>
+                    <Text className="text-gray-600"> Following</Text>
+                  </Text>
+                </TouchableOpacity>
                 <TouchableOpacity>
-                  <ChevronDown size={20} color="#4B5563" />
+                  <Text className="text-gray-800">
+                    <Text className="font-bold text-lg">
+                      {currentUser.followers?.length || 0}
+                    </Text>
+                    <Text className="text-gray-600"> Followers</Text>
+                  </Text>
                 </TouchableOpacity>
               </View>
-              <Text className="text-gray-500 text-base mb-3">
-                @{currentUser.username}
-              </Text>
+              <View className="space-y-3 mt-4">
+                {currentUser.location && (
+                  <View className="flex-row items-center mb-2">
+                    <MapPin size={18} color="#6B7280" />
+                    <Text className="text-gray-600 ml-2">
+                      {currentUser.location}
+                    </Text>
+                  </View>
+                )}
+
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons
+                    name="calendar-clock"
+                    size={18}
+                    color="#6B7280"
+                  />
+                  <Text className="text-gray-600 ml-2">
+                    Joined{" "}
+                    {currentUser.createdAt
+                      ? format(new Date(currentUser.createdAt), "MMMM yyyy")
+                      : "Recently"}
+                  </Text>
+                </View>
+              </View>
             </View>
 
             <TouchableOpacity
@@ -177,50 +211,10 @@ const ProfileScreens = () => {
           </View>
 
           {currentUser.bio && (
-            <Text className="text-gray-700 text-base mb-4 leading-6">
+            <Text className="text-gray-700 text-lg mt-3 leading-6 font-medium">
               {currentUser.bio}
             </Text>
           )}
-
-          <View className="space-y-3 mb-4">
-            {currentUser.location && (
-              <View className="flex-row items-center">
-                <MapPin size={16} color="#6B7280" />
-                <Text className="text-gray-600 ml-2">
-                  {currentUser.location}
-                </Text>
-              </View>
-            )}
-
-            <View className="flex-row items-center">
-              <Calendar size={16} color="#6B7280" />
-              <Text className="text-gray-600 ml-2">
-                Joined{" "}
-                {currentUser.createdAt
-                  ? format(new Date(currentUser.createdAt), "MMMM yyyy")
-                  : "Recently"}
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-row space-x-6">
-            <TouchableOpacity className="mr-4">
-              <Text className="text-gray-800">
-                <Text className="font-bold text-lg">
-                  {currentUser.following?.length || 0}
-                </Text>
-                <Text className="text-gray-600"> Following</Text>
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text className="text-gray-800">
-                <Text className="font-bold text-lg">
-                  {currentUser.followers?.length || 0}
-                </Text>
-                <Text className="text-gray-600"> Followers</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         <View className="px-6 py-4 border-b border-gray-200 bg-white">
