@@ -48,18 +48,15 @@ const SearchPostsScreen = () => {
       const filteredPosts = posts.filter((post: Post) => {
         const searchLower = searchText.toLowerCase();
 
-        // Ensure post.author exists before accessing its properties
-        if (!post.author) {
-          return false; 
-        }
-
         const contentMatch = post.content.toLowerCase().includes(searchLower);
-        const authorMatch = `${post.author.firstName} ${post.author.lastName}`
-          .toLowerCase()
-          .includes(searchLower);
-        const usernameMatch = post.author.username
-          .toLowerCase()
-          .includes(searchLower);
+        
+        // Safely access author properties, defaulting to empty string if undefined
+        const authorFirstName = post.author?.firstName?.toLowerCase() || '';
+        const authorLastName = post.author?.lastName?.toLowerCase() || '';
+        const authorUsername = post.author?.username?.toLowerCase() || '';
+
+        const authorMatch = `${authorFirstName} ${authorLastName}`.includes(searchLower);
+        const usernameMatch = authorUsername.includes(searchLower);
 
         return contentMatch || authorMatch || usernameMatch;
       });
@@ -95,7 +92,7 @@ const SearchPostsScreen = () => {
           <ChevronLeft size={26} color="#000" />
         </TouchableOpacity>
 
-        <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-4">
+        <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-2">
           <Search size={20} color="#657786" />
           <TextInput
             placeholder="Search posts"
@@ -161,7 +158,7 @@ const SearchPostsScreen = () => {
                 <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
                   <Search size={32} color="#65676B" />
                 </View>
-                <Text className="text-xl font-semibold text-gray-900 mb-3">
+                <Text className="text-2xl font-semibold text-gray-900 mb-3">
                   No results found
                 </Text>
                 <Text className="text-gray-500 text-center text-base leading-6">

@@ -87,10 +87,10 @@ const UserCard = ({
       <View className="flex-row items-center space-x-2">
         {showMessageButton && (
           <TouchableOpacity
-            className="w-12 h-12 bg-gray-600 rounded-full items-center justify-center"
+            className="w-12 h-12 rounded-full items-center justify-center"
             onPress={handleMessage}
           >
-            <Ionicons name="chatbubble" size={29} color="white" />
+            <Ionicons name="chatbubble-ellipses" size={29} color="#3a3a3a" />
           </TouchableOpacity>
         )}
 
