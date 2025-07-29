@@ -23,7 +23,10 @@ const PostComposer = () => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => router.push("/create-post")}
+          onPress={() => router.push({
+            pathname: "/create-post",
+            params: { from: "image" }
+          })}
           className="ml-4"
         >
           <MaterialCommunityIcons

@@ -1,7 +1,7 @@
 // mobile/app/create-post.tsx
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, Fontisto } from "@expo/vector-icons";
 import {
   View,
@@ -31,6 +31,7 @@ const CreatePostScreen = () => {
     createPost,
   } = useCreatePost();
   const insets = useSafeAreaInsets();
+  const local = useLocalSearchParams();
 
   const placeholderTexts = [
     "What are you grateful for? ✨",
@@ -39,6 +40,9 @@ const CreatePostScreen = () => {
   ];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  // Determine if autoFocus should be enabled
+  const shouldAutoFocus = local.from !== "image";
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
@@ -139,7 +143,7 @@ const CreatePostScreen = () => {
                 value={content}
                 onChangeText={setContent}
                 multiline
-                autoFocus
+                autoFocus={shouldAutoFocus}
                 className="text-xl leading-7 text-gray-900"
                 style={{
                   minHeight: 120,
