@@ -1,6 +1,11 @@
 import { Modalize } from "react-native-modalize";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
-import { Entypo, Ionicons } from "@expo/vector-icons";
+import {
+  Entypo,
+  Ionicons,
+  MaterialCommunityIcons,
+  AntDesign,
+} from "@expo/vector-icons";
 import { forwardRef, useImperativeHandle, useRef } from "react";
 
 interface PostActionBottomSheetProps {
@@ -67,25 +72,52 @@ const PostActionBottomSheet = forwardRef<
       }}
       handlePosition="inside"
       adjustToContentHeight={true}
-      onClosed={handleModalizeClosed} // *** Changed from onClose to onClosed ***
+      onClosed={handleModalizeClosed}
+      modalTopOffset={0} // Ensures the modal overlay covers the entire screen
     >
       <View className="p-4">
         <TouchableOpacity
           className="flex-row items-center py-3"
-          onPress={handleDeletePress}
+          onPress={() => {
+            modalizeRef.current?.close();
+            // Add Save Post functionality here later
+          }}
         >
-          <Entypo name="trash" size={20} color="red" />
-          <Text className="ml-3 text-red-500 text-lg font-bold">Delete Post</Text>
+          <Ionicons name="bookmark" size={24} color="black" />
+          <Text className="ml-3 text-black text-lg font-semibold">Save Post</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-row items-center py-3"
+          onPress={() => {
+            modalizeRef.current?.close();
+            // Add Pin Post functionality here later
+          }}
+        >
+          <Entypo name="pin" size={24} color="black" />
+          <Text className="ml-3 text-black text-lg font-semibold">Pin Post</Text>
+        </TouchableOpacity>
+
         {postContent && (
           <TouchableOpacity
             className="flex-row items-center py-3"
             onPress={handleCopyTextPress}
           >
-            <Ionicons name="copy" size={20} color="#657786" />
-            <Text className="ml-3 text-gray-800 text-lg font-bold">Copy Text</Text>
+            <Ionicons name="copy" size={24} color="black" />
+            <Text className="ml-3 text-black text-lg font-semibold">Copy Text</Text>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          className="flex-row items-center py-3"
+          onPress={handleDeletePress}
+        >
+          <Entypo name="trash" size={24} color="red" />
+          <Text className="ml-3 text-red-500 text-lg font-semibold">
+            Delete Post
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           className="flex-row items-center py-3 mt-2 border-t border-gray-200"
           onPress={() => modalizeRef.current?.close()}
