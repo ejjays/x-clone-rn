@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { View, Image, Text, TouchableOpacity, TextInput } from "react-native";
+import { View, Image, Text, TouchableOpacity } from "react-native";
 
 const PostComposer = () => {
   const { user } = useUser();
@@ -28,7 +28,7 @@ const PostComposer = () => {
         >
           <MaterialCommunityIcons
             name="file-image"
-            size={25}
+            size={27}
             color={"#4CAF50"}
           />
         </TouchableOpacity>

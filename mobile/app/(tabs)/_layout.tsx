@@ -30,7 +30,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
 
-const HEADER_HEIGHT = 60;
+const HEADER_HEIGHT = 35;
 const TAB_BAR_HEIGHT = 50;
 const TAB_ROUTES = [
   "/",
@@ -114,10 +114,10 @@ const TabsLayout = () => {
                 className="p-2.5 rounded-full"
                 onPress={() => router.push("/search-posts")}
               >
-                <Search size={28} color="#000" />
+                <Search size={28} color="black" />
               </TouchableOpacity>
               <TouchableOpacity className="p-2.5 rounded-full">
-                <Ionicons name="chatbubble-ellipses" size={28} color="#000" />
+                <Ionicons name="chatbubble-ellipses" size={28} color="black" />
               </TouchableOpacity>
               {/* <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
                 <MessageCircle size={22} color="#000" />
@@ -147,13 +147,13 @@ const TabsLayout = () => {
                       onPress={() => props.navigation.navigate("index")}
                     >
                       <Home
-                        size={24}
+                        size={26}
                         color={
                           isVideosScreen
-                            ? "#000"
+                            ? "black"
                             : pathname === "/"
-                              ? "#1877F2"
-                              : "#657786"
+                              ? "#2563eb"
+                              : "black"
                         }
                       />
                     </TouchableOpacity>
@@ -163,13 +163,13 @@ const TabsLayout = () => {
                       onPress={() => props.navigation.navigate("search")}
                     >
                       <PeopleIcon
-                        size={25}
+                        size={27}
                         color={
                           isVideosScreen
-                            ? "#000"
+                            ? "black"
                             : pathname === "/search"
-                              ? "#1877F2"
-                              : "#657786"
+                              ? "#2563eb"
+                              : "black"
                         }
                       />
                     </TouchableOpacity>
@@ -179,8 +179,8 @@ const TabsLayout = () => {
                       onPress={() => props.navigation.navigate("videos")}
                     >
                       <TvMinimalPlay
-                        size={24}
-                        color={isVideosScreen ? "#1877F2" : "#657786"}
+                        size={26}
+                        color={isVideosScreen ? "#2563eb" : "black"}
                       />
                     </TouchableOpacity>
 
@@ -189,13 +189,13 @@ const TabsLayout = () => {
                       onPress={() => props.navigation.navigate("notifications")}
                     >
                       <Bell
-                        size={24}
+                        size={26}
                         color={
                           isVideosScreen
-                            ? "#000"
+                            ? "black"
                             : pathname === "/notifications"
-                              ? "#1877F2"
-                              : "#657786"
+                              ? "#2563eb"
+                              : "black"
                         }
                       />
                     </TouchableOpacity>
@@ -205,13 +205,13 @@ const TabsLayout = () => {
                       onPress={() => props.navigation.navigate("messages")}
                     >
                       <Mail
-                        size={24}
+                        size={26}
                         color={
                           isVideosScreen
-                            ? "#000"
+                            ? "black"
                             : pathname === "/messages"
-                              ? "#1877F2"
-                              : "#657786"
+                              ? "#2563eb"
+                              : "black"
                         }
                       />
                     </TouchableOpacity>
@@ -221,8 +221,8 @@ const TabsLayout = () => {
                       onPress={() => props.navigation.navigate("profile")}
                     >
                       <Menu
-                        size={24}
-                        color={pathname === "/profile" ? "#1877F2" : "#657786"}
+                        size={26}
+                        color={pathname === "/profile" ? "#2563eb" : "black"}
                       />
                     </TouchableOpacity>
                   </View>

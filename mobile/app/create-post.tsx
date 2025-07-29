@@ -2,8 +2,7 @@
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { router } from "expo-router";
-import { Image as ImageIcon } from "lucide-react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Fontisto } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -18,7 +17,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Video, ResizeMode } from "expo-av";
-import PostComposer from "@/components/PostComposer";
 import { useEffect, useState, useRef } from "react";
 
 const CreatePostScreen = () => { 
@@ -158,23 +156,24 @@ const CreatePostScreen = () => {
                 {selectedMedia.type === "image" ? (
                   <Image
                     source={{ uri: selectedMedia.uri }}
-                    className="w-full h-72 rounded-lg"
-                    resizeMode="cover"
+                    className="w-full rounded-lg"
+                    style={{ aspectRatio: 16/9 }}
+                    resizeMode="contain"
                   />
                 ) : (
                   <Video
                     source={{ uri: selectedMedia.uri }}
-                    style={{ width: "100%", height: 300 }}
+                    style={{ width: "100%", aspectRatio: 16/9 }}
                     useNativeControls
                     resizeMode={ResizeMode.CONTAIN}
                     isLooping
                   />
                 )}
                 <TouchableOpacity
-                  className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-full"
+                  className="absolute top-2 right-2 bg-black/60 p-1 rounded-full"
                   onPress={removeMedia}
                 >
-                  <Ionicons name="trash-sharp" size={18} color="white" />
+                  <Ionicons name="close" size={20} color="white" />
                 </TouchableOpacity>
               </View>
             )}
@@ -187,7 +186,7 @@ const CreatePostScreen = () => {
             onPress={pickMedia}
             className="flex-row items-center bg-gray-100 p-3 rounded-lg mb-3"
           >
-            <Ionicons name="images" size={24} color="#4CAF50" />
+            <Fontisto name="photograph" size={24} color="#4CAF50" />
             <Text className="ml-3 font-semibold text-base text-gray-800">
               Photos/videos
             </Text>
