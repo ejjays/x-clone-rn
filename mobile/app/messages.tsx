@@ -13,6 +13,7 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
+import CustomThemeToggle from "@/components/CustomThemeToggle"; // Import the new component
 import { useState, useEffect } from "react";
 import LottieView from "lottie-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -147,7 +148,7 @@ export default function MessagesScreen() {
         backgroundColor: colors.background,
       }}
     >
-      {/* Header with Dark Mode Toggle */}
+      {/* Header with Custom Dark Mode Toggle */}
       <View
         className="flex-row items-center justify-between px-4 py-2"
         style={{ backgroundColor: colors.background }}
@@ -161,17 +162,13 @@ export default function MessagesScreen() {
           </Text>
         </View>
         <View className="flex-row items-center">
-          {/* Dark Mode Toggle Button */}
-          <TouchableOpacity
-            onPress={toggleDarkMode}
-            className="w-10 h-10 rounded-full items-center justify-center mr-1"
-          >
-            <Ionicons
-              name={isDarkMode ? "sunny" : "moon"}
-              size={24}
-              color={isDarkMode ? "#fbbf24" : colors.icon}
+          {/* Custom Theme Toggle Component */}
+          <View className="mr-3">
+            <CustomThemeToggle
+              isDarkMode={isDarkMode}
+              onToggle={toggleDarkMode}
             />
-          </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             onPress={handleNewMessage}
