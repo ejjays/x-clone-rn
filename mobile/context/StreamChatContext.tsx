@@ -29,11 +29,24 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
   const [channels, setChannels] = useState<any[]>([]);
 
   // Fetch the Stream token from your backend
-  const { data: streamToken } = useQuery({
+  const { data: streamToken, error: tokenError, isLoading: tokenLoading } = useQuery({
     queryKey: ["streamToken"],
     queryFn: () => streamApi.getToken(api),
     enabled: isLoaded && !!user,
     staleTime: 1000 * 60 * 55, // 55 minutes
+  });
+
+  // ADD THESE DEBUG LOGS:
+  console.log("🔍 DEBUG - StreamChat State:", {
+    isLoaded,
+    hasUser: !!user,
+    tokenLoading,
+    hasToken: !!streamToken,
+    tokenError,
+    isConnected,
+    isConnecting,
+    channelsCount: channels.length,
+    STREAM_API_KEY: !!STREAM_API_KEY,
   });
 
   // Function to connect the user

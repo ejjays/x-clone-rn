@@ -33,6 +33,19 @@ export default function MessagesScreen() {
   };
 
   const renderContent = () => {
+    // TEMPORARY DEBUG - Comment out the connection checks
+    console.log("🔍 Messages Screen State:", {
+      isConnecting,
+      isConnected,
+      hasClient: !!client,
+      channelsCount: channels.length
+    });
+
+    // Force show the NoMessagesFound component for testing
+    // return <NoMessagesFound onRefresh={refreshChannels} />;
+
+    // Original code commented out for debugging:
+    
     if (isConnecting && !client) {
       return (
         <View className="flex-1 items-center justify-center">
@@ -78,6 +91,7 @@ export default function MessagesScreen() {
         searchQuery={searchQuery}
       />
     );
+    
   };
 
   return (

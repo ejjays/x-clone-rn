@@ -87,7 +87,7 @@ const TabsLayout = () => {
   // Handle message icon press - navigate to full screen messages
   const handleMessagePress = () => {
     router.push("/messages");
-  };
+  }
 
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
