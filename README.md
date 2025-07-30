@@ -2,7 +2,7 @@
 
 ![Demo App](/mobile/assets/images/screenshot-for-readme.png)
 
-Welcome to the **PCMI Official Application**! This is a social media app designed for our church community. It provides a platform for users to connect, share, and engage with each other through various features.
+Welcome to the **PCMI Official Application**! This is a social media app designed for our church family here at Infanta, Quezon. It provides a platform for our church members to connect, share, and engage with each other through various features.
 
 This application is built with a robust backend using Node.js, Express, and MongoDB, and a mobile frontend developed with React Native and Expo.
 

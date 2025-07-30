@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
+  ScrollView,
+  Image,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
@@ -19,6 +21,18 @@ export default function MessagesScreen() {
     useStreamChat();
   const [searchQuery, setSearchQuery] = useState("");
   const insets = useSafeAreaInsets();
+
+  // Mock user data for the horizontal list
+  const mockUsers = [
+    { id: "1", name: "Alice", avatar: "https://i.pravatar.cc/150?img=1" },
+    { id: "2", name: "Bob", avatar: "https://i.pravatar.cc/150?img=2" },
+    { id: "3", name: "Charlie", avatar: "https://i.pravatar.cc/150?img=3" },
+    { id: "4", name: "David", avatar: "https://i.pravatar.cc/150?img=4" },
+    { id: "5", name: "Eve", avatar: "https://i.pravatar.cc/150?img=5" },
+    { id: "6", name: "Frank", avatar: "https://i.pravatar.cc/150?img=6" },
+    { id: "7", name: "Grace", avatar: "https://i.pravatar.cc/150?img=7" },
+    { id: "8", name: "Heidi", avatar: "https://i.pravatar.cc/150?img=8" },
+  ];
 
   const handleNewMessage = () => {
     router.push("/new-message");
@@ -108,14 +122,14 @@ export default function MessagesScreen() {
             className="w-10 h-10 rounded-full items-center justify-center mr-1"
             disabled={!client || !isConnected}
           >
-            <Ionicons name="create" size={30} color="black" />
+            <Ionicons name="create" size={27} color="black" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleBack}
             className="w-10 h-10 rounded-full items-center justify-center"
             disabled={!client || !isConnected}
           >
-            <FontAwesome5 name="facebook" size={28} color="black" />
+            <FontAwesome5 name="facebook" size={26} color="black" />
           </TouchableOpacity>
         </View>
       </View>
@@ -132,7 +146,7 @@ export default function MessagesScreen() {
             onChangeText={setSearchQuery}
             returnKeyType="search"
             style={{
-              paddingVertical: Platform.OS === "android" ? 12 : 12,
+              paddingVertical: Platform.OS === "android" ? 10 : 12,
             }}
           />
           {searchQuery.length > 0 && (
@@ -143,8 +157,27 @@ export default function MessagesScreen() {
         </View>
       </View>
 
+      {/* Horizontal List of People */}
+      <View className="py-2">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
+          {mockUsers.map((user) => (
+            <TouchableOpacity key={user.id} className="items-center mr-4">
+              <Image
+                source={{ uri: user.avatar }}
+                className="w-20 h-20 rounded-full border-2 border-blue-400"
+              />
+              <Text className="text-sm text-gray-700 mt-1" numberOfLines={1}>
+                {user.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       {/* Messages Content */}
-      <View className="flex-1">{renderContent()}</View>
+      <View className="flex-1">
+        {renderContent()}
+      </View>
     </View>
   );
 }

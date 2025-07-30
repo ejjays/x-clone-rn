@@ -8,13 +8,13 @@ import PostCardSkeleton from "./PostCardSkeleton";
 interface PostsListProps {
   username?: string;
   onOpenComments?: (postId: string) => void;
-  onOpenPostMenu: (post: Post) => void; // Add this new prop
+  onOpenPostMenu: (post: Post) => void; 
 }
 
 const PostsList = ({
   username,
   onOpenComments,
-  onOpenPostMenu, // Destructure new prop
+  onOpenPostMenu, 
 }: PostsListProps) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {

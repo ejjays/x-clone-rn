@@ -43,4 +43,4 @@ export const reactionLabels: Record<ReactionName, string> = {
   haha: "Haha",
   sad: "Sad",
   angry: "Angry",
-};
+}; 

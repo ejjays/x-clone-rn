@@ -18,12 +18,12 @@ import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { ScrollProvider } from "@/context/ScrollContext";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
 
-const HEADER_HEIGHT = 35;
+const HEADER_HEIGHT = 40;
 const TAB_BAR_HEIGHT = 50;
 // Updated TAB_ROUTES - removed "/messages"
 const TAB_ROUTES = ["/", "/search", "/videos", "/notifications", "/profile"];
@@ -87,7 +87,7 @@ const TabsLayout = () => {
   // Handle message icon press - navigate to full screen messages
   const handleMessagePress = () => {
     router.push("/messages");
-  }
+  };
 
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
@@ -121,7 +121,11 @@ const TabsLayout = () => {
                 className="p-2.5 rounded-full"
                 onPress={handleMessagePress}
               >
-                <Ionicons name="chatbubble-ellipses" size={28} color="black" />
+                <FontAwesome5
+                  name="facebook-messenger"
+                  size={26}
+                  color="black"
+                />
               </TouchableOpacity>
             </View>
           </View>

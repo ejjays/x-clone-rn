@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   type View as RNView,
   Pressable,
-  Alert,
   Dimensions,
 } from "react-native";
 import CommentIcon from "../assets/icons/Comment";
