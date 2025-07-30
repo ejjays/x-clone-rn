@@ -11,7 +11,7 @@ interface ScrollContextType {
 const ScrollContext = createContext<ScrollContextType | null>(null);
 
 // Define constants for header and tab bar heights
-const HEADER_HEIGHT = 60;
+const HEADER_HEIGHT = 35;
 const TAB_BAR_HEIGHT = 50;
 
 export const ScrollProvider: React.FC<{
