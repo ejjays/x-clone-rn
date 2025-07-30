@@ -51,6 +51,9 @@ const TabsLayout = () => {
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
 
+  // 🔥 ADD THIS: Create a shared value for indicator position
+  const indicatorX = useSharedValue(0);
+
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
@@ -60,6 +63,16 @@ const TabsLayout = () => {
     headerHeight.value = isHomeScreen ? HEADER_HEIGHT : 0;
     tabBarHeight.value = isProfileScreen ? 0 : TAB_BAR_HEIGHT;
   }, [isHomeScreen, isProfileScreen]);
+
+  // 🔥 ADD THIS: Update indicator position when pathname changes
+  useEffect(() => {
+    const activeIndex = TAB_ROUTES.indexOf(pathname);
+    if (activeIndex !== -1) {
+      indicatorX.value = withTiming(activeIndex * (screenWidth / NUM_TABS), {
+        duration: 150,
+      });
+    }
+  }, [pathname, screenWidth]);
 
   const animatedHeaderStyle = useAnimatedStyle(() => ({
     height: headerHeight.value,
@@ -73,15 +86,13 @@ const TabsLayout = () => {
     overflow: "hidden",
   }));
 
-  const activeIndex = TAB_ROUTES.indexOf(pathname);
+  // 🔥 REPLACE THIS: Remove the withTiming from here
   const animatedIndicatorStyle = useAnimatedStyle(() => {
     return {
       width: `${100 / NUM_TABS}%`,
       transform: [
         {
-          translateX: withTiming(activeIndex * (screenWidth / NUM_TABS), {
-            duration: 250,
-          }),
+          translateX: indicatorX.value, // Just use the shared value
         },
       ],
     };
@@ -103,7 +114,6 @@ const TabsLayout = () => {
           backgroundColor: "white",
         }}
       >
-        {/* This StatusBar now controls the style for all tab screens */}
         <StatusBar style={isVideosScreen ? "light" : "dark"} />
 
         <Animated.View style={animatedHeaderStyle}>
@@ -119,9 +129,6 @@ const TabsLayout = () => {
               <TouchableOpacity className="p-2.5 rounded-full">
                 <Ionicons name="chatbubble-ellipses" size={28} color="black" />
               </TouchableOpacity>
-              {/* <TouchableOpacity className="bg-gray-200 p-2.5 rounded-full">
-                <MessageCircle size={22} color="#000" />
-              </TouchableOpacity> */}
             </View>
           </View>
         </Animated.View>

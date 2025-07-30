@@ -1,4 +1,4 @@
-<h1 align="left">📱 PCMI - Infanta Official Application 🚀</h1>
+<h1 align="left">📱 PCMI - Infanta's Official Application 🚀</h1>
 
 ![Demo App](/mobile/assets/images/screenshot-for-readme.png)
 
