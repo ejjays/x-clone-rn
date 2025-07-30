@@ -175,7 +175,7 @@ const PostActionBottomSheet = forwardRef<
                 if (!isDragging) {
                   handleClose();
                   // Add Save Post functionality here later
-                }
+                } 
               }}
             >
               <Ionicons name="bookmark" size={24} color="black" />
