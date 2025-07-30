@@ -25,7 +25,8 @@ const InitialLayout = () => {
     }
   }, [isLoaded, isSignedIn]);
 
-  if (!isLoaded || !client) {
+  // Only block for auth loading, NOT for Stream Chat client
+  if (!isLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#1DA1F2" />
@@ -35,7 +36,25 @@ const InitialLayout = () => {
 
   return (
     <OverlayProvider value={{ style: streamChatTheme }}>
-      <Chat client={client}>
+      {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
+      {client ? (
+        <Chat client={client}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="create-post"
+              options={{ presentation: "modal" }}
+            />
+            <Stack.Screen name="post/[postId]" />
+            <Stack.Screen name="messages" />
+            <Stack.Screen name="chat/[channelId]" />
+            <Stack.Screen name="new-message" />
+            <Stack.Screen name="search-posts" />
+            <Stack.Screen name="sso-callback" />
+          </Stack>
+        </Chat>
+      ) : (
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
@@ -50,7 +69,7 @@ const InitialLayout = () => {
           <Stack.Screen name="search-posts" />
           <Stack.Screen name="sso-callback" />
         </Stack>
-      </Chat>
+      )}
     </OverlayProvider>
   );
 };
