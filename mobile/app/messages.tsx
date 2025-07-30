@@ -8,13 +8,14 @@ import {
   ScrollView,
   Image,
   useColorScheme,
+  Animated,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
-import CustomThemeToggle from "@/components/CustomThemeToggle"; // Import the new component
-import { useState, useEffect } from "react";
+import CustomThemeToggle from "@/components/CustomThemeToggle";
+import { useState, useEffect, useRef } from "react";
 import LottieView from "lottie-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAllUsers } from "@/hooks/useAllUsers";
@@ -25,10 +26,14 @@ export default function MessagesScreen() {
     useStreamChat();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isWaveAnimating, setIsWaveAnimating] = useState(false);
   const insets = useSafeAreaInsets();
   const systemColorScheme = useColorScheme();
   const { users: allUsers, isLoading: usersLoading } = useAllUsers();
   const { currentUser } = useCurrentUser();
+
+  // Animated value for smooth background transition during wave
+  const backgroundOpacity = useRef(new Animated.Value(1)).current;
 
   // Filter out current user and get real users
   const realUsers =
@@ -53,6 +58,26 @@ export default function MessagesScreen() {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const handleWaveAnimationStart = () => {
+    setIsWaveAnimating(true);
+    // Slightly fade the background during wave animation for smoother transition
+    Animated.timing(backgroundOpacity, {
+      toValue: 0.95,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleWaveAnimationComplete = () => {
+    setIsWaveAnimating(false);
+    // Restore full opacity after wave completes
+    Animated.timing(backgroundOpacity, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handleUserPress = (user) => {
@@ -135,152 +160,158 @@ export default function MessagesScreen() {
       <CustomChannelList
         onRefresh={refreshChannels}
         searchQuery={searchQuery}
-        isDarkMode={isDarkMode} // Pass isDarkMode prop
+        isDarkMode={isDarkMode}
       />
     );
   };
 
   return (
-    <View
-      className="flex-1"
-      style={{
-        paddingTop: insets.top,
-        backgroundColor: colors.background,
-      }}
-    >
-      {/* Header with Custom Dark Mode Toggle */}
-      <View
-        className="flex-row items-center justify-between px-4 py-2"
-        style={{ backgroundColor: colors.background }}
+    <View style={{ flex: 1, position: "relative" }}>
+      {/* Main Content with Animated Background */}
+      <Animated.View
+        className="flex-1"
+        style={{
+          paddingTop: insets.top,
+          backgroundColor: colors.background,
+          opacity: backgroundOpacity,
+        }}
       >
-        <View className="flex-row items-center">
-          <Text
-            className="text-3xl font-extrabold"
-            style={{ color: colors.blue }}
-          >
-            messages
-          </Text>
-        </View>
-        <View className="flex-row items-center">
-          {/* Custom Theme Toggle Component */}
-          <View className="mr-3">
-            <CustomThemeToggle
-              isDarkMode={isDarkMode}
-              onToggle={toggleDarkMode}
-            />
-          </View>
-
-          <TouchableOpacity
-            onPress={handleNewMessage}
-            className="w-10 h-10 rounded-full items-center justify-center mr-1"
-            disabled={!client || !isConnected}
-          >
-            <Ionicons name="create" size={27} color={colors.icon} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleBack}
-            className="w-10 h-10 rounded-full items-center justify-center"
-            disabled={!client || !isConnected}
-          >
-            <FontAwesome5 name="facebook" size={26} color={colors.icon} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Search Field */}
-      <View className="px-4 py-1">
+        {/* Header with Custom Dark Mode Toggle */}
         <View
-          className="flex-row items-center rounded-full px-4"
-          style={{ backgroundColor: colors.surface }}
+          className="flex-row items-center justify-between px-4 py-2"
+          style={{ backgroundColor: colors.background }}
         >
-          <Ionicons name="search" size={25} color={colors.textMuted} />
-          <TextInput
-            className="flex-1 ml-3 text-base"
-            placeholder="Search conversations..."
-            placeholderTextColor={colors.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-            style={{
-              paddingVertical: Platform.OS === "android" ? 10 : 12,
-              color: colors.text,
-            }}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} className="ml-2">
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color={colors.textMuted}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Horizontal List of Real Users */}
-      <View className="py-2">
-        {usersLoading ? (
-          <View className="flex-row items-center justify-center py-4">
-            <LottieView
-              source={require("@/assets/animations/loading-loader.json")}
-              autoPlay
-              loop
-              className="w-8 h-8"
-            />
-            <Text style={{ color: colors.textMuted }} className="ml-2">
-              Loading users...
+          <View className="flex-row items-center">
+            <Text
+              className="text-3xl font-extrabold"
+              style={{ color: colors.blue }}
+            >
+              messages
             </Text>
           </View>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="px-4"
-          >
-            {realUsers.map((user) => (
-              <TouchableOpacity
-                key={user._id}
-                className="items-center mr-4"
-                onPress={() => handleUserPress(user)}
-              >
-                {user.profilePicture ? (
-                  <Image
-                    source={{ uri: user.profilePicture }}
-                    className="w-20 h-20 rounded-full border-2"
-                    style={{ borderColor: colors.blue }}
-                  />
-                ) : (
-                  <View
-                    className="w-20 h-20 rounded-full border-2 items-center justify-center"
-                    style={{
-                      borderColor: colors.blue,
-                      backgroundColor: colors.surface,
-                    }}
-                  >
-                    <Text
-                      className="font-semibold text-lg"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {getInitials(user.firstName, user.lastName)}
-                    </Text>
-                  </View>
-                )}
-                <Text
-                  className="text-sm mt-1"
-                  numberOfLines={1}
-                  style={{ color: colors.textSecondary }}
-                >
-                  {user.firstName}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-      </View>
+          <View className="flex-row items-center">
+            {/* Custom Theme Toggle Component with Wave Animation */}
+            <View className="mr-3">
+              <CustomThemeToggle
+                isDarkMode={isDarkMode}
+                onToggle={toggleDarkMode}
+                onWaveAnimationStart={handleWaveAnimationStart}
+                onWaveAnimationComplete={handleWaveAnimationComplete}
+              />
+            </View>
 
-      {/* Messages Content */}
-      <View className="flex-1">{renderContent()}</View>
+            <TouchableOpacity
+              onPress={handleNewMessage}
+              className="w-10 h-10 rounded-full items-center justify-center mr-1"
+              disabled={!client || !isConnected}
+            >
+              <Ionicons name="create" size={27} color={colors.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleBack}
+              className="w-10 h-10 rounded-full items-center justify-center"
+              disabled={!client || !isConnected}
+            >
+              <FontAwesome5 name="facebook" size={26} color={colors.icon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Search Field */}
+        <View className="px-4 py-1">
+          <View
+            className="flex-row items-center rounded-full px-4"
+            style={{ backgroundColor: colors.surface }}
+          >
+            <Ionicons name="search" size={25} color={colors.textMuted} />
+            <TextInput
+              className="flex-1 ml-3 text-base"
+              placeholder="Search conversations..."
+              placeholderTextColor={colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              style={{
+                paddingVertical: Platform.OS === "android" ? 10 : 12,
+                color: colors.text,
+              }}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={clearSearch} className="ml-2">
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={colors.textMuted}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Horizontal List of Real Users */}
+        <View className="py-2">
+          {usersLoading ? (
+            <View className="flex-row items-center justify-center py-4">
+              <LottieView
+                source={require("@/assets/animations/loading-loader.json")}
+                autoPlay
+                loop
+                className="w-8 h-8"
+              />
+              <Text style={{ color: colors.textMuted }} className="ml-2">
+                Loading users...
+              </Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="px-4"
+            >
+              {realUsers.map((user) => (
+                <TouchableOpacity
+                  key={user._id}
+                  className="items-center mr-4"
+                  onPress={() => handleUserPress(user)}
+                >
+                  {user.profilePicture ? (
+                    <Image
+                      source={{ uri: user.profilePicture }}
+                      className="w-20 h-20 rounded-full border-2"
+                      style={{ borderColor: colors.blue }}
+                    />
+                  ) : (
+                    <View
+                      className="w-20 h-20 rounded-full border-2 items-center justify-center"
+                      style={{
+                        borderColor: colors.blue,
+                        backgroundColor: colors.surface,
+                      }}
+                    >
+                      <Text
+                        className="font-semibold text-lg"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {getInitials(user.firstName, user.lastName)}
+                      </Text>
+                    </View>
+                  )}
+                  <Text
+                    className="text-sm mt-1"
+                    numberOfLines={1}
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {user.firstName}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        {/* Messages Content */}
+        <View className="flex-1">{renderContent()}</View>
+      </Animated.View>
     </View>
   );
 }
