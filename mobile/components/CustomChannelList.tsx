@@ -17,6 +17,7 @@ interface CustomChannelListProps {
   onRefresh?: () => void;
   refreshing?: boolean;
   searchQuery?: string;
+  isDarkMode: boolean; // Add isDarkMode prop
 }
 
 interface ChannelMember {
@@ -50,11 +51,21 @@ export default function CustomChannelList({
   onRefresh,
   refreshing = false,
   searchQuery = "",
+  isDarkMode, // Destructure isDarkMode prop
 }: CustomChannelListProps) {
   const { channels, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const [processedChannels, setProcessedChannels] = useState<any[]>([]);
   const [filteredChannels, setFilteredChannels] = useState<any[]>([]);
+
+  // Dynamic color scheme based on dark mode state
+  const colors = {
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+  };
 
   useEffect(() => {
     if (!channels || !currentUser) return;
@@ -131,14 +142,15 @@ export default function CustomChannelList({
       <View className="flex-1 min-w-0 mr-2">
         {/* --- ⬆️ TEXT SIZE INCREASED HERE --- */}
         <Text
-          className="font-semibold text-gray-900 text-lg mb-1"
+          className="font-semibold text-lg mb-1"
           numberOfLines={1}
           ellipsizeMode="tail"
+          style={{ color: colors.text }}
         >
           {item.name}
         </Text>
         {/* --- ⬆️ TEXT SIZE INCREASED HERE --- */}
-        <Text className="text-gray-500 text-base" numberOfLines={1}>
+        <Text className="text-base" numberOfLines={1} style={{ color: colors.textSecondary }}>
           {item.isFromCurrentUser ? "You: " : ""}
           {item.lastMessage}
         </Text>
@@ -146,7 +158,7 @@ export default function CustomChannelList({
 
       <View className="flex-shrink-0">
         {item.lastMessageTime && (
-          <Text className="text-gray-400 text-xs">{item.lastMessageTime}</Text>
+          <Text className="text-xs" style={{ color: colors.textMuted }}>{item.lastMessageTime}</Text>
         )}
       </View>
     </TouchableOpacity>
@@ -155,8 +167,8 @@ export default function CustomChannelList({
   if (isConnecting && channels.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-500 mt-2">Loading conversations...</Text>
+        <ActivityIndicator size="large" color={colors.blue} />
+        <Text style={{ color: colors.textMuted }} className="mt-2">Loading conversations...</Text>
       </View>
     );
   }
@@ -170,15 +182,15 @@ export default function CustomChannelList({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor="#2563EB"
-          colors={["#2563EB"]}
+          tintColor={colors.blue}
+          colors={[colors.blue]}
         />
       }
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ flexGrow: 1 }}
       ListEmptyComponent={
         <View className="flex-1 items-center justify-center">
-          <Text className="text-gray-500">No conversations yet.</Text>
+          <Text style={{ color: colors.textMuted }}>No conversations yet.</Text>
         </View>
       }
     />

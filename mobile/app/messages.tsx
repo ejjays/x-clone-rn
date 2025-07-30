@@ -7,32 +7,36 @@ import {
   Platform,
   ScrollView,
   Image,
+  useColorScheme,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LottieView from "lottie-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAllUsers } from "@/hooks/useAllUsers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } =
     useStreamChat();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const insets = useSafeAreaInsets();
+  const systemColorScheme = useColorScheme();
+  const { users: allUsers, isLoading: usersLoading } = useAllUsers();
+  const { currentUser } = useCurrentUser();
 
-  // Mock user data for the horizontal list
-  const mockUsers = [
-    { id: "1", name: "Alice", avatar: "https://i.pravatar.cc/150?img=1" },
-    { id: "2", name: "Bob", avatar: "https://i.pravatar.cc/150?img=2" },
-    { id: "3", name: "Charlie", avatar: "https://i.pravatar.cc/150?img=3" },
-    { id: "4", name: "David", avatar: "https://i.pravatar.cc/150?img=4" },
-    { id: "5", name: "Eve", avatar: "https://i.pravatar.cc/150?img=5" },
-    { id: "6", name: "Frank", avatar: "https://i.pravatar.cc/150?img=6" },
-    { id: "7", name: "Grace", avatar: "https://i.pravatar.cc/150?img=7" },
-    { id: "8", name: "Heidi", avatar: "https://i.pravatar.cc/150?img=8" },
-  ];
+  // Filter out current user and get real users
+  const realUsers =
+    allUsers?.filter((user) => user._id !== currentUser?._id) || [];
+
+  // Initialize dark mode based on system preference
+  useEffect(() => {
+    setIsDarkMode(systemColorScheme === "dark");
+  }, [systemColorScheme]);
 
   const handleNewMessage = () => {
     router.push("/new-message");
@@ -46,47 +50,74 @@ export default function MessagesScreen() {
     setSearchQuery("");
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const handleUserPress = (user) => {
+    console.log("Selected user:", user);
+  };
+
+  const getInitials = (firstName, lastName) => {
+    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
+  };
+
+  // Dynamic color scheme based on dark mode state
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
+
   const renderContent = () => {
-    // TEMPORARY DEBUG - Comment out the connection checks
-    console.log("🔍 Messages Screen State:", {
-      isConnecting,
-      isConnected,
-      hasClient: !!client,
-      channelsCount: channels.length,
-    });
-
-    // Force show the NoMessagesFound component for testing
-    // return <NoMessagesFound onRefresh={refreshChannels} />;
-
-    // Original code commented out for debugging:
-
     if (isConnecting && !client) {
       return (
-        <View className="flex-1 items-center justify-center">
+        <View
+          className="flex-1 items-center justify-center"
+          style={{ backgroundColor: colors.background }}
+        >
           <LottieView
             source={require("@/assets/animations/loading-loader.json")}
             autoPlay
             loop
             className="w-24 h-24"
           />
-          <Text className="text-gray-500 mt-2">Loading conversations...</Text>
+          <Text style={{ color: colors.textMuted }} className="mt-2">
+            Loading conversations...
+          </Text>
         </View>
       );
     }
 
     if (!client || !isConnected) {
       return (
-        <View className="flex-1 items-center justify-center px-8">
-          <Ionicons name="cloud-offline-outline" size={64} color="#9CA3AF" />
-          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">
+        <View
+          className="flex-1 items-center justify-center px-8"
+          style={{ backgroundColor: colors.background }}
+        >
+          <Ionicons
+            name="cloud-offline-outline"
+            size={64}
+            color={colors.textMuted}
+          />
+          <Text
+            className="text-xl font-semibold mt-4 mb-2"
+            style={{ color: colors.text }}
+          >
             Connection Issue
           </Text>
-          <Text className="text-gray-500 text-center">
+          <Text className="text-center" style={{ color: colors.textSecondary }}>
             Unable to connect to chat service. Please check your internet
             connection.
           </Text>
           <TouchableOpacity
-            className="bg-blue-500 px-6 py-3 rounded-lg mt-4"
+            className="px-6 py-3 rounded-lg mt-4"
+            style={{ backgroundColor: colors.blue }}
             onPress={refreshChannels}
           >
             <Text className="text-white font-semibold">Retry Connection</Text>
@@ -103,81 +134,156 @@ export default function MessagesScreen() {
       <CustomChannelList
         onRefresh={refreshChannels}
         searchQuery={searchQuery}
+        isDarkMode={isDarkMode} // Pass isDarkMode prop
       />
     );
   };
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      {/* Full Screen Header with Back Button */}
-      <View className="flex-row items-center justify-between px-4 py-2">
+    <View
+      className="flex-1"
+      style={{
+        paddingTop: insets.top,
+        backgroundColor: colors.background,
+      }}
+    >
+      {/* Header with Dark Mode Toggle */}
+      <View
+        className="flex-row items-center justify-between px-4 py-2"
+        style={{ backgroundColor: colors.background }}
+      >
         <View className="flex-row items-center">
-          <Text className="text-3xl font-extrabold text-blue-600">
+          <Text
+            className="text-3xl font-extrabold"
+            style={{ color: colors.blue }}
+          >
             messages
           </Text>
         </View>
         <View className="flex-row items-center">
+          {/* Dark Mode Toggle Button */}
+          <TouchableOpacity
+            onPress={toggleDarkMode}
+            className="w-10 h-10 rounded-full items-center justify-center mr-1"
+          >
+            <Ionicons
+              name={isDarkMode ? "sunny" : "moon"}
+              size={24}
+              color={isDarkMode ? "#fbbf24" : colors.icon}
+            />
+          </TouchableOpacity>
+
           <TouchableOpacity
             onPress={handleNewMessage}
             className="w-10 h-10 rounded-full items-center justify-center mr-1"
             disabled={!client || !isConnected}
           >
-            <Ionicons name="create" size={27} color="black" />
+            <Ionicons name="create" size={27} color={colors.icon} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleBack}
             className="w-10 h-10 rounded-full items-center justify-center"
             disabled={!client || !isConnected}
           >
-            <FontAwesome5 name="facebook" size={26} color="black" />
+            <FontAwesome5 name="facebook" size={26} color={colors.icon} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Search Field */}
       <View className="px-4 py-1">
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4">
-          <Ionicons name="search" size={25} color="#6B7280" />
+        <View
+          className="flex-row items-center rounded-full px-4"
+          style={{ backgroundColor: colors.surface }}
+        >
+          <Ionicons name="search" size={25} color={colors.textMuted} />
           <TextInput
-            className="flex-1 ml-3 text-gray-900 text-base"
+            className="flex-1 ml-3 text-base"
             placeholder="Search conversations..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             returnKeyType="search"
             style={{
               paddingVertical: Platform.OS === "android" ? 10 : 12,
+              color: colors.text,
             }}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={clearSearch} className="ml-2">
-              <Ionicons name="close-circle" size={20} color="#6B7280" />
+              <Ionicons
+                name="close-circle"
+                size={20}
+                color={colors.textMuted}
+              />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {/* Horizontal List of People */}
+      {/* Horizontal List of Real Users */}
       <View className="py-2">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
-          {mockUsers.map((user) => (
-            <TouchableOpacity key={user.id} className="items-center mr-4">
-              <Image
-                source={{ uri: user.avatar }}
-                className="w-20 h-20 rounded-full border-2 border-blue-400"
-              />
-              <Text className="text-sm text-gray-700 mt-1" numberOfLines={1}>
-                {user.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {usersLoading ? (
+          <View className="flex-row items-center justify-center py-4">
+            <LottieView
+              source={require("@/assets/animations/loading-loader.json")}
+              autoPlay
+              loop
+              className="w-8 h-8"
+            />
+            <Text style={{ color: colors.textMuted }} className="ml-2">
+              Loading users...
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="px-4"
+          >
+            {realUsers.map((user) => (
+              <TouchableOpacity
+                key={user._id}
+                className="items-center mr-4"
+                onPress={() => handleUserPress(user)}
+              >
+                {user.profilePicture ? (
+                  <Image
+                    source={{ uri: user.profilePicture }}
+                    className="w-20 h-20 rounded-full border-2"
+                    style={{ borderColor: colors.blue }}
+                  />
+                ) : (
+                  <View
+                    className="w-20 h-20 rounded-full border-2 items-center justify-center"
+                    style={{
+                      borderColor: colors.blue,
+                      backgroundColor: colors.surface,
+                    }}
+                  >
+                    <Text
+                      className="font-semibold text-lg"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {getInitials(user.firstName, user.lastName)}
+                    </Text>
+                  </View>
+                )}
+                <Text
+                  className="text-sm mt-1"
+                  numberOfLines={1}
+                  style={{ color: colors.textSecondary }}
+                >
+                  {user.firstName}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
       {/* Messages Content */}
-      <View className="flex-1">
-        {renderContent()}
-      </View>
+      <View className="flex-1">{renderContent()}</View>
     </View>
   );
 }
