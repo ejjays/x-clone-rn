@@ -115,7 +115,7 @@ export default function CustomChannelList({
 
   const renderChannelItem = ({ item }: { item: any }) => (
     <TouchableOpacity
-      className="flex-row items-center p-4 border-b border-gray-100"
+      className="flex-row items-center p-4"
       onPress={() => router.push(`/chat/${item.id}`)}
     >
       <View className="relative mr-4">
