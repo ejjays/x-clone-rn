@@ -57,9 +57,6 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
         } finally {
           setIsConnecting(false);
         }
-      } else {
-        setIsConnected(true);
-        setIsConnecting(false);
       }
     }
   }, [user, streamToken, isConnected, isConnecting]);
@@ -80,8 +77,7 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
     } catch (error) {
       console.error("❌ Failed to refresh channels:", error);
     }
-    // 👇 THIS IS THE FIX. I changed `client` to `chatClient` here.
-  }, [chatClient, user]);
+  }, [chatClient, user]); // Corrected dependency
 
   // Function to create a new channel
   const createChannel = async (memberId: string, name?: string) => {

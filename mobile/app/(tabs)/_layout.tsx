@@ -1,12 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo";
-import {
-  Bell,
-  Home,
-  Menu,
-  Search,
-  Mail,
-  TvMinimalPlay,
-} from "lucide-react-native";
+import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { Redirect, usePathname, withLayoutContext, router } from "expo-router";
 import { useEffect } from "react";
@@ -32,14 +25,8 @@ export const MaterialTopTabs = withLayoutContext(Navigator);
 
 const HEADER_HEIGHT = 35;
 const TAB_BAR_HEIGHT = 50;
-const TAB_ROUTES = [
-  "/",
-  "/search",
-  "/videos",
-  "/notifications",
-  "/messages",
-  "/profile",
-];
+// Updated TAB_ROUTES - removed "/messages"
+const TAB_ROUTES = ["/", "/search", "/videos", "/notifications", "/profile"];
 const NUM_TABS = TAB_ROUTES.length;
 
 const TabsLayout = () => {
@@ -51,7 +38,7 @@ const TabsLayout = () => {
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
 
-  // 🔥 ADD THIS: Create a shared value for indicator position
+  // Create a shared value for indicator position
   const indicatorX = useSharedValue(0);
 
   const isHomeScreen = pathname === "/";
@@ -64,7 +51,7 @@ const TabsLayout = () => {
     tabBarHeight.value = isProfileScreen ? 0 : TAB_BAR_HEIGHT;
   }, [isHomeScreen, isProfileScreen]);
 
-  // 🔥 ADD THIS: Update indicator position when pathname changes
+  // Update indicator position when pathname changes
   useEffect(() => {
     const activeIndex = TAB_ROUTES.indexOf(pathname);
     if (activeIndex !== -1) {
@@ -86,17 +73,21 @@ const TabsLayout = () => {
     overflow: "hidden",
   }));
 
-  // 🔥 REPLACE THIS: Remove the withTiming from here
   const animatedIndicatorStyle = useAnimatedStyle(() => {
     return {
       width: `${100 / NUM_TABS}%`,
       transform: [
         {
-          translateX: indicatorX.value, // Just use the shared value
+          translateX: indicatorX.value,
         },
       ],
     };
   });
+
+  // Handle message icon press - navigate to full screen messages
+  const handleMessagePress = () => {
+    router.push("/messages");
+  };
 
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
@@ -126,7 +117,10 @@ const TabsLayout = () => {
               >
                 <Search size={28} color="black" />
               </TouchableOpacity>
-              <TouchableOpacity className="p-2.5 rounded-full">
+              <TouchableOpacity
+                className="p-2.5 rounded-full"
+                onPress={handleMessagePress}
+              >
                 <Ionicons name="chatbubble-ellipses" size={28} color="black" />
               </TouchableOpacity>
             </View>
@@ -209,22 +203,6 @@ const TabsLayout = () => {
 
                     <TouchableOpacity
                       className="flex-1 items-center justify-center h-full"
-                      onPress={() => props.navigation.navigate("messages")}
-                    >
-                      <Mail
-                        size={26}
-                        color={
-                          isVideosScreen
-                            ? "black"
-                            : pathname === "/messages"
-                              ? "#2563eb"
-                              : "black"
-                        }
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
                       onPress={() => props.navigation.navigate("profile")}
                     >
                       <Menu
@@ -248,7 +226,6 @@ const TabsLayout = () => {
             <MaterialTopTabs.Screen name="search" />
             <MaterialTopTabs.Screen name="videos" />
             <MaterialTopTabs.Screen name="notifications" />
-            <MaterialTopTabs.Screen name="messages" />
             <MaterialTopTabs.Screen name="profile" />
           </MaterialTopTabs>
         </View>

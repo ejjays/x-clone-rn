@@ -1,4 +1,3 @@
-// mobile/app/_layout.tsx
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack, router } from "expo-router";
@@ -26,7 +25,6 @@ const InitialLayout = () => {
     }
   }, [isLoaded, isSignedIn]);
 
-
   if (!isLoaded || !client) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -41,10 +39,16 @@ const InitialLayout = () => {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="create-post" options={{ presentation: "modal" }} />
+          <Stack.Screen
+            name="create-post"
+            options={{ presentation: "modal" }}
+          />
           <Stack.Screen name="post/[postId]" />
+          <Stack.Screen name="messages" />
           <Stack.Screen name="chat/[channelId]" />
           <Stack.Screen name="new-message" />
+          <Stack.Screen name="search-posts" />
+          <Stack.Screen name="sso-callback" />
         </Stack>
       </Chat>
     </OverlayProvider>
@@ -62,7 +66,10 @@ export default function RootLayout() {
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
-          <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+          <ClerkProvider
+            publishableKey={publishableKey}
+            tokenCache={tokenCache}
+          >
             <StreamChatProvider>
               <InitialLayout />
             </StreamChatProvider>
