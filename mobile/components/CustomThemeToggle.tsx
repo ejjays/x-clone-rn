@@ -81,11 +81,9 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
       // Only toggle theme when wave animation is completely done
       onToggle();
       
-      // Small delay to let the theme change settle
-      setTimeout(() => {
-        setIsAnimating(false);
-        onWaveAnimationComplete?.();
-      }, 100);
+      // Removed the setTimeout to prevent flickering
+      setIsAnimating(false);
+      onWaveAnimationComplete?.();
     });
   };
 
@@ -136,7 +134,7 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
             left: 0,
             right: 0,
             bottom: 0,
-            zIndex: 9998,
+            zIndex: 0, // Changed zIndex to 1
             pointerEvents: "none",
           }}
         >
