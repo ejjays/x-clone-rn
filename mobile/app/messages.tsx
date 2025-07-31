@@ -8,7 +8,6 @@ import {
   ScrollView,
   Image,
   useColorScheme,
-  Animated,
   StatusBar,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
@@ -16,7 +15,7 @@ import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
 import CustomThemeToggle from "@/components/CustomThemeToggle";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import LottieView from "lottie-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAllUsers } from "@/hooks/useAllUsers";
@@ -32,9 +31,6 @@ export default function MessagesScreen() {
   const systemColorScheme = useColorScheme();
   const { users: allUsers, isLoading: usersLoading } = useAllUsers();
   const { currentUser } = useCurrentUser();
-
-  // Animated value for smooth background transition during wave
-  const backgroundOpacity = useRef(new Animated.Value(1)).current;
 
   // Filter out current user and get real users
   const realUsers =
@@ -68,22 +64,12 @@ export default function MessagesScreen() {
 
   const handleWaveAnimationStart = () => {
     setIsWaveAnimating(true);
-    // Slightly fade the background during wave animation for smoother transition
-    Animated.timing(backgroundOpacity, {
-      toValue: 0.95,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
+    // Remove the opacity animation
   };
 
   const handleWaveAnimationComplete = () => {
     setIsWaveAnimating(false);
-    // Restore full opacity after wave completes
-    Animated.timing(backgroundOpacity, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
+    // Remove the opacity animation
   };
 
   const handleUserPress = (user) => {
@@ -174,12 +160,11 @@ export default function MessagesScreen() {
   return (
     <View style={{ flex: 1, position: "relative" }}>
       {/* Main Content with Animated Background */}
-      <Animated.View
+      <View
         className="flex-1"
         style={{
           paddingTop: insets.top,
-          backgroundColor: colors.background,
-          opacity: backgroundOpacity,
+          backgroundColor: colors.background, // This will change instantly when isDarkMode changes
         }}
       >
         {/* Header with Custom Dark Mode Toggle */}
@@ -317,7 +302,7 @@ export default function MessagesScreen() {
 
         {/* Messages Content */}
         <View className="flex-1">{renderContent()}</View>
-      </Animated.View>
+      </View>
     </View>
   );
 }
