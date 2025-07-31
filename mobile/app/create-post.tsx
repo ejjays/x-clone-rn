@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, Fontisto } from "@expo/vector-icons";
 import {
-  View,
+  View,  
   Text,
   TouchableOpacity,
   Image,
