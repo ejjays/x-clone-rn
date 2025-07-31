@@ -89,12 +89,8 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
     ]).start(() => {
       setIsAnimating(false);
       onWaveAnimationComplete?.();
+      onToggle(); // Move onToggle here!
     });
-
-    // Trigger theme change after a short delay for better UX
-    setTimeout(() => {
-      onToggle();
-    }, 50);
   };
 
   // Animated values for the slider position

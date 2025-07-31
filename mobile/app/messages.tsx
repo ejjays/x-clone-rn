@@ -9,6 +9,7 @@ import {
   Image,
   useColorScheme,
   Animated,
+  StatusBar,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
@@ -43,6 +44,11 @@ export default function MessagesScreen() {
   useEffect(() => {
     setIsDarkMode(systemColorScheme === "dark");
   }, [systemColorScheme]);
+
+  // Update status bar style based on dark mode state
+  useEffect(() => {
+    StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content");
+  }, [isDarkMode]);
 
   const handleNewMessage = () => {
     router.push("/new-message");
