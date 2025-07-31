@@ -17,7 +17,6 @@ interface CustomThemeToggleProps {
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Calculate the maximum radius needed to cover the entire screen from any corner
 const MAX_RADIUS = Math.sqrt(
   SCREEN_WIDTH * SCREEN_WIDTH + SCREEN_HEIGHT * SCREEN_HEIGHT
 );
@@ -31,7 +30,6 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
   const animatedValue = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
   const scaleValue = useRef(new Animated.Value(1)).current;
   const waveScale = useRef(new Animated.Value(0)).current;
-  const waveOpacity = useRef(new Animated.Value(0)).current;
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [wavePosition, setWavePosition] = useState({ x: 0, y: 0 });
@@ -58,7 +56,6 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
 
     // Reset wave values
     waveScale.setValue(0);
-    waveOpacity.setValue(1);
 
     // Press animation
     Animated.sequence([
@@ -74,31 +71,22 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
       }),
     ]).start();
 
-    // Start wave expansion first
+    // Wave animation - slower and smoother
     Animated.timing(waveScale, {
       toValue: 1,
-      duration: 400,
-      easing: Easing.out(Easing.cubic),
+      duration: 600, // Increased duration for smoother animation
+      easing: Easing.out(Easing.quad), // Smoother easing
       useNativeDriver: true,
-    }).start();
-
-    // Toggle theme halfway through the wave expansion
-    setTimeout(() => {
+    }).start(() => {
+      // Only toggle theme when wave animation is completely done
       onToggle();
-    }, 200);
-
-    // Fade out wave after theme change
-    setTimeout(() => {
-      Animated.timing(waveOpacity, {
-        toValue: 0,
-        duration: 200,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }).start(() => {
+      
+      // Small delay to let the theme change settle
+      setTimeout(() => {
         setIsAnimating(false);
         onWaveAnimationComplete?.();
-      });
-    }, 200);
+      }, 100);
+    });
   };
 
   // Animated values for the slider position
@@ -131,10 +119,10 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
     outputRange: [0.6, 1],
   });
 
-  // Wave scale animation
+  // Wave scale animation - covers entire screen smoothly
   const waveScaleInterpolated = waveScale.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, (MAX_RADIUS * 2) / 50], // Scale to cover entire screen
+    outputRange: [0, (MAX_RADIUS * 2.2) / 50], // Slightly larger for complete coverage
   });
 
   return (
@@ -162,7 +150,8 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
               left: wavePosition.x - 25,
               top: wavePosition.y - 25,
               transform: [{ scale: waveScaleInterpolated }],
-              opacity: waveOpacity,
+              // Keep wave solid throughout the animation - no opacity changes
+              opacity: 1,
             }}
           />
         </View>
