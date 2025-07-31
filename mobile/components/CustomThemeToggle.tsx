@@ -31,24 +31,30 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
   const animatedValue = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
   const scaleValue = useRef(new Animated.Value(1)).current;
   const waveScale = useRef(new Animated.Value(0)).current;
-  const waveOpacity = useRef(new Animated.Value(0)).current;
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [wavePosition, setWavePosition] = useState({ x: 0, y: 0 });
+  const [targetTheme, setTargetTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    Animated.timing(animatedValue, {
-      toValue: isDarkMode ? 1 : 0,
-      duration: 300,
-      easing: Easing.bezier(0.4, 0, 0.2, 1),
-      useNativeDriver: false,
-    }).start();
-  }, [isDarkMode]);
+    if (!isAnimating) {
+      Animated.timing(animatedValue, {
+        toValue: isDarkMode ? 1 : 0,
+        duration: 300,
+        easing: Easing.bezier(0.4, 0, 0.2, 1),
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isDarkMode, isAnimating]);
 
   const handlePress = (event: any) => {
     // Get the touch position relative to the screen
     const { pageX, pageY } = event.nativeEvent;
     setWavePosition({ x: pageX, y: pageY });
+
+    // Determine target theme (opposite of current)
+    const newTargetTheme = isDarkMode ? 'light' : 'dark';
+    setTargetTheme(newTargetTheme);
 
     // Start wave animation
     setIsAnimating(true);
@@ -56,7 +62,6 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
 
     // Reset wave values
     waveScale.setValue(0);
-    waveOpacity.setValue(1);
 
     // Press animation
     Animated.sequence([
@@ -72,24 +77,21 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
       }),
     ]).start();
 
-    // Wave animation
-    Animated.parallel([
-      Animated.timing(waveScale, {
-        toValue: 1,
-        duration: 800,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(waveOpacity, {
-        toValue: 0,
-        duration: 800,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setIsAnimating(false);
-      onWaveAnimationComplete?.();
-      onToggle(); // Move onToggle here!
+    // Wave animation - starts immediately and covers the screen
+    Animated.timing(waveScale, {
+      toValue: 1,
+      duration: 600, // Reduced duration for snappier feel
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start(() => {
+      // Toggle theme when wave animation is complete
+      onToggle();
+      
+      // Small delay to let the theme change take effect
+      setTimeout(() => {
+        setIsAnimating(false);
+        onWaveAnimationComplete?.();
+      }, 50);
     });
   };
 
@@ -123,18 +125,24 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
     outputRange: [0.6, 1],
   });
 
-  // Wave scale animation
+  // Wave scale animation - covers entire screen
   const waveScaleInterpolated = waveScale.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, (MAX_RADIUS * 2) / 100], // Scale to cover entire screen
+    outputRange: [0, (MAX_RADIUS * 2.5) / 100], // Slightly larger to ensure full coverage
   });
 
-  // Determine wave color based on target theme (opposite of current)
-  const waveColor = isDarkMode ? "#ffffff" : "#111827";
+  // Wave color - the new theme's background color
+  const getWaveColor = () => {
+    if (targetTheme === 'dark') {
+      return '#111827'; // Dark theme background
+    } else {
+      return '#ffffff'; // Light theme background
+    }
+  };
 
   return (
     <>
-      {/* Full Screen Wave Overlay */}
+      {/* Full Screen Wave Overlay - This becomes the new background */}
       {isAnimating && (
         <View
           style={{
@@ -153,11 +161,12 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
               width: 100,
               height: 100,
               borderRadius: 50,
-              backgroundColor: waveColor,
+              backgroundColor: getWaveColor(),
               left: wavePosition.x - 50,
               top: wavePosition.y - 50,
-              opacity: waveOpacity,
               transform: [{ scale: waveScaleInterpolated }],
+              // Remove opacity animation - keep it solid
+              opacity: 1,
             }}
           />
         </View>
@@ -169,6 +178,7 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
           onPress={handlePress}
           activeOpacity={0.8}
           className="relative"
+          disabled={isAnimating} // Prevent multiple taps during animation
         >
           {/* Main toggle background */}
           <Animated.View
