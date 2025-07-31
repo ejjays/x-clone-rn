@@ -69,7 +69,7 @@ const PostCard = ({
       Image.getSize(
         post.image,
         (width, height) => {
-          const calculatedHeight = (screenWidth / width) * height;
+          const calculatedHeight = Math.round((screenWidth / width) * height);
           setImageHeight(calculatedHeight);
           setIsMediaLoading(false);
         },
@@ -81,7 +81,7 @@ const PostCard = ({
       );
     } else if (post.video) {
       setIsMediaLoading(true);
-      setVideoHeight(screenWidth * 0.5);
+      setVideoHeight(Math.round(screenWidth * 0.5));
     } else {
       setImageHeight(null);
       setVideoHeight(null);
@@ -96,7 +96,7 @@ const PostCard = ({
       playbackStatus.naturalSize
     ) {
       const { width, height } = playbackStatus.naturalSize;
-      const calculatedHeight = (screenWidth / width) * height;
+      const calculatedHeight = Math.round((screenWidth / width) * height);
       setVideoHeight(calculatedHeight);
     }
     setIsMediaLoading(false);

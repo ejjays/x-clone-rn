@@ -7,7 +7,7 @@ const LikeEmoji: React.FC<SvgProps> = (props) => (
     <Defs>
       <LinearGradient id="a" x1="47.061%" y1="-3.394%" x2="47.061%" y2="96.606%">
         <Stop offset="0" stopColor="#37aeff"/>
-        <Stop offset=".05" stopColor="#37aeff"/>
+        <Stop offset={0.05} stopColor="#37aeff"/>
         <Stop offset="1" stopColor="#1861f7"/>
       </LinearGradient>
     </Defs>
