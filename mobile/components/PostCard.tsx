@@ -246,7 +246,7 @@ const PostCard = ({
         {/* Reactions and Comments Count */}
         {((post.reactions && post.reactions.length > 0) ||
           (post.comments && post.comments.length > 0)) && (
-          <View className="flex-row justify-between items-center px-4 py-0.5">
+          <View className="flex-row justify-between items-center px-4 py-1">
             {post.reactions && post.reactions.length > 0 ? (
               <View className="flex-row items-center">
                 <View className="flex-row">
