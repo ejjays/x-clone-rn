@@ -111,7 +111,7 @@ const TabsLayout = () => {
 
         <Animated.View style={animatedHeaderStyle}>
           <View className="flex-row justify-between items-center px-3 h-full" style={{ backgroundColor: colors.background }}>
-            <Text className="text-4xl font-bold" style={{ color: colors.blue }}>pcmi</Text>
+            <Text className="text-4xl font-extrabold ml-1" style={{ color: 'white' }}>pcmi</Text>
             <View className="flex-row space-x-2">
               <TouchableOpacity
                 className="p-2.5 rounded-full"

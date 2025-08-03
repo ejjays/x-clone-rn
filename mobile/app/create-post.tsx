@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Video, ResizeMode } from "expo-av";
 import { useEffect, useState, useRef } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 const CreatePostScreen = () => { 
   const { currentUser } = useCurrentUser();
@@ -32,6 +33,7 @@ const CreatePostScreen = () => {
   } = useCreatePost();
   const insets = useSafeAreaInsets();
   const local = useLocalSearchParams();
+  const { colors } = useTheme();
 
   const placeholderTexts = [
     "What are you grateful for? ✨",
@@ -90,26 +92,27 @@ const CreatePostScreen = () => {
     (!content.trim() && !selectedMedia) || isCreating;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+        <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200" style={{ borderColor: colors.border }}>
           <View className="flex-row items-center">
             <TouchableOpacity onPress={() => router.back()} className="p-2">
-              <Ionicons name="chevron-back-sharp" size={24} color="#1C1E21" />
+              <Ionicons name="chevron-back-sharp" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text className="text-xl font-bold text-gray-900 ml-2">
+            <Text className="text-xl font-bold ml-2" style={{ color: colors.text }}>
               Create post
             </Text>
           </View>
           <TouchableOpacity
             onPress={handleCreatePost}
             disabled={isPostButtonDisabled}
-            className={`px-5 py-2 rounded-full ${isPostButtonDisabled ? "bg-blue-300" : "bg-blue-500"}`}
+            style={{ backgroundColor: isPostButtonDisabled ? colors.border : "#2962FF" }} // Use darker blue
+            className="px-5 py-2 rounded-full"
           >
             {isCreating ? (
               <ActivityIndicator size="small" color="white" />
@@ -128,7 +131,7 @@ const CreatePostScreen = () => {
                 className="w-12 h-12 rounded-full mr-3"
               />
               <View>
-                <Text className="font-bold text-base text-gray-900">
+                <Text className="font-bold text-base" style={{ color: colors.text }}>
                   {currentUser?.firstName} {currentUser?.lastName}
                 </Text>
                 <Text className="text-gray-500">@{currentUser?.username}</Text>
@@ -139,17 +142,18 @@ const CreatePostScreen = () => {
             <Animated.View style={{ opacity: fadeAnim }}>
               <TextInput
                 placeholder={placeholderTexts[placeholderIndex]}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
                 value={content}
                 onChangeText={setContent}
                 multiline
                 autoFocus={shouldAutoFocus}
-                className="text-xl leading-7 text-gray-900"
+                className="text-xl leading-7"
                 style={{
                   minHeight: 120,
                   maxHeight: 400,
                   paddingTop: 10,
                   paddingBottom: 10,
+                  color: colors.text
                 }}
               />
             </Animated.View>
@@ -185,21 +189,20 @@ const CreatePostScreen = () => {
         </ScrollView>
 
         {/* Footer Actions */}
-        <View className="border-t border-gray-200 px-4 py-3">
+        <View className="border-t border-gray-200 px-4 py-3" style={{ borderColor: colors.border }}>
           <TouchableOpacity
             onPress={pickMedia}
-            className="flex-row items-center bg-gray-100 p-3 rounded-lg mb-3"
+            className="flex-row items-center p-3 rounded-lg mb-3" style={{ backgroundColor: colors.surface }}
           >
             <Fontisto name="photograph" size={24} color="#4CAF50" />
-            <Text className="ml-3 font-semibold text-base text-gray-800">
-              Photos/videos
-            </Text>
+            <Text className="ml-3 font-semibold text-base" style={{color: colors.text}}>Photos/videos</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={handleCreatePost}
             disabled={isPostButtonDisabled}
-            className={`w-full py-3 rounded-lg items-center ${isPostButtonDisabled ? "bg-blue-300" : "bg-blue-500"}`}
+            style={{ backgroundColor: isPostButtonDisabled ? colors.border : "#2962FF" }} // Use darker blue
+            className="w-full py-3 rounded-lg items-center"
           >
             {isCreating ? (
               <ActivityIndicator size="small" color="white" />

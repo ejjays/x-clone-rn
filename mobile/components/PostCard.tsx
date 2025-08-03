@@ -17,7 +17,7 @@ import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
 import { Video, ResizeMode } from "expo-av";
-import { reactionComponents, reactionTextColor } from "@/utils/reactions";
+import { reactionComponents, reactionTextColor, reactionLabels } from "@/utils/reactions";
 import { FontAwesome } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -149,20 +149,55 @@ const PostCard = ({
   };
 
   const ReactionButton = () => {
-    const reactionLabel =
-      currentUserReaction?.type === "celebrate"
-        ? "Yeyy"
-        : currentUserReaction?.type || "Like";
+    const reactionLabel = reactionLabels[currentUserReaction?.type] || "Like";
+
+    let textColor;
+
+    switch (currentUserReaction?.type) {
+      case "love":
+        textColor = "#E91E63";
+        break;
+      case "celebrate":
+        textColor = "#FFC857";
+        break;
+      case "haha":
+      case "wow":
+        textColor = "#FFDA63"; // Light Dark Yellow
+        break;
+      case "sad":
+        textColor = "#D4A373"; // Light Dark Yellow
+        break;
+      case "angry":
+        /**
+         * @description the Unknown method
+         *
+         * @function Unknown
+         * @signature N/A
+         * @modifiers N/A
+         *
+         * @params:
+         *   - None
+         * @returns {Type} - void
+         *
+         * @file mobile/components/PostCard.tsx
+         * @date 8/3/2025
+         * @author Unknown
+         * @version 1.0.0
+         * @license MIT
+         */
+        textColor = "#FF6347";
+        break;
+      default:
+        textColor = colors.textSecondary;
+        break;
+    }
+
     return (
       <View className="flex-row items-center">
         <LikeIcon userReaction={currentUserReaction?.type} size={22} />
         <Text
-          className={`font-semibold capitalize ml-2 ${
-            currentUserReaction?.type
-              ? reactionTextColor[currentUserReaction.type]
-              : "text-gray-500"
-          }`}
-          style={{ color: currentUserReaction?.type ? undefined : colors.textSecondary }}
+          className="font-semibold capitalize ml-2"
+          style={{ color: textColor }}
         >
           {reactionLabel}
         </Text>

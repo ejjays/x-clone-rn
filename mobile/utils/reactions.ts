@@ -24,9 +24,9 @@ export const reactionComponents: Record<
 export const reactionTextColor: Record<string, string> = {
   like: "text-blue-500",
   love: "text-red-500",
-  celebrate: "text-yellow-500",
-  wow: "text-yellow-500",
-  haha: "text-yellow-500",
+  celebrate: "text-yellow-400",
+  wow: "text-yellow-400",
+  haha: "text-yellow-400",
   sad: "text-blue-400",
   angry: "text-red-600",
 };
@@ -38,7 +38,7 @@ export const getReactionComponent = (reactionType: ReactionName) => {
 export const reactionLabels: Record<ReactionName, string> = {
   like: "Like",
   love: "Love",
-  celebrate: "Celebrate",
+  celebrate: "Yeyy",
   wow: "Wow",
   haha: "Haha",
   sad: "Sad",
