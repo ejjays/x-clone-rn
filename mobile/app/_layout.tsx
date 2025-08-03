@@ -1,4 +1,4 @@
-import  { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack, router } from "expo-router";
 import "../global.css";
@@ -13,7 +13,7 @@ import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "@/context/ThemeContext"; // Import ThemeProvider
 
-const queryClient = new QueryClient(); 
+const queryClient = new QueryClient();
 
 const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
@@ -38,12 +38,10 @@ const InitialLayout = () => {
 
   return (
     <OverlayProvider value={{ style: streamChatTheme }}>
+      <StatusBar style="dark" />
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
       {client ? (
         <Chat client={client}>
-          <View>
-            <StatusBar style="dark" />
-          </View>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
@@ -60,23 +58,20 @@ const InitialLayout = () => {
           </Stack>
         </Chat>
       ) : (
-        <View>
-          <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="create-post"
-              options={{ presentation: "modal" }}
-            />
-            <Stack.Screen name="post/[postId]" />
-            <Stack.Screen name="messages" />
-            <Stack.Screen name="chat/[channelId]" />
-            <Stack.Screen name="new-message" />
-            <Stack.Screen name="search-posts" />
-            <Stack.Screen name="sso-callback" />
-          </Stack>
-        </View>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="create-post"
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen name="post/[postId]" />
+          <Stack.Screen name="messages" />
+          <Stack.Screen name="chat/[channelId]" />
+          <Stack.Screen name="new-message" />
+          <Stack.Screen name="search-posts" />
+          <Stack.Screen name="sso-callback" />
+        </Stack>
       )}
     </OverlayProvider>
   );
@@ -98,7 +93,9 @@ export default function RootLayout() {
             tokenCache={tokenCache}
           >
             <StreamChatProvider>
-              <ThemeProvider> {/* Wrap with ThemeProvider */}
+              <ThemeProvider>
+                {" "}
+                {/* Wrap with ThemeProvider */}
                 <InitialLayout />
               </ThemeProvider>
             </StreamChatProvider>
