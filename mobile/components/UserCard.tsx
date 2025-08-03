@@ -2,6 +2,7 @@ import type { User } from "@/types";
 import { MoreHorizontal } from "lucide-react-native";
 import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 interface UserCardProps {
   user: User;
@@ -18,6 +19,19 @@ const UserCard = ({
   isFollowing,
   showMessageButton = true,
 }: UserCardProps) => {
+  const { isDarkMode } = useTheme(); // Use useTheme hook
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
+
   const handleFollow = () => {
     if (onFollow) {
       onFollow(user._id);
@@ -58,8 +72,9 @@ const UserCard = ({
 
   return (
     <TouchableOpacity
-      className="flex-row items-center p-4 bg-white"
+      className="flex-row items-center p-4"
       activeOpacity={0.7}
+      style={{ backgroundColor: colors.background }} // Apply background color
     >
       {/* Profile Picture */}
       <Image
@@ -72,12 +87,12 @@ const UserCard = ({
 
       {/* User Info */}
       <View className="flex-1">
-        <Text className="text-lg font-semibold text-gray-900">
+        <Text className="text-lg font-semibold" style={{ color: colors.text }}>
           {user.firstName} {user.lastName}
         </Text>
-        <Text className="text-gray-500 text-sm">@{user.username}</Text>
+        <Text className="text-sm" style={{ color: colors.textSecondary }}>@{user.username}</Text>
         {user.bio && (
-          <Text className="text-gray-600 text-sm mt-1" numberOfLines={2}>
+          <Text className="text-sm mt-1" numberOfLines={2} style={{ color: colors.textSecondary }}>
             {user.bio}
           </Text>
         )}
@@ -90,7 +105,7 @@ const UserCard = ({
             className="w-12 h-12 rounded-full items-center justify-center"
             onPress={handleMessage}
           >
-            <Ionicons name="chatbubble-ellipses" size={29} color="#3a3a3a" />
+            <Ionicons name="chatbubble-ellipses" size={29} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
 
@@ -98,7 +113,7 @@ const UserCard = ({
           className="w-8 h-8 items-center justify-center"
           onPress={handleMoreOptions}
         >
-          <MoreHorizontal size={20} color="#65676B" />
+          <MoreHorizontal size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

@@ -4,6 +4,7 @@ import type { Post } from "@/types";
 import { View, Text, TouchableOpacity } from "react-native";
 import PostCard from "./PostCard";
 import PostCardSkeleton from "./PostCardSkeleton";
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 interface PostsListProps {
   username?: string;
@@ -26,10 +27,22 @@ const PostsList = ({
     deletePost,
     getCurrentUserReaction,
   } = usePosts(username);
+  const { isDarkMode } = useTheme(); // Use useTheme hook
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
 
   if (isPostsLoading || isUserLoading) {
     return (
-      <View>
+      <View style={{ backgroundColor: colors.background }}>
         {[...Array(3)].map((_, index) => (
           <PostCardSkeleton key={index} />
         ))}
@@ -39,9 +52,9 @@ const PostsList = ({
 
   if (error) {
     return (
-      <View className="p-8 items-center">
-        <Text className="text-gray-500 mb-4">Failed to load posts</Text>
-        <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded-lg" onPress={() => refetch()}>
+      <View className="p-8 items-center" style={{ backgroundColor: colors.background }}>
+        <Text className="mb-4" style={{ color: colors.textMuted }}>Failed to load posts</Text>
+        <TouchableOpacity className="px-4 py-2 rounded-lg" style={{ backgroundColor: colors.blue }} onPress={() => refetch()}>
           <Text className="text-white font-semibold">Retry</Text>
         </TouchableOpacity>
       </View>
@@ -54,14 +67,14 @@ const PostsList = ({
 
   if (posts.length === 0) {
     return (
-      <View className="p-8 items-center">
-        <Text className="text-gray-500">No posts yet</Text>
+      <View className="p-8 items-center" style={{ backgroundColor: colors.background }}>
+        <Text style={{ color: colors.textMuted }}>No posts yet</Text>
       </View>
     );
   }
 
   return (
-    <View className="bg-white">
+    <View style={{ backgroundColor: colors.background }}>
       {posts.map((post: Post, index: number) => (
         <View key={post._id}>
           <PostCard
@@ -73,7 +86,7 @@ const PostsList = ({
             currentUserReaction={getCurrentUserReaction(post.reactions, currentUser)}
             onOpenPostMenu={onOpenPostMenu} // Pass the new prop down to PostCard
           />
-          {index < posts.length - 1 && <View className="h-1 bg-gray-200" />}
+          {index < posts.length - 1 && <View className="h-1" style={{ backgroundColor: colors.border }} />}
         </View>
       ))}
     </View>

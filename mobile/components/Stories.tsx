@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-expo";
-import { Plus } from "lucide-react-native"; // Replaced Feather
+import { Plus } from "lucide-react-native";
 import {
   View,
   Text,
@@ -8,16 +8,29 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 const Stories = () => {
   const { user } = useUser();
+  const { isDarkMode } = useTheme(); // Use useTheme hook
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
 
   const stories = [
     {
       id: 0,
       username: "Create story",
-      avatar: user?.imageUrl || "https://randomuser.me/api/portraits/men/0.jpg", // Use user's avatar or a placeholder
-      storyImage: user?.imageUrl || "https://picsum.photos/seed/0/200/300", // Use user's avatar or a placeholder for story background
+      avatar: user?.imageUrl || "https://randomuser.me/api/portraits/men/0.jpg",
+      storyImage: user?.imageUrl || "https://picsum.photos/seed/0/200/300",
     },
     {
       id: 1,
@@ -82,7 +95,7 @@ const Stories = () => {
   ];
 
   return (
-    <View className="bg-white py-3 border-y border-gray-200">
+    <View className="py-3 border-y" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -99,9 +112,9 @@ const Stories = () => {
               className="w-full h-full"
               resizeMode="cover"
             />
-            <View className="absolute top-2 left-2 border-2 border-blue-500 rounded-full">
+            <View className="absolute top-2 left-2 border-2 rounded-full" style={{ borderColor: item.id === 0 ? colors.blue : colors.blue }}>
               {item.id === 0 ? (
-                <View className="w-9 h-9 rounded-full bg-blue-500 items-center justify-center">
+                <View className="w-9 h-9 rounded-full items-center justify-center" style={{ backgroundColor: colors.blue }}>
                   <Plus size={24} color="white" />
                 </View>
               ) : (

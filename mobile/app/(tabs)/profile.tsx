@@ -4,11 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { usePosts } from "@/hooks/usePosts";
 import { useProfile } from "@/hooks/useProfile";
 import { useSignOut } from "@/hooks/useSignOut";
-import {
-  LogOut,
-  MapPin,
-  UserX,
-} from "lucide-react-native";
+import { LogOut, MapPin, UserX } from "lucide-react-native";
 import { format } from "date-fns";
 import {
   View,
@@ -22,11 +18,24 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
+import { useTheme } from "@/context/ThemeContext";
 
 const ProfileScreens = () => {
   const { currentUser, isLoading } = useCurrentUser();
   const insets = useSafeAreaInsets();
   const { handleSignOut } = useSignOut();
+  const { isDarkMode } = useTheme(); // Use useTheme hook
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
 
   const {
     posts: userPosts,
@@ -55,46 +64,72 @@ const ProfileScreens = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-gray-50 items-center justify-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-600 mt-2">Loading profile...</Text>
+      <View
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: colors.background }}
+      >
+        <ActivityIndicator size="large" color={colors.blue} />
+        <Text className="mt-2" style={{ color: colors.textMuted }}>
+          Loading profile...
+        </Text>
       </View>
     );
   }
 
   if (!currentUser) {
     return (
-      <View className="flex-1 bg-gray-50 items-center justify-center px-8">
-        <View className="w-20 h-20 bg-gray-200 rounded-full items-center justify-center mb-6">
-          <UserX size={32} color="#4B5563" />
+      <View
+        className="flex-1 items-center justify-center px-8"
+        style={{ backgroundColor: colors.background }}
+      >
+        <View
+          className="w-20 h-20 rounded-full items-center justify-center mb-6"
+          style={{ backgroundColor: colors.surface }}
+        >
+          <UserX size={32} color={colors.textMuted} />
         </View>
-        <Text className="text-xl font-bold text-gray-800 mb-3">
+        <Text className="text-xl font-bold mb-3" style={{ color: colors.text }}>
           Profile not available
         </Text>
-        <Text className="text-gray-600 text-center text-base leading-6 mb-6">
+        <Text
+          className="text-center text-base leading-6 mb-6"
+          style={{ color: colors.textMuted }}
+        >
           We couldn't load your profile. Please check your connection and try
           again.
         </Text>
         <TouchableOpacity
-          className="bg-blue-600 px-6 py-3 rounded-full shadow-md"
+          className="px-6 py-3 rounded-full shadow-md"
           onPress={() => router.push("/(tabs)/")}
+          style={{ backgroundColor: colors.blue }}
         >
-          <Text className="text-white font-semibold">Go to Home</Text>
+          <Text className="font-semibold text-white">Go to Home</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row justify-between items-center px-4 py-3 bg-white border-b border-gray-200">
+    <View
+      className="flex-1"
+      style={{ paddingTop: insets.top, backgroundColor: colors.background }}
+    >
+      <View
+        className="flex-row justify-between items-center px-4 py-3 border-b"
+        style={{
+          backgroundColor: colors.background,
+          borderColor: colors.border,
+        }}
+      >
         <TouchableOpacity
           className="w-10 h-10 items-center justify-center"
           onPress={handleBackPress}
         >
-          <Ionicons name="chevron-back" size={24} color="#333" />
+          <Ionicons name="chevron-back" size={24} color={colors.icon} />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-800">Profile</Text>
+        <Text className="text-xl font-bold" style={{ color: colors.text }}>
+          Profile
+        </Text>
         <TouchableOpacity
           className="w-10 h-10 items-center justify-center"
           onPress={handleSignOut}
@@ -114,8 +149,8 @@ const ProfileScreens = () => {
               refetchProfile();
               refetchPosts();
             }}
-            colors={["#2563EB"]}
-            tintColor="#2563EB"
+            colors={[colors.blue]}
+            tintColor={colors.blue}
           />
         }
       >
@@ -138,47 +173,78 @@ const ProfileScreens = () => {
                     currentUser.profilePicture ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.firstName + " " + currentUser.lastName)}&background=2563EB&color=fff&size=120`,
                 }}
-                className="w-40 h-40 rounded-full border-4 border-white shadow-lg"
+                className="w-40 h-40 rounded-full border-4 shadow-lg"
+                style={{ borderColor: colors.blue }} // Changed to colors.blue
               />
-              <TouchableOpacity className="absolute bottom-2 right-2 w-10 h-10 bg-gray-100 rounded-full items-center justify-center border-2 border-white shadow-md">
-                <Entypo name="camera" size={18} color="#4B5563" />
+              <TouchableOpacity
+                className="absolute bottom-2 right-2 w-10 h-10 rounded-full items-center justify-center border-2 shadow-md"
+                style={{
+                  backgroundColor: colors.surface,
+                  borderColor: colors.background,
+                }}
+              >
+                <Entypo name="camera" size={18} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        <View className="px-6 pt-20 pb-6 border-b border-gray-200 bg-white">
+        <View
+          className="px-6 pt-20 pb-6 border-b"
+          style={{
+            backgroundColor: colors.background,
+            borderColor: colors.border,
+          }}
+        >
           <View className="flex-row justify-between items-start mb-4">
             <View className="flex-1 pr-4">
               <View className="flex-row items-center mb-1">
-                <Text className="text-2xl font-bold text-gray-800 mr-2">
+                <Text
+                  className="text-2xl font-bold mr-2"
+                  style={{ color: colors.text }}
+                >
                   {currentUser.firstName} {currentUser.lastName}
                 </Text>
-              </View>              
+              </View>
 
               <View className="flex-row space-x-6 mt-2">
                 <TouchableOpacity className="mr-4">
-                  <Text className="text-gray-800">
+                  <Text style={{ color: colors.text }}>
                     <Text className="font-bold text-lg">
                       {currentUser.following?.length || 0}
                     </Text>
-                    <Text className="text-gray-600"> Following</Text>
+                    <Text
+                      className="text-sm"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {" "}
+                      Following
+                    </Text>
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity>
-                  <Text className="text-gray-800">
+                  <Text style={{ color: colors.text }}>
                     <Text className="font-bold text-lg">
                       {currentUser.followers?.length || 0}
                     </Text>
-                    <Text className="text-gray-600"> Followers</Text>
+                    <Text
+                      className="text-sm"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {" "}
+                      Followers
+                    </Text>
                   </Text>
                 </TouchableOpacity>
               </View>
               <View className="space-y-3 mt-4">
                 {currentUser.location && (
                   <View className="flex-row items-center mb-2">
-                    <MapPin size={18} color="#6B7280" />
-                    <Text className="text-gray-600 ml-2">
+                    <MapPin size={18} color={colors.textSecondary} />
+                    <Text
+                      className="ml-2"
+                      style={{ color: colors.textSecondary }}
+                    >
                       {currentUser.location}
                     </Text>
                   </View>
@@ -188,9 +254,12 @@ const ProfileScreens = () => {
                   <MaterialCommunityIcons
                     name="calendar-clock"
                     size={18}
-                    color="#6B7280"
+                    color={colors.textSecondary}
                   />
-                  <Text className="text-gray-600 ml-2">
+                  <Text
+                    className="ml-2"
+                    style={{ color: colors.textSecondary }}
+                  >
                     Joined{" "}
                     {currentUser.createdAt
                       ? format(new Date(currentUser.createdAt), "MMMM yyyy")
@@ -201,8 +270,9 @@ const ProfileScreens = () => {
             </View>
 
             <TouchableOpacity
-              className="bg-blue-600 px-5 py-2.5 rounded-full shadow-md"
+              className="px-5 py-2.5 rounded-full shadow-md"
               onPress={openEditModal}
+              style={{ backgroundColor: colors.blue }}
             >
               <Text className="font-semibold text-white text-sm">
                 Edit profile
@@ -211,15 +281,26 @@ const ProfileScreens = () => {
           </View>
 
           {currentUser.bio && (
-            <Text className="text-gray-700 text-lg mt-3 leading-6 font-medium">
+            <Text
+              className="text-lg mt-3 leading-6 font-medium"
+              style={{ color: colors.textSecondary }}
+            >
               {currentUser.bio}
             </Text>
           )}
         </View>
 
-        <View className="px-6 py-4 border-b border-gray-200 bg-white">
-          <Text className="text-lg font-bold text-gray-800">Posts</Text>
-          <Text className="text-gray-500 text-sm">
+        <View
+          className="px-6 py-4 border-b"
+          style={{
+            backgroundColor: colors.background,
+            borderColor: colors.border,
+          }}
+        >
+          <Text className="text-lg font-bold" style={{ color: colors.text }}>
+            Posts
+          </Text>
+          <Text className="text-sm" style={{ color: colors.textMuted }}>
             {userPosts.length} posts
           </Text>
         </View>

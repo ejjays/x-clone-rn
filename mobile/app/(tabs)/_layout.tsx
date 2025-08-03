@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
@@ -34,6 +35,7 @@ const TabsLayout = () => {
   const pathname = usePathname();
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const { isDarkMode } = useTheme(); // Use useTheme hook
 
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
@@ -44,6 +46,17 @@ const TabsLayout = () => {
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
 
   // Initialize header and tab bar visibility instantly based on initial screen
   useEffect(() => {
@@ -102,20 +115,20 @@ const TabsLayout = () => {
         style={{
           flex: 1,
           paddingTop: isProfileScreen ? 0 : insets.top,
-          backgroundColor: "white",
+          backgroundColor: colors.background, // Apply background color here
         }}
       >
-        <StatusBar style={isVideosScreen ? "light" : "dark"} />
+        <StatusBar style={isVideosScreen ? "light" : (isDarkMode ? "light" : "dark")} />
 
         <Animated.View style={animatedHeaderStyle}>
-          <View className="flex-row justify-between items-center px-3 h-full">
-            <Text className="text-4xl font-bold text-blue-600">pcmi</Text>
+          <View className="flex-row justify-between items-center px-3 h-full" style={{ backgroundColor: colors.background }}>
+            <Text className="text-4xl font-bold" style={{ color: colors.blue }}>pcmi</Text>
             <View className="flex-row space-x-2">
               <TouchableOpacity
                 className="p-2.5 rounded-full"
                 onPress={() => router.push("/search-posts")}
               >
-                <Search size={28} color="black" />
+                <Search size={28} color={colors.icon} />
               </TouchableOpacity>
               <TouchableOpacity
                 className="p-2.5 rounded-full"
@@ -124,7 +137,7 @@ const TabsLayout = () => {
                 <FontAwesome5
                   name="facebook-messenger"
                   size={26}
-                  color="black"
+                  color={colors.icon}
                 />
               </TouchableOpacity>
             </View>
@@ -145,7 +158,7 @@ const TabsLayout = () => {
             }}
             tabBar={(props) => (
               <Animated.View style={animatedTabBarStyle}>
-                <View className="bg-white border-b border-gray-200">
+                <View className="border-b" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
                   <View className="flex-row justify-around items-center h-full">
                     <TouchableOpacity
                       className="flex-1 items-center justify-center h-full"
@@ -155,10 +168,10 @@ const TabsLayout = () => {
                         size={26}
                         color={
                           isVideosScreen
-                            ? "black"
+                            ? colors.icon
                             : pathname === "/"
-                              ? "#2563eb"
-                              : "black"
+                              ? colors.blue
+                              : colors.icon
                         }
                       />
                     </TouchableOpacity>
@@ -171,10 +184,10 @@ const TabsLayout = () => {
                         size={27}
                         color={
                           isVideosScreen
-                            ? "black"
+                            ? colors.icon
                             : pathname === "/search"
-                              ? "#2563eb"
-                              : "black"
+                              ? colors.blue
+                              : colors.icon
                         }
                       />
                     </TouchableOpacity>
@@ -185,7 +198,7 @@ const TabsLayout = () => {
                     >
                       <TvMinimalPlay
                         size={26}
-                        color={isVideosScreen ? "#2563eb" : "black"}
+                        color={isVideosScreen ? colors.blue : colors.icon}
                       />
                     </TouchableOpacity>
 
@@ -197,10 +210,10 @@ const TabsLayout = () => {
                         size={26}
                         color={
                           isVideosScreen
-                            ? "black"
+                            ? colors.icon
                             : pathname === "/notifications"
-                              ? "#2563eb"
-                              : "black"
+                              ? colors.blue
+                              : colors.icon
                         }
                       />
                     </TouchableOpacity>
@@ -211,12 +224,12 @@ const TabsLayout = () => {
                     >
                       <Menu
                         size={26}
-                        color={pathname === "/profile" ? "#2563eb" : "black"}
+                        color={pathname === "/profile" ? colors.blue : colors.icon}
                       />
                     </TouchableOpacity>
                   </View>
 
-                  <View className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200">
+                  <View className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: colors.border }}>
                     <Animated.View
                       className="h-full bg-blue-500"
                       style={animatedIndicatorStyle}

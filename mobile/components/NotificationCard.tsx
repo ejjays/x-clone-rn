@@ -1,6 +1,7 @@
 import type { Notification } from "@/types"
 import { Bell, Heart, MessageCircle, MoreHorizontal, UserPlus } from "lucide-react-native"
 import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 interface NotificationCardProps {
   notification: Notification
@@ -8,34 +9,47 @@ interface NotificationCardProps {
 }
 
 const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => {
+  const { isDarkMode } = useTheme(); // Use useTheme hook
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
+
   const getNotificationText = () => {
     const name = `${notification.from.firstName} ${notification.from.lastName}`
     switch (notification.type) {
       case "like":
         return (
-          <Text className="text-gray-900 text-base leading-6">
+          <Text className="text-base leading-6" style={{ color: colors.text }}>
             <Text className="font-semibold">{name}</Text>
             <Text> liked your post.</Text>
           </Text>
         )
       case "comment":
         return (
-          <Text className="text-gray-900 text-base leading-6">
+          <Text className="text-base leading-6" style={{ color: colors.text }}>
             <Text className="font-semibold">{name}</Text>
             <Text> commented on your post: "</Text>
-            <Text className="text-gray-600">{notification.comment?.content}</Text>
+            <Text className="text-sm" style={{ color: colors.textSecondary }}>{notification.comment?.content}</Text>
             <Text>"</Text>
           </Text>
         )
       case "follow":
         return (
-          <Text className="text-gray-900 text-base leading-6">
+          <Text className="text-base leading-6" style={{ color: colors.text }}>
             <Text className="font-semibold">{name}</Text>
             <Text> started following you.</Text>
           </Text>
         )
       default:
-        return <Text className="text-gray-900 text-base leading-6">New notification</Text>
+        return <Text className="text-base leading-6" style={{ color: colors.text }}>New notification</Text>
     }
   }
 
@@ -43,25 +57,25 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
     switch (notification.type) {
       case "like":
         return (
-          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-red-500 rounded-full items-center justify-center border-2 border-white">
+          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-red-500 rounded-full items-center justify-center border-2" style={{ borderColor: colors.background }}>
             <Heart size={14} color="white" />
           </View>
         )
       case "comment":
         return (
-          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-500 rounded-full items-center justify-center border-2 border-white">
+          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-500 rounded-full items-center justify-center border-2" style={{ borderColor: colors.background }}>
             <MessageCircle size={14} color="white" />
           </View>
         )
       case "follow":
         return (
-          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 rounded-full items-center justify-center border-2 border-white">
+          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 rounded-full items-center justify-center border-2" style={{ borderColor: colors.background }}>
             <UserPlus size={14} color="white" />
           </View>
         )
       default:
         return (
-          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-gray-500 rounded-full items-center justify-center border-2 border-white">
+          <View className="absolute -bottom-1 -right-1 w-7 h-7 bg-gray-500 rounded-full items-center justify-center border-2" style={{ borderColor: colors.background }}>
             <Bell size={14} color="white" />
           </View>
         )
@@ -120,7 +134,7 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
   }
 
   return (
-    <TouchableOpacity className="bg-white px-4 py-4" activeOpacity={0.7}>
+    <TouchableOpacity className="px-4 py-4" activeOpacity={0.7} style={{ backgroundColor: colors.background }}>
       <View className="flex-row">
         {/* Profile Picture with Badge - Made Bigger */}
         <View className="relative mr-4">
@@ -134,8 +148,8 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
 
           {/* Post Preview (if applicable) */}
           {notification.post && (
-            <View className="mt-3 p-3 bg-gray-50 rounded-lg">
-              <Text className="text-gray-700 text-sm" numberOfLines={2}>
+            <View className="mt-3 p-3 rounded-lg" style={{ backgroundColor: colors.surface }}>
+              <Text className="text-sm" numberOfLines={2} style={{ color: colors.textSecondary }}>
                 {notification.post.content}
               </Text>
               {notification.post.image && (
@@ -149,12 +163,12 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
           )}
 
           {/* Timestamp with better formatting */}
-          <Text className="text-gray-500 text-sm mt-2">{formatNotificationDate(notification.createdAt)}</Text>
+          <Text className="text-sm mt-2" style={{ color: colors.textSecondary }}>{formatNotificationDate(notification.createdAt)}</Text>
         </View>
 
         {/* More Options */}
         <TouchableOpacity className="w-10 h-10 items-center justify-center" onPress={handleDelete}>
-          <MoreHorizontal size={22} color="#65676B" />
+          <MoreHorizontal size={22} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

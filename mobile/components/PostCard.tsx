@@ -19,6 +19,7 @@ import LikeIcon from "../assets/icons/LikeIcon";
 import { Video, ResizeMode } from "expo-av";
 import { reactionComponents, reactionTextColor } from "@/utils/reactions";
 import { FontAwesome } from "@expo/vector-icons";
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -62,6 +63,18 @@ const PostCard = ({
   const [imageHeight, setImageHeight] = useState<number | null>(null);
   const [videoHeight, setVideoHeight] = useState<number | null>(null);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
+  const { isDarkMode } = useTheme(); // Use useTheme hook
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
 
   useEffect(() => {
     if (post.image) {
@@ -160,6 +173,7 @@ const PostCard = ({
               ? reactionTextColor[currentUserReaction.type]
               : "text-gray-500"
           }`}
+          style={{ color: currentUserReaction?.type ? undefined : colors.textSecondary }}
         >
           {reactionLabel}
         </Text>
@@ -169,7 +183,7 @@ const PostCard = ({
 
   return (
     <>
-      <View>
+      <View style={{ backgroundColor: colors.background }}>
         {/* Post Header */}
         <View className="flex-row px-2 py-3 items-center">
           <Image
@@ -177,10 +191,10 @@ const PostCard = ({
             className="w-14 h-14 rounded-full mr-3"
           />
           <View className="flex-1">
-            <Text className="font-bold text-gray-900 text-lg">
+            <Text className="font-bold text-lg" style={{ color: colors.text }}>
               {post.user.firstName} {post.user.lastName}
             </Text>
-            <Text className="text-gray-500 text-sm">
+            <Text className="text-sm" style={{ color: colors.textSecondary }}>
               {formatDate(post.createdAt)}
             </Text>
           </View>
@@ -189,7 +203,7 @@ const PostCard = ({
               onPress={() => onOpenPostMenu(post)} // Call the new prop
               className="p-2"
             >
-              <FontAwesome name="ellipsis-h" size={20} color="#657786" />
+              <FontAwesome name="ellipsis-h" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -197,11 +211,12 @@ const PostCard = ({
         {/* Post Content */}
         {post.content && (
           <Text
-            className={`my-3 text-gray-800 px-2 ${
+            className={`my-3 px-2 ${
               !post.image && !post.video
                 ? getDynamicPostTextStyle(post.content)
                 : "text-lg font-normal"
             }`}
+            style={{ color: colors.text }}
           >
             {post.content}
           </Text>
@@ -214,12 +229,12 @@ const PostCard = ({
           style={{
             width: screenWidth,
             height: 200,
-            backgroundColor: "#e0e0e0",
+            backgroundColor: colors.surface,
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <Text>Loading media...</Text>
+          <Text style={{ color: colors.textMuted }}>Loading media...</Text>
         </View>
       )}
 
@@ -242,7 +257,7 @@ const PostCard = ({
         />
       )}
 
-      <View className="bg-white">
+      <View style={{ backgroundColor: colors.background }}>
         {/* Reactions and Comments Count */}
         {((post.reactions && post.reactions.length > 0) ||
           (post.comments && post.comments.length > 0)) && (
@@ -261,7 +276,7 @@ const PostCard = ({
                     return <Emoji key={reaction} width={20} height={20} />;
                   })}
                 </View>
-                <Text className="text-gray-500 text-base ml-2">
+                <Text className="text-base ml-2" style={{ color: colors.textSecondary }}>
                   {formatNumber(post.reactions.length)}
                 </Text>
               </View>
@@ -270,7 +285,7 @@ const PostCard = ({
             )}
 
             {post.comments && post.comments.length > 0 && (
-              <Text className="text-gray-500 text-base">
+              <Text className="text-base" style={{ color: colors.textSecondary }}>
                 {formatNumber(post.comments.length)}{" "}
                 {post.comments.length === 1 ? "comment" : "comments"}
               </Text>
@@ -279,7 +294,7 @@ const PostCard = ({
         )}
 
         {/* Post Actions */}
-        <View className="flex-row justify-around py-1 border-t border-gray-100 mt-2">
+        <View className="flex-row justify-around py-1 border-t" style={{ borderColor: colors.border, marginTop: 8 }}>
           <Pressable
             ref={likeButtonRef}
             onPress={handleQuickPress}
@@ -293,13 +308,13 @@ const PostCard = ({
             className="flex-1 flex-row items-center justify-center py-2.5"
             onPress={() => onComment(post._id)}
           >
-            <CommentIcon size={22} color="#657786" />
-            <Text className="text-gray-500 font-semibold ml-1.5">Comment</Text>
+            <CommentIcon size={22} color={colors.textSecondary} />
+            <Text className="font-semibold ml-1.5" style={{ color: colors.textSecondary }}>Comment</Text>
           </TouchableOpacity>
 
           <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
-            <ShareIcon size={22} color="#657786" />
-            <Text className="text-gray-500 font-semibold ml-1.5">Share</Text>
+            <ShareIcon size={22} color={colors.textSecondary} />
+            <Text className="font-semibold ml-1.5" style={{ color: colors.textSecondary }}>Share</Text>
           </TouchableOpacity>
         </View>
       </View>

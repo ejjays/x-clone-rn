@@ -1,10 +1,12 @@
 // mobile/context/ThemeContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
+import { DarkThemeColors, LightThemeColors } from '../constants/Colors'; // Import colors
 
 interface ThemeContextType {
   isDarkMode: boolean;
   toggleTheme: () => void;
+  colors: typeof LightThemeColors; // Type for the colors object
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -13,17 +15,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const systemColorScheme = useColorScheme();
   const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
 
-  // Remove this useEffect to prevent system color scheme from overriding manual toggle
-  // useEffect(() => {
-  //   setIsDarkMode(systemColorScheme === 'dark');
-  // }, [systemColorScheme]);
-
   const toggleTheme = () => {
     setIsDarkMode(prevMode => !prevMode);
   };
 
+  const colors = isDarkMode ? DarkThemeColors : LightThemeColors; // Determine active colors
+
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme, colors }}>
       {children}
     </ThemeContext.Provider>
   );

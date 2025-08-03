@@ -12,6 +12,7 @@ import PostActionBottomSheet, {
 } from "@/components/PostActionBottomSheet";
 import type { Post } from "@/types";
 import { useScroll } from "@/context/ScrollContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const HomeScreen = () => {
   const [isRefetching, setIsRefetching] = useState(false);
@@ -21,8 +22,8 @@ const HomeScreen = () => {
     null
   );
   const { handleScroll } = useScroll();
+  const { isDarkMode, colors } = useTheme(); // Use useTheme hook and get colors
 
-  // This function now just navigates
   const handleOpenComments = (postId: string) => {
     router.push(`/post/${postId}`);
   };
@@ -35,37 +36,33 @@ const HomeScreen = () => {
 
   const handleOpenPostMenu = (post: Post) => {
     setSelectedPostForMenu(post);
-    // Reduce the delay to make the opening feel more immediate
     setTimeout(() => {
       postActionBottomSheetRef.current?.open();
-    }, 10); // Changed to 10ms
+    }, 10);
   };
 
   const handleCloseBottomSheet = () => {
-    // This function is called by PostActionBottomSheet when it closes.
-    // We only need to reset the selected post here.
     setSelectedPostForMenu(null);
   };
 
   const handleDeletePost = () => {
     if (selectedPostForMenu) {
       deletePost(selectedPostForMenu._id);
-      postActionBottomSheetRef.current?.close(); // Explicitly close after action
+      postActionBottomSheetRef.current?.close();
     }
   };
 
-  // Temporarily make this a non-functional copy text option
   const handleCopyText = (text: string) => {
     Alert.alert("Copy Functionality", "This feature is temporarily disabled.");
-    postActionBottomSheetRef.current?.close(); // Explicitly close after action
+    postActionBottomSheetRef.current?.close();
   };
 
   useUserSync();
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <ScrollView
-        className="flex-1 bg-gray-100"
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={1}
@@ -73,16 +70,16 @@ const HomeScreen = () => {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handlePullToRefresh}
-            colors={["#1877F2"]}
-            tintColor="#1877F2"
+            colors={[colors.blue]}
+            tintColor={colors.blue}
           />
         }
       >
-        <View className="bg-white">
+        <View style={{ backgroundColor: colors.background }}>
           <PostComposer animatedPlaceholder={false} />
           <Stories />
         </View>
-        <View className="h-1.5 bg-gray-200" />
+        <View className="h-1.5" style={{ backgroundColor: colors.border }} />
         <PostsList
           onOpenComments={handleOpenComments}
           onOpenPostMenu={handleOpenPostMenu}

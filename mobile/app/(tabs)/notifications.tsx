@@ -5,11 +5,24 @@ import type { Notification } from "@/types"
 import { Check, Search } from "lucide-react-native" // Replaced Feather
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 const NotificationsScreen = () => {
   const { notifications, isLoading, error, refetch, isRefetching, deleteNotification } = useNotifications()
+  const { isDarkMode } = useTheme(); // Use useTheme hook
 
   const insets = useSafeAreaInsets()
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
 
   // Group notifications by time periods
   const groupNotificationsByTime = (notifications: Notification[]) => {
@@ -47,17 +60,17 @@ const NotificationsScreen = () => {
   }
 
   const renderSectionHeader = (title: string) => (
-    <View className="px-4 pt-2 pb-3 bg-white">
-      <Text className="text-xl font-bold text-gray-900">{title}</Text>
+    <View className="px-4 pt-2 pb-3" style={{ backgroundColor: colors.background }}>
+      <Text className="text-xl font-bold" style={{ color: colors.text }}>{title}</Text>
     </View>
   )
 
   if (error) {
     return (
-      <View className="flex-1 bg-white">
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
         <View className="flex-1 items-center justify-center p-8">
-          <Text className="text-gray-500 mb-4">Failed to load notifications</Text>
-          <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded-lg" onPress={() => refetch()}>
+          <Text className="mb-4" style={{ color: colors.textMuted }}>Failed to load notifications</Text>
+          <TouchableOpacity className="px-4 py-2 rounded-lg" style={{ backgroundColor: colors.blue }} onPress={() => refetch()}>
             <Text className="text-white font-semibold">Retry</Text>
           </TouchableOpacity>
         </View>
@@ -68,37 +81,37 @@ const NotificationsScreen = () => {
   const groupedNotifications = groupNotificationsByTime(notifications)
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Facebook-style Header - No back arrow, bigger title, good spacing */}
-      <View className="flex-row items-center justify-between px-4 py-4 bg-white">
-        <Text className="text-3xl font-bold text-gray-900">Notifications</Text>
+      <View className="flex-row items-center justify-between px-4 py-4" style={{ backgroundColor: colors.background }}>
+        <Text className="text-3xl font-bold" style={{ color: colors.text }}>Notifications</Text>
 
         <View className="flex-row space-x-2">
-          <TouchableOpacity className="w-9 h-9 bg-gray-200 rounded-full items-center justify-center">
-            <Check size={18} color="#1C1E21" />
+          <TouchableOpacity className="w-9 h-9 rounded-full items-center justify-center" style={{ backgroundColor: colors.surface }}>
+            <Check size={18} color={colors.icon} />
           </TouchableOpacity>
-          <TouchableOpacity className="w-9 h-9 bg-gray-200 rounded-full items-center justify-center">
-            <Search size={18} color="#1C1E21" />
+          <TouchableOpacity className="w-9 h-9 rounded-full items-center justify-center" style={{ backgroundColor: colors.surface }}>
+            <Search size={18} color={colors.icon} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Content */}
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1" style={{ backgroundColor: colors.background }}
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={"#1877F2"} colors={["#1877F2"]} />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.blue} colors={[colors.blue]} />}
       >
         {isLoading ? (
           <View className="flex-1 items-center justify-center p-8">
-            <ActivityIndicator size="large" color="#1877F2" />
-            <Text className="text-gray-500 mt-4">Loading notifications...</Text>
+            <ActivityIndicator size="large" color={colors.blue} />
+            <Text className="mt-4" style={{ color: colors.textMuted }}>Loading notifications...</Text>
           </View>
         ) : notifications.length === 0 ? (
           <NoNotificationsFound />
         ) : (
-          <View className="bg-white">
+          <View style={{ backgroundColor: colors.background }}>
             {/* New Notifications */}
             {groupedNotifications.new.length > 0 && (
               <>

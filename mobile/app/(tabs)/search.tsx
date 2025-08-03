@@ -6,12 +6,25 @@ import { Search, Users, X } from "lucide-react-native"
 import { useState } from "react"
 import { View, TextInput, ScrollView, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 const SearchScreen = () => {
   const [searchText, setSearchText] = useState("")
   const { users, isLoading, error, refetch } = useAllUsers()
   const { currentUser } = useCurrentUser()
   const insets = useSafeAreaInsets()
+  const { isDarkMode } = useTheme(); // Use useTheme hook
+
+  const colors = {
+    background: isDarkMode ? "#111827" : "#ffffff",
+    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
+    text: isDarkMode ? "#ffffff" : "#111827",
+    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+    border: isDarkMode ? "#374151" : "#e5e7eb",
+    blue: "#3b82f6",
+    icon: isDarkMode ? "#ffffff" : "#000000",
+  };
 
   // Filter users based on search text and exclude current user
   const filteredUsers = users.filter((user: User) => {
@@ -38,13 +51,13 @@ const SearchScreen = () => {
 
   if (error) {
     return (
-      <View className="flex-1 bg-white">
-        <View className="px-4 py-4 bg-white">
-          <Text className="text-3xl font-bold text-gray-900">Peoples</Text>
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
+        <View className="px-4 py-4" style={{ backgroundColor: colors.background }}>
+          <Text className="text-3xl font-bold" style={{ color: colors.text }}>Peoples</Text>
         </View>
         <View className="flex-1 items-center justify-center p-8">
-          <Text className="text-gray-500 mb-4">Failed to load users</Text>
-          <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded-lg" onPress={() => refetch()}>
+          <Text className="mb-4" style={{ color: colors.textMuted }}>Failed to load users</Text>
+          <TouchableOpacity className="px-4 py-2 rounded-lg" style={{ backgroundColor: colors.blue }} onPress={() => refetch()}>
             <Text className="text-white font-semibold">Retry</Text>
           </TouchableOpacity>
         </View>
@@ -53,25 +66,26 @@ const SearchScreen = () => {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* HEADER */}
-      <View className="px-4 py-4 bg-white">
-        <Text className="text-3xl font-bold text-gray-900 mb-3">Peoples</Text>
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4">
-          <Search size={20} color="#657786" />
+      <View className="px-4 py-4" style={{ backgroundColor: colors.background }}>
+        <Text className="text-3xl font-bold mb-3" style={{ color: colors.text }}>Peoples</Text>
+        <View className="flex-row items-center rounded-full px-4" style={{ backgroundColor: colors.surface }}>
+          <Search size={20} color={colors.textMuted} />
           <TextInput
             placeholder="Search people"
             className="flex-1 ml-3 text-base"
-            placeholderTextColor="#657786"
+            placeholderTextColor={colors.textMuted}
             value={searchText}
             onChangeText={setSearchText}
             style={{
               paddingVertical: Platform.OS === "android" ? 8 : 12,
+              color: colors.text,
             }}
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={() => setSearchText("")}>
-              <X size={20} color="#657786" />
+              <X size={20} color={colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -82,23 +96,23 @@ const SearchScreen = () => {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor="#1877F2" colors={["#1877F2"]} />}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.blue} colors={[colors.blue]} />}
       >
         {isLoading ? (
           <View className="flex-1 items-center justify-center p-8">
-            <ActivityIndicator size="large" color="#1877F2" />
-            <Text className="text-gray-500 mt-4">Loading people...</Text>
+            <ActivityIndicator size="large" color={colors.blue} />
+            <Text className="mt-4" style={{ color: colors.textMuted }}>Loading people...</Text>
           </View>
         ) : filteredUsers.length === 0 ? (
           <View className="flex-1 items-center justify-center p-8">
             <View className="items-center">
-              <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
-                <Users size={32} color="#65676B" />
+              <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: colors.surface }}>
+                <Users size={32} color={colors.textMuted} />
               </View>
-              <Text className="text-xl font-semibold text-gray-900 mb-3">
+              <Text className="text-xl font-semibold mb-3" style={{ color: colors.text }}>
                 {searchText ? "No people found" : "No people yet"}
               </Text>
-              <Text className="text-gray-500 text-center text-base leading-6 max-w-xs">
+              <Text className="text-center text-base leading-6 max-w-xs" style={{ color: colors.textMuted }}>
                 {searchText
                   ? `No results found for "${searchText}"`
                   : "People will appear here when they join the app."}
@@ -106,7 +120,7 @@ const SearchScreen = () => {
             </View>
           </View>
         ) : (
-          <View className="bg-white">
+          <View style={{ backgroundColor: colors.background }}>
             {filteredUsers.map((user: User) => (
               <UserCard key={user._id} user={user} onFollow={handleFollow} onMessage={handleMessage} />
             ))}
