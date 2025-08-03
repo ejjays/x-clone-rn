@@ -13,9 +13,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const systemColorScheme = useColorScheme();
   const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
 
-  useEffect(() => {
-    setIsDarkMode(systemColorScheme === 'dark');
-  }, [systemColorScheme]);
+  // Remove this useEffect to prevent system color scheme from overriding manual toggle
+  // useEffect(() => {
+  //   setIsDarkMode(systemColorScheme === 'dark');
+  // }, [systemColorScheme]);
 
   const toggleTheme = () => {
     setIsDarkMode(prevMode => !prevMode);

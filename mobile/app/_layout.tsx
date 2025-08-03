@@ -41,7 +41,9 @@ const InitialLayout = () => {
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
       {client ? (
         <Chat client={client}>
-          <StatusBar style="dark" />
+          <View>
+            <StatusBar style="dark" />
+          </View>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
@@ -58,21 +60,23 @@ const InitialLayout = () => {
           </Stack>
         </Chat>
       ) : (
-        <Stack screenOptions={{ headerShown: false }}>
+        <View>
           <StatusBar style="dark" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="create-post"
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen name="post/[postId]" />
-          <Stack.Screen name="messages" />
-          <Stack.Screen name="chat/[channelId]" />
-          <Stack.Screen name="new-message" />
-          <Stack.Screen name="search-posts" />
-          <Stack.Screen name="sso-callback" />
-        </Stack>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="create-post"
+              options={{ presentation: "modal" }}
+            />
+            <Stack.Screen name="post/[postId]" />
+            <Stack.Screen name="messages" />
+            <Stack.Screen name="chat/[channelId]" />
+            <Stack.Screen name="new-message" />
+            <Stack.Screen name="search-posts" />
+            <Stack.Screen name="sso-callback" />
+          </Stack>
+        </View>
       )}
     </OverlayProvider>
   );
