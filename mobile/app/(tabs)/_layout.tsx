@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import { useTheme } from "@/context/ThemeContext";
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
@@ -35,7 +35,7 @@ const TabsLayout = () => {
   const pathname = usePathname();
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { isDarkMode } = useTheme(); // Use useTheme hook
+  const { isDarkMode, colors } = useTheme(); // Get colors from useTheme hook
 
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
@@ -46,17 +46,6 @@ const TabsLayout = () => {
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
-
-  const colors = {
-    background: isDarkMode ? "#111827" : "#ffffff",
-    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-    icon: isDarkMode ? "#ffffff" : "#000000",
-  };
 
   // Initialize header and tab bar visibility instantly based on initial screen
   useEffect(() => {

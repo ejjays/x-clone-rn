@@ -7,7 +7,6 @@ import {
   Platform,
   ScrollView,
   Image,
-  // Removed useColorScheme
   StatusBar,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
@@ -20,7 +19,7 @@ import LottieView from "lottie-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import { useTheme } from "@/context/ThemeContext";
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } =
@@ -30,16 +29,11 @@ export default function MessagesScreen() {
   const insets = useSafeAreaInsets();
   const { users: allUsers, isLoading: usersLoading } = useAllUsers();
   const { currentUser } = useCurrentUser();
-  const { isDarkMode, toggleTheme } = useTheme(); // Use useTheme hook
+  const { isDarkMode, toggleTheme, colors } = useTheme(); // Get colors from useTheme hook
 
   // Filter out current user and get real users
   const realUsers =
     allUsers?.filter((user) => user._id !== currentUser?._id) || [];
-
-  // No longer need this useEffect as isDarkMode is from context
-  // useEffect(() => {
-  //   setIsDarkMode(systemColorScheme === "dark");
-  // }, [systemColorScheme]);
 
   const handleNewMessage = () => {
     router.push("/new-message");
@@ -53,19 +47,16 @@ export default function MessagesScreen() {
     setSearchQuery("");
   };
 
-  // Use toggleTheme from context
   const handleToggleDarkMode = () => {
     toggleTheme();
   };
 
   const handleWaveAnimationStart = () => {
     setIsWaveAnimating(true);
-    // Remove the opacity animation
   };
 
   const handleWaveAnimationComplete = () => {
     setIsWaveAnimating(false);
-    // Remove the opacity animation
   };
 
   const handleUserPress = (user) => {
@@ -74,18 +65,6 @@ export default function MessagesScreen() {
 
   const getInitials = (firstName, lastName) => {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
-  };
-
-  // Dynamic color scheme based on dark mode state from context
-  const colors = {
-    background: isDarkMode ? "#111827" : "#ffffff",
-    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-    icon: isDarkMode ? "#ffffff" : "#000000",
   };
 
   const renderContent = () => {
@@ -182,7 +161,7 @@ export default function MessagesScreen() {
             <View className="mr-3">
               <CustomThemeToggle
                 isDarkMode={isDarkMode}
-                onToggle={handleToggleDarkMode} // Use handleToggleDarkMode
+                onToggle={handleToggleDarkMode}
                 onWaveAnimationStart={handleWaveAnimationStart}
                 onWaveAnimationComplete={handleWaveAnimationComplete}
               />
