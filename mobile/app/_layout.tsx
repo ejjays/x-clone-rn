@@ -10,6 +10,8 @@ import { streamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
+import { ThemeProvider } from "@/context/ThemeContext"; // Import ThemeProvider
 
 const queryClient = new QueryClient(); 
 
@@ -39,6 +41,7 @@ const InitialLayout = () => {
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
       {client ? (
         <Chat client={client}>
+          <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
@@ -56,6 +59,7 @@ const InitialLayout = () => {
         </Chat>
       ) : (
         <Stack screenOptions={{ headerShown: false }}>
+          <StatusBar style="dark" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen
@@ -90,7 +94,9 @@ export default function RootLayout() {
             tokenCache={tokenCache}
           >
             <StreamChatProvider>
-              <InitialLayout />
+              <ThemeProvider> {/* Wrap with ThemeProvider */}
+                <InitialLayout />
+              </ThemeProvider>
             </StreamChatProvider>
           </ClerkProvider>
         </QueryClientProvider>

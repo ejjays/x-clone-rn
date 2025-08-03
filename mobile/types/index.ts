@@ -35,7 +35,7 @@ export interface Comment {
   content: string;
   createdAt: string;
   user: User;
-  likes: string[];
+  reactions?: Reaction[]; // Changed from likes: string[]
 }
 
 export interface Post {
@@ -102,7 +102,7 @@ export interface Comment {
   content: string;
   createdAt: string;
   user: User;
-  likes: string[];
+  reactions?: Reaction[];
 }
 
 export interface Post {

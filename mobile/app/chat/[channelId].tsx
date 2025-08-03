@@ -1,5 +1,4 @@
 // mobile/app/chat/[channelId].tsx
-import ReactionsPicker from "@/components/ReactionsPicker";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useStreamChat } from "@/context/StreamChatContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,26 +17,48 @@ import {
   View,
   Image,
   Keyboard,
+  Modal,
+  TouchableWithoutFeedback,
+  Dimensions,
+  // Removed useColorScheme
 } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
 import Animated, { Layout } from "react-native-reanimated";
 import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
+import { StatusBar } from "expo-status-bar";
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+
+const MOCK_EMOJIS = ["👍", "❤️", "😂", "😮", "😡", "😭"];
 
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>();
   const { client, isConnected, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
+  const { isDarkMode } = useTheme(); // Use useTheme hook
+
+  // Define dynamic colors based on dark mode state from context
+  const colors = {
+    background: isDarkMode ? "#111827" : "#FFFFFF",
+    cardBackground: isDarkMode ? "#1F2937" : "#F3F4F6",
+    text: isDarkMode ? "#F9FAFB" : "#1F2937",
+    grayText: isDarkMode ? "#D1D5DB" : "#6B7280",
+    border: isDarkMode ? "#374151" : "#E5E7EB",
+    inputBackground: isDarkMode ? "#374151" : "#F9FAFB",
+    inputBorder: isDarkMode ? "#4B5563" : "#D1D5DB",
+    blue500: "#3B82F6", // Tailwind blue-500
+    gray200: isDarkMode ? "#4B5563" : "#E5E7EB", // For received message bubble
+  };
+
 
   const [channel, setChannel] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [otherUser, setOtherUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true); // Initial state set to true
+  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<{
     uri: string;
@@ -59,7 +80,7 @@ export default function ChatScreen() {
 
     const initializeChannel = async () => {
       try {
-        setLoading(true); // Ensure loading is true when starting initialization
+        setLoading(true);
         const ch = client.channel("messaging", channelId);
         await ch.watch();
         setChannel(ch);
@@ -94,7 +115,7 @@ export default function ChatScreen() {
 
         setTimeout(() => {
           setLoading(false);
-        }, 500); // Show loader for at least 500ms
+        }, 500);
 
         return () => {
           ch.off("message.new", handleEvent);
@@ -104,7 +125,7 @@ export default function ChatScreen() {
       } catch (error) {
         console.error("❌ Error initializing channel:", error);
         Alert.alert("Error", "Failed to load chat. Please try again.");
-        setLoading(false); // Set false on error
+        setLoading(false);
       }
     };
 
@@ -149,7 +170,7 @@ export default function ChatScreen() {
             "Could not upload your media. Message not sent."
           );
           setSending(false);
-          return; // Stop sending if upload failed
+          return;
         }
       }
 
@@ -157,7 +178,6 @@ export default function ChatScreen() {
         !messageData.text &&
         (!messageData.attachments || messageData.attachments.length === 0)
       ) {
-        // Prevent sending empty message if media upload failed and no text
         setSending(false);
         return;
       }
@@ -167,61 +187,15 @@ export default function ChatScreen() {
       console.error("❌ Error sending message:", error);
       Alert.alert("Error", "Failed to send message.");
     } finally {
-      // Always clear input and selected media after attempting to send
       setNewMessage("");
       setSelectedMedia(null);
       setSending(false);
     }
   };
 
-  // --- REACTION LOGIC FIX ---
-  // This function now handles both adding and removing reactions with an optimistic update.
   const handleReaction = async (reactionType: string) => {
-    if (!channel || !selectedMessage) return;
-
-    const existingReaction = selectedMessage.latest_reactions?.find(
-      (r: any) => r.type === reactionType && r.user_id === currentUser.clerkId
-    );
-
-    // Optimistic UI update
-    setMessages((prevMessages) =>
-      prevMessages.map((msg) => {
-        if (msg.id !== selectedMessage.id) return msg;
-
-        let newReactions = [...(msg.latest_reactions || [])];
-
-        if (existingReaction) {
-          // Remove the reaction
-          newReactions = newReactions.filter(
-            (r) =>
-              !(r.type === reactionType && r.user_id === currentUser.clerkId)
-          );
-        } else {
-          // Add the new reaction
-          newReactions.push({
-            type: reactionType,
-            user_id: currentUser.clerkId,
-          });
-        }
-        return { ...msg, latest_reactions: newReactions };
-      })
-    );
-
-    setSelectedMessage(null); // Hide picker immediately
-
-    try {
-      if (existingReaction) {
-        // If it existed, send a delete request to the server
-        await channel.deleteReaction(selectedMessage.id, existingReaction.type);
-      } else {
-        // Otherwise, send a new reaction request
-        await channel.sendReaction(selectedMessage.id, { type: reactionType });
-      }
-    } catch (error) {
-      console.error("❌ Failed to send/delete reaction:", error);
-      Alert.alert("Error", "Could not update reaction.");
-      // Note: You could add logic here to revert the optimistic UI update on error
-    }
+    console.log(`Mock reaction selected: ${reactionType}`);
+    setSelectedMessage(null);
   };
 
   const handleLongPress = (message: any) => {
@@ -311,7 +285,7 @@ export default function ChatScreen() {
       if (!uniqueEmojis.length) return null;
 
       return (
-        <View className="absolute -bottom-2.5 -right-2 bg-white rounded-full p-0.5 shadow flex-row">
+        <View className="absolute -bottom-2.5 -right-2 rounded-full p-0.5 shadow flex-row" style={{ backgroundColor: colors.background }}>
           {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
             <Text
               key={idx}
@@ -329,8 +303,8 @@ export default function ChatScreen() {
       <Animated.View layout={Layout.duration(200)}>
         {showTimestamp && (
           <View className="items-center my-6">
-            <View className="bg-gray-100 px-3 py-1 rounded-full">
-              <Text className="text-gray-500 text-xs font-medium tracking-wide">
+            <View className="px-3 py-1 rounded-full" style={{ backgroundColor: colors.cardBackground }}>
+              <Text className="text-xs font-medium tracking-wide" style={{ color: colors.grayText }}>
                 {formatMessageTime(new Date(message.created_at))}
               </Text>
             </View>
@@ -365,8 +339,9 @@ export default function ChatScreen() {
               >
                 <View
                   className={`px-4 py-2.5 ${getBubbleStyle()} ${
-                    isFromCurrentUser ? "bg-blue-500 shadow-sm" : "bg-gray-200"
+                    isFromCurrentUser ? "shadow-sm" : ""
                   }`}
+                  style={{ backgroundColor: isFromCurrentUser ? colors.blue500 : colors.gray200 }}
                 >
                   {attachment && attachment.type === "image" && (
                     <Image
@@ -379,7 +354,8 @@ export default function ChatScreen() {
 
                   {message.text && (
                     <Text
-                      className={`text-lg leading-6 ${isFromCurrentUser ? "text-white" : "text-gray-900"}`}
+                      className={`text-lg leading-6`}
+                      style={{ color: isFromCurrentUser ? colors.background : colors.text }}
                     >
                       {message.text}
                     </Text>
@@ -396,12 +372,10 @@ export default function ChatScreen() {
     );
   };
 
-  // Only show the loader if explicitly connecting (Stream Chat client) or if channel-specific loading is true.
-  // The `isConnecting` from `useStreamChat` will handle the initial connection to Stream.
-  // The `loading` state here handles the channel-specific data fetching.
   if (isConnecting || loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="50" color="#1DA1F2" />
         </View>
@@ -411,13 +385,14 @@ export default function ChatScreen() {
 
   if (!client || !isConnected) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View className="flex-1 items-center justify-center px-8">
-          <Ionicons name="cloud-offline-outline" size={64} color="#9CA3AF" />
-          <Text className="text-xl font-semibold text-gray-700 mt-4 mb-2">
+          <Ionicons name="cloud-offline-outline" size={64} color={colors.grayText} />
+          <Text className="text-xl font-semibold mt-4 mb-2" style={{ color: colors.text }}>
             Connection Issue
           </Text>
-          <Text className="text-gray-500 text-center">
+          <Text className="text-center" style={{ color: colors.grayText }}>
             Unable to connect to chat service. Please check your internet
             connection.
           </Text>
@@ -427,11 +402,12 @@ export default function ChatScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1" style={{ paddingTop: insets.top, backgroundColor: colors.background }}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       {/* Header */}
-      <View className="flex-row items-center p-4 border-b border-gray-200 bg-white">
+      <View className="flex-row items-center p-4 border-b bg-white" style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}>
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Ionicons name="arrow-back" size={24} color={colors.grayText} />
         </TouchableOpacity>
         {otherUser?.image && (
           <View className="relative mr-3">
@@ -446,23 +422,24 @@ export default function ChatScreen() {
         )}
         <View className="flex-1 min-w-0">
           <Text
-            className="font-semibold text-gray-900 text-xl"
+            className="font-semibold text-xl"
             numberOfLines={1}
             ellipsizeMode="tail"
-         >
+            style={{ color: colors.text }}
+          >
             {otherUser?.name || "Chat"}
           </Text>
           {otherUser && (
-            <Text className="text-gray-500 text-sm">
+            <Text className="text-sm" style={{ color: colors.grayText }}>
               {otherUser.online ? "Online" : "Offline"}
             </Text>
           )}
         </View>
         <TouchableOpacity className="p-2">
-          <Ionicons name="call-outline" size={24} color="#374151" />
+          <Ionicons name="call-outline" size={24} color={colors.grayText} />
         </TouchableOpacity>
         <TouchableOpacity className="p-2 ml-2">
-          <Ionicons name="videocam-outline" size={24} color="#374151" />
+          <Ionicons name="videocam-outline" size={24} color={colors.grayText} />
         </TouchableOpacity>
       </View>
 
@@ -476,7 +453,8 @@ export default function ChatScreen() {
             data={messages}
             renderItem={renderMessage}
             keyExtractor={(item) => item.id}
-            className="flex-1 bg-white px-2"
+            className="flex-1 px-2"
+            style={{ backgroundColor: colors.background }}
             contentContainerStyle={{
               paddingTop: 16,
               paddingBottom: keyboardHeight > 0 ? 20 : 16,
@@ -492,11 +470,13 @@ export default function ChatScreen() {
 
           {/* Message Input */}
           <View
-            className="flex-row items-end border-t border-gray-200 bg-white px-4"
+            className="flex-row items-end border-t px-4"
             style={{
               paddingTop: 12,
               paddingBottom: Math.max(insets.bottom, 16),
               marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
+              borderTopColor: colors.border,
+              backgroundColor: colors.background,
             }}
           >
             {/* Image Picker Button */}
@@ -513,9 +493,10 @@ export default function ChatScreen() {
                   const media = await pickMedia();
                   setSelectedMedia(media);
                 }}
-                className="p-3 rounded-full bg-gray-200 mr-2 mb-2"
+                className="p-3 rounded-full mr-2 mb-2"
+                style={{ backgroundColor: colors.gray200 }}
               >
-                <Ionicons name="image-outline" size={24} color="#374151" />
+                <Ionicons name="image-outline" size={24} color={colors.grayText} />
               </TouchableOpacity>
             )}
             <View className="flex-1 mr-3">
@@ -523,20 +504,22 @@ export default function ChatScreen() {
                 value={newMessage}
                 onChangeText={setNewMessage}
                 placeholder="Type a message..."
-                placeholderTextColor="#9CA3AF"
-                className="border border-gray-300 rounded-full px-4 py-3 text-base text-gray-900 bg-gray-50"
+                placeholderTextColor={colors.grayText}
+                className="rounded-full px-4 py-3 text-base"
+                style={{ borderColor: colors.inputBorder, color: colors.text, backgroundColor: colors.inputBackground, borderWidth: 1 }}
                 multiline
                 maxLength={500}
                 editable={!sending}
                 textAlignVertical="top"
-                style={{ minHeight: 48, maxHeight: 120 }}
+                autoCapitalize="sentences"
+                // style={{ minHeight: 48, maxHeight: 120, borderColor: colors.inputBorder, color: colors.text, backgroundColor: colors.inputBackground, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 999 }}
               />
             </View>
             <TouchableOpacity
               onPress={sendMessage}
               disabled={(!newMessage.trim() && !selectedMedia) || sending}
               className={`p-3 rounded-full ${(!newMessage.trim() && !selectedMedia) || sending ? "bg-gray-300" : "bg-blue-500"}`}
-              style={{ marginBottom: 2 }}
+              style={{ marginBottom: 2, backgroundColor: ((!newMessage.trim() && !selectedMedia) || sending) ? colors.gray200 : colors.blue500 }}
             >
               {sending ? (
                 <ActivityIndicator size="small" color="white" />
@@ -545,7 +528,7 @@ export default function ChatScreen() {
                   name="send"
                   size={20}
                   color={
-                    !newMessage.trim() && !selectedMedia ? "gray" : "white"
+                    (!newMessage.trim() && !selectedMedia) ? colors.grayText : "white"
                   }
                 />
               )}
@@ -554,12 +537,39 @@ export default function ChatScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      <ReactionsPicker
-        isVisible={!!selectedMessage}
-        onClose={() => setSelectedMessage(null)}
-        onSelect={handleReaction}
-        anchorMeasurements={anchorMeasurements}
-      />
+      {selectedMessage && anchorMeasurements && (
+        <Modal
+          transparent={true}
+          visible={!!selectedMessage}
+          onRequestClose={() => setSelectedMessage(null)}
+        >
+          <TouchableWithoutFeedback onPress={() => setSelectedMessage(null)}>
+            <View className="flex-1"> {/* Simplified this View */}
+              <View
+                style={{
+                  position: "absolute",
+                  top: anchorMeasurements.pageY - 60,
+                  left: 0, // Span full width
+                  right: 0, // Span full width
+                  alignItems: "center", // Center content horizontally
+                }}
+              >
+                <View className="flex-row rounded-full p-2 shadow-lg border" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+                  {MOCK_EMOJIS.map((emoji, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => handleReaction(emoji)}
+                      className="px-3 py-2"
+                    >
+                      <Text className="text-3xl">{emoji}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
     </View>
   );
 }

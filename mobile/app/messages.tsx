@@ -7,7 +7,7 @@ import {
   Platform,
   ScrollView,
   Image,
-  useColorScheme,
+  // Removed useColorScheme
   StatusBar,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
@@ -20,31 +20,26 @@ import LottieView from "lottie-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } =
     useStreamChat();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isWaveAnimating, setIsWaveAnimating] = useState(false);
   const insets = useSafeAreaInsets();
-  const systemColorScheme = useColorScheme();
   const { users: allUsers, isLoading: usersLoading } = useAllUsers();
   const { currentUser } = useCurrentUser();
+  const { isDarkMode, toggleTheme } = useTheme(); // Use useTheme hook
 
   // Filter out current user and get real users
   const realUsers =
     allUsers?.filter((user) => user._id !== currentUser?._id) || [];
 
-  // Initialize dark mode based on system preference
-  useEffect(() => {
-    setIsDarkMode(systemColorScheme === "dark");
-  }, [systemColorScheme]);
-
-  // Update status bar style based on dark mode state
-  useEffect(() => {
-    StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content");
-  }, [isDarkMode]);
+  // No longer need this useEffect as isDarkMode is from context
+  // useEffect(() => {
+  //   setIsDarkMode(systemColorScheme === "dark");
+  // }, [systemColorScheme]);
 
   const handleNewMessage = () => {
     router.push("/new-message");
@@ -58,8 +53,9 @@ export default function MessagesScreen() {
     setSearchQuery("");
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+  // Use toggleTheme from context
+  const handleToggleDarkMode = () => {
+    toggleTheme();
   };
 
   const handleWaveAnimationStart = () => {
@@ -80,7 +76,7 @@ export default function MessagesScreen() {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   };
 
-  // Dynamic color scheme based on dark mode state
+  // Dynamic color scheme based on dark mode state from context
   const colors = {
     background: isDarkMode ? "#111827" : "#ffffff",
     surface: isDarkMode ? "#1f2937" : "#f3f4f6",
@@ -159,6 +155,7 @@ export default function MessagesScreen() {
 
   return (
     <View style={{ flex: 1, position: "relative" }}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       {/* Main Content with Animated Background */}
       <View
         className="flex-1"
@@ -185,7 +182,7 @@ export default function MessagesScreen() {
             <View className="mr-3">
               <CustomThemeToggle
                 isDarkMode={isDarkMode}
-                onToggle={toggleDarkMode}
+                onToggle={handleToggleDarkMode} // Use handleToggleDarkMode
                 onWaveAnimationStart={handleWaveAnimationStart}
                 onWaveAnimationComplete={handleWaveAnimationComplete}
               />

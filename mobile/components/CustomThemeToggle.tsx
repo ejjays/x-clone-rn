@@ -11,7 +11,7 @@ import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
 interface CustomThemeToggleProps {
   isDarkMode: boolean;
   onToggle: () => void;
-  onWaveAnimationStart?: () => void;
+  onWaveAnimationStart?: () => void; 
   onWaveAnimationComplete?: () => void;
 }
 

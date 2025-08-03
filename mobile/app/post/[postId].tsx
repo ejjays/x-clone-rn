@@ -33,7 +33,7 @@ const PostDetailsScreen = () => {
   }
 
   const insets = useSafeAreaInsets();
-  const { post, isLoading, error, refetch, createComment, isCreatingComment, likeComment, reactToPost } = usePost(postId);
+  const { post, isLoading, error, refetch, createComment, isCreatingComment, reactToPost, reactToComment } = usePost(postId);
   const { currentUser } = useCurrentUser();
   const [commentText, setCommentText] = useState("");
 
@@ -97,7 +97,17 @@ const PostDetailsScreen = () => {
         <FlatList
           data={post.comments}
           keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <CommentCard comment={item} currentUser={currentUser} onLike={likeComment} />}
+          renderItem={({ item }) => {
+            const currentUserCommentReaction = item.reactions?.find(r => r.user?._id === currentUser?._id);
+            return (
+              <CommentCard
+                comment={item}
+                currentUser={currentUser}
+                reactToComment={reactToComment}
+                currentUserCommentReaction={currentUserCommentReaction}
+              />
+            );
+          }}
           showsVerticalScrollIndicator={false}
           className="flex-1"
           contentContainerStyle={styles.listContentContainer}

@@ -88,37 +88,58 @@ export const usePost = (postId: string) => {
     },
   });
 
+  const reactToCommentMutation = useMutation({
+    mutationFn: ({ commentId, reactionType }: { commentId: string; reactionType: string | null }) =>
+      commentApi.reactToComment(api, commentId, reactionType),
+    onMutate: async ({ commentId, reactionType }) => {
+      if (!currentUser) return;
 
-  const likeCommentMutation = useMutation({
-    mutationFn: (commentId: string) => commentApi.likeComment(api, commentId),
-    onMutate: async (commentId) => {
       await queryClient.cancelQueries({ queryKey });
       const previousPost = queryClient.getQueryData<Post>(queryKey);
 
-      if (!currentUser) {
-        return { previousPost };
-      }
-
       queryClient.setQueryData<Post>(queryKey, (oldPost) => {
         if (!oldPost) return undefined;
+
         return {
           ...oldPost,
-          comments: oldPost.comments.map((c) => {
-            if (c._id === commentId) {
-              const isLiked = c.likes.includes(currentUser._id);
-              const newLikes = isLiked
-                ? c.likes.filter((id) => id !== currentUser._id)
-                : [...c.likes, currentUser._id];
-              return { ...c, likes: newLikes };
+          comments: oldPost.comments.map((comment) => {
+            if (comment._id === commentId) {
+              const newReactions = [...(comment.reactions || [])];
+              const existingReactionIndex = newReactions.findIndex((r) => r.user?._id === currentUser._id);
+
+              if (existingReactionIndex > -1) {
+                if (reactionType === null) {
+                  // Remove reaction if reactionType is null
+                  newReactions.splice(existingReactionIndex, 1);
+                } else if (newReactions[existingReactionIndex].type === reactionType) {
+                  // If the new reaction is the same as the old, remove it (toggle off)
+                  newReactions.splice(existingReactionIndex, 1);
+                } else {
+                  // Otherwise, update the reaction type
+                  newReactions[existingReactionIndex].type = reactionType;
+                }
+              } else if (reactionType !== null) {
+                // Add a new reaction if reactionType is not null
+                newReactions.push({
+                  _id: new Date().toISOString(),
+                  user: currentUser,
+                  type: reactionType,
+                } as Reaction);
+              }
+              return { ...comment, reactions: newReactions };
             }
-            return c;
+            return comment;
           }),
         };
       });
+
       return { previousPost };
     },
-    onError: (_err, _commentId, context) => {
-      queryClient.setQueryData(queryKey, context?.previousPost);
+    onError: (_err, _vars, context) => {
+      if (context?.previousPost) {
+        queryClient.setQueryData(queryKey, context.previousPost);
+      }
+      Alert.alert("Error", "Could not update comment reaction. Please try again.");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
@@ -133,6 +154,6 @@ export const usePost = (postId: string) => {
     createComment: createCommentMutation.mutate,
     isCreatingComment: createCommentMutation.isPending,
     reactToPost: reactToPostMutation.mutate,
-    likeComment: likeCommentMutation.mutate,
+    reactToComment: reactToCommentMutation.mutate,
   };
 };
