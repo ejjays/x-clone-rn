@@ -13,18 +13,7 @@ const SearchScreen = () => {
   const { users, isLoading, error, refetch } = useAllUsers()
   const { currentUser } = useCurrentUser()
   const insets = useSafeAreaInsets()
-  const { isDarkMode } = useTheme(); // Use useTheme hook
-
-  const colors = {
-    background: isDarkMode ? "#111827" : "#ffffff",
-    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-    icon: isDarkMode ? "#ffffff" : "#000000",
-  };
+  const { colors } = useTheme(); // Use useTheme hook
 
   // Filter users based on search text and exclude current user
   const filteredUsers = users.filter((user: User) => {
@@ -99,12 +88,12 @@ const SearchScreen = () => {
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.blue} colors={[colors.blue]} />}
       >
         {isLoading ? (
-          <View className="flex-1 items-center justify-center p-8">
+          <View className="flex-1 items-center justify-center p-8" style={{backgroundColor: colors.background}}>
             <ActivityIndicator size="large" color={colors.blue} />
             <Text className="mt-4" style={{ color: colors.textMuted }}>Loading people...</Text>
           </View>
         ) : filteredUsers.length === 0 ? (
-          <View className="flex-1 items-center justify-center p-8">
+          <View className="flex-1 items-center justify-center p-8" style={{backgroundColor: colors.background}}>
             <View className="items-center">
               <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: colors.surface }}>
                 <Users size={32} color={colors.textMuted} />

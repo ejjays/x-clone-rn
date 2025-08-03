@@ -140,7 +140,7 @@ export default function MessagesScreen() {
         className="flex-1"
         style={{
           paddingTop: insets.top,
-          backgroundColor: colors.background, // This will change instantly when isDarkMode changes
+          backgroundColor: colors.background,
         }}
       >
         {/* Header with Custom Dark Mode Toggle */}

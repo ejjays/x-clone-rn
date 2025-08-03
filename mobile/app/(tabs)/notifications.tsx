@@ -9,20 +9,9 @@ import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 const NotificationsScreen = () => {
   const { notifications, isLoading, error, refetch, isRefetching, deleteNotification } = useNotifications()
-  const { isDarkMode } = useTheme(); // Use useTheme hook
+  const { colors } = useTheme(); // Use useTheme hook
 
   const insets = useSafeAreaInsets()
-
-  const colors = {
-    background: isDarkMode ? "#111827" : "#ffffff",
-    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-    icon: isDarkMode ? "#ffffff" : "#000000",
-  };
 
   // Group notifications by time periods
   const groupNotificationsByTime = (notifications: Notification[]) => {
@@ -104,7 +93,7 @@ const NotificationsScreen = () => {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.blue} colors={[colors.blue]} />}
       >
         {isLoading ? (
-          <View className="flex-1 items-center justify-center p-8">
+          <View className="flex-1 items-center justify-center p-8" style={{backgroundColor:colors.background}}>
             <ActivityIndicator size="large" color={colors.blue} />
             <Text className="mt-4" style={{ color: colors.textMuted }}>Loading notifications...</Text>
           </View>

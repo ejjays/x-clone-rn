@@ -2,22 +2,11 @@ import { useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { View, Image, Text, TouchableOpacity } from "react-native";
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import { useTheme } from "@/context/ThemeContext";
 
 const PostComposer = () => {
   const { user } = useUser();
-  const { isDarkMode } = useTheme(); // Use useTheme hook
-
-  const colors = {
-    background: isDarkMode ? "#111827" : "#ffffff",
-    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-    icon: isDarkMode ? "#ffffff" : "#000000",
-  };
+  const { colors } = useTheme(); // Get colors from useTheme hook
 
   return (
     <View className="p-4" style={{ backgroundColor: colors.background }}>

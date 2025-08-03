@@ -4,7 +4,7 @@ import type { Post } from "@/types";
 import { View, Text, TouchableOpacity } from "react-native";
 import PostCard from "./PostCard";
 import PostCardSkeleton from "./PostCardSkeleton";
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import { useTheme } from "@/context/ThemeContext";
 
 interface PostsListProps {
   username?: string;
@@ -27,18 +27,7 @@ const PostsList = ({
     deletePost,
     getCurrentUserReaction,
   } = usePosts(username);
-  const { isDarkMode } = useTheme(); // Use useTheme hook
-
-  const colors = {
-    background: isDarkMode ? "#111827" : "#ffffff",
-    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-    icon: isDarkMode ? "#ffffff" : "#000000",
-  };
+  const { colors } = useTheme(); // Use useTheme hook
 
   if (isPostsLoading || isUserLoading) {
     return (
@@ -55,7 +44,7 @@ const PostsList = ({
       <View className="p-8 items-center" style={{ backgroundColor: colors.background }}>
         <Text className="mb-4" style={{ color: colors.textMuted }}>Failed to load posts</Text>
         <TouchableOpacity className="px-4 py-2 rounded-lg" style={{ backgroundColor: colors.blue }} onPress={() => refetch()}>
-          <Text className="text-white font-semibold">Retry</Text>
+          <Text className="font-semibold text-white">Retry</Text>
         </TouchableOpacity>
       </View>
     );
@@ -84,7 +73,7 @@ const PostsList = ({
             onComment={onOpenComments || (() => {})}
             currentUser={currentUser}
             currentUserReaction={getCurrentUserReaction(post.reactions, currentUser)}
-            onOpenPostMenu={onOpenPostMenu} // Pass the new prop down to PostCard
+            onOpenPostMenu={onOpenPostMenu}
           />
           {index < posts.length - 1 && <View className="h-1" style={{ backgroundColor: colors.border }} />}
         </View>

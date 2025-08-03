@@ -10,8 +10,8 @@ export const LightThemeColors = {
 };
 
 export const DarkThemeColors = {
-  background: "#18191a",
-  surface: "#242526",
+  background: "#242526",
+  surface: "#3a3b3c",
   text: "#e4e6eb",
   textSecondary: "#b0b3b8",
   textMuted: "#8b8d91",

@@ -6,6 +6,7 @@ import { useApiClient, userApi } from "@/utils/api"
 import { useStreamChat } from "@/context/StreamChatContext"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import type { User } from "@/types"
+import { useTheme } from "@/context/ThemeContext";
 
 export default function NewMessageScreen() {
   const [users, setUsers] = useState<User[]>([])
@@ -16,6 +17,7 @@ export default function NewMessageScreen() {
   const api = useApiClient()
   const { client, isConnected, createChannel } = useStreamChat()
   const { currentUser } = useCurrentUser()
+  const { colors } = useTheme();
 
   useEffect(() => {
     fetchUsers()
@@ -97,52 +99,54 @@ export default function NewMessageScreen() {
       className="flex-row items-center p-4 border-b border-gray-100"
       onPress={() => handleUserSelect(item)}
       disabled={creating || !isConnected}
+      style={{ backgroundColor: colors.background }} // Apply theme
     >
       {item.profilePicture ? (
         <Image source={{ uri: item.profilePicture }} className="w-12 h-12 rounded-full mr-3" />
       ) : (
-        <View className="w-12 h-12 rounded-full bg-blue-500 items-center justify-center mr-3">
+        <View className="w-12 h-12 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.blue }}>
           <Text className="text-white font-semibold text-lg">
             {item.firstName?.[0]?.toUpperCase() || item.username?.[0]?.toUpperCase() || "?"}
           </Text>
         </View>
       )}
       <View className="flex-1">
-        <Text className="text-lg font-semibold text-gray-900">
+        <Text className="text-lg font-semibold" style={{ color: colors.text }}>
           {item.firstName} {item.lastName}
         </Text>
-        <Text className="text-gray-500">@{item.username}</Text>
+        <Text className="text-gray-500" style={{ color: colors.textSecondary }}>@{item.username}</Text>
       </View>
       {creating && <ActivityIndicator size="small" color="#3B82F6" />}
     </TouchableOpacity>
   )
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Header */}
       <View
         className="flex-row items-center p-4 border-b border-gray-200"
-        style={{ paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 }}
+        style={{ paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0, backgroundColor: colors.background }}
       >
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Ionicons name="close" size={24} color="#000" />
+          <Ionicons name="close" size={24} color={colors.icon} />
         </TouchableOpacity>
-        <Text className="text-xl font-bold">New Message</Text>
+        <Text className="text-xl font-bold" style={{ color: colors.text }}>New Message</Text>
       </View>
 
       {/* Search */}
-      <View className="p-4 border-b border-gray-200">
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4">
-          <Ionicons name="search" size={20} color="#666" />
+      <View className="p-4 border-b border-gray-200" style={{ backgroundColor: colors.background }}>
+        <View className="flex-row items-center rounded-full px-4" style={{ backgroundColor: colors.surface }}>
+          <Ionicons name="search" size={20} color={colors.textMuted} />
           <TextInput
             className="flex-1 ml-2 text-base"
             placeholder="Search people"
-            placeholderTextColor="#666"
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
              style={{
               paddingVertical: Platform.OS === "android" ? 8 : 12,
+              color: colors.text,
             }}
           />
         </View>
@@ -150,21 +154,21 @@ export default function NewMessageScreen() {
 
       {/* Connection status indicator */}
       {!isConnected && (
-        <View className="p-2 bg-yellow-100 items-center">
-          <Text className="text-yellow-800 text-xs font-semibold">Connecting to chat service...</Text>
+        <View className="p-2 items-center" style={{ backgroundColor: colors.surface }}>
+          <Text className="text-xs font-semibold" style={{ color: colors.textMuted }}>Connecting to chat service...</Text>
         </View>
       )}
 
       {/* Users List */}
       {loading ? (
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.background }}>
           <ActivityIndicator size="large" color="#3B82F6" />
-          <Text className="mt-2 text-gray-500">Loading users...</Text>
+          <Text className="mt-2 text-gray-500" style={{ color: colors.textMuted }}>Loading users...</Text>
         </View>
       ) : filteredUsers.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.background }}>
           <Ionicons name="people-outline" size={48} color="#ccc" />
-          <Text className="mt-2 text-gray-500">No users found</Text>
+          <Text className="mt-2 text-gray-500" style={{ color: colors.textMuted }}>No users found</Text>
         </View>
       ) : (
         <FlatList

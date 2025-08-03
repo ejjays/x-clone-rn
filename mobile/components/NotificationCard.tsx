@@ -1,7 +1,7 @@
 import type { Notification } from "@/types"
 import { Bell, Heart, MessageCircle, MoreHorizontal, UserPlus } from "lucide-react-native"
 import { View, Text, Alert, Image, TouchableOpacity } from "react-native"
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import { useTheme } from "@/context/ThemeContext";
 
 interface NotificationCardProps {
   notification: Notification
@@ -9,18 +9,7 @@ interface NotificationCardProps {
 }
 
 const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => {
-  const { isDarkMode } = useTheme(); // Use useTheme hook
-
-  const colors = {
-    background: isDarkMode ? "#111827" : "#ffffff",
-    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-    icon: isDarkMode ? "#ffffff" : "#000000",
-  };
+  const { colors } = useTheme(); // Use useTheme hook
 
   const getNotificationText = () => {
     const name = `${notification.from.firstName} ${notification.from.lastName}`

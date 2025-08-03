@@ -2,7 +2,7 @@ import type { User } from "@/types";
 import { MoreHorizontal } from "lucide-react-native";
 import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import { useTheme } from "@/context/ThemeContext";
 
 interface UserCardProps {
   user: User;
@@ -19,18 +19,7 @@ const UserCard = ({
   isFollowing,
   showMessageButton = true,
 }: UserCardProps) => {
-  const { isDarkMode } = useTheme(); // Use useTheme hook
-
-  const colors = {
-    background: isDarkMode ? "#111827" : "#ffffff",
-    surface: isDarkMode ? "#1f2937" : "#f3f4f6",
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-    icon: isDarkMode ? "#ffffff" : "#000000",
-  };
+  const { colors } = useTheme();
 
   const handleFollow = () => {
     if (onFollow) {
@@ -74,8 +63,7 @@ const UserCard = ({
     <TouchableOpacity
       className="flex-row items-center p-4"
       activeOpacity={0.7}
-      style={{ backgroundColor: colors.background }} // Apply background color
-    >
+      style={{ backgroundColor: colors.background }}    >
       {/* Profile Picture */}
       <Image
         source={{ uri: profilePicture }}
@@ -87,7 +75,7 @@ const UserCard = ({
 
       {/* User Info */}
       <View className="flex-1">
-        <Text className="text-lg font-semibold" style={{ color: colors.text }}>
+        <Text className="text-lg font-semibold"  style={{ color: colors.text }}>
           {user.firstName} {user.lastName}
         </Text>
         <Text className="text-sm" style={{ color: colors.textSecondary }}>@{user.username}</Text>
