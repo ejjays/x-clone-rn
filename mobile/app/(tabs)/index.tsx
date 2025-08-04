@@ -1,4 +1,3 @@
-// mobile/app/(tabs)/index.tsx
 import PostsList from "@/components/PostsList";
 import PostComposer from "@/components/PostComposer";
 import Stories from "@/components/Stories";
@@ -22,7 +21,7 @@ const HomeScreen = () => {
     null
   );
   const { handleScroll } = useScroll();
-  const { isDarkMode, colors } = useTheme(); // Use useTheme hook and get colors
+  const { isDarkMode, colors } = useTheme();
 
   const handleOpenComments = (postId: string) => {
     router.push(`/post/${postId}`);
@@ -72,7 +71,7 @@ const HomeScreen = () => {
             onRefresh={handlePullToRefresh}
             colors={["#1877F2"]}
             tintColor={"#1877F2"}
-            progressBackgroundColor={colors.surface} // Add this line
+            progressBackgroundColor={colors.surface}
           />
         }
       >
@@ -80,7 +79,7 @@ const HomeScreen = () => {
           <PostComposer animatedPlaceholder={false} />
           <Stories />
         </View>
-        <View className="h-1.5" style={{ backgroundColor: colors.border }} />
+        <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
         <PostsList
           onOpenComments={handleOpenComments}
           onOpenPostMenu={handleOpenPostMenu}

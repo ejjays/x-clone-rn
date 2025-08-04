@@ -16,6 +16,7 @@ import PostCard from "@/components/PostCard";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
+import { DarkThemeColors } from "@/constants/Colors";
 
 const SearchPostsScreen = () => {
   const [searchText, setSearchText] = useState("");
@@ -83,21 +84,21 @@ const SearchPostsScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      <StatusBar style="dark" />
+    <View className="flex-1" style={{ paddingTop: insets.top, backgroundColor: DarkThemeColors.background }}>
+      <StatusBar style="light" backgroundColor={DarkThemeColors.background} />
 
       {/* Header */}
-      <View className="flex-row items-center px-2 py-3 bg-white border-b border-gray-200">
+      <View className="flex-row items-center px-2 py-3 border-b" style={{ backgroundColor: DarkThemeColors.surface, borderBottomColor: DarkThemeColors.border }}>
         <TouchableOpacity onPress={() => router.back()} className="mr-1 p-1">
-          <ChevronLeft size={26} color="#000" />
+          <ChevronLeft size={26} color={DarkThemeColors.icon} />
         </TouchableOpacity>
 
-        <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-2">
-          <Search size={20} color="#657786" />
+        <View className="flex-1 flex-row items-center rounded-full px-2" style={{ backgroundColor: DarkThemeColors.background }}>
+          <Search size={20} color={DarkThemeColors.textSecondary} />
           <TextInput
             placeholder="Search posts"
-            className="flex-1 ml-3 text-base"
-            placeholderTextColor="#657786"
+            className="flex-1 ml-3 text-base" style={{ color: DarkThemeColors.text }}
+            placeholderTextColor={DarkThemeColors.textSecondary}
             value={searchText}
             onChangeText={setSearchText}
             autoFocus
@@ -107,7 +108,7 @@ const SearchPostsScreen = () => {
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={clearSearch}>
-              <X size={20} color="#657786" />
+              <X size={20} color={DarkThemeColors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -122,11 +123,11 @@ const SearchPostsScreen = () => {
         {searchText.trim().length === 0 && (
           <View className="px-4 py-4">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-semibold text-gray-900">
+              <Text className="text-lg font-semibold" style={{ color: DarkThemeColors.text }}>
                 Recent
               </Text>
               <TouchableOpacity>
-                <Text className="text-blue-500 font-medium">See all</Text>
+                <Text className="font-medium" style={{ color: DarkThemeColors.blue }}>See all</Text>
               </TouchableOpacity>
             </View>
 
@@ -136,10 +137,10 @@ const SearchPostsScreen = () => {
                 onPress={() => handleRecentSearchPress(search)}
                 className="flex-row items-center py-3"
               >
-                <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
-                  <Search size={18} color="#657786" />
+                <View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: DarkThemeColors.surface }}>
+                  <Search size={18} color={DarkThemeColors.textSecondary} />
                 </View>
-                <Text className="text-base text-gray-900">{search}</Text>
+                <Text className="text-base" style={{ color: DarkThemeColors.text }}>{search}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -151,24 +152,24 @@ const SearchPostsScreen = () => {
             {isSearching ? (
               <View className="items-center justify-center py-12">
                 <ActivityIndicator size="large" color="#1877F2" />
-                <Text className="text-gray-500 mt-4">Searching posts...</Text>
+                <Text className="mt-4" style={{ color: DarkThemeColors.textSecondary }}>Searching posts...</Text>
               </View>
             ) : searchResults.length === 0 ? (
               <View className="items-center justify-center py-12 px-8">
-                <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
-                  <Search size={32} color="#65676B" />
+                <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: DarkThemeColors.surface }}>
+                  <Search size={32} color={DarkThemeColors.textSecondary} />
                 </View>
-                <Text className="text-2xl font-semibold text-gray-900 mb-3">
+                <Text className="text-2xl font-semibold" style={{ color: DarkThemeColors.text }}>
                   No results found
                 </Text>
-                <Text className="text-gray-500 text-center text-base leading-6">
+                <Text className="text-center text-base leading-6" style={{ color: DarkThemeColors.textSecondary }}>
                   {`No posts found for "${searchText}". Try searching for something else.`}
                 </Text>
               </View>
             ) : (
               <View>
-                <View className="px-4 py-3 bg-gray-50">
-                  <Text className="text-sm font-medium text-gray-600">
+                <View className="px-4 py-3" style={{ backgroundColor: DarkThemeColors.surface }}>
+                  <Text className="text-sm font-medium" style={{ color: DarkThemeColors.textSecondary }}>
                     {searchResults.length} result
                     {searchResults.length !== 1 ? "s" : ""} for "{searchText}"
                   </Text>
@@ -189,7 +190,7 @@ const SearchPostsScreen = () => {
                       onOpenPostMenu={handlePostMenuOpen}
                     />
                     {index < searchResults.length - 1 && (
-                      <View className="h-px bg-gray-200 mx-4" />
+                      <View className="h-px mx-4" style={{ backgroundColor: DarkThemeColors.border }} />
                     )}
                   </View>
                 ))}

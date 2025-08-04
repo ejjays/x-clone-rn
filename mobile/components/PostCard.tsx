@@ -186,7 +186,7 @@ const PostCard = ({
          * @license MIT
          */
         textColor = "#FF6347";
-        break;
+        break; 
       default:
         textColor = colors.textSecondary;
         break;

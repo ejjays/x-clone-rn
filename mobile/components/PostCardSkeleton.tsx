@@ -25,7 +25,7 @@ const PostCardSkeleton = () => {
       <View style={{backgroundColor: colors.surface}} className="w-full h-72 rounded-lg mb-2" />
 
       {/* Actions Skeleton */}
-      <View className="flex-row justify-around py-2 border-t border-gray-100 mt-2">
+      <View className="flex-row justify-around py-2 border-t" style={{ borderColor: colors.border, marginTop: 2 }}>
         <View style={{backgroundColor: colors.surface}} className="w-1/4 h-6 rounded-full" />
         <View style={{backgroundColor: colors.surface}} className="w-1/4 h-6 rounded-full" />
         <View style={{backgroundColor: colors.surface}} className="w-1/4 h-6 rounded-full" />

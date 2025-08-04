@@ -9,13 +9,13 @@ import { useTheme } from "@/context/ThemeContext";
 interface PostsListProps {
   username?: string;
   onOpenComments?: (postId: string) => void;
-  onOpenPostMenu: (post: Post) => void; 
+  onOpenPostMenu: (post: Post) => void;
 }
 
 const PostsList = ({
   username,
   onOpenComments,
-  onOpenPostMenu, 
+  onOpenPostMenu,
 }: PostsListProps) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
@@ -41,9 +41,18 @@ const PostsList = ({
 
   if (error) {
     return (
-      <View className="p-8 items-center" style={{ backgroundColor: colors.background }}>
-        <Text className="mb-4" style={{ color: colors.textMuted }}>Failed to load posts</Text>
-        <TouchableOpacity className="px-4 py-2 rounded-lg" style={{ backgroundColor: colors.blue }} onPress={() => refetch()}>
+      <View
+        className="p-8 items-center"
+        style={{ backgroundColor: colors.background }}
+      >
+        <Text className="mb-4" style={{ color: colors.textMuted }}>
+          Failed to load posts
+        </Text>
+        <TouchableOpacity
+          className="px-4 py-2 rounded-lg"
+          style={{ backgroundColor: colors.blue }}
+          onPress={() => refetch()}
+        >
           <Text className="font-semibold text-white">Retry</Text>
         </TouchableOpacity>
       </View>
@@ -56,7 +65,10 @@ const PostsList = ({
 
   if (posts.length === 0) {
     return (
-      <View className="p-8 items-center" style={{ backgroundColor: colors.background }}>
+      <View
+        className="p-8 items-center"
+        style={{ backgroundColor: colors.background }}
+      >
         <Text style={{ color: colors.textMuted }}>No posts yet</Text>
       </View>
     );
@@ -72,10 +84,15 @@ const PostsList = ({
             onDelete={deletePost}
             onComment={onOpenComments || (() => {})}
             currentUser={currentUser}
-            currentUserReaction={getCurrentUserReaction(post.reactions, currentUser)}
+            currentUserReaction={getCurrentUserReaction(
+              post.reactions,
+              currentUser
+            )}
             onOpenPostMenu={onOpenPostMenu}
           />
-          {index < posts.length - 1 && <View className="h-1" style={{ backgroundColor: colors.border }} />}
+          {index < posts.length - 1 && (
+            <View className="h-1" style={{ backgroundColor: "#141414" }} />
+          )}
         </View>
       ))}
     </View>
