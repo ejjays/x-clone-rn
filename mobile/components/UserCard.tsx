@@ -1,7 +1,7 @@
 import type { User } from "@/types";
 import { MoreHorizontal } from "lucide-react-native";
 import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Fontisto from "@expo/vector-icons/Fontisto";
 import { useTheme } from "@/context/ThemeContext";
 
 interface UserCardProps {
@@ -63,7 +63,8 @@ const UserCard = ({
     <TouchableOpacity
       className="flex-row items-center p-4"
       activeOpacity={0.7}
-      style={{ backgroundColor: colors.background }}    >
+      style={{ backgroundColor: colors.background }}
+    >
       {/* Profile Picture */}
       <Image
         source={{ uri: profilePicture }}
@@ -75,12 +76,18 @@ const UserCard = ({
 
       {/* User Info */}
       <View className="flex-1">
-        <Text className="text-lg font-semibold"  style={{ color: colors.text }}>
+        <Text className="text-lg font-semibold" style={{ color: colors.text }}>
           {user.firstName} {user.lastName}
         </Text>
-        <Text className="text-sm" style={{ color: colors.textSecondary }}>@{user.username}</Text>
+        <Text className="text-sm" style={{ color: colors.textSecondary }}>
+          @{user.username}
+        </Text>
         {user.bio && (
-          <Text className="text-sm mt-1" numberOfLines={2} style={{ color: colors.textSecondary }}>
+          <Text
+            className="text-sm mt-1"
+            numberOfLines={2}
+            style={{ color: colors.textSecondary }}
+          >
             {user.bio}
           </Text>
         )}
@@ -93,7 +100,7 @@ const UserCard = ({
             className="w-12 h-12 rounded-full items-center justify-center"
             onPress={handleMessage}
           >
-            <Ionicons name="chatbubble-ellipses" size={29} color={colors.textSecondary} />
+            <Fontisto name="messenger" size={23} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
 
