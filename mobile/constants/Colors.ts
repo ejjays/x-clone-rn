@@ -1,6 +1,7 @@
 export const LightThemeColors = {
   background: "#ffffff",
   surface: "#f3f4f6",
+  card: "#ffffff", // Added card color for light theme
   text: "#111827",
   textSecondary: "#6b7280",
   textMuted: "#9ca3af",
@@ -12,6 +13,7 @@ export const LightThemeColors = {
 export const DarkThemeColors = {
   background: "#242526",
   surface: "#3a3b3c",
+  card: "#3a3b3c", // Added card color for dark theme
   text: "#e4e6eb",
   textSecondary: "#b0b3b8",
   textMuted: "#8b8d91",

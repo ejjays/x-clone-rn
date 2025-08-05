@@ -9,6 +9,7 @@ import {
 import type { ReactionName } from "@/types";
 import { reactionComponents } from "@/utils/reactions";
 import * as Haptics from "expo-haptics";
+import { useTheme } from "@/context/ThemeContext";
 
 interface PostReactionsPickerProps {
   isVisible: boolean;
@@ -40,6 +41,8 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
     onSelect(reactionType);
   };
 
+  const { colors } = useTheme();
+
   if (!isVisible || !anchorMeasurements) {
     return null;
   }
@@ -56,7 +59,7 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
   const calculatedPickerWidth =
     minimumContentWidth + containerHorizontalPadding;
 
-  // Ensure pickerWidth doesn't exceed screen width minus some margin
+  // Ensure pickerWidth doesn\'t exceed screen width minus some margin
   const screenMargin = 20; // 10px on each side for overall screen safety margin
   const maxPickerWidth = screenWidth - screenMargin;
 
@@ -78,7 +81,7 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
   return (
     <Modal
       visible={isVisible}
-      transparent
+      transparent={true}
       animationType="fade"
       onRequestClose={onClose}
     >
@@ -88,14 +91,14 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
             position: "absolute",
             left,
             top,
-            width: pickerWidth, // Use the dynamically calculated width
+            width: pickerWidth,
             height: pickerHeight,
-            backgroundColor: "white",
+            backgroundColor: colors.card, 
             borderRadius: 30,
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center", // Changed to space-around for even distribution
-            paddingHorizontal: 16, // Increased padding to provide more buffer on sides
+            justifyContent: "center",
+            paddingHorizontal: 16,
             shadowColor: "#000",
             shadowOffset: {
               width: 0,
@@ -113,12 +116,12 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
                 key={reaction.type}
                 onPress={() => handleReactionPress(reaction.type)}
                 style={{
-                  padding: 8, // This padding is factored into emojiDisplayWidth
+                  padding: 8,
                   borderRadius: 20,
                   alignItems: "center",
                   justifyContent: "center",
+                  backgroundColor: colors.card, // Added background color here
                 }}
-                activeOpacity={0.7}
               >
                 <ReactionComponent width={32} height={32} />
               </TouchableOpacity>

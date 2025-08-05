@@ -3,6 +3,7 @@ import { View, TouchableOpacity } from "react-native";
 import type { ReactionName } from "@/types";
 import { reactionComponents } from "@/utils/reactions";
 import * as Haptics from "expo-haptics";
+import { useTheme } from "@/context/ThemeContext";
 
 interface ReactionsPickerProps {
   onReactionSelect: (reactionType: ReactionName) => void;
@@ -28,8 +29,10 @@ const ReactionsPicker: React.FC<ReactionsPickerProps> = ({
     onReactionSelect(reactionType);
   };
 
+  const { colors } = useTheme();
+
   return (
-    <View className="flex-row justify-around items-center bg-white rounded-full py-2 px-4 shadow-lg">
+    <View className="flex-row justify-around items-center rounded-full py-2 px-4 shadow-lg" style={{ backgroundColor: colors.card }}>
       {reactions.map((reaction) => {
         const ReactionComponent = reactionComponents[reaction.type];
         const isSelected = selectedReaction === reaction.type;
@@ -38,7 +41,8 @@ const ReactionsPicker: React.FC<ReactionsPickerProps> = ({
           <TouchableOpacity
             key={reaction.type}
             onPress={() => handleReactionPress(reaction.type)}
-            className={`p-2 rounded-full ${isSelected ? "bg-blue-100" : "bg-transparent"}`}
+            className={`p-2 rounded-full`}
+            style={{ backgroundColor: isSelected ? colors.primaryLight : colors.card }}
             activeOpacity={0.7}
           >
             <ReactionComponent

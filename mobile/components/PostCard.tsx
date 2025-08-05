@@ -11,7 +11,7 @@ import {
   Modal,
   StyleSheet,
   PanResponder,
-  Animated, 
+  Animated,
 } from "react-native";
 import CommentIcon from "../assets/icons/Comment";
 import ShareIcon from "../assets/icons/ShareIcon";
@@ -20,7 +20,11 @@ import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
 import { Video, ResizeMode } from "expo-av";
-import { reactionComponents, reactionTextColor, reactionLabels } from "@/utils/reactions";
+import {
+  reactionComponents,
+  reactionTextColor,
+  reactionLabels,
+} from "@/utils/reactions";
 import { FontAwesome } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -48,7 +52,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const DRAG_THRESHOLD = 50;
 const SNAP_TO_CLOSE_THRESHOLD = screenHeight / 4; // Close if dragged more than 1/4 of the screen height
 
-const AnimatedImage = Animated.createAnimatedComponent(Image); 
+const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 const PostCard = ({
   currentUser,
@@ -70,42 +74,40 @@ const PostCard = ({
   const [imageHeight, setImageHeight] = useState<number | null>(null);
   const [videoHeight, setVideoHeight] = useState<number | null>(null);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
-  const { isDarkMode, colors } = useTheme(); 
-  const [isImageModalVisible, setIsImageModalVisible] = useState(false); 
-  const [isFullscreenImageLoading, setIsFullscreenImageLoading] = useState(false); 
+  const { isDarkMode, colors } = useTheme();
+  const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [showModalContent, setShowModalContent] = useState(true); // New state for content visibility
 
-  const imageTranslateY = useRef(new Animated.Value(0)).current;
+  const imageTranslateY = useRef(new Animated.Value(0)).current; // Initialize centered
   const modalFadeAnim = useRef(new Animated.Value(0)).current; // Sole controller for overall modal opacity
   const contentOpacityAnim = useRef(new Animated.Value(1)).current; // New Animated.Value for content opacity
 
   const openImageModal = useCallback(() => {
     setIsImageModalVisible(true);
-    setIsFullscreenImageLoading(true); 
-    // Start fade-in animation for the modal
     Animated.timing(modalFadeAnim, {
       toValue: 1,
-      duration: 300, 
+      duration: 300,
       useNativeDriver: true,
     }).start();
   }, []);
 
-  const closeImageModal = useCallback((direction: 'up' | 'down') => {
-    const toValue = direction === 'up' ? -screenHeight : screenHeight; 
+  const closeImageModal = useCallback((direction: "up" | "down") => {
+    const toValue = direction === "up" ? -screenHeight : screenHeight;
     Animated.parallel([
       Animated.timing(imageTranslateY, {
-        toValue: toValue, 
+        toValue: toValue,
         duration: 250,
         useNativeDriver: true,
       }),
-      Animated.timing(modalFadeAnim, { // Animate overall modal opacity to 0
+      Animated.timing(modalFadeAnim, {
+        // Animate overall modal opacity to 0
         toValue: 0,
         duration: 250,
         useNativeDriver: true,
       }),
     ]).start(() => {
-      setIsImageModalVisible(false); 
-      imageTranslateY.setValue(0); // Reset for next open
+      setIsImageModalVisible(false);
+      imageTranslateY.setValue(0); // Reset to initial off-screen position for next open
       modalFadeAnim.setValue(0); // Reset for next open
       contentOpacityAnim.setValue(1); // Reset content opacity to visible
       setShowModalContent(true); // Reset content visibility
@@ -113,7 +115,7 @@ const PostCard = ({
   }, []);
 
   const toggleModalContent = useCallback(() => {
-    setShowModalContent(prev => !prev);
+    setShowModalContent((prev) => !prev);
     Animated.timing(contentOpacityAnim, {
       toValue: showModalContent ? 0 : 1, // Fade out if currently visible, fade in if hidden
       duration: 200,
@@ -125,18 +127,19 @@ const PostCard = ({
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 5; 
+        return Math.abs(gestureState.dy) > 5;
       },
       onPanResponderMove: (_, gestureState) => {
         imageTranslateY.setValue(gestureState.dy);
         // Directly set modalFadeAnim based on drag distance for a cohesive feel
-        const newOpacity = 1 - Math.abs(gestureState.dy) / SNAP_TO_CLOSE_THRESHOLD;
+        const newOpacity =
+          1 - Math.abs(gestureState.dy) / SNAP_TO_CLOSE_THRESHOLD;
         modalFadeAnim.setValue(Math.max(0, newOpacity));
       },
       onPanResponderRelease: (_, gestureState) => {
         if (Math.abs(gestureState.dy) > SNAP_TO_CLOSE_THRESHOLD) {
-          const direction = gestureState.dy > 0 ? 'down' : 'up'; 
-          closeImageModal(direction); 
+          const direction = gestureState.dy > 0 ? "down" : "up";
+          closeImageModal(direction);
         } else {
           Animated.parallel([
             Animated.spring(imageTranslateY, {
@@ -144,7 +147,8 @@ const PostCard = ({
               useNativeDriver: true,
               bounciness: 10,
             }),
-            Animated.spring(modalFadeAnim, { // Spring back overall modal opacity to 1
+            Animated.spring(modalFadeAnim, {
+              // Spring back overall modal opacity to 1
               toValue: 1,
               useNativeDriver: true,
               bounciness: 10,
@@ -166,7 +170,7 @@ const PostCard = ({
           setIsMediaLoading(false);
         },
         (error) => {
-          console.error(`Couldn\'t get image size for ${post.image}:`, error);
+          console.error(`Couldn't get image size for ${post.image}:`, error);
           setImageHeight(200);
           setIsMediaLoading(false);
         }
@@ -244,22 +248,21 @@ const PostCard = ({
     let textColor;
 
     switch (currentUserReaction?.type) {
+      case "like":
+        textColor = "#1877F2";
+        break;
       case "love":
-        textColor = "#E91E63";
-        break;
-      case "celebrate":
-        textColor = "#FFC857";
-        break;
-      case "haha":
-      case "wow":
-        textColor = "#FFDA63"; 
+        textColor = "#E4405F";
         break;
       case "sad":
-        textColor = "#D4A373"; 
+      case "celebrate":
+      case "haha":
+      case "wow":
+        textColor = "#FFD972";
         break;
       case "angry":
         textColor = "#FF6347";
-        break; 
+        break;
       default:
         textColor = colors.textSecondary;
         break;
@@ -297,10 +300,14 @@ const PostCard = ({
           </View>
           {isOwnPost && (
             <TouchableOpacity
-              onPress={() => onOpenPostMenu(post)} 
+              onPress={() => onOpenPostMenu(post)}
               className="p-2"
             >
-              <FontAwesome name="ellipsis-h" size={20} color={colors.textSecondary} />
+              <FontAwesome
+                name="ellipsis-h"
+                size={20}
+                color={colors.textSecondary}
+              />
             </TouchableOpacity>
           )}
         </View>
@@ -375,7 +382,10 @@ const PostCard = ({
                     return <Emoji key={reaction} width={20} height={20} />;
                   })}
                 </View>
-                <Text className="text-base ml-2" style={{ color: colors.textSecondary }}>
+                <Text
+                  className="text-base ml-2"
+                  style={{ color: colors.textSecondary }}
+                >
                   {formatNumber(post.reactions.length)}
                 </Text>
               </View>
@@ -384,7 +394,10 @@ const PostCard = ({
             )}
 
             {post.comments && post.comments.length > 0 && (
-              <Text className="text-base" style={{ color: colors.textSecondary }}>
+              <Text
+                className="text-base"
+                style={{ color: colors.textSecondary }}
+              >
                 {formatNumber(post.comments.length)}{" "}
                 {post.comments.length === 1 ? "comment" : "comments"}
               </Text>
@@ -393,7 +406,10 @@ const PostCard = ({
         )}
 
         {/* Post Actions */}
-        <View className="flex-row justify-around py-1 border-t" style={{ borderColor: colors.border, marginTop: 8 }}>
+        <View
+          className="flex-row justify-around py-1 border-t"
+          style={{ borderColor: colors.border, marginTop: 8 }}
+        >
           <Pressable
             ref={likeButtonRef}
             onPress={handleQuickPress}
@@ -408,12 +424,22 @@ const PostCard = ({
             onPress={() => onComment(post._id)}
           >
             <CommentIcon size={22} color={colors.textSecondary} />
-            <Text className="font-semibold ml-1.5" style={{ color: colors.textSecondary }}>Comment</Text>
+            <Text
+              className="font-semibold ml-1.5"
+              style={{ color: colors.textSecondary }}
+            >
+              Comment
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
             <ShareIcon size={22} color={colors.textSecondary} />
-            <Text className="font-semibold ml-1.5" style={{ color: colors.textSecondary }}>Share</Text>
+            <Text
+              className="font-semibold ml-1.5"
+              style={{ color: colors.textSecondary }}
+            >
+              Share
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -423,53 +449,62 @@ const PostCard = ({
         onSelect={handleReactionSelect}
         anchorMeasurements={anchorMeasurements}
       />
-       <Modal
-        visible={isImageModalVisible}
-        transparent={true}
-      >
-        <Animated.View 
+      <Modal visible={isImageModalVisible} transparent={true}>
+        <Animated.View
           style={[
             styles.modalContainer,
-            { opacity: modalFadeAnim } 
+            { opacity: modalFadeAnim }, // Apply modalFadeAnim here
           ]}
         >
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => closeImageModal(
-              imageTranslateY.__getValue() > 0 ? 'down' : 'up'
-            )} 
+            onPress={() =>
+              closeImageModal(imageTranslateY.__getValue() > 0 ? "down" : "up")
+            }
           >
             <FontAwesome name="close" size={24} color="white" />
           </TouchableOpacity>
-          <Pressable onPress={toggleModalContent} style={{ flex: 1, width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+          <Pressable
+            onPress={toggleModalContent}
+            style={{
+              flex: 1,
+              width: "100%",
+              height: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <AnimatedImage
               source={{ uri: post.image }}
               style={[
                 styles.fullscreenImage,
-                { opacity: isFullscreenImageLoading ? 0 : 1 },
                 { transform: [{ translateY: imageTranslateY }] },
               ]}
               resizeMode="contain"
-              onLoad={() => setIsFullscreenImageLoading(false)}
               {...panResponder.panHandlers}
             />
           </Pressable>
           {/* New content for the modal */}
-          <Animated.View style={[styles.modalContentContainer, { opacity: contentOpacityAnim }]}>
+          <Animated.View
+            style={[
+              styles.modalContentContainer,
+              { opacity: contentOpacityAnim },
+            ]}
+          >
             {/* User Info */}
             <View className="flex-row items-center mb-2">
-                <Text className="font-bold text-base" style={{ color: "white" }}>
-                  {post.user.firstName} {post.user.lastName}
-                </Text>
+              <Text className="font-bold text-base" style={{ color: "white" }}>
+                {post.user.firstName} {post.user.lastName}
+              </Text>
             </View>
 
             {/* Post Content */}
             {post.content && (
-              <Text className="text-base mb-4" style={{ color: "white"}}>
+              <Text className="text-base mb-4" style={{ color: "white" }}>
                 {post.content}
               </Text>
             )}
-            
+
             {/* Reactions and Comments Count - within modal */}
             {((post.reactions && post.reactions.length > 0) ||
               (post.comments && post.comments.length > 0)) && (
@@ -488,7 +523,10 @@ const PostCard = ({
                         return <Emoji key={reaction} width={20} height={20} />;
                       })}
                     </View>
-                    <Text className="text-base ml-2" style={{ color: "#CCCCCC" }}>
+                    <Text
+                      className="text-base ml-2"
+                      style={{ color: "#CCCCCC" }}
+                    >
                       {formatNumber(post.reactions.length)}
                     </Text>
                   </View>
@@ -521,12 +559,22 @@ const PostCard = ({
                 onPress={() => onComment(post._id)}
               >
                 <CommentIcon size={22} color={"white"} />
-                <Text className="font-semibold ml-1.5" style={{ color: "white" }}>Comment</Text>
+                <Text
+                  className="font-semibold ml-1.5"
+                  style={{ color: "white" }}
+                >
+                  Comment
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
                 <ShareIcon size={22} color={"white"} />
-                <Text className="font-semibold ml-1.5" style={{ color: "white" }}>Share</Text>
+                <Text
+                  className="font-semibold ml-1.5"
+                  style={{ color: "white" }}
+                >
+                  Share
+                </Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -554,12 +602,12 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   modalContentContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
-    width: '100%',
+    width: "100%",
     padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.7)', // Semi-transparent black background
-  }
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
 });
 
 export default PostCard;
