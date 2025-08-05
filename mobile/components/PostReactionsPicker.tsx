@@ -68,15 +68,17 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
   const pickerHeight = 60; // Still sufficient based on emoji height + padding
 
   // Calculate position to center the picker above the button
+  // Changed offset from -10 to -85 to ensure it clears the action bar
   let left = anchorMeasurements.pageX - pickerWidth / 2;
-  let top = anchorMeasurements.pageY - pickerHeight - 10;
+  let top = anchorMeasurements.pageY - pickerHeight - 35; 
 
-  // Ensure picker stays within screen bounds
+  // Ensure picker stays within screen bounds horizontally
   if (left < 10) left = 10;
   if (left + pickerWidth > screenWidth - 10)
     left = screenWidth - pickerWidth - 10;
-  // If picker is too high, position it below the anchor
-  if (top < 50) top = anchorMeasurements.pageY + 50;
+
+  // Ensure picker stays within screen bounds vertically (always above, never goes off top)
+  top = Math.max(top, 30); // Set minimum top position to 30px from screen top
 
   return (
     <Modal
@@ -120,7 +122,7 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
                   borderRadius: 20,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: colors.card, // Added background color here
+                  backgroundColor: colors.card, 
                 }}
               >
                 <ReactionComponent width={32} height={32} />
