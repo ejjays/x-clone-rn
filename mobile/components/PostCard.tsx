@@ -441,9 +441,6 @@ const PostCard = ({
           >
             <FontAwesome name="close" size={24} color="white" />
           </TouchableOpacity>
-          {isFullscreenImageLoading ? (
-            <Text style={{ color: "white" }}>Loading image...</Text>
-          ) : null}
           <Pressable onPress={toggleModalContent} style={{ flex: 1, width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
             <AnimatedImage
               source={{ uri: post.image }}
