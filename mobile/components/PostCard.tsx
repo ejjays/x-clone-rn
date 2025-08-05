@@ -343,7 +343,7 @@ const PostCard = ({
       )}
 
       {post.image && !isMediaLoading && imageHeight !== null && (
-        <TouchableOpacity onPress={openImageModal}>
+        <TouchableOpacity onPress={openImageModal} activeOpacity={1}>
           <Image
             source={{ uri: post.image }}
             style={{ width: screenWidth, height: imageHeight }}
