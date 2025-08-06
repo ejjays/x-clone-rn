@@ -1,7 +1,7 @@
 import type { User } from "@/types";
 import { MoreHorizontal } from "lucide-react-native";
 import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
-import Fontisto from "@expo/vector-icons/Fontisto";
+import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
 import { useTheme } from "@/context/ThemeContext";
 
 interface UserCardProps {
@@ -100,7 +100,7 @@ const UserCard = ({
             className="w-12 h-12 rounded-full items-center justify-center"
             onPress={handleMessage}
           >
-            <Fontisto name="messenger" size={23} color={colors.textSecondary} />
+            <PcmiChatIcon size={30} color={colors.icon} />
           </TouchableOpacity>
         )}
 

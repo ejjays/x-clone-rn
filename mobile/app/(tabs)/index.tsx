@@ -22,6 +22,7 @@ const HomeScreen = () => {
   );
   const { handleScroll } = useScroll();
   const { isDarkMode, colors } = useTheme();
+  const [isReactionPickerVisible, setIsReactionPickerVisible] = useState(false);
 
   const handleOpenComments = (postId: string) => {
     router.push(`/post/${postId}`);
@@ -56,6 +57,10 @@ const HomeScreen = () => {
     postActionBottomSheetRef.current?.close();
   };
 
+  const handleReactionPickerVisibilityChange = (isVisible: boolean) => {
+    setIsReactionPickerVisible(isVisible);
+  };
+
   useUserSync();
 
   return (
@@ -65,6 +70,7 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={1}
+        scrollEnabled={!isReactionPickerVisible}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -83,6 +89,7 @@ const HomeScreen = () => {
         <PostsList
           onOpenComments={handleOpenComments}
           onOpenPostMenu={handleOpenPostMenu}
+          onReactionPickerVisibilityChange={handleReactionPickerVisibilityChange}
         />
       </ScrollView>
       <PostActionBottomSheet

@@ -18,15 +18,14 @@ import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { ScrollProvider } from "@/context/ScrollContext";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
+import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
 
 const HEADER_HEIGHT = 40;
 const TAB_BAR_HEIGHT = 50;
-// Updated TAB_ROUTES - removed "/messages"
 const TAB_ROUTES = ["/", "/search", "/videos", "/notifications", "/profile"];
 const NUM_TABS = TAB_ROUTES.length;
 
@@ -107,27 +106,33 @@ const TabsLayout = () => {
           backgroundColor: colors.background, // Apply background color here
         }}
       >
-        <StatusBar style={isVideosScreen ? "light" : (isDarkMode ? "light" : "dark")} />
+        <StatusBar
+          style={isVideosScreen ? "light" : isDarkMode ? "light" : "dark"}
+        />
 
         <Animated.View style={animatedHeaderStyle}>
-          <View className="flex-row justify-between items-center px-3 h-full" style={{ backgroundColor: colors.background }}>
-            <Text className="text-4xl font-extrabold ml-1" style={{ color: 'white' }}>pcmi</Text>
+          <View
+            className="flex-row justify-between items-center px-3 h-full"
+            style={{ backgroundColor: colors.background }}
+          >
+            <Text
+              className="text-4xl font-extrabold ml-1"
+              style={{ color: "white" }}
+            >
+              pcmi
+            </Text>
             <View className="flex-row space-x-2">
               <TouchableOpacity
                 className="p-2.5 rounded-full"
                 onPress={() => router.push("/search-posts")}
               >
-                <Search size={28} color={colors.icon} />
+                <Search size={29} color='white' />
               </TouchableOpacity>
               <TouchableOpacity
                 className="p-2.5 rounded-full"
                 onPress={handleMessagePress}
               >
-                <FontAwesome5
-                  name="facebook-messenger"
-                  size={26}
-                  color={colors.icon}
-                />
+                <PcmiChatIcon size={29} color={'white'} />
               </TouchableOpacity>
             </View>
           </View>
@@ -147,7 +152,13 @@ const TabsLayout = () => {
             }}
             tabBar={(props) => (
               <Animated.View style={animatedTabBarStyle}>
-                <View className="border-b" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+                <View
+                  className="border-b"
+                  style={{
+                    backgroundColor: colors.background,
+                    borderColor: colors.border,
+                  }}
+                >
                   <View className="flex-row justify-around items-center h-full">
                     <TouchableOpacity
                       className="flex-1 items-center justify-center h-full"
@@ -157,10 +168,10 @@ const TabsLayout = () => {
                         size={26}
                         color={
                           isVideosScreen
-                            ? colors.icon
+                            ? 'white'
                             : pathname === "/"
                               ? colors.blue
-                              : colors.icon
+                              : 'white'
                         }
                       />
                     </TouchableOpacity>
@@ -173,10 +184,10 @@ const TabsLayout = () => {
                         size={27}
                         color={
                           isVideosScreen
-                            ? colors.icon
+                            ? 'white'
                             : pathname === "/search"
                               ? colors.blue
-                              : colors.icon
+                              : 'white'
                         }
                       />
                     </TouchableOpacity>
@@ -187,7 +198,7 @@ const TabsLayout = () => {
                     >
                       <TvMinimalPlay
                         size={26}
-                        color={isVideosScreen ? colors.blue : colors.icon}
+                        color={isVideosScreen ? colors.blue : 'white'}
                       />
                     </TouchableOpacity>
 
@@ -199,10 +210,10 @@ const TabsLayout = () => {
                         size={26}
                         color={
                           isVideosScreen
-                            ? colors.icon
+                            ? 'white'
                             : pathname === "/notifications"
                               ? colors.blue
-                              : colors.icon
+                              : 'white'
                         }
                       />
                     </TouchableOpacity>
@@ -213,12 +224,17 @@ const TabsLayout = () => {
                     >
                       <Menu
                         size={26}
-                        color={pathname === "/profile" ? colors.blue : colors.icon}
+                        color={
+                          pathname === "/profile" ? colors.blue : 'white'
+                        }
                       />
                     </TouchableOpacity>
                   </View>
 
-                  <View className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: colors.border }}>
+                  <View
+                    className="absolute bottom-0 left-0 right-0 h-0.5"
+                    style={{ backgroundColor: colors.border }}
+                  >
                     <Animated.View
                       className="h-full bg-blue-500"
                       style={animatedIndicatorStyle}

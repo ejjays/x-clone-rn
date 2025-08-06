@@ -25,7 +25,7 @@ import {
   reactionTextColor,
   reactionLabels,
 } from "@/utils/reactions";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, AntDesign, Fontisto } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 
 const getDynamicPostTextStyle = (content: string): string => {
@@ -46,6 +46,7 @@ interface PostCardProps {
   currentUser: User;
   currentUserReaction: Reaction | null;
   onOpenPostMenu: (post: Post) => void;
+  onReactionPickerVisibilityChange?: (isVisible: boolean) => void;
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -62,6 +63,7 @@ const PostCard = ({
   onComment,
   currentUserReaction,
   onOpenPostMenu,
+  onReactionPickerVisibilityChange,
 }: PostCardProps) => {
   const isOwnPost = post.user._id === currentUser._id;
   const likeButtonRef = useRef<RNView>(null);
@@ -80,15 +82,30 @@ const PostCard = ({
 
   const imageTranslateY = useRef(new Animated.Value(0)).current; // Initialize centered
   const modalFadeAnim = useRef(new Animated.Value(0)).current; // Sole controller for overall modal opacity
-  const contentOpacityAnim = useRef(new Animated.Value(1)).current; // New Animated.Value for content opacity
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current; // New Animated.Value for content opacity, initialy 0
 
   const openImageModal = useCallback(() => {
     setIsImageModalVisible(true);
-    Animated.timing(modalFadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    imageTranslateY.setValue(50); // Start slightly off-center for the movement effect
+    Animated.parallel([
+      Animated.timing(modalFadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(imageTranslateY, {
+        // Use spring for a smoother, bouncier movement
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 10,
+      }),
+      Animated.timing(contentOpacityAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: 600, // Delay content animation by 1 second
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
   const closeImageModal = useCallback((direction: "up" | "down") => {
@@ -105,11 +122,16 @@ const PostCard = ({
         duration: 250,
         useNativeDriver: true,
       }),
+      Animated.timing(contentOpacityAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
     ]).start(() => {
       setIsImageModalVisible(false);
       imageTranslateY.setValue(0); // Reset to initial off-screen position for next open
       modalFadeAnim.setValue(0); // Reset for next open
-      contentOpacityAnim.setValue(1); // Reset content opacity to visible
+      contentOpacityAnim.setValue(0); // Reset content opacity to hidden
       setShowModalContent(true); // Reset content visibility
     });
   }, []);
@@ -184,6 +206,12 @@ const PostCard = ({
       setIsMediaLoading(false);
     }
   }, [post.image, post.video]);
+
+  useEffect(() => {
+    if (onReactionPickerVisibilityChange) {
+      onReactionPickerVisibilityChange(pickerVisible);
+    }
+  }, [pickerVisible, onReactionPickerVisibilityChange]);
 
   const handleVideoLoad = (playbackStatus: any) => {
     if (
@@ -456,14 +484,18 @@ const PostCard = ({
             { opacity: modalFadeAnim }, // Apply modalFadeAnim here
           ]}
         >
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() =>
-              closeImageModal(imageTranslateY.__getValue() > 0 ? "down" : "up")
-            }
-          >
-            <FontAwesome name="close" size={24} color="white" />
-          </TouchableOpacity>
+          <Animated.View style={{ opacity: contentOpacityAnim }}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() =>
+                closeImageModal(
+                  imageTranslateY.__getValue() > 0 ? "down" : "up"
+                )
+              }
+            >
+              <AntDesign name="close" size={28} color="white" />
+            </TouchableOpacity>
+          </Animated.View>
           <Pressable
             onPress={toggleModalContent}
             style={{
@@ -594,7 +626,7 @@ const styles = StyleSheet.create({
   closeButton: {
     position: "absolute",
     top: 40,
-    left: 20,
+    right: "38%",
     zIndex: 1,
   },
   fullscreenImage: {
