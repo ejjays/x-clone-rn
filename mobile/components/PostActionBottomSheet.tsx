@@ -11,6 +11,7 @@ import {
 import { Entypo, Ionicons } from "@expo/vector-icons";
 import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
 import { Dimensions } from "react-native";
+import ConfirmationAlert from "./ConfirmationAlert";
 
 interface PostActionBottomSheetProps {
   onClose: () => void;
@@ -35,6 +36,8 @@ const PostActionBottomSheet = forwardRef<
   const [visible, setVisible] = useState(false);
   const translateY = useRef(new Animated.Value(height)).current;
   const [isDragging, setIsDragging] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const bottomSheetStyle = useRef({
     backgroundColor: "#121212",
     borderTopLeftRadius: 20,
@@ -96,20 +99,20 @@ const PostActionBottomSheet = forwardRef<
 
   const handleDeletePress = () => {
     if (!isDragging) {
+      setShowDeleteConfirm(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete();
+      setShowDeleteConfirm(false);
       handleClose();
-      Alert.alert(
-        "Delete Post",
-        "Are you sure you want to delete this post?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Delete",
-            onPress: onDelete,
-            style: "destructive",
-          },
-        ],
-        { cancelable: true }
-      );
+    } catch (error) {
+      console.error('Delete failed:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -227,6 +230,18 @@ const PostActionBottomSheet = forwardRef<
           </View>
         </Animated.View>
       </Pressable>
+      <ConfirmationAlert
+        visible={showDeleteConfirm}
+        title="Delete Post"
+        message="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmButtonColor="danger"
+        icon="trash-outline"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </Modal>
   );
 });
