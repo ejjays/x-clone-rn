@@ -315,7 +315,11 @@ const PostCard = ({
         {/* Post Header */}
         <View className="flex-row px-2 py-3 items-center">
           <Image
-            source={{ uri: post.user.profilePicture || "" }}
+            source={
+              post.user.profilePicture
+                ? { uri: post.user.profilePicture }
+                : require("../assets/images/default-avatar.png")
+            }
             className="w-14 h-14 rounded-full mr-3"
           />
           <View className="flex-1">

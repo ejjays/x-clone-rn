@@ -94,8 +94,6 @@ export default function RootLayout() {
           >
             <StreamChatProvider>
               <ThemeProvider>
-                {" "}
-                {/* Wrap with ThemeProvider */}
                 <InitialLayout />
               </ThemeProvider>
             </StreamChatProvider>

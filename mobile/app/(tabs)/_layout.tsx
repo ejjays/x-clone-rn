@@ -34,30 +34,27 @@ const TabsLayout = () => {
   const pathname = usePathname();
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { isDarkMode, colors } = useTheme(); // Get colors from useTheme hook
+  const { isDarkMode, colors } = useTheme();
 
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
 
-  // Create a shared value for indicator position
   const indicatorX = useSharedValue(0);
 
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
 
-  // Initialize header and tab bar visibility instantly based on initial screen
   useEffect(() => {
     headerHeight.value = isHomeScreen ? HEADER_HEIGHT : 0;
     tabBarHeight.value = isProfileScreen ? 0 : TAB_BAR_HEIGHT;
   }, [isHomeScreen, isProfileScreen]);
 
-  // Update indicator position when pathname changes
   useEffect(() => {
     const activeIndex = TAB_ROUTES.indexOf(pathname);
     if (activeIndex !== -1) {
       indicatorX.value = withTiming(activeIndex * (screenWidth / NUM_TABS), {
-        duration: 150,
+        duration: 0,
       });
     }
   }, [pathname, screenWidth]);
@@ -85,7 +82,6 @@ const TabsLayout = () => {
     };
   });
 
-  // Handle message icon press - navigate to full screen messages
   const handleMessagePress = () => {
     router.push("/messages");
   };
@@ -103,7 +99,7 @@ const TabsLayout = () => {
         style={{
           flex: 1,
           paddingTop: isProfileScreen ? 0 : insets.top,
-          backgroundColor: colors.background, // Apply background color here
+          backgroundColor: colors.background,
         }}
       >
         <StatusBar
@@ -126,13 +122,13 @@ const TabsLayout = () => {
                 className="p-2.5 rounded-full"
                 onPress={() => router.push("/search-posts")}
               >
-                <Search size={29} color='white' />
+                <Search size={29} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
                 className="p-2.5 rounded-full"
                 onPress={handleMessagePress}
               >
-                <PcmiChatIcon size={29} color={'white'} />
+                <PcmiChatIcon size={29} color={"white"} />
               </TouchableOpacity>
             </View>
           </View>
@@ -143,6 +139,7 @@ const TabsLayout = () => {
             screenOptions={{
               tabBarShowLabel: false,
               lazy: false,
+              animationEnabled: false,
               sceneContainerStyle: {
                 display: "flex",
                 height: "100%",
@@ -168,10 +165,10 @@ const TabsLayout = () => {
                         size={26}
                         color={
                           isVideosScreen
-                            ? 'white'
+                            ? "white"
                             : pathname === "/"
                               ? colors.blue
-                              : 'white'
+                              : "white"
                         }
                       />
                     </TouchableOpacity>
@@ -184,10 +181,10 @@ const TabsLayout = () => {
                         size={27}
                         color={
                           isVideosScreen
-                            ? 'white'
+                            ? "white"
                             : pathname === "/search"
                               ? colors.blue
-                              : 'white'
+                              : "white"
                         }
                       />
                     </TouchableOpacity>
@@ -198,7 +195,7 @@ const TabsLayout = () => {
                     >
                       <TvMinimalPlay
                         size={26}
-                        color={isVideosScreen ? colors.blue : 'white'}
+                        color={isVideosScreen ? colors.blue : "white"}
                       />
                     </TouchableOpacity>
 
@@ -210,10 +207,10 @@ const TabsLayout = () => {
                         size={26}
                         color={
                           isVideosScreen
-                            ? 'white'
+                            ? "white"
                             : pathname === "/notifications"
                               ? colors.blue
-                              : 'white'
+                              : "white"
                         }
                       />
                     </TouchableOpacity>
@@ -224,9 +221,7 @@ const TabsLayout = () => {
                     >
                       <Menu
                         size={26}
-                        color={
-                          pathname === "/profile" ? colors.blue : 'white'
-                        }
+                        color={pathname === "/profile" ? colors.blue : "white"}
                       />
                     </TouchableOpacity>
                   </View>
