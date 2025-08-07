@@ -122,7 +122,7 @@ const TabsLayout = () => {
             screenOptions={{
               tabBarShowLabel: false,
               lazy: false,
-              animationEnabled: false,
+              animationEnabled: true,
               swipeEnabled: false,
               tabBarStyle: { elevation: 0 },
               sceneContainerStyle: {
