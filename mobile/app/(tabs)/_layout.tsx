@@ -12,7 +12,6 @@ import {
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
 } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -39,8 +38,6 @@ const TabsLayout = () => {
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
 
-  const indicatorX = useSharedValue(0);
-
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
@@ -50,14 +47,11 @@ const TabsLayout = () => {
     tabBarHeight.value = isProfileScreen ? 0 : TAB_BAR_HEIGHT;
   }, [isHomeScreen, isProfileScreen]);
 
-  useEffect(() => {
+  // ✅ INSTANT INDICATOR CALCULATION (No animation delays)
+  const getIndicatorPosition = () => {
     const activeIndex = TAB_ROUTES.indexOf(pathname);
-    if (activeIndex !== -1) {
-      indicatorX.value = withTiming(activeIndex * (screenWidth / NUM_TABS), {
-        duration: 0,
-      });
-    }
-  }, [pathname, screenWidth]);
+    return activeIndex !== -1 ? activeIndex * (screenWidth / NUM_TABS) : 0;
+  };
 
   const animatedHeaderStyle = useAnimatedStyle(() => ({
     height: headerHeight.value,
@@ -70,17 +64,6 @@ const TabsLayout = () => {
     opacity: tabBarHeight.value / TAB_BAR_HEIGHT,
     overflow: "hidden",
   }));
-
-  const animatedIndicatorStyle = useAnimatedStyle(() => {
-    return {
-      width: `${100 / NUM_TABS}%`,
-      transform: [
-        {
-          translateX: indicatorX.value,
-        },
-      ],
-    };
-  });
 
   const handleMessagePress = () => {
     router.push("/messages");
@@ -140,6 +123,8 @@ const TabsLayout = () => {
               tabBarShowLabel: false,
               lazy: false,
               animationEnabled: false,
+              swipeEnabled: false,
+              tabBarStyle: { elevation: 0 },
               sceneContainerStyle: {
                 display: "flex",
                 height: "100%",
@@ -226,13 +211,21 @@ const TabsLayout = () => {
                     </TouchableOpacity>
                   </View>
 
+                  {/* ✅ INSTANT INDICATOR - NO ANIMATION DELAYS */}
                   <View
                     className="absolute bottom-0 left-0 right-0 h-0.5"
                     style={{ backgroundColor: colors.border }}
                   >
-                    <Animated.View
+                    <View
                       className="h-full bg-blue-500"
-                      style={animatedIndicatorStyle}
+                      style={{
+                        width: `${100 / NUM_TABS}%`,
+                        transform: [
+                          {
+                            translateX: getIndicatorPosition(),
+                          },
+                        ],
+                      }}
                     />
                   </View>
                 </View>
