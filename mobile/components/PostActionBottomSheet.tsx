@@ -8,12 +8,7 @@ import {
   PanResponder,
   Animated,
 } from "react-native";
-import {
-  Entypo,
-  Ionicons,
-  MaterialCommunityIcons,
-  AntDesign,
-} from "@expo/vector-icons";
+import { Entypo, Ionicons } from "@expo/vector-icons";
 import { forwardRef, useImperativeHandle, useState, useRef } from "react";
 import { Dimensions } from "react-native";
 
@@ -30,16 +25,16 @@ export interface PostActionBottomSheetRef {
 }
 
 const { height } = Dimensions.get("window");
-const SNAP_TO_CLOSE_THRESHOLD = height * 0.2; // 20% of screen height to close
-const DRAG_THRESHOLD = 5; // Pixels to distinguish a drag from a tap
+const SNAP_TO_CLOSE_THRESHOLD = height * 0.2;
+const DRAG_THRESHOLD = 5;
 
 const PostActionBottomSheet = forwardRef<
   PostActionBottomSheetRef,
   PostActionBottomSheetProps
 >(({ onClose, onDelete, onCopyText, postContent }, ref) => {
   const [visible, setVisible] = useState(false);
-  const translateY = useRef(new Animated.Value(height)).current; // Initial position off-screen
-  const [isDragging, setIsDragging] = useState(false); // New state to track if a drag is active
+  const translateY = useRef(new Animated.Value(height)).current;
+  const [isDragging, setIsDragging] = useState(false);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -62,12 +57,11 @@ const PostActionBottomSheet = forwardRef<
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onStartShouldSetPanResponderCapture: () => false, // No capture here, let children handle taps first
+      onStartShouldSetPanResponderCapture: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only respond to vertical drags above a certain threshold
         const shouldSet = Math.abs(gestureState.dy) > DRAG_THRESHOLD;
         if (shouldSet) {
-          setIsDragging(true); // Indicate that a drag has started
+          setIsDragging(true);
         }
         return shouldSet;
       },
@@ -77,7 +71,7 @@ const PostActionBottomSheet = forwardRef<
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        setIsDragging(false); // Reset drag state
+        setIsDragging(false);
         if (gestureState.dy > SNAP_TO_CLOSE_THRESHOLD) {
           handleClose();
         } else {
@@ -92,8 +86,8 @@ const PostActionBottomSheet = forwardRef<
   ).current;
 
   const handleDeletePress = () => {
-    if (!isDragging) { // Only fire if not dragging
-      handleClose(); // Close the sheet before showing alert
+    if (!isDragging) {
+      handleClose();
       Alert.alert(
         "Delete Post",
         "Are you sure you want to delete this post?",
@@ -111,8 +105,8 @@ const PostActionBottomSheet = forwardRef<
   };
 
   const handleCopyTextPress = () => {
-    if (!isDragging) { // Only fire if not dragging
-      handleClose(); // Close the sheet
+    if (!isDragging) {
+      handleClose();
       if (postContent) {
         onCopyText(postContent);
       }
@@ -147,20 +141,20 @@ const PostActionBottomSheet = forwardRef<
         {/* Bottom sheet content */}
         <Animated.View
           style={{
-            backgroundColor: "white",
+            backgroundColor: "#121212",
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
-            paddingBottom: 16, // Reduced from 34 to 16
+            paddingBottom: 16,
             transform: [{ translateY: translateY }],
           }}
-          {...panResponder.panHandlers} // Apply panHandlers to the whole content view
+          {...panResponder.panHandlers}
         >
           {/* Handle bar */}
           <View
             style={{
               width: 40,
               height: 4,
-              backgroundColor: "#E5E5E5",
+              backgroundColor: "#444444",
               borderRadius: 2,
               alignSelf: "center",
               marginTop: 12,
@@ -174,12 +168,11 @@ const PostActionBottomSheet = forwardRef<
               onPress={() => {
                 if (!isDragging) {
                   handleClose();
-                  // Add Save Post functionality here later
-                } 
+                }
               }}
             >
-              <Ionicons name="bookmark" size={24} color="black" />
-              <Text className="ml-3 text-black text-lg font-semibold">
+              <Ionicons name="bookmark" size={22} color="white" />
+              <Text className="ml-3 text-gray-200 text-lg font-semibold">
                 Save Post
               </Text>
             </TouchableOpacity>
@@ -188,12 +181,11 @@ const PostActionBottomSheet = forwardRef<
               onPress={() => {
                 if (!isDragging) {
                   handleClose();
-                  // Add Pin Post functionality here later
                 }
               }}
             >
-              <Entypo name="pin" size={24} color="black" />
-              <Text className="ml-3 text-black text-lg font-semibold">
+              <Entypo name="pin" size={22} color="white" />
+              <Text className="ml-3 text-gray-200 text-lg font-semibold">
                 Pin Post
               </Text>
             </TouchableOpacity>
@@ -202,8 +194,8 @@ const PostActionBottomSheet = forwardRef<
                 className="flex-row items-center py-4"
                 onPress={handleCopyTextPress}
               >
-                <Ionicons name="copy" size={24} color="black" />
-                <Text className="ml-3 text-black text-lg font-semibold">
+                <Ionicons name="copy" size={21} color="white" />
+                <Text className="ml-3 text-gray-200 text-lg font-semibold">
                   Copy Text
                 </Text>
               </TouchableOpacity>
@@ -212,13 +204,13 @@ const PostActionBottomSheet = forwardRef<
               className="flex-row items-center py-4"
               onPress={handleDeletePress}
             >
-              <Entypo name="trash" size={24} color="red" />
+              <Entypo name="trash" size={22} color="red" />
               <Text className="ml-3 text-red-500 text-lg font-semibold">
                 Delete Post
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="flex-row items-center py-3 mt-2 border-t border-gray-200"
+              className="flex-row items-center py-3 mt-2 border-t border-gray-700"
               onPress={() => {
                 if (!isDragging) {
                   handleClose();
