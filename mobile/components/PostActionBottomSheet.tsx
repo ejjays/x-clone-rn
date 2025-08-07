@@ -9,7 +9,7 @@ import {
   Animated,
 } from "react-native";
 import { Entypo, Ionicons } from "@expo/vector-icons";
-import { forwardRef, useImperativeHandle, useState, useRef } from "react";
+import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
 import { Dimensions } from "react-native";
 
 interface PostActionBottomSheetProps {
@@ -35,6 +35,15 @@ const PostActionBottomSheet = forwardRef<
   const [visible, setVisible] = useState(false);
   const translateY = useRef(new Animated.Value(height)).current;
   const [isDragging, setIsDragging] = useState(false);
+  const bottomSheetStyle = useRef({
+    backgroundColor: "#121212",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 16,
+    transform: [{ translateY: translateY }],
+    // Add the white glowing outline to the top edge
+    boxShadow: "0 -1px 5px rgba(255, 255, 255, 0.15)",
+  }).current
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -140,13 +149,7 @@ const PostActionBottomSheet = forwardRef<
       >
         {/* Bottom sheet content */}
         <Animated.View
-          style={{
-            backgroundColor: "#121212",
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            paddingBottom: 16,
-            transform: [{ translateY: translateY }],
-          }}
+          style={bottomSheetStyle}
           {...panResponder.panHandlers}
         >
           {/* Handle bar */}
