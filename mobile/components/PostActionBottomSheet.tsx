@@ -3,13 +3,18 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   Pressable,
   PanResponder,
   Animated,
 } from "react-native";
 import { Entypo, Ionicons } from "@expo/vector-icons";
-import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
 import { Dimensions } from "react-native";
 import ConfirmationAlert from "./ConfirmationAlert";
 
@@ -46,7 +51,7 @@ const PostActionBottomSheet = forwardRef<
     transform: [{ translateY: translateY }],
     // Add the white glowing outline to the top edge
     boxShadow: "0 -1px 5px rgba(255, 255, 255, 0.15)",
-  }).current
+  }).current;
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -110,7 +115,7 @@ const PostActionBottomSheet = forwardRef<
       setShowDeleteConfirm(false);
       handleClose();
     } catch (error) {
-      console.error('Delete failed:', error);
+      console.error("Delete failed:", error);
     } finally {
       setIsDeleting(false);
     }
@@ -151,10 +156,7 @@ const PostActionBottomSheet = forwardRef<
         onPress={handleClose}
       >
         {/* Bottom sheet content */}
-        <Animated.View
-          style={bottomSheetStyle}
-          {...panResponder.panHandlers}
-        >
+        <Animated.View style={bottomSheetStyle} {...panResponder.panHandlers}>
           {/* Handle bar */}
           <View
             style={{
@@ -236,7 +238,7 @@ const PostActionBottomSheet = forwardRef<
         message="Are you sure you want to delete this post? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
-        confirmButtonColor="danger"
+        confirmTextColor="#FF2C2C"
         icon="trash-outline"
         isLoading={isDeleting}
         onConfirm={handleConfirmDelete}

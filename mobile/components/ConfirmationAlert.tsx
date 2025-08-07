@@ -10,16 +10,20 @@ import {
 } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 
+/**
+ * The 'confirmButtonColor' prop has been removed to align with the new minimalist design
+ * which uses text buttons instead of colored background buttons.
+ */
 export interface ConfirmationAlertProps {
   visible: boolean;
   title: string;
   message: string;
   confirmText?: string;
   cancelText?: string;
-  confirmButtonColor?: "danger" | "primary" | "warning";
   isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  confirmTextColor?: string;
 }
 
 const ConfirmationAlert: React.FC<ConfirmationAlertProps> = ({
@@ -28,27 +32,12 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = ({
   message,
   confirmText = "Okay",
   cancelText = "Cancel",
-  confirmButtonColor = "primary",
   isLoading = false,
   onConfirm,
   onCancel,
+  confirmTextColor,
 }) => {
   const { colors } = useTheme();
-
-  const getConfirmButtonStyle = () => {
-    switch (confirmButtonColor) {
-      case "danger":
-        return styles.dangerButton;
-      case "primary":
-        return styles.primaryButton;
-      case "warning":
-        return styles.warningButton;
-      default:
-        return styles.primaryButton;
-    }
-  };
-
-  const confirmButtonStyle = getConfirmButtonStyle();
 
   return (
     <Modal
@@ -66,23 +55,27 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = ({
           </Text>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton, {backgroundColor: colors.border}]} // Darker background for cancel button
+              style={styles.button}
               onPress={onCancel}
               disabled={isLoading}
             >
-              <Text style={[styles.buttonText, { color: colors.text }]}>
+              <Text
+                style={[styles.buttonText, { color: colors.textSecondary }]}
+              >
                 {cancelText}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, confirmButtonStyle]}
+              style={styles.button}
               onPress={onConfirm}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator size="small" color="white" />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Text style={styles.buttonText}>{confirmText}</Text>
+                <Text style={[styles.buttonText, { color: confirmTextColor || colors.primary }]}>
+                  {confirmText}
+                </Text> // Apply the color here
               )}
             </TouchableOpacity>
           </View>
@@ -95,70 +88,51 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)", // Darker backdrop
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
   },
   container: {
-    borderRadius: 10,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    borderRadius: 3,
+    padding: 24,
     width: "100%",
     maxWidth: 340,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 0,
+      height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 8,
   },
   title: {
-    fontSize: 19,
-    fontWeight: "600",
-    textAlign: "center",
-    marginBottom: 10,
-    color: "#fff", // Light text color
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "left",
+    marginBottom: 8,
   },
   message: {
     fontSize: 16,
-    lineHeight: 22,
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#ddd", // Lighter text color
+    lineHeight: 24,
+    textAlign: "left",
+    marginBottom: 24,
   },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
   button: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    marginHorizontal: 6,
-  },
-  primaryButton: {
-    backgroundColor: "#3b82f6", // Facebook blue
-  },
-  dangerButton: {
-    backgroundColor: "#ef4444",
-  },
-  warningButton: {
-    backgroundColor: "#f59e0b",
-  },
-  cancelButton: {
-    
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginLeft: 8,
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
+    textTransform: "uppercase",
   },
 });
 
