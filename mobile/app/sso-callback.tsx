@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect } from "expo-router";
 import { Text, View } from "react-native";
-import LottieView from "lottie-react-native";
+import LottieView from "lottie-react-native"; 
 
 export default function SSOCallback() {
   const { isSignedIn } = useAuth();
