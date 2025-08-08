@@ -1,3 +1,4 @@
+// mobile/components/CommentCard.tsx
 import type { Comment, User, Reaction, ReactionName } from "@/types";
 import { formatDate } from "@/utils/formatters";
 import {
@@ -14,16 +15,18 @@ import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
 import { reactionTextColor } from "@/utils/reactions";
+import { useTheme } from "@/context/ThemeContext";
+import { Trash } from "lucide-react-native";
 
 interface CommentCardProps {
   comment: Comment;
   currentUser: User | undefined;
-  onLike: (commentId: string) => void; // This will be replaced or integrated
   reactToComment: (args: {
     commentId: string;
     reactionType: string | null;
   }) => void;
-  currentUserCommentReaction: Reaction | null;
+  currentUserCommentReaction?: Reaction | undefined;
+  onDelete?: (commentId: string) => void;
 }
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -33,15 +36,18 @@ const CommentCard = ({
   currentUser,
   reactToComment,
   currentUserCommentReaction,
+  onDelete,
 }: CommentCardProps) => {
-  const isLiked = currentUser ? comment.likes.includes(currentUser._id) : false; // Keep for now if `likes` array is still used
-
+  const { colors, isDarkMode } = useTheme();
   const likeButtonRef = useRef<RNView>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<{
     pageX: number;
     pageY: number;
   } | null>(null);
+
+  const isOwnComment = comment.user._id === currentUser?._id;
+  const reactionCount = comment.reactions?.length || 0;
 
   const handleQuickPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -51,6 +57,7 @@ const CommentCard = ({
   };
 
   const handleLongPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
       setAnchorMeasurements({ pageX, pageY });
       setPickerVisible(true);
@@ -62,23 +69,33 @@ const CommentCard = ({
     setPickerVisible(false);
   };
 
+  const handleDelete = () => {
+    if (onDelete && isOwnComment) {
+      onDelete(comment._id);
+    }
+  };
+
   const ReactionButton = () => {
     const reactionLabel =
       currentUserCommentReaction?.type === "celebrate"
         ? "Yeyy"
         : currentUserCommentReaction?.type || "Like";
+
+    const textColor = currentUserCommentReaction?.type
+      ? reactionTextColor[currentUserCommentReaction.type]
+      : colors.textSecondary;
+
     return (
       <View className="flex-row items-center">
-        <LikeIcon userReaction={currentUserCommentReaction?.type} size={22} />
-        <Text
-          className={`font-semibold capitalize ml-2 ${
-            currentUserCommentReaction?.type
-              ? reactionTextColor[currentUserCommentReaction.type]
-              : "text-gray-600"
-          }`}
-        >
-          {reactionLabel}
-        </Text>
+        <LikeIcon userReaction={currentUserCommentReaction?.type} size={18} />
+        {reactionCount > 0 && (
+          <Text
+            className="font-medium text-xs ml-1"
+            style={{ color: textColor }}
+          >
+            {reactionCount}
+          </Text>
+        )}
       </View>
     );
   };
@@ -91,51 +108,113 @@ const CommentCard = ({
           source={{
             uri:
               comment.user.profilePicture ||
-              `https://example.com/default-avatar.png`,
+              `https://ui-avatars.com/api/?name=${comment.user.firstName}+${comment.user.lastName}&background=random`,
           }}
           className="w-10 h-10 rounded-full"
+          style={{ backgroundColor: colors.surface }}
         />
 
-        {/* This container holds the comment bubble and the actions below it */}
-        {/* FIX: A left margin 'ml-3' creates a guaranteed space from the profile picture. */}
+        {/* Comment content container */}
         <View className="flex-1 ml-3">
-          {/* The gray comment bubble with slightly more padding */}
-          <View className="bg-gray-100 rounded-2xl px-3.5 py-2.5">
-            {/* FIX: Name is now bold and text-sm (14px) */}
-            <Text className="font-bold text-sm text-gray-900">
+          {/* Comment bubble with modern dark theme */}
+          <View
+            className="rounded-2xl px-3.5 py-2.5 max-w-[85%]"
+            style={{ backgroundColor: colors.surface }}
+          >
+            {/* User name with proper dark theme color */}
+            <Text
+              className="font-bold text-sm mb-1"
+              style={{ color: colors.text }}
+            >
               {comment.user.firstName} {comment.user.lastName}
             </Text>
-            {/* FIX: Comment text is now larger (15px) with better line height */}
-            <Text className="text-[15px] text-gray-900 leading-[22px] mt-1">
+
+            {/* Comment text with proper dark theme color and typography */}
+            <Text
+              className="text-base leading-5"
+              style={{ color: colors.text }}
+            >
               {comment.content}
             </Text>
           </View>
 
-          {/* The action buttons below the bubble */}
-          {/* FIX: Using specific margins 'ml-4' on each button to FORCE the spacing. */}
-          <View className="flex-row items-center mt-1.5 px-3">
-            <Text className="text-sm font-semibold text-gray-600">
+          {/* Action buttons below the bubble with modern styling */}
+          <View className="flex-row items-center mt-2 px-3">
+            {/* Timestamp */}
+            <Text
+              className="text-xs font-medium"
+              style={{ color: colors.textSecondary }}
+            >
               {formatDate(comment.createdAt)}
             </Text>
 
+            {/* Like/Reaction button */}
             <Pressable
               ref={likeButtonRef}
               onPress={handleQuickPress}
               onLongPress={handleLongPress}
-              className="ml-4"
+              className="ml-4 flex-row items-center"
+              style={{ minWidth: 40 }}
             >
               <ReactionButton />
+              <Text
+                className="font-medium text-xs ml-1"
+                style={{
+                  color: currentUserCommentReaction?.type
+                    ? reactionTextColor[currentUserCommentReaction.type]
+                    : colors.textSecondary,
+                }}
+              >
+                Like
+              </Text>
             </Pressable>
 
+            {/* Reply button */}
             <TouchableOpacity
               onPress={() => console.log("Reply to comment:", comment._id)}
               className="ml-4"
             >
-              <Text className="font-semibold text-sm text-gray-600">Reply</Text>
+              <Text
+                className="font-medium text-xs"
+                style={{ color: colors.textSecondary }}
+              >
+                Reply
+              </Text>
             </TouchableOpacity>
+
+            {/* Delete button for own comments */}
+            {isOwnComment && onDelete && (
+              <TouchableOpacity
+                onPress={handleDelete}
+                className="ml-auto p-1"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Trash size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
           </View>
+
+          {/* Show reactions if any */}
+          {comment.reactions && comment.reactions.length > 0 && (
+            <View className="flex-row items-center mt-1 px-3">
+              <View
+                className="flex-row items-center px-2 py-1 rounded-full"
+                style={{ backgroundColor: colors.backgroundSecondary }}
+              >
+                <Text
+                  className="text-xs"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {comment.reactions.length}{" "}
+                  {comment.reactions.length === 1 ? "reaction" : "reactions"}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       </View>
+
+      {/* Reaction picker modal */}
       <PostReactionsPicker
         isVisible={pickerVisible}
         onClose={() => setPickerVisible(false)}

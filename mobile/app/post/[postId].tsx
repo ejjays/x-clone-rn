@@ -21,25 +21,84 @@ import { useState } from "react";
 import { formatDate, formatNumber } from "@/utils/formatters";
 import CommentIcon from "@/assets/icons/Comment";
 import ShareIcon from "@/assets/icons/ShareIcon";
+import { useTheme } from "@/context/ThemeContext";
+import LikeIcon from "@/assets/icons/LikeIcon";
+
+// Comment skeleton component
+const CommentSkeleton = () => {
+  const { colors } = useTheme();
+  return (
+    <View className="flex-row items-start px-4 mb-4">
+      <View
+        style={{ backgroundColor: colors.surface }}
+        className="w-10 h-10 rounded-full"
+      />
+      <View className="flex-1 ml-3">
+        <View
+          style={{ backgroundColor: colors.surface }}
+          className="rounded-2xl px-3.5 py-2.5 mb-2"
+        >
+          <View
+            style={{ backgroundColor: colors.border }}
+            className="w-1/4 h-3 rounded mb-2"
+          />
+          <View
+            style={{ backgroundColor: colors.border }}
+            className="w-full h-4 rounded mb-1"
+          />
+          <View
+            style={{ backgroundColor: colors.border }}
+            className="w-3/4 h-4 rounded"
+          />
+        </View>
+        <View className="flex-row items-center px-3">
+          <View
+            style={{ backgroundColor: colors.border }}
+            className="w-12 h-3 rounded mr-4"
+          />
+          <View
+            style={{ backgroundColor: colors.border }}
+            className="w-8 h-3 rounded mr-4"
+          />
+          <View
+            style={{ backgroundColor: colors.border }}
+            className="w-10 h-3 rounded"
+          />
+        </View>
+      </View>
+    </View>
+  );
+};
 
 const PostDetailsScreen = () => {
   const { postId } = useLocalSearchParams<{ postId: string }>();
   if (!postId) {
     return (
-      <View style={styles.containerCenter}>
-        <Text>Post not found.</Text>
+      <View
+        style={[styles.containerCenter, { backgroundColor: colors.background }]}
+      >
+        <Text style={{ color: colors.text }}>Post not found.</Text>
       </View>
     );
   }
 
   const insets = useSafeAreaInsets();
-  const { post, isLoading, error, refetch, createComment, isCreatingComment, reactToPost, reactToComment } = usePost(postId);
+  const { colors, isDarkMode } = useTheme();
+  const {
+    post,
+    isLoading,
+    error,
+    refetch,
+    createComment,
+    isCreatingComment,
+    reactToPost,
+    reactToComment,
+  } = usePost(postId);
   const { currentUser } = useCurrentUser();
   const [commentText, setCommentText] = useState("");
 
   const handleCreateComment = () => {
     if (!commentText.trim() || !createComment) return;
-    // @ts-ignore
     createComment(commentText.trim(), {
       onSuccess: () => {
         setCommentText("");
@@ -49,44 +108,66 @@ const PostDetailsScreen = () => {
 
   const handleLikePost = () => {
     if (post) {
-      reactToPost({ postId: post._id, reactionType: 'like' });
+      const currentUserReaction = post.reactions.find(
+        (r) => r.user?._id === currentUser?._id
+      );
+      const newReaction = currentUserReaction?.type === "like" ? null : "like";
+      reactToPost({ postId: post._id, reactionType: newReaction });
     }
   };
 
   const HEADER_HEIGHT = 60;
 
-  if (isLoading) {
+  // Show error state
+  if (error && !post) {
     return (
-      <View style={styles.containerCenter}>
-        <ActivityIndicator size="large" color="#1877F2" />
-      </View>
-    );
-  }
-
-  if (error || !post) {
-    return (
-      <View style={styles.containerCenter}>
-        <Text className="text-red-500 mb-4">Could not load post.</Text>
-        <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded-lg" onPress={() => refetch()}>
+      <View
+        style={[styles.containerCenter, { backgroundColor: colors.background }]}
+      >
+        <Text style={{ color: colors.error }} className="mb-4">
+          Could not load post.
+        </Text>
+        <TouchableOpacity
+          style={{ backgroundColor: colors.blue }}
+          className="px-4 py-2 rounded-lg"
+          onPress={() => refetch()}
+        >
           <Text className="text-white font-semibold">Try Again</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  const isOwnPost = post.user._id === currentUser?._id;
-  const currentUserReaction = post.reactions.find(r => r.user?._id === currentUser?._id);
-  const isLiked = currentUserReaction?.type === 'like';
-  const likeCount = post.reactions.filter(r => r.type === 'like').length;
+  // Calculate reactions
+  const currentUserReaction = post?.reactions.find(
+    (r) => r.user?._id === currentUser?._id
+  );
+  const isLiked = currentUserReaction?.type === "like";
+  const likeCount =
+    post?.reactions.filter((r) => r.type === "like").length || 0;
+  const isOwnPost = post?.user._id === currentUser?._id;
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View
+      className="flex-1"
+      style={{ paddingTop: insets.top, backgroundColor: colors.background }}
+    >
       {/* Header */}
-      <View className="flex-row items-center px-4 py-2 border-b border-gray-200" style={{ height: HEADER_HEIGHT }}>
+      <View
+        className="flex-row items-center px-4 py-2"
+        style={{
+          height: HEADER_HEIGHT,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+          backgroundColor: colors.background,
+        }}
+      >
         <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
-          <ArrowLeft size={24} color="#1C1E21" />
+          <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-900 ml-4">{post.user.firstName}'s Post</Text>
+        <Text className="text-xl font-bold ml-4" style={{ color: colors.text }}>
+          {post?.user.firstName || "User"}'s Post
+        </Text>
       </View>
 
       <KeyboardAvoidingView
@@ -95,10 +176,18 @@ const PostDetailsScreen = () => {
         keyboardVerticalOffset={Platform.OS === "ios" ? HEADER_HEIGHT : 0}
       >
         <FlatList
-          data={post.comments}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => {
-            const currentUserCommentReaction = item.reactions?.find(r => r.user?._id === currentUser?._id);
+          data={isLoading ? Array(3).fill(null) : post?.comments || []}
+          keyExtractor={(item, index) =>
+            isLoading ? `skeleton-${index}` : item._id
+          }
+          renderItem={({ item, index }) => {
+            if (isLoading) {
+              return <CommentSkeleton />;
+            }
+
+            const currentUserCommentReaction = item.reactions?.find(
+              (r) => r.user?._id === currentUser?._id
+            );
             return (
               <CommentCard
                 comment={item}
@@ -112,71 +201,135 @@ const PostDetailsScreen = () => {
           className="flex-1"
           contentContainerStyle={styles.listContentContainer}
           ListHeaderComponent={
-            <View className="mb-4 border-b border-gray-200 pb-4">
+            <View
+              className="mb-4 pb-4"
+              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+            >
               {/* --- POST HEADER --- */}
               <View className="flex-row px-4 pt-2 pb-2 items-center">
-                <Image source={{ uri: post.user.profilePicture || "" }} className="w-12 h-12 rounded-full mr-3" />
+                <Image
+                  source={{ uri: post?.user.profilePicture || "" }}
+                  className="w-12 h-12 rounded-full mr-3"
+                />
                 <View className="flex-1">
-                  <Text className="font-bold text-gray-900 text-base">
-                    {post.user.firstName} {post.user.lastName}
+                  <Text
+                    className="font-bold text-base"
+                    style={{ color: colors.text }}
+                  >
+                    {post?.user.firstName} {post?.user.lastName}
                   </Text>
-                  <Text className="text-gray-500 text-sm">{formatDate(post.createdAt)}</Text>
+                  <Text
+                    className="text-sm"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {post ? formatDate(post.createdAt) : ""}
+                  </Text>
                 </View>
                 {isOwnPost && (
                   <TouchableOpacity className="p-2">
-                    <Trash size={20} color="#657786" />
+                    <Trash size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 )}
               </View>
 
               {/* --- POST CONTENT --- */}
-              {post.content && <Text className="text-gray-900 text-base leading-5 px-4 mb-3">{post.content}</Text>}
+              {post?.content && (
+                <Text
+                  className="text-base leading-5 px-4 mb-3"
+                  style={{ color: colors.text }}
+                >
+                  {post.content}
+                </Text>
+              )}
 
-              {/* --- POST IMAGE (Edge-to-edge) --- */}
-              {post.image && <Image source={{ uri: post.image }} className="w-full h-80 bg-gray-200" resizeMode="cover" />}
-              
-              {/* --- POST ACTIONS --- */}
+              {/* --- POST IMAGE (Full aspect ratio) --- */}
+              {post?.image && (
+                <Image
+                  source={{ uri: post.image }}
+                  className="w-full"
+                  style={{ aspectRatio: 1, backgroundColor: colors.surface }}
+                  resizeMode="cover"
+                />
+              )}
+
+              {/* --- MODERN POST ACTIONS --- */}
               <View className="flex-row justify-around py-3 mt-2 px-4">
-                <TouchableOpacity onPress={handleLikePost} className="flex-row items-center space-x-2">
-                  <Heart size={22} color={isLiked ? "#E0245E" : "#657786"} fill={isLiked ? "#E0245E" : "none"} />
-                  <Text className={`font-medium ml-1 ${isLiked ? "text-red-500" : "text-gray-500"}`}>
+                <TouchableOpacity
+                  onPress={handleLikePost}
+                  className="flex-row items-center space-x-2"
+                >
+                  <LikeIcon
+                    userReaction={currentUserReaction?.type}
+                    size={22}
+                  />
+                  <Text
+                    className={`font-medium ml-1`}
+                    style={{
+                      color: isLiked ? "#E0245E" : colors.textSecondary,
+                    }}
+                  >
                     {formatNumber(likeCount)} Like
                   </Text>
                 </TouchableOpacity>
                 <View className="flex-row items-center space-x-2">
-                  <CommentIcon size={22} color="#657786" />
-                  <Text className="text-gray-500 font-medium ml-1">{formatNumber(post.comments?.length || 0)} Comment</Text>
+                  <CommentIcon size={22} color={colors.textSecondary} />
+                  <Text
+                    className="font-medium ml-1"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {formatNumber(post?.comments?.length || 0)} Comment
+                  </Text>
                 </View>
                 <View className="flex-row items-center space-x-2">
-                  <ShareIcon size={22} color="#657786" />
-                  <Text className="text-gray-500 font-medium ml-1">Share</Text>
+                  <ShareIcon size={22} color={colors.textSecondary} />
+                  <Text
+                    className="font-medium ml-1"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    Share
+                  </Text>
                 </View>
               </View>
             </View>
           }
           ListEmptyComponent={
-            <View style={styles.containerCenter}>
-              <Text className="text-gray-500">No comments yet.</Text>
-              <Text className="text-gray-400 text-sm">Be the first to comment!</Text>
-            </View>
+            !isLoading ? (
+              <View style={styles.containerCenter}>
+                <Text style={{ color: colors.textSecondary }}>
+                  No comments yet.
+                </Text>
+                <Text style={{ color: colors.textMuted }} className="text-sm">
+                  Be the first to comment!
+                </Text>
+              </View>
+            ) : null
           }
         />
 
         {/* Comment Input Footer */}
         <View
-          className="bg-white border-t border-gray-200"
-          style={{ paddingBottom: insets.bottom === 0 ? 16 : insets.bottom, paddingTop: 16 }}
+          style={{
+            backgroundColor: colors.background,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            paddingBottom: insets.bottom === 0 ? 16 : insets.bottom,
+            paddingTop: 16,
+          }}
         >
           <View className="flex-row items-center px-4">
             <Image
               source={{ uri: currentUser?.profilePicture || "" }}
               className="w-10 h-10 rounded-full mr-3"
             />
-            <View className="flex-1 bg-gray-100 rounded-full flex-row items-center pr-2">
+            <View
+              className="flex-1 rounded-full flex-row items-center pr-2"
+              style={{ backgroundColor: colors.surface }}
+            >
               <TextInput
-                className="flex-1 p-3 text-base text-gray-900"
+                className="flex-1 p-3 text-base"
+                style={{ color: colors.text }}
                 placeholder="Write a comment..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textMuted}
                 value={commentText}
                 onChangeText={setCommentText}
                 multiline
@@ -187,9 +340,12 @@ const PostDetailsScreen = () => {
                 className="p-2"
               >
                 {isCreatingComment ? (
-                  <ActivityIndicator size="small" color="#1877F2" />
+                  <ActivityIndicator size="small" color={colors.blue} />
                 ) : (
-                  <Send size={22} color={commentText.trim() ? "#1877F2" : "#9CA3AF"} />
+                  <Send
+                    size={22}
+                    color={commentText.trim() ? colors.blue : colors.textMuted}
+                  />
                 )}
               </TouchableOpacity>
             </View>
