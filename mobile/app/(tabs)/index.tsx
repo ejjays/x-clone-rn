@@ -1,21 +1,38 @@
-import PostsList from "@/components/PostsList";
 import PostComposer from "@/components/PostComposer";
 import Stories from "@/components/Stories";
 import { usePosts } from "@/hooks/usePosts";
 import { useUserSync } from "@/hooks/useUserSync";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { router } from "expo-router";
-import { useState, useRef } from "react";
-import { RefreshControl, ScrollView, View, Alert } from "react-native";
+import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  View,
+  Alert,
+} from "react-native";
 import PostActionBottomSheet, {
   type PostActionBottomSheetRef,
 } from "@/components/PostActionBottomSheet";
+import PostCard from "@/components/PostCard";
+import PostCardSkeleton from "@/components/PostCardSkeleton";
 import type { Post } from "@/types";
 import { useScroll } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 
 const HomeScreen = () => {
   const [isRefetching, setIsRefetching] = useState(false);
-  const { refetch: refetchPosts, deletePost } = usePosts();
+  const {
+    posts,
+    isLoading: isPostsLoading,
+    error,
+    refetch: refetchPosts,
+    reactToPost,
+    deletePost,
+    getCurrentUserReaction,
+  } = usePosts();
+  const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const postActionBottomSheetRef = useRef<PostActionBottomSheetRef>(null);
   const [selectedPostForMenu, setSelectedPostForMenu] = useState<Post | null>(
     null
@@ -63,13 +80,68 @@ const HomeScreen = () => {
 
   useUserSync();
 
+  const renderItem = useCallback(
+    ({ item, index }: { item: Post; index: number }) => {
+      if (!currentUser) return null;
+      return (
+        <View>
+          <PostCard
+            post={item}
+            reactToPost={reactToPost}
+            onDelete={deletePost}
+            onComment={handleOpenComments}
+            currentUser={currentUser}
+            currentUserReaction={getCurrentUserReaction(
+              item.reactions,
+              currentUser
+            )}
+            onOpenPostMenu={handleOpenPostMenu}
+            onReactionPickerVisibilityChange={
+              handleReactionPickerVisibilityChange
+            }
+          />
+        </View>
+      );
+    },
+    [currentUser, reactToPost, deletePost]
+  );
+
+  const listHeader = useMemo(
+    () => (
+      <View>
+        <View style={{ backgroundColor: colors.background }}>
+          <PostComposer animatedPlaceholder={false} />
+          <Stories />
+        </View>
+        <View
+          className="h-1"
+          style={{ backgroundColor: isDarkMode ? "#141414" : colors.border }}
+        />
+        {(isPostsLoading || isUserLoading) && (
+          <View style={{ backgroundColor: colors.background }}>
+            {[...Array(3)].map((_, idx) => (
+              <PostCardSkeleton key={`skeleton-${idx}`} />
+            ))}
+          </View>
+        )}
+      </View>
+    ),
+    [colors, isDarkMode, isPostsLoading, isUserLoading]
+  );
+
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      <ScrollView
-        className="flex-1"
+      <FlatList
+        data={posts}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        ListHeaderComponent={listHeader}
+        ItemSeparatorComponent={() => (
+          <View className="h-1" style={{ backgroundColor: "#141414" }} />
+        )}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
-        scrollEventThrottle={1}
+        scrollEventThrottle={16}
         scrollEnabled={!isReactionPickerVisible}
         refreshControl={
           <RefreshControl
@@ -80,18 +152,11 @@ const HomeScreen = () => {
             progressBackgroundColor={colors.surface}
           />
         }
-      >
-        <View style={{ backgroundColor: colors.background }}>
-          <PostComposer animatedPlaceholder={false} />
-          <Stories />
-        </View>
-        <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
-        <PostsList
-          onOpenComments={handleOpenComments}
-          onOpenPostMenu={handleOpenPostMenu}
-          onReactionPickerVisibilityChange={handleReactionPickerVisibilityChange}
-        />
-      </ScrollView>
+        removeClippedSubviews
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={7}
+      />
       <PostActionBottomSheet
         ref={postActionBottomSheetRef}
         onClose={handleCloseBottomSheet}

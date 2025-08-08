@@ -3,7 +3,7 @@ import NotificationCard from "@/components/NotificationCard"
 import { useNotifications } from "@/hooks/useNotifications"
 import type { Notification } from "@/types"
 import { Check, Search } from "lucide-react-native" // Replaced Feather
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from "react-native"
+import { View, Text, TouchableOpacity, SectionList, ActivityIndicator, RefreshControl } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
@@ -68,6 +68,13 @@ const NotificationsScreen = () => {
   }
 
   const groupedNotifications = groupNotificationsByTime(notifications)
+  const sections = [
+    { title: "New", data: groupedNotifications.new },
+    { title: "Today", data: groupedNotifications.today },
+    { title: "Yesterday", data: groupedNotifications.yesterday },
+    { title: "This Week", data: groupedNotifications.thisWeek },
+    { title: "Earlier", data: groupedNotifications.earlier },
+  ].filter((section) => section.data.length > 0)
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
@@ -86,73 +93,31 @@ const NotificationsScreen = () => {
       </View>
 
       {/* Content */}
-      <ScrollView
-        className="flex-1" style={{ backgroundColor: colors.background }}
-        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.blue} colors={[colors.blue]} />}
-      >
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center p-8" style={{backgroundColor:colors.background}}>
-            <ActivityIndicator size="large" color={colors.blue} />
-            <Text className="mt-4" style={{ color: colors.textMuted }}>Loading notifications...</Text>
-          </View>
-        ) : notifications.length === 0 ? (
-          <NoNotificationsFound />
-        ) : (
-          <View style={{ backgroundColor: colors.background }}>
-            {/* New Notifications */}
-            {groupedNotifications.new.length > 0 && (
-              <>
-                {renderSectionHeader("New")}
-                {groupedNotifications.new.map((notification: Notification) => (
-                  <NotificationCard key={notification._id} notification={notification} onDelete={deleteNotification} />
-                ))}
-              </>
-            )}
-
-            {/* Today */}
-            {groupedNotifications.today.length > 0 && (
-              <>
-                {renderSectionHeader("Today")}
-                {groupedNotifications.today.map((notification: Notification) => (
-                  <NotificationCard key={notification._id} notification={notification} onDelete={deleteNotification} />
-                ))}
-              </>
-            )}
-
-            {/* Yesterday */}
-            {groupedNotifications.yesterday.length > 0 && (
-              <>
-                {renderSectionHeader("Yesterday")}
-                {groupedNotifications.yesterday.map((notification: Notification) => (
-                  <NotificationCard key={notification._id} notification={notification} onDelete={deleteNotification} />
-                ))}
-              </>
-            )}
-
-            {/* This Week */}
-            {groupedNotifications.thisWeek.length > 0 && (
-              <>
-                {renderSectionHeader("This Week")}
-                {groupedNotifications.thisWeek.map((notification: Notification) => (
-                  <NotificationCard key={notification._id} notification={notification} onDelete={deleteNotification} />
-                ))}
-              </>
-            )}
-
-            {/* Earlier */}
-            {groupedNotifications.earlier.length > 0 && (
-              <>
-                {renderSectionHeader("Earlier")}
-                {groupedNotifications.earlier.map((notification: Notification) => (
-                  <NotificationCard key={notification._id} notification={notification} onDelete={deleteNotification} />
-                ))}
-              </>
-            )}
-          </View>
-        )}
-      </ScrollView>
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center p-8" style={{backgroundColor:colors.background}}>
+          <ActivityIndicator size="large" color={colors.blue} />
+          <Text className="mt-4" style={{ color: colors.textMuted }}>Loading notifications...</Text>
+        </View>
+      ) : notifications.length === 0 ? (
+        <NoNotificationsFound />
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(item: Notification) => item._id}
+          renderItem={({ item }) => (
+            <NotificationCard notification={item} onDelete={deleteNotification} />
+          )}
+          renderSectionHeader={({ section: { title } }) => renderSectionHeader(title)}
+          contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.blue} colors={[colors.blue]} />}
+          stickySectionHeadersEnabled={false}
+          removeClippedSubviews
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={11}
+        />
+      )}
     </View>
   )
 }

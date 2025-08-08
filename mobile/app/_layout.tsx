@@ -12,6 +12,10 @@ import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "@/context/ThemeContext"; // Import ThemeProvider
+import { enableScreens, enableFreeze } from "react-native-screens";
+
+enableScreens(true);
+enableFreeze(true);
 
 const queryClient = new QueryClient();
 

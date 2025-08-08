@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser"
 import type { User } from "@/types"
 import { Search, Users, X } from "lucide-react-native" 
 import { useState } from "react"
-import { View, TextInput, ScrollView, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform } from "react-native"
+import { View, TextInput, FlatList, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
@@ -81,41 +81,44 @@ const SearchScreen = () => {
       </View>
 
       {/* USERS LIST */}
-      <ScrollView
-        className="flex-1"
+      <FlatList
+        data={filteredUsers}
+        keyExtractor={(item: User) => item._id}
+        renderItem={({ item }) => (
+          <UserCard user={item} onFollow={handleFollow} onMessage={handleMessage} />
+        )}
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.blue} colors={[colors.blue]} />}
-      >
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center p-8" style={{backgroundColor: colors.background}}>
-            <ActivityIndicator size="large" color={colors.blue} />
-            <Text className="mt-4" style={{ color: colors.textMuted }}>Loading people...</Text>
-          </View>
-        ) : filteredUsers.length === 0 ? (
-          <View className="flex-1 items-center justify-center p-8" style={{backgroundColor: colors.background}}>
-            <View className="items-center">
-              <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: colors.surface }}>
-                <Users size={32} color={colors.textMuted} />
-              </View>
-              <Text className="text-xl font-semibold mb-3" style={{ color: colors.text }}>
-                {searchText ? "No people found" : "No people yet"}
-              </Text>
-              <Text className="text-center text-base leading-6 max-w-xs" style={{ color: colors.textMuted }}>
-                {searchText
-                  ? `No results found for "${searchText}"`
-                  : "People will appear here when they join the app."}
-              </Text>
+        ListEmptyComponent={() => (
+          isLoading ? (
+            <View className="flex-1 items-center justify-center p-8" style={{backgroundColor: colors.background}}>
+              <ActivityIndicator size="large" color={colors.blue} />
+              <Text className="mt-4" style={{ color: colors.textMuted }}>Loading people...</Text>
             </View>
-          </View>
-        ) : (
-          <View style={{ backgroundColor: colors.background }}>
-            {filteredUsers.map((user: User) => (
-              <UserCard key={user._id} user={user} onFollow={handleFollow} onMessage={handleMessage} />
-            ))}
-          </View>
+          ) : (
+            <View className="flex-1 items-center justify-center p-8" style={{backgroundColor: colors.background}}>
+              <View className="items-center">
+                <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: colors.surface }}>
+                  <Users size={32} color={colors.textMuted} />
+                </View>
+                <Text className="text-xl font-semibold mb-3" style={{ color: colors.text }}>
+                  {searchText ? "No people found" : "No people yet"}
+                </Text>
+                <Text className="text-center text-base leading-6 max-w-xs" style={{ color: colors.textMuted }}>
+                  {searchText
+                    ? `No results found for "${searchText}"`
+                    : "People will appear here when they join the app."}
+                </Text>
+              </View>
+            </View>
+          )
         )}
-      </ScrollView>
+        removeClippedSubviews
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={11}
+      />
     </View>
   )
 }

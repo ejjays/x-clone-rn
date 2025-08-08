@@ -143,63 +143,55 @@ const TabsLayout = () => {
                   }}
                 >
                   <View className="flex-row justify-around items-center h-full">
-                    {(() => {
-                      const activeIndex = props.state.index;
-                      const activeRouteName = props.state.routes[activeIndex]?.name;
-                      return (
-                        <>
-                          <TouchableOpacity
-                            className="flex-1 items-center justify-center h-full"
-                            onPress={() => props.navigation.jumpTo("index")}
-                          >
-                            <Home
-                              size={26}
-                              color={activeRouteName === "index" ? colors.blue : "white"}
-                            />
-                          </TouchableOpacity>
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => router.replace("/")}
+                    >
+                      <Home
+                        size={26}
+                        color={pathname === "/" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
 
-                          <TouchableOpacity
-                            className="flex-1 items-center justify-center h-full"
-                            onPress={() => props.navigation.jumpTo("search")}
-                          >
-                            <PeopleIcon
-                              size={27}
-                              color={activeRouteName === "search" ? colors.blue : "white"}
-                            />
-                          </TouchableOpacity>
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => router.replace("/search")}
+                    >
+                      <PeopleIcon
+                        size={27}
+                        color={pathname === "/search" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
 
-                          <TouchableOpacity
-                            className="flex-1 items-center justify-center h-full"
-                            onPress={() => props.navigation.jumpTo("videos")}
-                          >
-                            <TvMinimalPlay
-                              size={26}
-                              color={activeRouteName === "videos" ? colors.blue : "white"}
-                            />
-                          </TouchableOpacity>
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => router.replace("/videos")}
+                    >
+                      <TvMinimalPlay
+                        size={26}
+                        color={pathname === "/videos" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
 
-                          <TouchableOpacity
-                            className="flex-1 items-center justify-center h-full"
-                            onPress={() => props.navigation.jumpTo("notifications")}
-                          >
-                            <Bell
-                              size={26}
-                              color={activeRouteName === "notifications" ? colors.blue : "white"}
-                            />
-                          </TouchableOpacity>
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => router.replace("/notifications")}
+                    >
+                      <Bell
+                        size={26}
+                        color={pathname === "/notifications" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
 
-                          <TouchableOpacity
-                            className="flex-1 items-center justify-center h-full"
-                            onPress={() => props.navigation.jumpTo("profile")}
-                          >
-                            <Menu
-                              size={26}
-                              color={activeRouteName === "profile" ? colors.blue : "white"}
-                            />
-                          </TouchableOpacity>
-                        </>
-                      );
-                    })()}
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => router.replace("/profile")}
+                    >
+                      <Menu
+                        size={26}
+                        color={pathname === "/profile" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
                   </View>
 
                   {/* ✅ INSTANT INDICATOR - NO ANIMATION DELAYS */}
@@ -207,22 +199,17 @@ const TabsLayout = () => {
                     className="absolute bottom-0 left-0 right-0 h-0.5"
                     style={{ backgroundColor: colors.border }}
                   >
-                    {(() => {
-                      const activeIndex = props.state.index;
-                      return (
-                        <View
-                          className="h-full bg-blue-500"
-                          style={{
-                            width: `${100 / NUM_TABS}%`,
-                            transform: [
-                              {
-                                translateX: activeIndex * (screenWidth / NUM_TABS),
-                              },
-                            ],
-                          }}
-                        />
-                      );
-                    })()}
+                    <View
+                      className="h-full bg-blue-500"
+                      style={{
+                        width: `${100 / NUM_TABS}%`,
+                        transform: [
+                          {
+                            translateX: getIndicatorPosition(),
+                          },
+                        ],
+                      }}
+                    />
                   </View>
                 </View>
               </Animated.View>
