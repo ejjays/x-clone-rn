@@ -81,7 +81,8 @@ export const getAllUsers = async (req, res) => {
  */
 export const getUserById = async (req, res) => {
 	try {
-		const user = await User.findOne({ clerkId: req.params.userId });
+		const { username } = req.params;
+		const user = await User.findOne({ username });
 		if (!user) {
 			return res.status(404).json({ message: "User not found" });
 		}

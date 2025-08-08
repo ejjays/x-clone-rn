@@ -93,14 +93,14 @@ export const likeComment = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: "User or comment not found" })
   }
 
-  const isLiked = comment.likes.includes(user._id)
+  const isLiked = comment.likes.some((id) => id.toString() === user._id.toString())
 
   if (isLiked) {
     // Unlike
     await Comment.findByIdAndUpdate(commentId, { $pull: { likes: user._id } })
   } else {
-    // Like
-    await Comment.findByIdAndUpdate(commentId, { $push: { likes: user._id } })
+    // Like (avoid duplicates)
+    await Comment.findByIdAndUpdate(commentId, { $addToSet: { likes: user._id } })
   }
 
   const updatedComment = await Comment.findById(commentId).populate(
