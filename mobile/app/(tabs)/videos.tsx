@@ -57,19 +57,27 @@ const VideoItem = ({
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState(null);
   const [selectedReaction, setSelectedReaction] = useState(null);
+  const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
+  const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(width);
 
   useEffect(() => {
     if (!videoRef.current) return;
-    if (isVisible && isScreenFocused) {
-      videoRef.current.playAsync().then(() => setIsPlaying(true));
-    } else {
-      videoRef.current.pauseAsync();
-      // Reset position only when not visible (to start from top next time)
-      if (!isVisible) {
-        videoRef.current.setStatusAsync({ positionMillis: 0 });
+    const apply = async () => {
+      if (isVisible && isScreenFocused) {
+        await videoRef.current.setStatusAsync({ isMuted: false, shouldPlay: true });
+        await videoRef.current.playAsync();
+        setIsPlaying(true);
+      } else {
+        await videoRef.current.setStatusAsync({ shouldPlay: false, isMuted: true });
+        await videoRef.current.pauseAsync();
+        if (!isVisible) {
+          await videoRef.current.setStatusAsync({ positionMillis: 0 });
+        }
+        setIsPlaying(false);
       }
-      setIsPlaying(false);
-    }
+    };
+    apply();
   }, [isVisible, isScreenFocused]);
 
   const onPlayPausePress = async () => {
@@ -82,6 +90,12 @@ const VideoItem = ({
       setIsPlaying((prev) => !prev);
     }
   };
+
+  const computedHeight = useMemo(() => {
+    if (!naturalWidth || !naturalHeight) return height; // fallback full screen
+    const aspect = naturalWidth / naturalHeight;
+    return Math.min(height, containerWidth / aspect);
+  }, [naturalWidth, naturalHeight, containerWidth]);
 
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
@@ -99,14 +113,24 @@ const VideoItem = ({
 
   return (
     <View style={styles.videoContainer}>
-      <Pressable onPress={onPlayPausePress} style={styles.videoPressable}>
+      <Pressable
+        onPress={onPlayPausePress}
+        style={styles.videoPressable}
+        onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+      >
                  <Video
           ref={videoRef}
-          style={styles.video}
+          style={[styles.video, { width: containerWidth, height: computedHeight }]}
           source={{ uri: item.video! }}
           resizeMode={ResizeMode.CONTAIN}
           isLooping
           shouldPlay={false}
+          onLoad={(status: any) => {
+            if (status?.naturalSize?.width && status?.naturalSize?.height) {
+              setNaturalWidth(status.naturalSize.width);
+              setNaturalHeight(status.naturalSize.height);
+            }
+          }}
           onError={(error) =>
             console.log(`Video Error for post ${item._id}:`, error)
           }
