@@ -112,17 +112,19 @@ const PostActionBottomSheet = forwardRef<
   };
 
   const handleConfirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await onDelete();
-      setShowDeleteConfirm(false);
+  setIsDeleting(true);
+  try {
+    await onDelete();
+    setShowDeleteConfirm(false);
+    requestAnimationFrame(() => {
       handleClose();
-    } catch (error) {
-      console.error("Delete failed:", error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+    });
+  } catch (error) {
+    console.error("Delete failed:", error);
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
   const handleCopyTextPress = () => {
     if (!isDragging) {
