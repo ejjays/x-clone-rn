@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
+import { useIsFocused } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -39,11 +40,13 @@ const { height, width } = Dimensions.get("window");
 const VideoItem = ({
   item,
   isVisible,
+  isScreenFocused,
   onCommentPress,
   insets,
 }: {
   item: Post;
   isVisible: boolean;
+  isScreenFocused: boolean;
   onCommentPress: () => void;
   insets: EdgeInsets;
 }) => {
@@ -54,22 +57,28 @@ const VideoItem = ({
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState(null);
   const [selectedReaction, setSelectedReaction] = useState(null);
+  const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
+  const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(width);
 
   useEffect(() => {
-    if (videoRef.current) {
-      if (isVisible) {
-        // When the video becomes visible, attempt to play it
-        // Set isPlaying to true if it was paused previously
-        videoRef.current.playAsync().then(() => setIsPlaying(true));
-        videoRef.current.setStatusAsync({ volume: 1 }); // Ensure volume is up
+    if (!videoRef.current) return;
+    const apply = async () => {
+      if (isVisible && isScreenFocused) {
+        await videoRef.current.setStatusAsync({ isMuted: false, shouldPlay: true });
+        await videoRef.current.playAsync();
+        setIsPlaying(true);
       } else {
-        // When the video is not visible, pause it, reset to beginning, and mute
-        videoRef.current.pauseAsync();
-        videoRef.current.setStatusAsync({ positionMillis: 0, volume: 0 });
-        setIsPlaying(false); // Update internal state to paused
+        await videoRef.current.setStatusAsync({ shouldPlay: false, isMuted: true });
+        await videoRef.current.pauseAsync();
+        if (!isVisible) {
+          await videoRef.current.setStatusAsync({ positionMillis: 0 });
+        }
+        setIsPlaying(false);
       }
-    }
-  }, [isVisible]); // Only depend on isVisible
+    };
+    apply();
+  }, [isVisible, isScreenFocused]);
 
   const onPlayPausePress = async () => {
     if (videoRef.current) {
@@ -81,6 +90,12 @@ const VideoItem = ({
       setIsPlaying((prev) => !prev);
     }
   };
+
+  const computedHeight = useMemo(() => {
+    if (!naturalWidth || !naturalHeight) return height; // fallback full screen
+    const aspect = naturalWidth / naturalHeight;
+    return Math.min(height, containerWidth / aspect);
+  }, [naturalWidth, naturalHeight, containerWidth]);
 
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
@@ -98,14 +113,24 @@ const VideoItem = ({
 
   return (
     <View style={styles.videoContainer}>
-      <Pressable onPress={onPlayPausePress} style={styles.videoPressable}>
-                 <Video
+      <Pressable
+        onPress={onPlayPausePress}
+        style={styles.videoPressable}
+        onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+      >
+        <Video
           ref={videoRef}
-          style={styles.video}
+          style={[styles.video, { width: containerWidth, height: computedHeight }]}
           source={{ uri: item.video! }}
-          resizeMode={ResizeMode.COVER}
+          resizeMode={ResizeMode.CONTAIN}
           isLooping
           shouldPlay={false}
+          onLoad={(status: any) => {
+            if (status?.naturalSize?.width && status?.naturalSize?.height) {
+              setNaturalWidth(status.naturalSize.width);
+              setNaturalHeight(status.naturalSize.height);
+            }
+          }}
           onError={(error) =>
             console.log(`Video Error for post ${item._id}:`, error)
           }
@@ -199,6 +224,7 @@ export default function VideosScreen() {
   const [viewableItems, setViewableItems] = useState<string[]>([]);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
 
   const videoPosts = useMemo(() => {
     return posts.filter((post) => post.video && post.video.trim() !== "");
@@ -227,16 +253,24 @@ export default function VideosScreen() {
     []
   );
 
+  // When the screen loses focus, clear visible items to force pause in VideoItem
+  useEffect(() => {
+    if (!isFocused) {
+      setViewableItems([]);
+    }
+  }, [isFocused]);
+
   const renderItem = useCallback(
     ({ item }: { item: Post }) => (
       <VideoItem
         item={item}
         isVisible={viewableItems.includes(item._id)}
+        isScreenFocused={!!isFocused}
         onCommentPress={handleOpenComments}
         insets={insets}
       />
     ),
-    [viewableItems, insets]
+    [viewableItems, insets, isFocused]
   );
 
   if (isLoading) {
@@ -341,7 +375,8 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   video: {
-    ...StyleSheet.absoluteFillObject,
+    width: width,
+    height: height,
   },
   playIconContainer: {
     ...StyleSheet.absoluteFillObject,
