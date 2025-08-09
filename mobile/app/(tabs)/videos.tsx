@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
+  Animated,
 } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import {
@@ -61,12 +62,16 @@ const VideoItem = ({
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(width);
+  const [isMuted, setIsMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const lastTapRef = useRef<number>(0);
+  const heartOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!videoRef.current) return;
     const apply = async () => {
       if (isVisible && isScreenFocused) {
-        await videoRef.current.setStatusAsync({ isMuted: false, shouldPlay: true });
+        await videoRef.current.setStatusAsync({ isMuted, shouldPlay: true });
         await videoRef.current.playAsync();
         setIsPlaying(true);
       } else {
@@ -79,7 +84,7 @@ const VideoItem = ({
       }
     };
     apply();
-  }, [isVisible, isScreenFocused]);
+  }, [isVisible, isScreenFocused, isMuted]);
 
   const onPlayPausePress = async () => {
     if (videoRef.current) {
@@ -89,6 +94,39 @@ const VideoItem = ({
         await videoRef.current.playAsync();
       }
       setIsPlaying((prev) => !prev);
+    }
+  };
+
+  const onContainerPress = async () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      // Double tap: like with heart animation
+      setSelectedReaction(
+        postReactions.find((r) => r.type === "like") || null
+      );
+      Animated.sequence([
+        Animated.timing(heartOpacity, {
+          toValue: 1,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartOpacity, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      await onPlayPausePress();
+    }
+    lastTapRef.current = now;
+  };
+
+  const toggleMute = async () => {
+    const next = !isMuted;
+    setIsMuted(next);
+    if (videoRef.current) {
+      await videoRef.current.setStatusAsync({ isMuted: next });
     }
   };
 
@@ -115,7 +153,7 @@ const VideoItem = ({
   return (
     <View style={styles.videoContainer}>
       <Pressable
-        onPress={onPlayPausePress}
+        onPress={onContainerPress}
         style={styles.videoPressable}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
@@ -132,10 +170,28 @@ const VideoItem = ({
               setNaturalHeight(status.naturalSize.height);
             }
           }}
+          onPlaybackStatusUpdate={(status: any) => {
+            if (status?.isLoaded && status.durationMillis) {
+              const ratio = Math.min(
+                1,
+                Math.max(0, status.positionMillis / status.durationMillis)
+              );
+              setProgress(ratio);
+            }
+          }}
           onError={(error) =>
             console.log(`Video Error for post ${item._id}:`, error)
           }
         />
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.playIconContainer,
+            { opacity: heartOpacity },
+          ]}
+        >
+          <Ionicons name="heart" size={96} color="rgba(255,255,255,0.85)" />
+        </Animated.View>
         {!isPlaying &&
           isVisible && ( // Only show play icon if visible and not playing
             <View style={styles.playIconContainer}>
@@ -209,10 +265,32 @@ const VideoItem = ({
               {formatNumber(item.comments.length)}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconContainer}>
-            <Ionicons name="share-social" size={30} color="white" />
-            <Text style={styles.iconText}>0</Text>
+          <TouchableOpacity style={styles.iconContainer} onPress={toggleMute}>
+            <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={28} color="white" />
+            <Text style={styles.iconText}>{isMuted ? "Mute" : "Sound"}</Text>
           </TouchableOpacity>
+        </View>
+        {/* Progress bar */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: 10,
+            right: 10,
+            bottom: insets.bottom + 8,
+            height: 3,
+            backgroundColor: "rgba(255,255,255,0.25)",
+            borderRadius: 2,
+          }}
+        >
+          <View
+            style={{
+              width: `${Math.round(progress * 100)}%`,
+              height: "100%",
+              backgroundColor: "#fff",
+              borderRadius: 2,
+            }}
+          />
         </View>
       </View>
       <PostReactionsPicker
