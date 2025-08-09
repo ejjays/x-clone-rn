@@ -3,7 +3,6 @@ import PostComposer from "@/components/PostComposer";
 import Stories from "@/components/Stories";
 import { usePosts } from "@/hooks/usePosts";
 import { useUserSync } from "@/hooks/useUserSync";
-import { useCurrentUser } from "@/hooks/useCurrentUser"; 
 import { router } from "expo-router";
 import { useState, useRef } from "react";
 import { RefreshControl, ScrollView, View, Alert } from "react-native";
@@ -17,6 +16,7 @@ import { useTheme } from "@/context/ThemeContext";
 const HomeScreen = () => {
   const [isRefetching, setIsRefetching] = useState(false);
   const { refetch: refetchPosts, deletePost } = usePosts();
+  const { currentUser } = useCurrentUser();
   const postActionBottomSheetRef = useRef<PostActionBottomSheetRef>(null);
   const [selectedPostForMenu, setSelectedPostForMenu] = useState<Post | null>(
     null
@@ -94,15 +94,12 @@ const HomeScreen = () => {
         />
       </ScrollView>
       <PostActionBottomSheet
-  ref={postActionBottomSheetRef}
-  onClose={handleCloseBottomSheet}
-  onDelete={handleDeletePost}
-  onCopyText={handleCopyText}
-  postContent={selectedPostForMenu?.content}
-  isOwnPost={selectedPostForMenu?.user._id === currentUser?._id}
-  isAdmin={currentUser?.isAdmin}
-  postOwnerName={selectedPostForMenu ? `${selectedPostForMenu.user.firstName} ${selectedPostForMenu.user.lastName}` : ''}
-/>
+        ref={postActionBottomSheetRef}
+        onClose={handleCloseBottomSheet}
+        onDelete={handleDeletePost}
+        onCopyText={handleCopyText}
+        postContent={selectedPostForMenu?.content}
+      />
     </View>
   );
 };
