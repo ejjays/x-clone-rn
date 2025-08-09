@@ -1,4 +1,3 @@
-// backend/src/controllers/post.controller.js
 import asyncHandler from "express-async-handler";
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
@@ -134,12 +133,20 @@ export const deletePost = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: "User or post not found" });
   }
 
-  if (post.user.toString() !== user._id.toString()) {
+  // Allow deletion if user is admin OR owns the post
+  const isOwner = post.user.toString() === user._id.toString();
+  const isAdmin = user.isAdmin === true;
+
+  if (!isOwner && !isAdmin) {
     return res.status(403).json({ error: "You can only delete your own posts" });
   }
 
   await Comment.deleteMany({ post: postId });
   await Post.findByIdAndDelete(postId);
 
-  res.status(200).json({ message: "Post deleted successfully" });
+  const message = isAdmin && !isOwner ? 
+    "Post deleted by admin" : 
+    "Post deleted successfully";
+  
+  res.status(200).json({ message });
 });

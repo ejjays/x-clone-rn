@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    isAdmin: {
+       type: Boolean,
+       default: false,
+     },
     followers: [
       {
         type: mongoose.Schema.Types.ObjectId,
