@@ -313,36 +313,37 @@ const PostCard = ({
     <>
       <View style={{ backgroundColor: colors.background }}>
         {/* Post Header */}
-        <View className="flex-row px-2 py-3 items-center">
-          <Image
-            source={
-              post.user.profilePicture
-                ? { uri: post.user.profilePicture }
-                : require("../assets/images/default-avatar.png")
-            }
-            className="w-14 h-14 rounded-full mr-3"
-          />
-          <View className="flex-1">
-            <Text className="font-bold text-lg" style={{ color: colors.text }}>
-              {post.user.firstName} {post.user.lastName}
-            </Text>
-            <Text className="text-sm" style={{ color: colors.textSecondary }}>
-              {formatDate(post.createdAt)}
-            </Text>
-          </View>
-          {isOwnPost && (
-            <TouchableOpacity
-              onPress={() => onOpenPostMenu(post)}
-              className="p-2"
-            >
-              <FontAwesome
-                name="ellipsis-h"
-                size={20}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+<View className="flex-row px-2 py-3 items-center">
+  <Image
+    source={
+      post.user.profilePicture
+        ? { uri: post.user.profilePicture }
+        : require("../assets/images/default-avatar.png")
+    }
+    className="w-14 h-14 rounded-full mr-3"
+  />
+  <View className="flex-1">
+    <Text className="font-bold text-lg" style={{ color: colors.text }}>
+      {post.user.firstName} {post.user.lastName}
+    </Text>
+    <Text className="text-sm" style={{ color: colors.textSecondary }}>
+      {formatDate(post.createdAt)}
+    </Text>
+  </View>
+  {/* Show menu if user owns the post OR user is admin */}
+  {(isOwnPost || currentUser.isAdmin) && (
+    <TouchableOpacity
+      onPress={() => onOpenPostMenu(post)}
+      className="p-2"
+    >
+      <FontAwesome
+        name="ellipsis-h"
+        size={20}
+        color={colors.textSecondary}
+      />
+    </TouchableOpacity>
+  )}
+</View>
 
         {/* Post Content */}
         {post.content && (

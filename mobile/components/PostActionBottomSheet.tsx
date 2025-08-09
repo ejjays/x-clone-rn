@@ -23,6 +23,9 @@ interface PostActionBottomSheetProps {
   onDelete: () => void;
   onCopyText: (text: string) => void;
   postContent?: string;
+  isOwnPost?: boolean;          // NEW: Track if it's user's own post
+  isAdmin?: boolean;            // NEW: Track if user is admin
+  postOwnerName?: string;       // NEW: Name of post owner for admin context
 }
 
 export interface PostActionBottomSheetRef {
@@ -37,7 +40,7 @@ const DRAG_THRESHOLD = 5;
 const PostActionBottomSheet = forwardRef<
   PostActionBottomSheetRef,
   PostActionBottomSheetProps
->(({ onClose, onDelete, onCopyText, postContent }, ref) => {
+>(({ onClose, onDelete, onCopyText, postContent, isOwnPost = true, isAdmin = false, postOwnerName }, ref) => {
   const [visible, setVisible] = useState(false);
   const translateY = useRef(new Animated.Value(height)).current;
   const [isDragging, setIsDragging] = useState(false);
@@ -138,6 +141,13 @@ const PostActionBottomSheet = forwardRef<
     }).start(() => setVisible(false));
   };
 
+  // Determine delete text and confirmation message based on admin status
+  const deleteText = isOwnPost ? "Delete Post" : "Delete Post (Admin)";
+  const confirmationTitle = isOwnPost ? "Delete Post" : "Delete Post (Admin Action)";
+  const confirmationMessage = isOwnPost 
+    ? "Are you sure you want to delete this post? This action cannot be undone."
+    : `Are you sure you want to delete ${postOwnerName}'s post? This action cannot be undone and will be logged as an admin action.`;
+
   return (
     <Modal
       visible={visible}
@@ -171,32 +181,38 @@ const PostActionBottomSheet = forwardRef<
           />
 
           <View className="px-4 pb-2">
-            <TouchableOpacity
-              className="flex-row items-center py-4"
-              onPress={() => {
-                if (!isDragging) {
-                  handleClose();
-                }
-              }}
-            >
-              <Ionicons name="bookmark" size={22} color="white" />
-              <Text className="ml-3 text-gray-200 text-lg font-semibold">
-                Save Post
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-row items-center py-4"
-              onPress={() => {
-                if (!isDragging) {
-                  handleClose();
-                }
-              }}
-            >
-              <Entypo name="pin" size={22} color="white" />
-              <Text className="ml-3 text-gray-200 text-lg font-semibold">
-                Pin Post
-              </Text>
-            </TouchableOpacity>
+            {/* Only show Save/Pin options for own posts */}
+            {isOwnPost && (
+              <>
+                <TouchableOpacity
+                  className="flex-row items-center py-4"
+                  onPress={() => {
+                    if (!isDragging) {
+                      handleClose();
+                    }
+                  }}
+                >
+                  <Ionicons name="bookmark" size={22} color="white" />
+                  <Text className="ml-3 text-gray-200 text-lg font-semibold">
+                    Save Post
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-row items-center py-4"
+                  onPress={() => {
+                    if (!isDragging) {
+                      handleClose();
+                    }
+                  }}
+                >
+                  <Entypo name="pin" size={22} color="white" />
+                  <Text className="ml-3 text-gray-200 text-lg font-semibold">
+                    Pin Post
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+            
             {postContent && (
               <TouchableOpacity
                 className="flex-row items-center py-4"
@@ -208,15 +224,17 @@ const PostActionBottomSheet = forwardRef<
                 </Text>
               </TouchableOpacity>
             )}
+            
             <TouchableOpacity
               className="flex-row items-center py-4"
               onPress={handleDeletePress}
             >
               <Entypo name="trash" size={22} color="red" />
               <Text className="ml-3 text-red-500 text-lg font-semibold">
-                Delete Post
+                {deleteText}
               </Text>
             </TouchableOpacity>
+            
             <TouchableOpacity
               className="flex-row items-center py-3 mt-2 border-t border-gray-700"
               onPress={() => {
@@ -234,8 +252,8 @@ const PostActionBottomSheet = forwardRef<
       </Pressable>
       <ConfirmationAlert
         visible={showDeleteConfirm}
-        title="Delete Post"
-        message="Are you sure you want to delete this post? This action cannot be undone."
+        title={confirmationTitle}
+        message={confirmationMessage}
         confirmText="Delete"
         cancelText="Cancel"
         confirmTextColor="#FF2C2C"
