@@ -99,13 +99,13 @@ const VideoItem = ({
   return (
     <View style={styles.videoContainer}>
       <Pressable onPress={onPlayPausePress} style={styles.videoPressable}>
-        <Video
+                 <Video
           ref={videoRef}
           style={styles.video}
           source={{ uri: item.video! }}
           resizeMode={ResizeMode.COVER}
           isLooping
-          // shouldPlay is now controlled by useEffect and onPlayPausePress
+          shouldPlay={false}
           onError={(error) =>
             console.log(`Video Error for post ${item._id}:`, error)
           }
@@ -126,9 +126,10 @@ const VideoItem = ({
         style={[
           styles.overlay,
           {
-            paddingBottom: insets.bottom + 80,
+            paddingBottom: insets.bottom + 90,
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
+            paddingTop: insets.top + 60,
           },
         ]}
       >
@@ -142,7 +143,7 @@ const VideoItem = ({
               {item.user.firstName} {item.user.lastName}
             </Text>
           </View>
-          <Text style={styles.caption}>{item.content}</Text>
+                     <Text style={styles.caption} numberOfLines={3}>{item.content}</Text>
         </View>
         <View style={styles.rightContainer}>
           <TouchableOpacity
@@ -272,25 +273,24 @@ export default function VideosScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
-      <FlatList
-        data={videoPosts}
-        renderItem={renderItem}
-        keyExtractor={(item) => item._id}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        snapToInterval={height}
-        decelerationRate="fast"
-        disableIntervalMomentum
-        initialNumToRender={1}
-        maxToRenderPerBatch={1}
-        windowSize={2}
-      />
+             <FlatList
+         data={videoPosts}
+         renderItem={renderItem}
+         keyExtractor={(item) => item._id}
+         pagingEnabled
+         showsVerticalScrollIndicator={false}
+         onViewableItemsChanged={onViewableItemsChanged}
+         viewabilityConfig={viewabilityConfig}
+         getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+         decelerationRate="fast"
+         initialNumToRender={2}
+         maxToRenderPerBatch={3}
+         windowSize={5}
+       />
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
         onClose={handleCloseComments}
@@ -312,6 +312,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 10,
     zIndex: 10,
+    backgroundColor: "transparent",
   },
   headerTitle: {
     fontSize: 28,

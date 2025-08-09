@@ -199,7 +199,8 @@ const PostCard = ({
       );
     } else if (post.video) {
       setIsMediaLoading(true);
-      setVideoHeight(Math.round(screenWidth * 0.5));
+      // Use a sensible default 16:9 height until the video reports natural size
+      setVideoHeight(Math.round((screenWidth * 9) / 16));
     } else {
       setImageHeight(null);
       setVideoHeight(null);
@@ -361,7 +362,7 @@ const PostCard = ({
       </View>
 
       {/* Media Display */}
-      {isMediaLoading && (post.image || post.video) && (
+      {isMediaLoading && post.image && (
         <View
           style={{
             width: screenWidth,
@@ -375,7 +376,7 @@ const PostCard = ({
         </View>
       )}
 
-      {post.image && !isMediaLoading && imageHeight !== null && (
+      {post.image && imageHeight !== null && (
         <TouchableOpacity onPress={openImageModal} activeOpacity={1}>
           <Image
             source={{ uri: post.image }}
@@ -384,13 +385,14 @@ const PostCard = ({
           />
         </TouchableOpacity>
       )}
-      {post.video && !isMediaLoading && videoHeight !== null && (
+      {post.video && videoHeight !== null && (
         <Video
           source={{ uri: post.video }}
           style={{ width: screenWidth, height: videoHeight }}
           useNativeControls
           resizeMode={ResizeMode.CONTAIN}
           isLooping
+          shouldPlay={false}
           onLoad={handleVideoLoad}
           onError={handleVideoError}
         />
