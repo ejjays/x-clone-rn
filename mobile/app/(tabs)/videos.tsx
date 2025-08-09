@@ -35,7 +35,7 @@ import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
 import { formatNumber } from "@/utils/formatters";
 import { StatusBar } from "expo-status-bar";
-import { LinearGradient } from "expo-linear-gradient";
+// Gradient disabled to avoid native module requirement during dev build
 
 const { height, width } = Dimensions.get("window");
 
@@ -216,11 +216,7 @@ const VideoItem = ({
           },
         ]}
       >
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.7)"]}
-          style={StyleSheet.absoluteFillObject as any}
-          pointerEvents="none"
-        />
+        {/* Gradient overlay temporarily removed for dev build stability */}
         <View style={styles.leftContainer}>
           <View style={styles.userInfo}>
             <Image
