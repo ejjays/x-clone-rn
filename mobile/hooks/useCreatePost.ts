@@ -7,7 +7,7 @@ import axios from 'axios';
 import { useApiClient } from "../utils/api";
 
 // --- IMPORTANT: MAKE SURE THESE VALUES ARE CORRECT ---
-const CLOUDINARY_CLOUD_NAME = "dtna5t2em";
+const CLOUDINARY_CLOUD_NAME = "dagzpmz00";
 const CLOUDINARY_UPLOAD_PRESET = "aivq0snq";
 // ----------------------------------------------------
 
