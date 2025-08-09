@@ -2,6 +2,7 @@ import PostsList from "@/components/PostsList";
 import PostComposer from "@/components/PostComposer";
 import Stories from "@/components/Stories";
 import { usePosts } from "@/hooks/usePosts";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUserSync } from "@/hooks/useUserSync";
 import { router } from "expo-router";
 import { useState, useRef } from "react";
@@ -94,12 +95,15 @@ const HomeScreen = () => {
         />
       </ScrollView>
       <PostActionBottomSheet
-        ref={postActionBottomSheetRef}
-        onClose={handleCloseBottomSheet}
-        onDelete={handleDeletePost}
-        onCopyText={handleCopyText}
-        postContent={selectedPostForMenu?.content}
-      />
+  ref={postActionBottomSheetRef}
+  onClose={handleCloseBottomSheet}
+  onDelete={handleDeletePost}
+  onCopyText={handleCopyText}
+  postContent={selectedPostForMenu?.content}
+  isOwnPost={selectedPostForMenu?.user._id === currentUser?._id}
+  isAdmin={currentUser?.isAdmin}
+  postOwnerName={selectedPostForMenu ? `${selectedPostForMenu.user.firstName} ${selectedPostForMenu.user.lastName}` : ''}
+/>
     </View>
   );
 };
