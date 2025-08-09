@@ -54,18 +54,11 @@ export const useCreatePost = () => {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         
-        let secureUrl = response.data.secure_url;
+        const secureUrl = response.data.secure_url;
 
-        // If the uploaded media is a video, we will modify the returned URL 
-        // to include transformation parameters for playback compatibility.
-        if (media.type === 'video' && secureUrl) {
-            const transformation = "w_1080,h_1920,c_limit,f_mp4,vc_h264:main:4.0,ac_aac,q_auto";
-            const urlParts = secureUrl.split('/upload/');
-            if (urlParts.length === 2) {
-                secureUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
-                console.log('Applying on-the-fly transformation. New URL:', secureUrl);
-            }
-        }
+        // REMOVED EXPENSIVE VIDEO TRANSFORMATIONS TO SAVE CREDITS
+        // The previous transformation was consuming 10-20+ credits per video upload
+        // Now videos will be uploaded in their original format, using minimal credits
         
         console.log('Cloudinary upload successful. Final URL:', secureUrl);
         return secureUrl;
@@ -89,7 +82,7 @@ export const useCreatePost = () => {
       const pickerOptions: ImagePicker.ImagePickerOptions = {
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: false,
-        quality: 1,
+        quality: 0.8, // Reduced from 1 to 0.8 to save on file size and credits
       };
 
       const result = await ImagePicker.launchImageLibraryAsync(pickerOptions);
