@@ -4,7 +4,6 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
-  Animated,
 } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import {
@@ -17,6 +16,7 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import {
   useSafeAreaInsets,
@@ -264,6 +264,10 @@ const VideoItem = ({
             <Text style={styles.iconText}>
               {formatNumber(item.comments.length)}
             </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconContainer} onPress={onCommentPress}>
+            <Ionicons name="share-social" size={30} color="white" />
+            <Text style={styles.iconText}>Share</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconContainer} onPress={toggleMute}>
             <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={28} color="white" />
