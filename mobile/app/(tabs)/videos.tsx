@@ -34,6 +34,7 @@ import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
 import { formatNumber } from "@/utils/formatters";
 import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { height, width } = Dimensions.get("window");
 
@@ -148,16 +149,22 @@ const VideoItem = ({
       </Pressable>
 
       <View
+        pointerEvents="box-none"
         style={[
           styles.overlay,
           {
-            paddingBottom: insets.bottom + 90,
+            paddingBottom: insets.bottom + 40,
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingTop: insets.top + 60,
+            paddingTop: insets.top + 40,
           },
         ]}
       >
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.7)"]}
+          style={StyleSheet.absoluteFillObject as any}
+          pointerEvents="none"
+        />
         <View style={styles.leftContainer}>
           <View style={styles.userInfo}>
             <Image
@@ -168,7 +175,7 @@ const VideoItem = ({
               {item.user.firstName} {item.user.lastName}
             </Text>
           </View>
-                     <Text style={styles.caption} numberOfLines={3}>{item.content}</Text>
+          <Text style={styles.caption} numberOfLines={2}>{item.content}</Text>
         </View>
         <View style={styles.rightContainer}>
           <TouchableOpacity
@@ -373,6 +380,8 @@ const styles = StyleSheet.create({
   },
   videoPressable: {
     ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
   },
   video: {
     width: width,
@@ -387,6 +396,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     flexDirection: "row",
     justifyContent: "space-between",
+    zIndex: 5,
   },
   leftContainer: {
     flex: 1,
@@ -421,6 +431,7 @@ const styles = StyleSheet.create({
   caption: {
     color: "white",
     fontSize: 14,
+    marginRight: 70,
   },
   iconContainer: {
     alignItems: "center",
