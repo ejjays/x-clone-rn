@@ -1,5 +1,5 @@
 import { useSignOut } from "@/hooks/useSignOut"
-import { LogOut } from "lucide-react-native" // Replaced Feather
+import { LogOut } from "lucide-react-native" 
 import { TouchableOpacity } from "react-native"
 const SignOutButton = () => {
   const { handleSignOut } = useSignOut()

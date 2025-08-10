@@ -212,7 +212,6 @@ const VideoItem = ({
             paddingBottom: insets.bottom + 40,
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingTop: insets.top + 40,
           },
         ]}
       >
@@ -246,9 +245,16 @@ const VideoItem = ({
               name={selectedReaction ? "heart" : "heart-outline"}
               size={30}
               color="white"
+              style={{
+                textStrokeColor: 'black',
+                textStrokeWidth: 1,
+              }}
             />
 
-            <Text style={styles.iconText}>
+            <Text style={[styles.iconText, {
+              textStrokeColor: 'black',
+              textStrokeWidth: 1,
+            }]}>
               {formatNumber(item.reactions.length)}
             </Text>
           </TouchableOpacity>
@@ -256,14 +262,27 @@ const VideoItem = ({
             style={styles.iconContainer}
             onPress={onCommentPress}
           >
-            <Ionicons name="chatbubble-ellipses" size={30} color="white" />
-            <Text style={styles.iconText}>
+            <Ionicons name="chatbubble-ellipses" size={30} color="white"
+              style={{
+                textStrokeColor: 'black',
+                textStrokeWidth: 1,
+              }} />
+            <Text style={[styles.iconText, {
+              textStrokeColor: 'black',
+              textStrokeWidth: 1,
+            }]}>
               {formatNumber(item.comments.length)}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconContainer} onPress={onCommentPress}>
-            <Ionicons name="share-social" size={30} color="white" />
-            <Text style={styles.iconText}>Share</Text>
+            <Ionicons name="share-social" size={30} color="white" style={{
+              textStrokeColor: 'black',
+              textStrokeWidth: 1,
+            }} />
+            <Text style={[styles.iconText, {
+              textStrokeColor: 'black',
+              textStrokeWidth: 1,
+            }]}>Share</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconContainer} onPress={toggleMute}>
             <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={28} color="white" />
@@ -310,6 +329,7 @@ export default function VideosScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+  const marginTop = -insets.top - 80;
 
   const videoPosts = useMemo(() => {
     return posts.filter((post) => post.video && post.video.trim() !== "");
@@ -381,7 +401,7 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <SafeAreaView style={styles.centered}>
-        <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={[styles.header, {paddingTop: 10}]}>
           <Text style={styles.headerTitle}>Reels</Text>
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
@@ -393,7 +413,7 @@ export default function VideosScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
       <StatusBar style="light" />
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={[styles.header, {paddingTop: 10}]}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
              <FlatList
@@ -409,6 +429,7 @@ export default function VideosScreen() {
          initialNumToRender={2}
          maxToRenderPerBatch={3}
          windowSize={5}
+         style={{marginTop: marginTop}}
        />
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
