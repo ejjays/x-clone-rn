@@ -225,15 +225,25 @@ const PostCard = ({
       playbackStatus.isLoaded &&
       playbackStatus.naturalSize
     ) {
-      const { width, height } = playbackStatus.naturalSize;
-      const calculatedHeight = Math.round((screenWidth / width) * height);
+      const { width, height, orientation } = playbackStatus.naturalSize as {
+        width: number;
+        height: number;
+        orientation?: "portrait" | "landscape" | undefined;
+      };
+
+      // Correct for orientation if provided by expo-av
+      const displayedWidth = orientation === "portrait" && width > height ? height : width;
+      const displayedHeight = orientation === "portrait" && width > height ? width : height;
+
+      const calculatedHeight = Math.round((screenWidth / displayedWidth) * displayedHeight);
       setVideoHeight(calculatedHeight);
-      if (width > 0 && height > 0) {
-        setVideoAspectRatio(width / height);
+      if (displayedWidth > 0 && displayedHeight > 0) {
+        setVideoAspectRatio(displayedWidth / displayedHeight);
       }
     }
     setIsMediaLoading(false);
   };
+
 
   const handleVideoError = (error: any) => {
     console.error(`Video Error for post ${post._id} (${post.video}):`, error);
@@ -397,8 +407,13 @@ const PostCard = ({
         <Video
           source={{ uri: post.video }}
           style={
-            edgeToEdgeMedia && videoAspectRatio
-              ? { width: "100%", aspectRatio: videoAspectRatio }
+            edgeToEdgeMedia
+              ? {
+                  width: screenWidth,
+                  height: videoAspectRatio
+                    ? Math.round(screenWidth / videoAspectRatio)
+                    : (videoHeight as number),
+                }
               : { width: screenWidth, height: videoHeight as number }
           }
           useNativeControls
