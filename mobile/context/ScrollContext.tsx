@@ -40,21 +40,22 @@ export const ScrollProvider: React.FC<{
     const SCROLL_THRESHOLD = 20; 
 
     if (isHomeScreen) {
-      if (Math.abs(scrollDelta) > SCROLL_THRESHOLD) {
-        if (scrollDelta > 0) {
-          // Scrolling down, hide header if visible
-          if (isHeaderVisible.value) {
-            headerHeight.value = withTiming(0, { duration: 100 }); // Smooth hide
-            isHeaderVisible.value = false;
-          }
-        } else if (scrollDelta < 0) {
-          // Scrolling up, show header if hidden
-          if (!isHeaderVisible.value) {
-            headerHeight.value = withTiming(HEADER_HEIGHT, { duration: 100 }); // Smooth show
-            isHeaderVisible.value = true;
-          }
-        }
-      }
+      // if (Math.abs(scrollDelta) > SCROLL_THRESHOLD) {
+      //   if (scrollDelta > 0) {
+      //     // Scrolling down, hide header if visible
+      //     if (isHeaderVisible.value) {
+      //       headerHeight.value = withTiming(0, { duration: 100 }); // Smooth hide
+      //       isHeaderVisible.value = false;
+      //     }
+      //   } else if (scrollDelta < 0) {
+      //     // Scrolling up, show header if hidden
+      //     if (!isHeaderVisible.value) {
+      //       headerHeight.value = withTiming(HEADER_HEIGHT, { duration: 100 }); // Smooth show
+      //       isHeaderVisible.value = true;
+      //     }
+      //   }
+      // }
+headerHeight.value = withTiming(HEADER_HEIGHT, { duration: 100 });
     } else { 
       // For non-home screens, ensure header is always hidden and smooth transition
       if (isHeaderVisible.value) {

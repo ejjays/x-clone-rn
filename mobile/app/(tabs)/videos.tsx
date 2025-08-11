@@ -17,6 +17,7 @@ import {
   Pressable,
   ActivityIndicator,
   Animated,
+  RefreshControl,
 } from "react-native";
 import {
   useSafeAreaInsets,
@@ -35,9 +36,21 @@ import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
 import { formatNumber } from "@/utils/formatters";
 import { StatusBar } from "expo-status-bar";
-// Gradient disabled to avoid native module requirement during dev build
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 const { height, width } = Dimensions.get("window");
+
+/**
+ * Safely attempt to read bottom tab bar height.
+ * Returns 0 if this screen isn't inside a BottomTabNavigator.
+ */
+function useOptionalTabBarHeight() {
+  try {
+    return useBottomTabBarHeight();
+  } catch {
+    return 0;
+  }
+}
 
 const VideoItem = ({
   item,
@@ -45,20 +58,21 @@ const VideoItem = ({
   isScreenFocused,
   onCommentPress,
   insets,
+  bottomSafeOffset,
 }: {
   item: Post;
   isVisible: boolean;
   isScreenFocused: boolean;
   onCommentPress: () => void;
   insets: EdgeInsets;
+  bottomSafeOffset: number;
 }) => {
   const videoRef = useRef<Video>(null);
   const likeButtonRef = useRef<TouchableOpacity>(null);
-  // Set initial isPlaying to false, so it doesn't autoplay until explicitly in view.
   const [isPlaying, setIsPlaying] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
-  const [anchorMeasurements, setAnchorMeasurements] = useState(null);
-  const [selectedReaction, setSelectedReaction] = useState(null);
+  const [anchorMeasurements, setAnchorMeasurements] = useState<any>(null);
+  const [selectedReaction, setSelectedReaction] = useState<any>(null);
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(width);
@@ -67,43 +81,41 @@ const VideoItem = ({
   const lastTapRef = useRef<number>(0);
   const heartOpacity = useRef(new Animated.Value(0)).current;
 
+  // Autoplay / pause based on visibility + screen focus
   useEffect(() => {
     if (!videoRef.current) return;
-    const apply = async () => {
+    async function sync() {
       if (isVisible && isScreenFocused) {
         await videoRef.current.setStatusAsync({ isMuted, shouldPlay: true });
         await videoRef.current.playAsync();
         setIsPlaying(true);
       } else {
-        await videoRef.current.setStatusAsync({ shouldPlay: false, isMuted: true });
+        await videoRef.current.setStatusAsync({
+          shouldPlay: false,
+          isMuted: true,
+        });
         await videoRef.current.pauseAsync();
         if (!isVisible) {
           await videoRef.current.setStatusAsync({ positionMillis: 0 });
         }
         setIsPlaying(false);
       }
-    };
-    apply();
+    }
+    sync();
   }, [isVisible, isScreenFocused, isMuted]);
 
   const onPlayPausePress = async () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        await videoRef.current.pauseAsync();
-      } else {
-        await videoRef.current.playAsync();
-      }
-      setIsPlaying((prev) => !prev);
-    }
+    if (!videoRef.current) return;
+    if (isPlaying) await videoRef.current.pauseAsync();
+    else await videoRef.current.playAsync();
+    setIsPlaying((p) => !p);
   };
 
   const onContainerPress = async () => {
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
-      // Double tap: like with heart animation
-      setSelectedReaction(
-        postReactions.find((r) => r.type === "like") || null
-      );
+      // double-tap => like
+      setSelectedReaction(postReactions.find((r) => r.type === "like") || null);
       Animated.sequence([
         Animated.timing(heartOpacity, {
           toValue: 1,
@@ -125,20 +137,17 @@ const VideoItem = ({
   const toggleMute = async () => {
     const next = !isMuted;
     setIsMuted(next);
-    if (videoRef.current) {
-      await videoRef.current.setStatusAsync({ isMuted: next });
-    }
+    await videoRef.current?.setStatusAsync({ isMuted: next });
   };
 
   const computedHeight = useMemo(() => {
-    if (!naturalWidth || !naturalHeight) return height; // fallback full screen
+    if (!naturalWidth || !naturalHeight) return height;
     const aspect = naturalWidth / naturalHeight;
     return Math.min(height, containerWidth / aspect);
   }, [naturalWidth, naturalHeight, containerWidth]);
 
   const handleLongPress = () => {
-    likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
-      // @ts-ignore
+    likeButtonRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
       setAnchorMeasurements({ pageX, pageY });
       setPickerVisible(true);
     });
@@ -151,57 +160,47 @@ const VideoItem = ({
   };
 
   return (
-    <View style={styles.videoContainer}>
+    <View style={[styles.videoContainer, { height: height - bottomSafeOffset }]}>
       <Pressable
-        onPress={onContainerPress}
         style={styles.videoPressable}
+        onPress={onContainerPress}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
         <Video
           ref={videoRef}
-          style={[styles.video, { width: containerWidth, height: computedHeight }]}
+          style={[
+            styles.video,
+            { width: containerWidth, height: computedHeight },
+          ]}
           source={{ uri: item.video! }}
           resizeMode={ResizeMode.CONTAIN}
           isLooping
           shouldPlay={false}
-          onLoad={(status: any) => {
-            if (status?.naturalSize?.width && status?.naturalSize?.height) {
+          onLoad={(status) => {
+            if (status.naturalSize?.width && status.naturalSize?.height) {
               setNaturalWidth(status.naturalSize.width);
               setNaturalHeight(status.naturalSize.height);
             }
           }}
-          onPlaybackStatusUpdate={(status: any) => {
-            if (status?.isLoaded && status.durationMillis) {
-              const ratio = Math.min(
-                1,
-                Math.max(0, status.positionMillis / status.durationMillis)
+          onPlaybackStatusUpdate={(status) => {
+            if (status.isLoaded && status.durationMillis) {
+              setProgress(
+                Math.min(1, status.positionMillis / status.durationMillis)
               );
-              setProgress(ratio);
             }
           }}
-          onError={(error) =>
-            console.log(`Video Error for post ${item._id}:`, error)
-          }
         />
         <Animated.View
+          style={[styles.playIconContainer, { opacity: heartOpacity }]}
           pointerEvents="none"
-          style={[
-            styles.playIconContainer,
-            { opacity: heartOpacity },
-          ]}
         >
           <Ionicons name="heart" size={96} color="rgba(255,255,255,0.85)" />
         </Animated.View>
-        {!isPlaying &&
-          isVisible && ( // Only show play icon if visible and not playing
-            <View style={styles.playIconContainer}>
-              <Ionicons
-                name="play"
-                size={80}
-                color="rgba(255, 255, 255, 0.7)"
-              />
-            </View>
-          )}
+        {!isPlaying && isVisible && (
+          <View style={styles.playIconContainer}>
+            <Ionicons name="play" size={80} color="rgba(255,255,255,0.7)" />
+          </View>
+        )}
       </Pressable>
 
       <View
@@ -209,13 +208,12 @@ const VideoItem = ({
         style={[
           styles.overlay,
           {
-            paddingBottom: insets.bottom + 40,
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
+            paddingBottom: bottomSafeOffset + 10,
           },
         ]}
       >
-        {/* Gradient overlay temporarily removed for dev build stability */}
         <View style={styles.leftContainer}>
           <View style={styles.userInfo}>
             <Image
@@ -226,9 +224,17 @@ const VideoItem = ({
               {item.user.firstName} {item.user.lastName}
             </Text>
           </View>
-          <Text style={styles.caption} numberOfLines={2}>{item.content}</Text>
+          <Text style={styles.caption} numberOfLines={2}>
+            {item.content}
+          </Text>
         </View>
-        <View style={styles.rightContainer}>
+
+        <View
+          style={[
+            styles.rightContainer,
+            { paddingBottom: bottomSafeOffset + 20 },
+          ]}
+        >
           <TouchableOpacity
             ref={likeButtonRef}
             onPress={() =>
@@ -245,58 +251,75 @@ const VideoItem = ({
               name={selectedReaction ? "heart" : "heart-outline"}
               size={30}
               color="white"
-              style={{
-                textStrokeColor: 'black',
-                textStrokeWidth: 1,
-              }}
+              style={{ textStrokeColor: "black", textStrokeWidth: 1 }}
             />
-
-            <Text style={[styles.iconText, {
-              textStrokeColor: 'black',
-              textStrokeWidth: 1,
-            }]}>
+            <Text
+              style={[
+                styles.iconText,
+                { textStrokeColor: "black", textStrokeWidth: 1 },
+              ]}
+            >
               {formatNumber(item.reactions.length)}
             </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.iconContainer}
             onPress={onCommentPress}
           >
-            <Ionicons name="chatbubble-ellipses" size={30} color="white"
-              style={{
-                textStrokeColor: 'black',
-                textStrokeWidth: 1,
-              }} />
-            <Text style={[styles.iconText, {
-              textStrokeColor: 'black',
-              textStrokeWidth: 1,
-            }]}>
+            <Ionicons
+              name="chatbubble-ellipses"
+              size={30}
+              color="white"
+              style={{ textStrokeColor: "black", textStrokeWidth: 1 }}
+            />
+            <Text
+              style={[
+                styles.iconText,
+                { textStrokeColor: "black", textStrokeWidth: 1 },
+              ]}
+            >
               {formatNumber(item.comments.length)}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconContainer} onPress={onCommentPress}>
-            <Ionicons name="share-social" size={30} color="white" style={{
-              textStrokeColor: 'black',
-              textStrokeWidth: 1,
-            }} />
-            <Text style={[styles.iconText, {
-              textStrokeColor: 'black',
-              textStrokeWidth: 1,
-            }]}>Share</Text>
+
+          <TouchableOpacity
+            style={styles.iconContainer}
+            onPress={onCommentPress}
+          >
+            <Ionicons
+              name="share-social"
+              size={30}
+              color="white"
+              style={{ textStrokeColor: "black", textStrokeWidth: 1 }}
+            />
+            <Text
+              style={[
+                styles.iconText,
+                { textStrokeColor: "black", textStrokeWidth: 1 },
+              ]}
+            >
+              Share
+            </Text>
           </TouchableOpacity>
+
           <TouchableOpacity style={styles.iconContainer} onPress={toggleMute}>
-            <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={28} color="white" />
+            <Ionicons
+              name={isMuted ? "volume-mute" : "volume-high"}
+              size={28}
+              color="white"
+            />
             <Text style={styles.iconText}>{isMuted ? "Mute" : "Sound"}</Text>
           </TouchableOpacity>
         </View>
-        {/* Progress bar */}
+
         <View
           pointerEvents="none"
           style={{
             position: "absolute",
             left: 10,
             right: 10,
-            bottom: insets.bottom + 8,
+            bottom: bottomSafeOffset + 8,
             height: 3,
             backgroundColor: "rgba(255,255,255,0.25)",
             borderRadius: 2,
@@ -312,11 +335,11 @@ const VideoItem = ({
           />
         </View>
       </View>
+
       <PostReactionsPicker
         isVisible={pickerVisible}
         onClose={() => setPickerVisible(false)}
         onSelect={handleReactionSelect}
-        // @ts-ignore
         anchorMeasurements={anchorMeasurements}
       />
     </View>
@@ -326,43 +349,43 @@ const VideoItem = ({
 export default function VideosScreen() {
   const { posts, isLoading, error, refetch } = usePosts();
   const [viewableItems, setViewableItems] = useState<string[]>([]);
+  const [isRefetching, setIsRefetching] = useState(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+
+  const tabBarHeight = useOptionalTabBarHeight();
+  const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
   const marginTop = -insets.top - 80;
 
-  const videoPosts = useMemo(() => {
-    return posts.filter((post) => post.video && post.video.trim() !== "");
-  }, [posts]);
+  const videoPosts = useMemo(
+    () => posts.filter((p) => p.video && p.video.trim() !== ""),
+    [posts]
+  );
 
-  const handleOpenComments = () => {
-    bottomSheetRef.current?.snapToIndex(0);
+  const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
+  const handleCloseComments = () => bottomSheetRef.current?.close();
+
+  const handlePullToRefresh = async () => {
+    setIsRefetching(true);
+    await refetch();
+    setIsRefetching(false);
   };
 
-  const handleCloseComments = () => {
-    bottomSheetRef.current?.close();
-  };
-
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50,
-  };
-
+  const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
   const onViewableItemsChanged = useCallback(
     ({
-      viewableItems: newViewableItems,
+      viewableItems: vItems,
     }: {
       viewableItems: Array<{ item: Post; key: string }>;
     }) => {
-      setViewableItems(newViewableItems.map((item) => item.key as string));
+      setViewableItems(vItems.map((vi) => vi.key));
     },
     []
   );
 
-  // When the screen loses focus, clear visible items to force pause in VideoItem
   useEffect(() => {
-    if (!isFocused) {
-      setViewableItems([]);
-    }
+    if (!isFocused) setViewableItems([]);
   }, [isFocused]);
 
   const renderItem = useCallback(
@@ -370,12 +393,13 @@ export default function VideosScreen() {
       <VideoItem
         item={item}
         isVisible={viewableItems.includes(item._id)}
-        isScreenFocused={!!isFocused}
+        isScreenFocused={isFocused}
         onCommentPress={handleOpenComments}
         insets={insets}
+        bottomSafeOffset={bottomSafeOffset}
       />
     ),
-    [viewableItems, insets, isFocused]
+    [viewableItems, insets, isFocused, bottomSafeOffset]
   );
 
   if (isLoading) {
@@ -391,7 +415,7 @@ export default function VideosScreen() {
     return (
       <SafeAreaView style={styles.centered}>
         <Text style={styles.infoText}>Could not load videos.</Text>
-        <TouchableOpacity onPress={() => refetch()}>
+        <TouchableOpacity onPress={refetch}>
           <Text style={[styles.infoText, { color: "#1877F2" }]}>Retry</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -401,7 +425,7 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <SafeAreaView style={styles.centered}>
-        <View style={[styles.header, {paddingTop: 10}]}>
+        <View style={[styles.header, { paddingTop: 10 }]}>
           <Text style={styles.headerTitle}>Reels</Text>
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
@@ -413,24 +437,41 @@ export default function VideosScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
       <StatusBar style="light" />
-      <View style={[styles.header, {paddingTop: 10}]}>
+      <View style={[styles.header, { paddingTop: 10 }]}>
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
-             <FlatList
-         data={videoPosts}
-         renderItem={renderItem}
-         keyExtractor={(item) => item._id}
-         pagingEnabled
-         showsVerticalScrollIndicator={false}
-         onViewableItemsChanged={onViewableItemsChanged}
-         viewabilityConfig={viewabilityConfig}
-         getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
-         decelerationRate="fast"
-         initialNumToRender={2}
-         maxToRenderPerBatch={3}
-         windowSize={5}
-         style={{marginTop: marginTop}}
-       />
+      <FlatList
+        data={videoPosts}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        getItemLayout={(_, i) => {
+          const itemHeight = height - bottomSafeOffset;
+          return {
+            length: itemHeight,
+            offset: itemHeight * i,
+            index: i,
+          };
+        }}
+        decelerationRate="fast"
+        initialNumToRender={2}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+        style={{ marginTop }}
+        contentContainerStyle={{ paddingBottom: bottomSafeOffset }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={handlePullToRefresh}
+            colors={["#1877F2"]}
+            tintColor="#1877F2"
+            progressBackgroundColor="black"
+          />
+        }
+      />
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
         onClose={handleCloseComments}
@@ -440,10 +481,7 @@ export default function VideosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "black",
-  },
+  container: { ...StyleSheet.absoluteFillObject, backgroundColor: "black" },
   header: {
     position: "absolute",
     left: 0,
@@ -454,25 +492,17 @@ const styles = StyleSheet.create({
     zIndex: 10,
     backgroundColor: "transparent",
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "white",
-  },
+  headerTitle: { fontSize: 28, fontWeight: "bold", color: "white" },
   centered: {
     flex: 1,
     backgroundColor: "black",
     justifyContent: "center",
     alignItems: "center",
   },
-  infoText: {
-    color: "white",
-    fontSize: 16,
-    marginTop: 10,
-  },
+  infoText: { color: "white", fontSize: 16, marginTop: 10 },
   videoContainer: {
-    width: width,
-    height: height,
+    width,
+    height,
     backgroundColor: "black",
     justifyContent: "center",
     alignItems: "center",
@@ -482,10 +512,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  video: {
-    width: width,
-    height: height,
-  },
+  video: { width, height },
   playIconContainer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
@@ -507,13 +534,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 10,
-    paddingBottom: 60,
   },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
+  userInfo: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   avatar: {
     width: 40,
     height: 40,
@@ -522,23 +544,8 @@ const styles = StyleSheet.create({
     borderColor: "white",
     marginRight: 10,
   },
-  username: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  caption: {
-    color: "white",
-    fontSize: 14,
-    marginRight: 70,
-  },
-  iconContainer: {
-    alignItems: "center",
-    marginBottom: 25,
-  },
-  iconText: {
-    color: "white",
-    fontSize: 12,
-    marginTop: 5,
-  },
+  username: { color: "white", fontWeight: "bold", fontSize: 16 },
+  caption: { color: "white", fontSize: 14, marginRight: 70 },
+  iconContainer: { alignItems: "center", marginBottom: 25 },
+  iconText: { color: "white", fontSize: 12, marginTop: 5 },
 });
