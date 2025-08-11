@@ -47,6 +47,7 @@ interface PostCardProps {
   currentUserReaction: Reaction | null;
   onOpenPostMenu: (post: Post) => void;
   onReactionPickerVisibilityChange?: (isVisible: boolean) => void;
+  edgeToEdgeMedia?: boolean;
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -64,6 +65,7 @@ const PostCard = ({
   currentUserReaction,
   onOpenPostMenu,
   onReactionPickerVisibilityChange,
+  edgeToEdgeMedia,
 }: PostCardProps) => {
   const isOwnPost = post.user._id === currentUser._id;
   const likeButtonRef = useRef<RNView>(null);
@@ -75,6 +77,7 @@ const PostCard = ({
 
   const [imageHeight, setImageHeight] = useState<number | null>(null);
   const [videoHeight, setVideoHeight] = useState<number | null>(null);
+  const [videoAspectRatio, setVideoAspectRatio] = useState<number | null>(null);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   const { isDarkMode, colors } = useTheme();
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
@@ -199,11 +202,13 @@ const PostCard = ({
       );
     } else if (post.video) {
       setIsMediaLoading(true);
-      // Use a sensible default 16:9 height until the video reports natural size
+      // Use a sensible default 16:9 until the video reports natural size
       setVideoHeight(Math.round((screenWidth * 9) / 16));
+      setVideoAspectRatio(16 / 9);
     } else {
       setImageHeight(null);
       setVideoHeight(null);
+      setVideoAspectRatio(null);
       setIsMediaLoading(false);
     }
   }, [post.image, post.video]);
@@ -223,6 +228,9 @@ const PostCard = ({
       const { width, height } = playbackStatus.naturalSize;
       const calculatedHeight = Math.round((screenWidth / width) * height);
       setVideoHeight(calculatedHeight);
+      if (width > 0 && height > 0) {
+        setVideoAspectRatio(width / height);
+      }
     }
     setIsMediaLoading(false);
   };
@@ -314,37 +322,37 @@ const PostCard = ({
     <>
       <View style={{ backgroundColor: colors.background }}>
         {/* Post Header */}
-<View className="flex-row px-2 py-3 items-center">
-  <Image
-    source={
-      post.user.profilePicture
-        ? { uri: post.user.profilePicture }
-        : require("../assets/images/default-avatar.png")
-    }
-    className="w-14 h-14 rounded-full mr-3"
-  />
-  <View className="flex-1">
-    <Text className="font-bold text-lg" style={{ color: colors.text }}>
-      {post.user.firstName} {post.user.lastName}
-    </Text>
-    <Text className="text-sm" style={{ color: colors.textSecondary }}>
-      {formatDate(post.createdAt)}
-    </Text>
-  </View>
-  {/* Show menu if user owns the post OR user is admin */}
-  {(isOwnPost || currentUser.isAdmin) && (
-    <TouchableOpacity
-      onPress={() => onOpenPostMenu(post)}
-      className="p-2"
-    >
-      <FontAwesome
-        name="ellipsis-h"
-        size={20}
-        color={colors.textSecondary}
-      />
-    </TouchableOpacity>
-  )}
-</View>
+        <View className="flex-row px-2 py-3 items-center">
+          <Image
+            source={
+              post.user.profilePicture
+                ? { uri: post.user.profilePicture }
+                : require("../assets/images/default-avatar.png")
+            }
+            className="w-14 h-14 rounded-full mr-3"
+          />
+          <View className="flex-1">
+            <Text className="font-bold text-lg" style={{ color: colors.text }}>
+              {post.user.firstName} {post.user.lastName}
+            </Text>
+            <Text className="text-sm" style={{ color: colors.textSecondary }}>
+              {formatDate(post.createdAt)}
+            </Text>
+          </View>
+          {/* Show menu if user owns the post OR user is admin */}
+          {(isOwnPost || currentUser.isAdmin) && (
+            <TouchableOpacity
+              onPress={() => onOpenPostMenu(post)}
+              className="p-2"
+            >
+              <FontAwesome
+                name="ellipsis-h"
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* Post Content */}
         {post.content && (
@@ -385,10 +393,14 @@ const PostCard = ({
           />
         </TouchableOpacity>
       )}
-      {post.video && videoHeight !== null && (
+      {post.video && (videoHeight !== null || videoAspectRatio !== null) && (
         <Video
           source={{ uri: post.video }}
-          style={{ width: screenWidth, height: videoHeight }}
+          style={
+            edgeToEdgeMedia && videoAspectRatio
+              ? { width: "100%", aspectRatio: videoAspectRatio }
+              : { width: screenWidth, height: videoHeight as number }
+          }
           useNativeControls
           resizeMode={ResizeMode.CONTAIN}
           isLooping
@@ -433,7 +445,7 @@ const PostCard = ({
                 className="text-base"
                 style={{ color: colors.textSecondary }}
               >
-                {formatNumber(post.comments.length)}{" "}
+                {formatNumber(post.comments.length)} {" "}
                 {post.comments.length === 1 ? "comment" : "comments"}
               </Text>
             )}
@@ -522,101 +534,19 @@ const PostCard = ({
               resizeMode="contain"
               {...panResponder.panHandlers}
             />
+            {showModalContent && (
+              <Animated.View
+                style={[styles.modalContentContainer, { opacity: contentOpacityAnim }]}
+              >
+                <Text style={{ color: "white", fontSize: 18, marginBottom: 10 }}>
+                  {post.user.firstName} {post.user.lastName}
+                </Text>
+                <Text style={{ color: "white", fontSize: 16 }}>
+                  {post.content}
+                </Text>
+              </Animated.View>
+            )}
           </Pressable>
-          {/* New content for the modal */}
-          <Animated.View
-            style={[
-              styles.modalContentContainer,
-              { opacity: contentOpacityAnim },
-            ]}
-          >
-            {/* User Info */}
-            <View className="flex-row items-center mb-2">
-              <Text className="font-bold text-base" style={{ color: "white" }}>
-                {post.user.firstName} {post.user.lastName}
-              </Text>
-            </View>
-
-            {/* Post Content */}
-            {post.content && (
-              <Text className="text-base mb-4" style={{ color: "white" }}>
-                {post.content}
-              </Text>
-            )}
-
-            {/* Reactions and Comments Count - within modal */}
-            {((post.reactions && post.reactions.length > 0) ||
-              (post.comments && post.comments.length > 0)) && (
-              <View className="flex-row justify-between items-center px-0 py-1 mb-4">
-                {post.reactions && post.reactions.length > 0 ? (
-                  <View className="flex-row items-center">
-                    <View className="flex-row">
-                      {getTopThreeReactions().map((reaction) => {
-                        const Emoji =
-                          reactionComponents[
-                            reaction as keyof typeof reactionComponents
-                          ];
-                        if (!Emoji) {
-                          return null;
-                        }
-                        return <Emoji key={reaction} width={20} height={20} />;
-                      })}
-                    </View>
-                    <Text
-                      className="text-base ml-2"
-                      style={{ color: "#CCCCCC" }}
-                    >
-                      {formatNumber(post.reactions.length)}
-                    </Text>
-                  </View>
-                ) : (
-                  <View />
-                )}
-
-                {post.comments && post.comments.length > 0 && (
-                  <Text className="text-base" style={{ color: "#CCCCCC" }}>
-                    {formatNumber(post.comments.length)}{" "}
-                    {post.comments.length === 1 ? "comment" : "comments"}
-                  </Text>
-                )}
-              </View>
-            )}
-
-            {/* Post Actions (Re-using existing logic) */}
-            <View className="flex-row justify-around py-1">
-              <Pressable
-                ref={likeButtonRef}
-                onPress={handleQuickPress}
-                onLongPress={handleLongPress}
-                className="flex-1 items-center py-2.5"
-              >
-                <ReactionButton />
-              </Pressable>
-
-              <TouchableOpacity
-                className="flex-1 flex-row items-center justify-center py-2.5"
-                onPress={() => onComment(post._id)}
-              >
-                <CommentIcon size={22} color={"white"} />
-                <Text
-                  className="font-semibold ml-1.5"
-                  style={{ color: "white" }}
-                >
-                  Comment
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
-                <ShareIcon size={22} color={"white"} />
-                <Text
-                  className="font-semibold ml-1.5"
-                  style={{ color: "white" }}
-                >
-                  Share
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
         </Animated.View>
       </Modal>
     </>

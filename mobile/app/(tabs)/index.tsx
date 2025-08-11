@@ -92,6 +92,7 @@ const HomeScreen = () => {
           onOpenComments={handleOpenComments}
           onOpenPostMenu={handleOpenPostMenu}
           onReactionPickerVisibilityChange={handleReactionPickerVisibilityChange}
+          edgeToEdgeMedia
         />
       </ScrollView>
       <PostActionBottomSheet

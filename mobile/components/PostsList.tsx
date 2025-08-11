@@ -10,12 +10,16 @@ interface PostsListProps {
   username?: string;
   onOpenComments?: (postId: string) => void;
   onOpenPostMenu: (post: Post) => void;
+  onReactionPickerVisibilityChange?: (isVisible: boolean) => void;
+  edgeToEdgeMedia?: boolean;
 }
 
 const PostsList = ({
   username,
   onOpenComments,
   onOpenPostMenu,
+  onReactionPickerVisibilityChange,
+  edgeToEdgeMedia,
 }: PostsListProps) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
@@ -89,6 +93,10 @@ const PostsList = ({
               currentUser
             )}
             onOpenPostMenu={onOpenPostMenu}
+            onReactionPickerVisibilityChange={
+              onReactionPickerVisibilityChange
+            }
+            edgeToEdgeMedia={edgeToEdgeMedia}
           />
           {index < posts.length - 1 && (
             <View className="h-1" style={{ backgroundColor: "#141414" }} />
