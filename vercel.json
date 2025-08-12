@@ -11,5 +11,16 @@
       "src": "/api/(.*)",
       "dest": "backend/src/server.js"
     }
-  ]
+  ],
+  "functions": {
+    "backend/src/server.js": {
+      "maxDuration": 10,
+      "memory": 1024,
+      "runtime": "nodejs20.x"
+    }
+  },
+  "regions": ["iad1"],
+  "env": {
+    "STREAM_HTTP_TIMEOUT_MS": "10000"
+  }
 }
