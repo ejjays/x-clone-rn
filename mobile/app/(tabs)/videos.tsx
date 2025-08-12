@@ -160,7 +160,9 @@ const VideoItem = ({
   };
 
   return (
-    <View style={[styles.videoContainer, { height: height - bottomSafeOffset }]}>
+    <View
+      style={[styles.videoContainer, { height: height - bottomSafeOffset }]}
+    >
       <Pressable
         style={styles.videoPressable}
         onPress={onContainerPress}
@@ -232,7 +234,10 @@ const VideoItem = ({
         <View
           style={[
             styles.rightContainer,
-            { paddingBottom: bottomSafeOffset + 20 },
+            {
+              paddingBottom: bottomSafeOffset + 20,
+              justifyContent: "flex-end",
+            },
           ]}
         >
           <TouchableOpacity
@@ -251,13 +256,21 @@ const VideoItem = ({
               name={selectedReaction ? "heart" : "heart-outline"}
               size={30}
               color="white"
-              style={{ textStrokeColor: "black", textStrokeWidth: 1 }}
+              style={{
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 3,
+              }}
             />
             <Text
-              style={[
-                styles.iconText,
-                { textStrokeColor: "black", textStrokeWidth: 1 },
-              ]}
+              style={{
+                color: "white",
+                fontSize: 12,
+                marginTop: 5,
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 7,
+              }}
             >
               {formatNumber(item.reactions.length)}
             </Text>
@@ -271,13 +284,21 @@ const VideoItem = ({
               name="chatbubble-ellipses"
               size={30}
               color="white"
-              style={{ textStrokeColor: "black", textStrokeWidth: 1 }}
+              style={{
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 3,
+              }}
             />
             <Text
-              style={[
-                styles.iconText,
-                { textStrokeColor: "black", textStrokeWidth: 1 },
-              ]}
+              style={{
+                color: "white",
+                fontSize: 12,
+                marginTop: 5,
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 7,
+              }}
             >
               {formatNumber(item.comments.length)}
             </Text>
@@ -291,13 +312,21 @@ const VideoItem = ({
               name="share-social"
               size={30}
               color="white"
-              style={{ textStrokeColor: "black", textStrokeWidth: 1 }}
+              style={{
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 3,
+              }}
             />
             <Text
-              style={[
-                styles.iconText,
-                { textStrokeColor: "black", textStrokeWidth: 1 },
-              ]}
+              style={{
+                color: "white",
+                fontSize: 12,
+                marginTop: 5,
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 7,
+              }}
             >
               Share
             </Text>
@@ -308,8 +337,24 @@ const VideoItem = ({
               name={isMuted ? "volume-mute" : "volume-high"}
               size={28}
               color="white"
+              style={{
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 3,
+              }}
             />
-            <Text style={styles.iconText}>{isMuted ? "Mute" : "Sound"}</Text>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 12,
+                marginTop: 5,
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 7,
+              }}
+            >
+              {isMuted ? "Mute" : "Sound"}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -426,7 +471,18 @@ export default function VideosScreen() {
     return (
       <SafeAreaView style={styles.centered}>
         <View style={[styles.header, { paddingTop: 10 }]}>
-          <Text style={styles.headerTitle}>Reels</Text>
+          <Text
+            style={[
+              styles.headerTitle,
+              {
+                textShadowColor: "black",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 7,
+              },
+            ]}
+          >
+            Reels
+          </Text>
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
         <Text style={styles.infoText}>No videos have been posted yet.</Text>
@@ -438,7 +494,18 @@ export default function VideosScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
       <StatusBar style="light" />
       <View style={[styles.header, { paddingTop: 10 }]}>
-        <Text style={styles.headerTitle}>Reels</Text>
+        <Text
+          style={[
+            styles.headerTitle,
+            {
+              textShadowColor: "black",
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 7,
+            },
+          ]}
+        >
+          Reels
+        </Text>
       </View>
       <FlatList
         data={videoPosts}
@@ -531,9 +598,9 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   rightContainer: {
-    justifyContent: "center",
+    justifyContent: "flex-end",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 3,
   },
   userInfo: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   avatar: {
@@ -547,5 +614,12 @@ const styles = StyleSheet.create({
   username: { color: "white", fontWeight: "bold", fontSize: 16 },
   caption: { color: "white", fontSize: 14, marginRight: 70 },
   iconContainer: { alignItems: "center", marginBottom: 25 },
-  iconText: { color: "white", fontSize: 12, marginTop: 5 },
+  iconText: {
+    color: "white",
+    fontSize: 12,
+    marginTop: 5,
+    textShadowColor: "black",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 7,
+  },
 });

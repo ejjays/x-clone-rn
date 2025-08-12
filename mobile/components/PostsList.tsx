@@ -78,9 +78,11 @@ const PostsList = ({
     );
   }
 
+  const filteredPosts = posts.filter((post: Post) => !post.video);
+
   return (
     <View style={{ backgroundColor: colors.background }}>
-      {posts.map((post: Post, index: number) => (
+      {filteredPosts.map((post: Post, index: number) => (
         <View key={post._id}>
           <PostCard
             post={post}
@@ -98,7 +100,7 @@ const PostsList = ({
             }
             edgeToEdgeMedia={edgeToEdgeMedia}
           />
-          {index < posts.length - 1 && (
+          {index < filteredPosts.length - 1 && (
             <View className="h-1" style={{ backgroundColor: "#141414" }} />
           )}
         </View>
