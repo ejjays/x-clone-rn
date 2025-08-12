@@ -47,17 +47,55 @@ export const syncUser = async (req, res) => {
 			{ upsert: true, new: true, setDefaultsOnInsert: true }
 		);
 
-		await streamClient.upsertUser({
-			id: userId,
-			name: `${firstName} ${lastName}`, // Use full name for Stream Chat
-			image: profileImage,
-		});
+		// Retry wrapper for transient Stream errors (e.g., 429/5xx)
+		const retry = async (fn, { retries = 3, baseDelayMs = 300 } = {}) => {
+			let attempt = 0;
+			let lastErr;
+			while (attempt <= retries) {
+				try {
+					return await fn();
+				} catch (err) {
+					lastErr = err;
+					const status = err?.response?.status;
+					const isRetryable = status === 429 || (status >= 500 && status < 600) || !status;
+					if (!isRetryable || attempt === retries) break;
+					const delay = baseDelayMs * 2 ** attempt + Math.floor(Math.random() * 100);
+					await new Promise((r) => setTimeout(r, delay));
+					attempt += 1;
+				}
+			}
+			throw lastErr;
+		};
+
+		try {
+			await retry(() => streamClient.upsertUser({
+				id: userId,
+				name: `${firstName ?? ""} ${lastName ?? ""}`.trim() || username,
+				image: profileImage,
+			}));
+		} catch (streamErr) {
+			const status = streamErr?.response?.status;
+			const statusText = streamErr?.response?.statusText;
+			console.error("⚠️ Stream upsertUser failed, proceeding without blocking sync:", {
+				message: streamErr?.message,
+				status,
+				statusText,
+			});
+		}
 
 		console.log(`✅ User synced successfully: ${dbUser.username} (${dbUser.clerkId})`);
 		res.status(200).json(dbUser);
 	} catch (error) {
-		console.error("❌ Error syncing user:", error);
-		res.status(500).json({ message: "Something went wrong during user sync!" });
+		const status = error?.response?.status;
+		const statusText = error?.response?.statusText;
+		console.error("❌ Error syncing user:", {
+			message: error?.message,
+			status,
+			statusText,
+			code: error?.code,
+			path: "/api/users/sync",
+		});
+		res.status(status && status >= 500 ? 503 : 500).json({ message: "Something went wrong during user sync!" });
 	}
 };
 
@@ -172,12 +210,20 @@ export const updateUserProfile = async (req, res) => {
 			},
 		});
 
-		await streamClient.partialUpdateUser({
-			id: req.auth.userId,
-			set: {
-				name: user.username,
-			},
-		});
+		try {
+			await streamClient.partialUpdateUser({
+				id: req.auth.userId,
+				set: {
+					name: user.username,
+				},
+			});
+		} catch (streamErr) {
+			console.error("⚠️ Stream partialUpdateUser failed, continuing:", {
+				message: streamErr?.message,
+				status: streamErr?.response?.status,
+				statusText: streamErr?.response?.statusText,
+			});
+		}
 
 		res.status(200).json(user);
 	} catch (error) {
