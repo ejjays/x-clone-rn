@@ -80,6 +80,8 @@ const VideoItem = ({
   const [progress, setProgress] = useState(0);
   const lastTapRef = useRef<number>(0);
   const heartOpacity = useRef(new Animated.Value(0)).current;
+  const [commentBarHeight, setCommentBarHeight] = useState<number>(64); // State for comment bar height
+
 
   // Autoplay / pause based on visibility + screen focus
   useEffect(() => {
@@ -146,6 +148,18 @@ const VideoItem = ({
     return Math.min(height, containerWidth / aspect);
   }, [naturalWidth, naturalHeight, containerWidth]);
 
+  // limit the video area so it does not go under the comment bar
+  const containerHeight = useMemo(() => {
+    // existing computedHeight based on aspect ratio
+    const maxVideoHeight = computedHeight || height;
+    // ensure video doesn't extend under comment bar
+    const allowedHeight = Math.max(
+      0,
+      height - bottomSafeOffset - commentBarHeight
+    );
+    return Math.min(maxVideoHeight, allowedHeight);
+  }, [computedHeight, bottomSafeOffset, commentBarHeight]);
+
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
       setAnchorMeasurements({ pageX, pageY });
@@ -160,17 +174,15 @@ const VideoItem = ({
   };
 
   return (
-    <View
-      style={[styles.videoContainer, { height: height }]}
-    >
+    <View style={[styles.videoContainer, { height }]}>
       <Pressable
-        style={styles.videoPressable}
+        style={[styles.videoPressable, { height: containerHeight }]}
         onPress={onContainerPress}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
         <Video
           ref={videoRef}
-          style={StyleSheet.absoluteFillObject}
+          style={{ width: "100%", height: "100%" }} // fills the item container
           source={{ uri: item.video! }}
           resizeMode={ResizeMode.COVER}
           isLooping
@@ -209,7 +221,7 @@ const VideoItem = ({
           {
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingBottom: bottomSafeOffset + 70,
+            paddingBottom: bottomSafeOffset + 88, // Adjusted padding
           },
         ]}
       >
@@ -354,17 +366,16 @@ const VideoItem = ({
             </Text>
           </TouchableOpacity>
         </View>
-
-                 {/* Removed per-screen input; moved to screen-level overlay */}
       </View>
 
+      {/* Progress Bar */}
       <View
         pointerEvents="none"
         style={{
           position: "absolute",
           left: 10,
           right: 10,
-          bottom: bottomSafeOffset + 8,
+          bottom: bottomSafeOffset + 78,
           height: 3,
           backgroundColor: "rgba(255,255,255,0.25)",
           borderRadius: 2,
@@ -378,6 +389,34 @@ const VideoItem = ({
             borderRadius: 2,
           }}
         />
+      </View>
+
+      {/* New Comment Input - now inside VideoItem */}
+      <View
+        onLayout={(e) => setCommentBarHeight(e.nativeEvent.layout.height)}
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: bottomSafeOffset,
+          backgroundColor: "black",
+        }}
+      >
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={onCommentPress}
+          style={{
+            margin: 12,
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 24,
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+          }}
+        >
+          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 14 }}>
+            Add a comment...
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <PostReactionsPicker
@@ -409,6 +448,10 @@ export default function VideosScreen() {
 
   const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
   const handleCloseComments = () => bottomSheetRef.current?.close();
+
+  // No longer need commentBarHeight at this level, as it's per VideoItem
+  // compute effective item height (used for getItemLayout / paging)
+  const itemHeight = Math.max(0, height - bottomSafeOffset);
 
   const handlePullToRefresh = async () => {
     setIsRefetching(true);
@@ -490,7 +533,10 @@ export default function VideosScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }} edges={['bottom']}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "black" }}
+      edges={["bottom"]}
+    >
       <StatusBar style="light" />
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Text
@@ -515,7 +561,6 @@ export default function VideosScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         getItemLayout={(_, i) => {
-          const itemHeight = height;
           return {
             length: itemHeight,
             offset: itemHeight * i,
@@ -527,7 +572,10 @@ export default function VideosScreen() {
         maxToRenderPerBatch={3}
         windowSize={5}
         style={{ marginTop }}
-        contentContainerStyle={{ paddingBottom: bottomSafeOffset, paddingTop: 0 }}
+        contentContainerStyle={{
+          paddingBottom: bottomSafeOffset,
+          paddingTop: 0,
+        }}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -538,24 +586,6 @@ export default function VideosScreen() {
           />
         }
       />
-      {/* Screen-level mock comment input (outside the video item) */}
-      <View
-        pointerEvents="box-none"
-        style={{
-          position: "absolute",
-          left: insets.left + 12,
-          right: insets.right + 12,
-          bottom: bottomSafeOffset + 12,
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={handleOpenComments}
-          style={styles.commentMockInput}
-        >
-          <Text style={styles.commentMockPlaceholder}>Add a comment...</Text>
-        </TouchableOpacity>
-      </View>
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
         onClose={handleCloseComments}

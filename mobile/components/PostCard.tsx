@@ -232,10 +232,14 @@ const PostCard = ({
       };
 
       // Correct for orientation if provided by expo-av
-      const displayedWidth = orientation === "portrait" && width > height ? height : width;
-      const displayedHeight = orientation === "portrait" && width > height ? width : height;
+      const displayedWidth =
+        orientation === "portrait" && width > height ? height : width;
+      const displayedHeight =
+        orientation === "portrait" && width > height ? width : height;
 
-      const calculatedHeight = Math.round((screenWidth / displayedWidth) * displayedHeight);
+      const calculatedHeight = Math.round(
+        (screenWidth / displayedWidth) * displayedHeight
+      );
       setVideoHeight(calculatedHeight);
       if (displayedWidth > 0 && displayedHeight > 0) {
         setVideoAspectRatio(displayedWidth / displayedHeight);
@@ -243,7 +247,6 @@ const PostCard = ({
     }
     setIsMediaLoading(false);
   };
-
 
   const handleVideoError = (error: any) => {
     console.error(`Video Error for post ${post._id} (${post.video}):`, error);
@@ -460,7 +463,7 @@ const PostCard = ({
                 className="text-base"
                 style={{ color: colors.textSecondary }}
               >
-                {formatNumber(post.comments.length)} {" "}
+                {formatNumber(post.comments.length)}{" "}
                 {post.comments.length === 1 ? "comment" : "comments"}
               </Text>
             )}
@@ -551,7 +554,10 @@ const PostCard = ({
             />
             {showModalContent && (
               <Animated.View
-                style={[styles.modalContentContainer, { opacity: contentOpacityAnim }]}
+                style={[
+                  styles.modalContentContainer,
+                  { opacity: contentOpacityAnim },
+                ]}
               >
                 {/* User Info and Content */}
                 <View className="flex-row items-center mb-3">
@@ -563,12 +569,16 @@ const PostCard = ({
                     }
                     className="w-10 h-10 rounded-full mr-2"
                   />
-                  <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>
+                  <Text
+                    style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+                  >
                     {post.user.firstName} {post.user.lastName}
                   </Text>
                 </View>
                 {post.content && (
-                  <Text style={{ color: "white", fontSize: 16, marginBottom: 15 }}>
+                  <Text
+                    style={{ color: "white", fontSize: 16, marginBottom: 15 }}
+                  >
                     {post.content}
                   </Text>
                 )}
@@ -588,7 +598,9 @@ const PostCard = ({
                             if (!Emoji) {
                               return null;
                             }
-                            return <Emoji key={reaction} width={20} height={20} />;
+                            return (
+                              <Emoji key={reaction} width={20} height={20} />
+                            );
                           })}
                         </View>
                         <Text
@@ -603,11 +615,8 @@ const PostCard = ({
                     )}
 
                     {post.comments && post.comments.length > 0 && (
-                      <Text
-                        className="text-base"
-                        style={{ color: "white" }}
-                      >
-                        {formatNumber(post.comments.length)} {" "}
+                      <Text className="text-base" style={{ color: "white" }}>
+                        {formatNumber(post.comments.length)}{" "}
                         {post.comments.length === 1 ? "comment" : "comments"}
                       </Text>
                     )}
@@ -617,7 +626,10 @@ const PostCard = ({
                 {/* Post Actions (Modal) */}
                 <View
                   className="flex-row justify-around pt-3 mt-3"
-                  style={{ borderTopColor: "rgba(255,255,255,0.2)", borderTopWidth: 1 }}
+                  style={{
+                    borderTopColor: "rgba(255,255,255,0.2)",
+                    borderTopWidth: 1,
+                  }}
                 >
                   <Pressable
                     ref={likeButtonRef}
