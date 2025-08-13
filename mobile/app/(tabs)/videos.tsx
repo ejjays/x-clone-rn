@@ -220,7 +220,7 @@ const VideoItem = ({
         pointerEvents="box-none"
         style={[
           styles.overlay,
-          {
+          { 
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
             paddingBottom: bottomSafeOffset + commentBarHeight + 10,
