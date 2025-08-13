@@ -161,7 +161,7 @@ const VideoItem = ({
 
   return (
     <View
-      style={[styles.videoContainer, { height: height - bottomSafeOffset }]}
+      style={[styles.videoContainer, { height: height }]}
     >
       <Pressable
         style={styles.videoPressable}
@@ -355,23 +355,7 @@ const VideoItem = ({
           </TouchableOpacity>
         </View>
 
-        {/* Mock comment input at bottom */}
-        <View
-          style={{
-            position: "absolute",
-            left: insets.left + 12,
-            right: insets.right + 12,
-            bottom: bottomSafeOffset + 20,
-          }}
-        >
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={onCommentPress}
-            style={styles.commentMockInput}
-          >
-            <Text style={styles.commentMockPlaceholder}>Add a comment...</Text>
-          </TouchableOpacity>
-        </View>
+                 {/* Removed per-screen input; moved to screen-level overlay */}
       </View>
 
       <View
@@ -416,7 +400,7 @@ export default function VideosScreen() {
 
   const tabBarHeight = useOptionalTabBarHeight();
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
-  const marginTop = -insets.top - 80;
+  const marginTop = 0;
 
   const videoPosts = useMemo(
     () => posts.filter((p) => p.video && p.video.trim() !== ""),
@@ -485,7 +469,7 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <SafeAreaView style={styles.centered}>
-        <View style={[styles.header, { paddingTop: 10 }]}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <Text
             style={[
               styles.headerTitle,
@@ -506,9 +490,9 @@ export default function VideosScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }} edges={['bottom']}>
       <StatusBar style="light" />
-      <View style={[styles.header, { paddingTop: 10 }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Text
           style={[
             styles.headerTitle,
@@ -531,7 +515,7 @@ export default function VideosScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         getItemLayout={(_, i) => {
-          const itemHeight = height - bottomSafeOffset;
+          const itemHeight = height;
           return {
             length: itemHeight,
             offset: itemHeight * i,
@@ -543,7 +527,7 @@ export default function VideosScreen() {
         maxToRenderPerBatch={3}
         windowSize={5}
         style={{ marginTop }}
-        contentContainerStyle={{ paddingBottom: bottomSafeOffset }}
+        contentContainerStyle={{ paddingBottom: bottomSafeOffset, paddingTop: 0 }}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -554,6 +538,24 @@ export default function VideosScreen() {
           />
         }
       />
+      {/* Screen-level mock comment input (outside the video item) */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          left: insets.left + 12,
+          right: insets.right + 12,
+          bottom: bottomSafeOffset + 12,
+        }}
+      >
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={handleOpenComments}
+          style={styles.commentMockInput}
+        >
+          <Text style={styles.commentMockPlaceholder}>Add a comment...</Text>
+        </TouchableOpacity>
+      </View>
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
         onClose={handleCloseComments}
