@@ -44,8 +44,8 @@ const TabsLayout = () => {
 
   useEffect(() => {
     headerHeight.value = isHomeScreen ? HEADER_HEIGHT : 0;
-    tabBarHeight.value = isProfileScreen ? 0 : TAB_BAR_HEIGHT;
-  }, [isHomeScreen, isProfileScreen]);
+    tabBarHeight.value = isProfileScreen || isVideosScreen ? 0 : TAB_BAR_HEIGHT;
+  }, [isHomeScreen, isProfileScreen, isVideosScreen]);
 
   // ✅ INSTANT INDICATOR CALCULATION (No animation delays)
   const getIndicatorPosition = () => {
@@ -81,7 +81,7 @@ const TabsLayout = () => {
       <View
         style={{
           flex: 1,
-          paddingTop: isProfileScreen ? 0 : insets.top,
+          paddingTop: isProfileScreen || isVideosScreen ? 0 : insets.top,
           backgroundColor: colors.background,
         }}
       >

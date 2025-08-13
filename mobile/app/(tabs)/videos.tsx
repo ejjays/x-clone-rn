@@ -170,12 +170,9 @@ const VideoItem = ({
       >
         <Video
           ref={videoRef}
-          style={[
-            styles.video,
-            { width: containerWidth, height: computedHeight },
-          ]}
+          style={StyleSheet.absoluteFillObject}
           source={{ uri: item.video! }}
-          resizeMode={ResizeMode.CONTAIN}
+          resizeMode={ResizeMode.COVER}
           isLooping
           shouldPlay={false}
           onLoad={(status) => {
@@ -212,7 +209,7 @@ const VideoItem = ({
           {
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingBottom: bottomSafeOffset + 10,
+            paddingBottom: bottomSafeOffset + 70,
           },
         ]}
       >
@@ -235,7 +232,7 @@ const VideoItem = ({
           style={[
             styles.rightContainer,
             {
-              paddingBottom: bottomSafeOffset + 20,
+              paddingBottom: bottomSafeOffset + 80,
               justifyContent: "flex-end",
             },
           ]}
@@ -358,27 +355,45 @@ const VideoItem = ({
           </TouchableOpacity>
         </View>
 
+        {/* Mock comment input at bottom */}
         <View
-          pointerEvents="none"
           style={{
             position: "absolute",
-            left: 10,
-            right: 10,
-            bottom: bottomSafeOffset + 8,
-            height: 3,
-            backgroundColor: "rgba(255,255,255,0.25)",
-            borderRadius: 2,
+            left: insets.left + 12,
+            right: insets.right + 12,
+            bottom: bottomSafeOffset + 20,
           }}
         >
-          <View
-            style={{
-              width: `${Math.round(progress * 100)}%`,
-              height: "100%",
-              backgroundColor: "#fff",
-              borderRadius: 2,
-            }}
-          />
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={onCommentPress}
+            style={styles.commentMockInput}
+          >
+            <Text style={styles.commentMockPlaceholder}>Add a comment...</Text>
+          </TouchableOpacity>
         </View>
+      </View>
+
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 10,
+          right: 10,
+          bottom: bottomSafeOffset + 8,
+          height: 3,
+          backgroundColor: "rgba(255,255,255,0.25)",
+          borderRadius: 2,
+        }}
+      >
+        <View
+          style={{
+            width: `${Math.round(progress * 100)}%`,
+            height: "100%",
+            backgroundColor: "#fff",
+            borderRadius: 2,
+          }}
+        />
       </View>
 
       <PostReactionsPicker
@@ -621,5 +636,17 @@ const styles = StyleSheet.create({
     textShadowColor: "black",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 7,
+  },
+  commentMockInput: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  commentMockPlaceholder: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 14,
   },
 });
