@@ -59,6 +59,7 @@ const VideoItem = ({
   onCommentPress,
   insets,
   bottomSafeOffset,
+  commentBarHeight, // <--- new prop
 }: {
   item: Post;
   isVisible: boolean;
@@ -66,6 +67,7 @@ const VideoItem = ({
   onCommentPress: () => void;
   insets: EdgeInsets;
   bottomSafeOffset: number;
+  commentBarHeight: number; // <- add this
 }) => {
   const videoRef = useRef<Video>(null);
   const likeButtonRef = useRef<TouchableOpacity>(null);
@@ -80,8 +82,6 @@ const VideoItem = ({
   const [progress, setProgress] = useState(0);
   const lastTapRef = useRef<number>(0);
   const heartOpacity = useRef(new Animated.Value(0)).current;
-  const [commentBarHeight, setCommentBarHeight] = useState<number>(64); // State for comment bar height
-
 
   // Autoplay / pause based on visibility + screen focus
   useEffect(() => {
@@ -173,8 +173,10 @@ const VideoItem = ({
     setPickerVisible(false);
   };
 
+  const itemOuterHeight = Math.max(0, height - bottomSafeOffset);
+
   return (
-    <View style={[styles.videoContainer, { height }]}>
+    <View style={[styles.videoContainer, { height: itemOuterHeight }]}>
       <Pressable
         style={[styles.videoPressable, { height: containerHeight }]}
         onPress={onContainerPress}
@@ -221,7 +223,7 @@ const VideoItem = ({
           {
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingBottom: bottomSafeOffset + 88, // Adjusted padding
+            paddingBottom: bottomSafeOffset + commentBarHeight + 10,
           },
         ]}
       >
@@ -244,7 +246,7 @@ const VideoItem = ({
           style={[
             styles.rightContainer,
             {
-              paddingBottom: bottomSafeOffset + 80,
+              paddingBottom: bottomSafeOffset + commentBarHeight + 10,
               justifyContent: "flex-end",
             },
           ]}
@@ -375,7 +377,7 @@ const VideoItem = ({
           position: "absolute",
           left: 10,
           right: 10,
-          bottom: bottomSafeOffset + 78,
+          bottom: bottomSafeOffset + commentBarHeight + 5,
           height: 3,
           backgroundColor: "rgba(255,255,255,0.25)",
           borderRadius: 2,
@@ -389,34 +391,6 @@ const VideoItem = ({
             borderRadius: 2,
           }}
         />
-      </View>
-
-      {/* New Comment Input - now inside VideoItem */}
-      <View
-        onLayout={(e) => setCommentBarHeight(e.nativeEvent.layout.height)}
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: bottomSafeOffset,
-          backgroundColor: "black",
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={onCommentPress}
-          style={{
-            margin: 12,
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: 24,
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-          }}
-        >
-          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 14 }}>
-            Add a comment...
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <PostReactionsPicker
@@ -441,6 +415,8 @@ export default function VideosScreen() {
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
   const marginTop = 0;
 
+  const [commentBarHeight, setCommentBarHeight] = useState<number>(64); // default until measured
+
   const videoPosts = useMemo(
     () => posts.filter((p) => p.video && p.video.trim() !== ""),
     [posts]
@@ -449,9 +425,9 @@ export default function VideosScreen() {
   const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
   const handleCloseComments = () => bottomSheetRef.current?.close();
 
-  // No longer need commentBarHeight at this level, as it's per VideoItem
-  // compute effective item height (used for getItemLayout / paging)
-  const itemHeight = Math.max(0, height - bottomSafeOffset);
+  // Once commentBarHeight is measured, recalc swipe height:
+  const swipeContainerHeight = height - bottomSafeOffset;
+  const itemHeight = swipeContainerHeight;
 
   const handlePullToRefresh = async () => {
     setIsRefetching(true);
@@ -484,9 +460,10 @@ export default function VideosScreen() {
         onCommentPress={handleOpenComments}
         insets={insets}
         bottomSafeOffset={bottomSafeOffset}
+        commentBarHeight={commentBarHeight} // <-- pass it
       />
     ),
-    [viewableItems, insets, isFocused, bottomSafeOffset]
+    [viewableItems, insets, isFocused, bottomSafeOffset, commentBarHeight]
   );
 
   if (isLoading) {
@@ -552,7 +529,9 @@ export default function VideosScreen() {
           Reels
         </Text>
       </View>
+      {/* Remount when commentBarHeight changes to ensure getItemLayout uses up-to-date height */}
       <FlatList
+        key={commentBarHeight}
         data={videoPosts}
         renderItem={renderItem}
         keyExtractor={(item) => item._id}
@@ -560,13 +539,11 @@ export default function VideosScreen() {
         showsVerticalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
-        getItemLayout={(_, i) => {
-          return {
-            length: itemHeight,
-            offset: itemHeight * i,
-            index: i,
-          };
-        }}
+        getItemLayout={(_, i) => ({
+          length: itemHeight,
+          offset: itemHeight * i,
+          index: i,
+        })}
         decelerationRate="fast"
         initialNumToRender={2}
         maxToRenderPerBatch={3}
@@ -585,7 +562,36 @@ export default function VideosScreen() {
             progressBackgroundColor="black"
           />
         }
+        extraData={commentBarHeight}
       />
+      {/* Single fixed comment mock input */}
+      <View
+        onLayout={(e) => setCommentBarHeight(e.nativeEvent.layout.height)}
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: bottomSafeOffset,
+          backgroundColor: "black",
+          zIndex: 20,
+        }}
+      >
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={handleOpenComments}
+          style={{
+            margin: 12,
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 24,
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+          }}
+        >
+          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 14 }}>
+            Add a comment...
+          </Text>
+        </TouchableOpacity>
+      </View>
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
         onClose={handleCloseComments}
