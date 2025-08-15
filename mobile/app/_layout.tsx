@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "@/context/ThemeContext"; // Import ThemeProvider
 import { LogBox } from "react-native";
+import { useFonts, Poppins_400Regular, Poppins_600SemiBold } from "@expo-google-fonts/poppins";
 
 // Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
@@ -22,6 +23,7 @@ const queryClient = new QueryClient();
 const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const { client } = useStreamChat();
+  const [fontsLoaded] = useFonts({ Poppins_400Regular, Poppins_600SemiBold });
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -33,6 +35,14 @@ const InitialLayout = () => {
 
   // Only block for auth loading, NOT for Stream Chat client
   if (!isLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#1DA1F2" />
+      </View>
+    );
+  }
+
+  if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#1DA1F2" />
