@@ -131,7 +131,7 @@ export default function CustomChannelList({
     >
       <View className="relative mr-4">
         <Image
-          source={{ uri: item.image }}
+          source={item.image ? { uri: item.image } : require("../assets/images/default-avatar.png")}
           className="w-16 h-16 rounded-full"
         />
         {item.online && (

@@ -97,7 +97,7 @@ const Stories = () => {
             className="w-28 h-48 rounded-xl overflow-hidden"
           >
             <Image
-              source={{ uri: item.storyImage }}
+              source={item.storyImage ? { uri: item.storyImage } : require("../assets/images/default-avatar.png")}
               className="w-full h-full"
               resizeMode="cover"
             />
@@ -108,7 +108,7 @@ const Stories = () => {
                 </View>
               ) : (
                 <Image
-                  source={{ uri: item.avatar }}
+                  source={item.avatar ? { uri: item.avatar } : require("../assets/images/default-avatar.png")}
                   className="w-9 h-9 rounded-full"
                 />
               )}

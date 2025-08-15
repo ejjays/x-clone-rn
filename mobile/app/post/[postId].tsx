@@ -208,7 +208,11 @@ const PostDetailsScreen = () => {
               {/* --- POST HEADER --- */}
               <View className="flex-row px-4 pt-2 pb-2 items-center">
                 <Image
-                  source={{ uri: post?.user.profilePicture || "" }}
+                  source={
+                    post?.user.profilePicture
+                      ? { uri: post.user.profilePicture }
+                      : require("../../assets/images/default-avatar.png")
+                  }
                   className="w-12 h-12 rounded-full mr-3"
                 />
                 <View className="flex-1">
@@ -318,7 +322,11 @@ const PostDetailsScreen = () => {
         >
           <View className="flex-row items-center px-4">
             <Image
-              source={{ uri: currentUser?.profilePicture || "" }}
+              source={
+                currentUser?.profilePicture
+                  ? { uri: currentUser.profilePicture }
+                  : require("../../assets/images/default-avatar.png")
+              }
               className="w-10 h-10 rounded-full mr-3"
             />
             <View

@@ -194,6 +194,7 @@ const VideoItem = ({
         onPress={onContainerPress}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
+        {item.video ? (
         <Video
           ref={videoRef}
           style={{ width: "100%", height: "100%", backgroundColor: "black" }} // fills the item container
@@ -219,6 +220,7 @@ const VideoItem = ({
             }
           }}
         />
+        ) : null}
         <Animated.View
           style={[styles.playIconContainer, { opacity: heartOpacity }]}
           pointerEvents="none"
@@ -246,7 +248,11 @@ const VideoItem = ({
         <View style={styles.leftContainer}>
           <View style={styles.userInfo}>
             <Image
-              source={{ uri: item.user.profilePicture }}
+              source={
+                item.user.profilePicture
+                  ? { uri: item.user.profilePicture }
+                  : require("../../assets/images/default-avatar.png")
+              }
               style={styles.avatar}
             />
             <Text style={styles.username}>

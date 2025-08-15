@@ -127,7 +127,14 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
       <View className="flex-row">
         {/* Profile Picture with Badge - Made Bigger */}
         <View className="relative mr-4">
-          <Image source={{ uri: notification.from.profilePicture }} className="w-16 h-16 rounded-full" />
+          <Image
+            source={
+              notification.from.profilePicture
+                ? { uri: notification.from.profilePicture }
+                : require("../assets/images/default-avatar.png")
+            }
+            className="w-16 h-16 rounded-full"
+          />
           {getNotificationIcon()}
         </View>
 
@@ -141,13 +148,13 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
               <Text className="text-sm" numberOfLines={2} style={{ color: colors.textSecondary }}>
                 {notification.post.content}
               </Text>
-              {notification.post.image && (
+              {notification.post && notification.post.image ? (
                 <Image
                   source={{ uri: notification.post.image }}
                   className="w-full h-28 rounded-md mt-2"
                   resizeMode="cover"
                 />
-              )}
+              ) : null}
             </View>
           )}
 

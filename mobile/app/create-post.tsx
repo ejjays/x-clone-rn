@@ -129,7 +129,11 @@ const CreatePostScreen = () => {
             {/* User Info */}
             <View className="flex-row items-center mb-4">
               <Image
-                source={{ uri: currentUser?.profilePicture }}
+                source={
+                  currentUser?.profilePicture
+                    ? { uri: currentUser.profilePicture }
+                    : require("../assets/images/default-avatar.png")
+                }
                 className="w-12 h-12 rounded-full mr-3"
               />
               <View>
