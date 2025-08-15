@@ -152,7 +152,7 @@ const VideoItem = ({
   const containerHeight = useMemo(() => {
     // existing computedHeight based on aspect ratio
     const maxVideoHeight = computedHeight || height;
-    // ensure video doesn't extend under comment bar
+    // ensure video doesn\'t extend under comment bar
     const allowedHeight = Math.max(
       0,
       height - bottomSafeOffset - commentBarHeight
@@ -220,7 +220,7 @@ const VideoItem = ({
         pointerEvents="box-none"
         style={[
           styles.overlay,
-          { 
+          {
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
             paddingBottom: bottomSafeOffset + commentBarHeight + 10,
@@ -489,7 +489,23 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <SafeAreaView style={styles.centered}>
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <View
+          style={[
+            styles.header,
+            { paddingTop: insets.top + 8, flexDirection: "row", alignItems: "center" },
+          ]}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={28}
+            color="white"
+            style={{
+              marginRight: 8,
+              textShadowColor: "black",
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 7,
+            }}
+          />
           <Text
             style={[
               styles.headerTitle,
@@ -515,7 +531,23 @@ export default function VideosScreen() {
       edges={["bottom"]}
     >
       <StatusBar style="light" />
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top + 8, flexDirection: "row", alignItems: "center" },
+        ]}
+      >
+        <Ionicons
+          name="chevron-back"
+          size={28}
+          color="white"
+          style={{
+            marginRight: 8,
+            textShadowColor: "black",
+            textShadowOffset: { width: 0, height: 0 },
+            textShadowRadius: 7,
+          }}
+        />
         <Text
           style={[
             styles.headerTitle,
