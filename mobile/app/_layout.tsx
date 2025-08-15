@@ -4,7 +4,7 @@ import { Stack, router } from "expo-router";
 import "../global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Text } from "react-native";
 import { OverlayProvider, Chat } from "stream-chat-react-native";
 import { streamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -13,7 +13,7 @@ import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "@/context/ThemeContext"; // Import ThemeProvider
 import { LogBox } from "react-native";
-import { useFonts, Poppins_400Regular, Poppins_600SemiBold } from "@expo-google-fonts/poppins";
+import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
 
 // Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
@@ -23,7 +23,25 @@ const queryClient = new QueryClient();
 const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const { client } = useStreamChat();
-  const [fontsLoaded] = useFonts({ Poppins_400Regular, Poppins_600SemiBold });
+  const [fontsLoaded] = useFonts({ Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold });
+
+  // Set a global default font for all Text components
+  if (!Text.defaultProps) {
+    Text.defaultProps = {} as any;
+  }
+  if (!Text.defaultProps.style) {
+    Text.defaultProps.style = { fontFamily: "Poppins_400Regular" };
+  } else {
+    const prev = Text.defaultProps.style as any;
+    const alreadyApplied = Array.isArray(prev)
+      ? prev.some((s) => (s as any)?.fontFamily === "Poppins_400Regular")
+      : (prev as any)?.fontFamily === "Poppins_400Regular";
+    if (!alreadyApplied) {
+      Text.defaultProps.style = Array.isArray(prev)
+        ? [...prev, { fontFamily: "Poppins_400Regular" }]
+        : [prev, { fontFamily: "Poppins_400Regular" }];
+    }
+  }
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
