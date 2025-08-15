@@ -151,18 +151,15 @@ const VideoItem = ({
 
   // limit the video area so it does not go under the comment bar
   const containerHeight = useMemo(() => {
-    // existing computedHeight based on aspect ratio
-    const maxVideoHeight = computedHeight || height;
-    // ensure video doesn\'t extend under comment bar
-    const allowedHeight = Math.max(
-      0,
-      height - bottomSafeOffset - commentBarHeight
-    );
-    return Math.min(maxVideoHeight, allowedHeight);
+    // Always allocate the full available vertical space for the player area
+    // (screen height minus bottom safe offset and the comment bar).
+    // Letterboxing will occur inside this area when using ResizeMode.CONTAIN.
+    const allowedHeight = Math.max(0, height - bottomSafeOffset - commentBarHeight);
+    return allowedHeight;
   }, [computedHeight, bottomSafeOffset, commentBarHeight]);
 
   const dynamicResizeMode = useMemo(() => {
-    if (!naturalWidth || !naturalHeight) return ResizeMode.COVER;
+    if (!naturalWidth || !naturalHeight) return ResizeMode.CONTAIN;
     const dimsSayLandscape = naturalWidth > naturalHeight;
     const isLandscape = videoOrientation
       ? videoOrientation === "landscape"
@@ -673,7 +670,7 @@ const styles = StyleSheet.create({
     width,
     height,
     backgroundColor: "black",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
   },
   videoPressable: {
