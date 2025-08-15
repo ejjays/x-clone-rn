@@ -331,6 +331,15 @@ const PostCard = ({
     );
   };
 
+  // Choose Poppins font family for the post content text based on existing dynamic style
+  const contentTextClass =
+    !post.image && !post.video
+      ? getDynamicPostTextStyle(post.content)
+      : "text-lg font-normal";
+  const postContentFontFamily = contentTextClass.includes("font-semibold")
+    ? "Poppins_600SemiBold"
+    : "Poppins_400Regular";
+
   return (
     <>
       <View style={{ backgroundColor: colors.background }}>
@@ -375,7 +384,7 @@ const PostCard = ({
                 ? getDynamicPostTextStyle(post.content)
                 : "text-lg font-normal"
             }`}
-            style={{ color: colors.text }}
+            style={{ color: colors.text, fontFamily: postContentFontFamily }}
           >
             {post.content}
           </Text>
