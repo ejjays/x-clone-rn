@@ -160,6 +160,11 @@ const VideoItem = ({
     return Math.min(maxVideoHeight, allowedHeight);
   }, [computedHeight, bottomSafeOffset, commentBarHeight]);
 
+  const dynamicResizeMode = useMemo(() => {
+    if (!naturalWidth || !naturalHeight) return ResizeMode.COVER;
+    return naturalHeight >= naturalWidth ? ResizeMode.COVER : ResizeMode.CONTAIN;
+  }, [naturalWidth, naturalHeight]);
+
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
       setAnchorMeasurements({ pageX, pageY });
@@ -184,9 +189,9 @@ const VideoItem = ({
       >
         <Video
           ref={videoRef}
-          style={{ width: "100%", height: "100%" }} // fills the item container
+          style={{ width: "100%", height: "100%", backgroundColor: "black" }} // fills the item container
           source={{ uri: item.video! }}
-          resizeMode={ResizeMode.COVER}
+          resizeMode={dynamicResizeMode}
           isLooping
           shouldPlay={false}
           onLoad={(status) => {
