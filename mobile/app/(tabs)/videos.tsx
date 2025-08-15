@@ -677,9 +677,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   videoPressable: {
-    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
+    width: "100%",
   },
   video: { width, height },
   playIconContainer: {
