@@ -82,6 +82,7 @@ const VideoItem = ({
   const [progress, setProgress] = useState(0);
   const lastTapRef = useRef<number>(0);
   const heartOpacity = useRef(new Animated.Value(0)).current;
+  const [videoOrientation, setVideoOrientation] = useState<"portrait" | "landscape" | null>(null);
 
   // Autoplay / pause based on visibility + screen focus
   useEffect(() => {
@@ -162,8 +163,15 @@ const VideoItem = ({
 
   const dynamicResizeMode = useMemo(() => {
     if (!naturalWidth || !naturalHeight) return ResizeMode.COVER;
-    return naturalHeight >= naturalWidth ? ResizeMode.COVER : ResizeMode.CONTAIN;
-  }, [naturalWidth, naturalHeight]);
+    const dimsSayLandscape = naturalWidth > naturalHeight;
+    const isLandscape = videoOrientation
+      ? videoOrientation === "landscape"
+      : dimsSayLandscape;
+    if (isLandscape) return ResizeMode.CONTAIN;
+    const hOverW = naturalHeight / naturalWidth;
+    // Treat only tall portrait (~>= 1.6, close to 9:16) as full-screen cover.
+    return hOverW >= 1.6 ? ResizeMode.COVER : ResizeMode.CONTAIN;
+  }, [naturalWidth, naturalHeight, videoOrientation]);
 
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
@@ -198,6 +206,10 @@ const VideoItem = ({
             if (status.naturalSize?.width && status.naturalSize?.height) {
               setNaturalWidth(status.naturalSize.width);
               setNaturalHeight(status.naturalSize.height);
+              const ori = (status as any).naturalSize?.orientation;
+              if (ori === "portrait" || ori === "landscape") {
+                setVideoOrientation(ori);
+              }
             }
           }}
           onPlaybackStatusUpdate={(status) => {
