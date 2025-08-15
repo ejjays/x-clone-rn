@@ -49,7 +49,7 @@ export const getUserPosts = asyncHandler(async (req, res) => {
 export const createPost = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   // FIX: We now receive mediaUrl and mediaType from the body, not a file.
-  const { content, mediaUrl, mediaType } = req.body;
+  const { content, mediaUrl, mediaType, videoFit } = req.body;
 
   if (!content && !mediaUrl) {
     return res.status(400).json({ error: "Post must contain either text or media" });
@@ -71,6 +71,9 @@ export const createPost = asyncHandler(async (req, res) => {
       newPostData.image = mediaUrl;
     } else if (mediaType === 'video') {
       newPostData.video = mediaUrl;
+      if (videoFit && (videoFit === 'original' || videoFit === 'full')) {
+        newPostData.videoFit = videoFit;
+      }
     }
   }
 

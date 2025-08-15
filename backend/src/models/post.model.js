@@ -33,6 +33,11 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    videoFit: {
+      type: String,
+      enum: ["original", "full"],
+      default: "original",
+    },
     reactions: [reactionSchema],
     comments: [
       {

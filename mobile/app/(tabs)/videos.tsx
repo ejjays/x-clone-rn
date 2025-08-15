@@ -159,6 +159,8 @@ const VideoItem = ({
   }, [computedHeight, bottomSafeOffset, commentBarHeight]);
 
   const dynamicResizeMode = useMemo(() => {
+    if (item.videoFit === 'full') return ResizeMode.COVER;
+    if (item.videoFit === 'original') return ResizeMode.CONTAIN;
     if (!naturalWidth || !naturalHeight) return ResizeMode.CONTAIN;
     const dimsSayLandscape = naturalWidth > naturalHeight;
     const isLandscape = videoOrientation

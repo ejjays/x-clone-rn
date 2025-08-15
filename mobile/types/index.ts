@@ -43,6 +43,7 @@ export interface Post {
   content: string;
   image?: string;
   video?: string;
+  videoFit?: "original" | "full";
   createdAt: string;
   user: User;
   reactions: Reaction[];
@@ -110,6 +111,7 @@ export interface Post {
   content: string;
   image?: string;
   video?: string;
+  videoFit?: "original" | "full";
   createdAt: string;
   user: User;
   reactions: Reaction[];

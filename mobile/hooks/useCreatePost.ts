@@ -14,12 +14,13 @@ const CLOUDINARY_UPLOAD_PRESET = "ejpogi";
 export const useCreatePost = () => {
   const [content, setContent] = useState("");
   const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: "image" | "video" } | null>(null);
+  const [videoFit, setVideoFit] = useState<"original" | "full">("full");
   const [isUploading, setIsUploading] = useState(false);
   const api = useApiClient();
   const queryClient = useQueryClient();
 
   const createPostMutation = useMutation({
-    mutationFn: async (postData: { content: string; mediaUrl?: string; mediaType?: "image" | "video", onSuccess?: () => void }) => {
+    mutationFn: async (postData: { content: string; mediaUrl?: string; mediaType?: "image" | "video"; videoFit?: "original" | "full"; onSuccess?: () => void }) => {
       return api.post("/posts", postData);
     },
     onSuccess: (_, variables) => {
@@ -114,13 +115,16 @@ export const useCreatePost = () => {
       }
     }
 
-    const postData: { content: string; mediaUrl?: string; mediaType?: 'image' | 'video'; onSuccess?: () => void } = {
+    const postData: { content: string; mediaUrl?: string; mediaType?: 'image' | 'video'; videoFit?: 'original' | 'full'; onSuccess?: () => void } = {
       content: content.trim(),
     };
 
     if (mediaUrl && selectedMedia) {
       postData.mediaUrl = mediaUrl;
       postData.mediaType = selectedMedia.type;
+      if (selectedMedia.type === 'video') {
+        postData.videoFit = videoFit;
+      }
     }
     
     if (onSuccess) {
@@ -138,6 +142,8 @@ export const useCreatePost = () => {
     content,
     setContent,
     selectedMedia,
+    videoFit,
+    setVideoFit,
     isCreating: isUploading || createPostMutation.isPending,
     pickMedia: handleMediaPicker,
     removeMedia: () => setSelectedMedia(null),

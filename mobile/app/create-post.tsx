@@ -30,6 +30,8 @@ const CreatePostScreen = () => {
     pickMedia,
     removeMedia,
     createPost,
+    videoFit,
+    setVideoFit,
   } = useCreatePost();
   const insets = useSafeAreaInsets();
   const local = useLocalSearchParams();
@@ -173,7 +175,7 @@ const CreatePostScreen = () => {
                     source={{ uri: selectedMedia.uri }}
                     style={{ width: "100%", aspectRatio: 16/9 }}
                     useNativeControls
-                    resizeMode={ResizeMode.CONTAIN}
+                    resizeMode={videoFit === 'full' ? ResizeMode.COVER : ResizeMode.CONTAIN}
                     isLooping
                   />
                 )}
@@ -183,6 +185,27 @@ const CreatePostScreen = () => {
                 >
                   <Ionicons name="close" size={20} color="white" />
                 </TouchableOpacity>
+              </View>
+            )}
+            {selectedMedia?.type === 'video' && (
+              <View className="mt-3 flex-row items-center">
+                <Text className="mr-3 font-semibold" style={{ color: colors.text }}>Aspect:</Text>
+                <View className="flex-row">
+                  <TouchableOpacity
+                    onPress={() => setVideoFit('full')}
+                    className="px-3 py-2 rounded-l-md"
+                    style={{ backgroundColor: videoFit === 'full' ? '#2962FF' : colors.surface }}
+                  >
+                    <Text style={{ color: videoFit === 'full' ? 'white' : colors.text }}>Full screen</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setVideoFit('original')}
+                    className="px-3 py-2 rounded-r-md"
+                    style={{ backgroundColor: videoFit === 'original' ? '#2962FF' : colors.surface, marginLeft: 1 }}
+                  >
+                    <Text style={{ color: videoFit === 'original' ? 'white' : colors.text }}>Original</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
