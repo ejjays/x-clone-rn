@@ -42,14 +42,7 @@ const InitialLayout = () => {
     );
   }
 
-  if (!fontsLoaded) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#1DA1F2" />
-      </View>
-    );
-  }
-
+  // Don't block the UI on fonts; render immediately and let fonts load in the background
   return (
     <OverlayProvider value={{ style: streamChatTheme }}>
       <StatusBar style="dark" />
