@@ -12,6 +12,10 @@ import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "@/context/ThemeContext"; // Import ThemeProvider
+import { LogBox } from "react-native";
+
+// Suppress dev warning from libraries that schedule updates in useInsertionEffect
+LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
 
 const queryClient = new QueryClient();
 
