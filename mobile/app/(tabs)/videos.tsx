@@ -50,7 +50,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 /**
  * Safely attempt to read bottom tab bar height.
- * Returns 0 if this screen isn\'t inside a BottomTabNavigator.
+ * Returns 0 if this screen isn't inside a BottomTabNavigator.
  */
 function useOptionalTabBarHeight() {
   try {
@@ -310,7 +310,7 @@ const VideoItem = ({
           {
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingBottom: bottomSafeOffset + commentBarHeight,
+            paddingBottom: commentBarHeight,
           },
         ]}
       >
@@ -329,7 +329,7 @@ const VideoItem = ({
               {item.user.firstName} {item.user.lastName}
             </Text>
           </View>
-          <Text style={styles.caption} numberOfLines={2}>
+          <Text style={[styles.caption, { marginBottom: 10 }]} numberOfLines={2}>
             {item.content}
           </Text>
         </View>
@@ -438,7 +438,7 @@ const VideoItem = ({
         pointerEvents="none"
         style={[
           styles.progressBackground,
-          { bottom: bottomSafeOffset + commentBarHeight },
+          { bottom: commentBarHeight },
         ]}
       >
         <View
