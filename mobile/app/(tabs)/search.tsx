@@ -13,12 +13,16 @@ import {
   RefreshControl,
   TouchableOpacity,
   Platform,
+  StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
 
 const SearchScreen = () => {
   const [searchText, setSearchText] = useState("");
+  const [activeTab, setActiveTab] = useState<"suggestions" | "yourFriends">(
+    "suggestions"
+  );
   const { users, isLoading, error, refetch } = useAllUsers();
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
@@ -36,6 +40,16 @@ const SearchScreen = () => {
 
     return fullName.includes(searchLower) || username.includes(searchLower);
   });
+
+  const suggestionsUsers = filteredUsers.filter(
+    (user: User) => !currentUser?.following.includes(user._id)
+  );
+  const yourFriendsUsers = filteredUsers.filter((user: User) =>
+    currentUser?.following.includes(user._id)
+  );
+
+  const displayedUsers =
+    activeTab === "suggestions" ? suggestionsUsers : yourFriendsUsers;
 
   const handleMessage = (user: User) => {
     console.log("Message user:", user);
@@ -104,6 +118,62 @@ const SearchScreen = () => {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Tab Navigation */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              {
+                backgroundColor:
+                  activeTab === "suggestions"
+                    ? colors.surface
+                    : colors.background,
+              },
+            ]}
+            onPress={() => setActiveTab("suggestions")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                {
+                  color:
+                    activeTab === "suggestions"
+                      ? colors.text
+                      : colors.textMuted,
+                },
+              ]}
+            >
+              Suggestions
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              {
+                backgroundColor:
+                  activeTab === "yourFriends"
+                    ? colors.surface
+                    : colors.background,
+              },
+            ]}
+            onPress={() => setActiveTab("yourFriends")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                {
+                  color:
+                    activeTab === "yourFriends"
+                      ? colors.text
+                      : colors.textMuted,
+                },
+              ]}
+            >
+              Your friends
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* USERS LIST */}
@@ -130,7 +200,7 @@ const SearchScreen = () => {
               Loading people...
             </Text>
           </View>
-        ) : filteredUsers.length === 0 ? (
+        ) : displayedUsers.length === 0 ? (
           <View
             className="flex-1 items-center justify-center p-8"
             style={{ backgroundColor: colors.background }}
@@ -146,21 +216,27 @@ const SearchScreen = () => {
                 className="text-xl font-semibold mb-3"
                 style={{ color: colors.text }}
               >
-                {searchText ? "No people found" : "No people yet"}
+                {searchText
+                  ? "No people found"
+                  : activeTab === "suggestions"
+                  ? "No suggestions yet"
+                  : "You are not following anyone yet"}
               </Text>
               <Text
                 className="text-center text-base leading-6 max-w-xs"
                 style={{ color: colors.textMuted }}
               >
                 {searchText
-                  ? `No results found for "${searchText}"`
-                  : "People will appear here when they join the app."}
+                  ? `No results found for \"${searchText}\"`
+                  : activeTab === "suggestions"
+                  ? "Suggestions will appear here."
+                  : "People you follow will appear here."}
               </Text>
             </View>
           </View>
         ) : (
           <View style={{ backgroundColor: colors.background }}>
-            {filteredUsers.map((user: User) => (
+            {displayedUsers.map((user: User) => (
               <UserCard key={user._id} user={user} onMessage={handleMessage} />
             ))}
           </View>
@@ -169,5 +245,24 @@ const SearchScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  tabContainer: {
+    flexDirection: "row",
+    marginTop: 16,
+    gap: 8,
+  },
+  tabButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabText: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+});
 
 export default SearchScreen;
