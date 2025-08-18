@@ -18,12 +18,20 @@ const UserCard = ({
 }: UserCardProps) => {
   const { colors } = useTheme();
   const { followUser, isLoading: isFollowLoading } = useFollow();
-  const { currentUser } = useCurrentUser();
+  const { currentUser, setCurrentUser } = useCurrentUser();
 
   // Check if current user is following this user
   const isFollowing = currentUser?.following?.includes(user._id) || false;
 
-  const handleFollow = () => {
+  const toggleFollowOptimistic = () => {
+    if (!currentUser) return;
+
+    const newFollowing = isFollowing
+      ? currentUser.following.filter((id) => id !== user._id)
+      : [...currentUser.following, user._id];
+
+    setCurrentUser({ ...currentUser, following: newFollowing });
+
     followUser(user.clerkId); // Use clerkId as the backend expects it
   };
 
@@ -75,7 +83,7 @@ const UserCard = ({
               backgroundColor: isFollowing ? "#707070" : "#d63b7e",
               opacity: isFollowLoading ? 0.7 : 1,
             }}
-            onPress={handleFollow}
+            onPress={toggleFollowOptimistic}
             disabled={isFollowLoading}
           >
             <Text className="text-white font-semibold">

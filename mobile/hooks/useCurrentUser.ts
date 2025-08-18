@@ -1,13 +1,16 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient, userApi } from "../utils/api";
+import { useEffect, useState } from "react";
+import type { User } from "@/types";
 
 export const useCurrentUser = () => {
   const api = useApiClient();
   const { isSignedIn } = useAuth();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const {
-    data: currentUser,
+    data,
     isLoading,
     error,
     refetch,
@@ -32,5 +35,11 @@ export const useCurrentUser = () => {
     },
   });
 
-  return { currentUser, isLoading, error, refetch };
+  useEffect(() => {
+    if (data) {
+      setCurrentUser(data);
+    }
+  }, [data]);
+
+  return { currentUser, setCurrentUser, isLoading, error, refetch };
 };
