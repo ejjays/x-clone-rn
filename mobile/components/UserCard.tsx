@@ -1,28 +1,30 @@
 import type { User } from "@/types";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
+import { useFollow } from "@/hooks/useFollow";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface UserCardProps {
   user: User;
   onFollow?: (userId: string) => void;
   onMessage?: (user: User) => void;
-  isFollowing?: boolean;
   showMessageButton?: boolean;
 }
 
 const UserCard = ({
   user,
-  onFollow,
   onMessage,
-  isFollowing,
   showMessageButton = true,
 }: UserCardProps) => {
   const { colors } = useTheme();
+  const { followUser, isLoading: isFollowLoading } = useFollow();
+  const { currentUser } = useCurrentUser();
+
+  // Check if current user is following this user
+  const isFollowing = currentUser?.following?.includes(user._id) || false;
 
   const handleFollow = () => {
-    if (onFollow) {
-      onFollow(user._id);
-    }
+    followUser(user.clerkId); // Use clerkId as the backend expects it
   };
 
   const handleMessage = () => {
@@ -34,22 +36,6 @@ const UserCard = ({
         `Start a conversation with ${user.firstName} ${user.lastName}`
       );
     }
-  };
-
-  const handleMoreOptions = () => {
-    Alert.alert(
-      "Options",
-      `More options for ${user.firstName} ${user.lastName}`,
-      [
-        { text: "View Profile", onPress: () => console.log("View profile") },
-        {
-          text: "Block User",
-          style: "destructive",
-          onPress: () => console.log("Block user"),
-        },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
   };
 
   // Fallback profile picture if user doesn't have one
@@ -85,16 +71,31 @@ const UserCard = ({
         <View className="flex-row items-center space-x-2 mt-2">
           <TouchableOpacity
             className="px-8 py-2 rounded-lg mr-3"
-            style={{ backgroundColor: "#d63b7e" }}
+            style={{
+              backgroundColor: isFollowing ? "#707070" : "#d63b7e",
+              opacity: isFollowLoading ? 0.7 : 1,
+            }}
+            onPress={handleFollow}
+            disabled={isFollowLoading}
           >
-            <Text className="text-white font-semibold">Follow</Text>
+            <Text className="text-white font-semibold">
+              {isFollowLoading
+                ? "Loading..."
+                : isFollowing
+                  ? "Unfollow"
+                  : "Follow"}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            className="px-6 py-2 rounded-lg"
-            style={{ backgroundColor: "#707070" }}
-          >
-            <Text className="text-white font-semibold">Remove</Text>
-          </TouchableOpacity>
+
+          {showMessageButton && (
+            <TouchableOpacity
+              className="px-6 py-2 rounded-lg"
+              style={{ backgroundColor: "#1877F2" }}
+              onPress={handleMessage}
+            >
+              <Text className="text-white font-semibold">Message</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </TouchableOpacity>
