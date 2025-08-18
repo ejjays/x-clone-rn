@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -18,21 +18,30 @@ import {
   ActivityIndicator,
   Animated,
   RefreshControl,
+  Alert,
+  ToastAndroid,
+  Platform,
 } from "react-native";
 import {
   useSafeAreaInsets,
   type EdgeInsets,
   SafeAreaView,
 } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Entypo } from "@expo/vector-icons";
 import { Video, ResizeMode } from "expo-av";
 import BottomSheet from "@gorhom/bottom-sheet";
+import * as Haptics from "expo-haptics";
+
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
 import PostReactionsPicker, {
   postReactions,
 } from "@/components/PostReactionsPicker";
-import * as Haptics from "expo-haptics";
+import PostActionBottomSheet, {
+  PostActionBottomSheetRef,
+} from "@/components/PostActionBottomSheet";
+
 import { usePosts } from "@/hooks/usePosts";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { Post } from "@/types";
 import { formatNumber } from "@/utils/formatters";
 import { StatusBar } from "expo-status-bar";
@@ -59,7 +68,7 @@ const VideoItem = ({
   onCommentPress,
   insets,
   bottomSafeOffset,
-  commentBarHeight, // <--- new prop
+  commentBarHeight,
 }: {
   item: Post;
   isVisible: boolean;
@@ -67,10 +76,14 @@ const VideoItem = ({
   onCommentPress: () => void;
   insets: EdgeInsets;
   bottomSafeOffset: number;
-  commentBarHeight: number; // <- add this
+  commentBarHeight: number;
 }) => {
   const videoRef = useRef<Video>(null);
   const likeButtonRef = useRef<TouchableOpacity>(null);
+  const postActionBottomSheetRef = useRef<PostActionBottomSheetRef>(null);
+  const { currentUser } = useCurrentUser();
+  const { deletePost } = usePosts();
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<any>(null);
@@ -82,22 +95,22 @@ const VideoItem = ({
   const [progress, setProgress] = useState(0);
   const lastTapRef = useRef<number>(0);
   const heartOpacity = useRef(new Animated.Value(0)).current;
-  const [videoOrientation, setVideoOrientation] = useState<"portrait" | "landscape" | null>(null);
+  const [videoOrientation, setVideoOrientation] = useState<
+    "portrait" | "landscape" | null
+  >(null);
 
-  // Autoplay / pause based on visibility + screen focus
+  // Autoplay / pause
   useEffect(() => {
     if (!videoRef.current) return;
     async function sync() {
       if (isVisible && isScreenFocused) {
         await videoRef.current.setStatusAsync({ isMuted, shouldPlay: true });
-        await videoRef.current.playAsync();
         setIsPlaying(true);
       } else {
         await videoRef.current.setStatusAsync({
           shouldPlay: false,
           isMuted: true,
         });
-        await videoRef.current.pauseAsync();
         if (!isVisible) {
           await videoRef.current.setStatusAsync({ positionMillis: 0 });
         }
@@ -117,7 +130,7 @@ const VideoItem = ({
   const onContainerPress = async () => {
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
-      // double-tap => like
+      // double-tap => like animation
       setSelectedReaction(postReactions.find((r) => r.type === "like") || null);
       Animated.sequence([
         Animated.timing(heartOpacity, {
@@ -143,35 +156,34 @@ const VideoItem = ({
     await videoRef.current?.setStatusAsync({ isMuted: next });
   };
 
+  // Compute container heights & resizeMode
   const computedHeight = useMemo(() => {
     if (!naturalWidth || !naturalHeight) return height;
     const aspect = naturalWidth / naturalHeight;
     return Math.min(height, containerWidth / aspect);
   }, [naturalWidth, naturalHeight, containerWidth]);
 
-  // limit the video area so it does not go under the comment bar
   const containerHeight = useMemo(() => {
-    // Always allocate the full available vertical space for the player area
-    // (screen height minus bottom safe offset and the comment bar).
-    // Letterboxing will occur inside this area when using ResizeMode.CONTAIN.
-    const allowedHeight = Math.max(0, height - bottomSafeOffset - commentBarHeight);
-    return allowedHeight;
-  }, [computedHeight, bottomSafeOffset, commentBarHeight]);
+    return Math.max(0, height - bottomSafeOffset - commentBarHeight);
+  }, [bottomSafeOffset, commentBarHeight]);
 
   const dynamicResizeMode = useMemo(() => {
-    if (item.videoFit === 'full') return ResizeMode.COVER;
-    if (item.videoFit === 'original') return ResizeMode.CONTAIN;
+    if (item.videoFit === "full") return ResizeMode.COVER;
+    if (item.videoFit === "original") return ResizeMode.CONTAIN;
     if (!naturalWidth || !naturalHeight) return ResizeMode.CONTAIN;
+
     const dimsSayLandscape = naturalWidth > naturalHeight;
     const isLandscape = videoOrientation
       ? videoOrientation === "landscape"
       : dimsSayLandscape;
-    if (isLandscape) return ResizeMode.CONTAIN;
-    const hOverW = naturalHeight / naturalWidth;
-    // Treat only tall portrait (~>= 1.6, close to 9:16) as full-screen cover.
-    return hOverW >= 1.6 ? ResizeMode.COVER : ResizeMode.CONTAIN;
-  }, [naturalWidth, naturalHeight, videoOrientation]);
 
+    if (isLandscape) return ResizeMode.CONTAIN;
+
+    const hOverW = naturalHeight / naturalWidth;
+    return hOverW >= 1.6 ? ResizeMode.COVER : ResizeMode.CONTAIN;
+  }, [item.videoFit, naturalWidth, naturalHeight, videoOrientation]);
+
+  // Reaction picker
   const handleLongPress = () => {
     likeButtonRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
       setAnchorMeasurements({ pageX, pageY });
@@ -185,6 +197,31 @@ const VideoItem = ({
     setPickerVisible(false);
   };
 
+  // PostAction handlers
+  const isOwnPost = currentUser?._id === item.user._id;
+  const isAdmin = currentUser?.isAdmin || false;
+
+  const handlePostActionsPress = () => {
+    postActionBottomSheetRef.current?.open();
+  };
+
+  const handleDeletePost = () => {
+    deletePost(item._id);
+    postActionBottomSheetRef.current?.close();
+  };
+
+  const handleCopyText = async (text: string) => {
+    await Clipboard.setStringAsync(text);
+
+    if (Platform.OS === "android") {
+      ToastAndroid.show("Copied to clipboard", ToastAndroid.SHORT);
+    } else {
+      Alert.alert("", "Copied to clipboard");
+    }
+
+    postActionBottomSheetRef.current?.close();
+  };
+
   const itemOuterHeight = Math.max(0, height - bottomSafeOffset);
 
   return (
@@ -194,33 +231,36 @@ const VideoItem = ({
         onPress={onContainerPress}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
-        {item.video ? (
-        <Video
-          ref={videoRef}
-          style={{ width: "100%", height: "100%", backgroundColor: "black" }} // fills the item container
-          source={{ uri: item.video! }}
-          resizeMode={dynamicResizeMode}
-          isLooping
-          shouldPlay={false}
-          onLoad={(status) => {
-            if (status.naturalSize?.width && status.naturalSize?.height) {
-              setNaturalWidth(status.naturalSize.width);
-              setNaturalHeight(status.naturalSize.height);
-              const ori = (status as any).naturalSize?.orientation;
-              if (ori === "portrait" || ori === "landscape") {
-                setVideoOrientation(ori);
+        {item.video && (
+          <Video
+            ref={videoRef}
+            style={{ width: "100%", height: "100%", backgroundColor: "black" }}
+            source={{ uri: item.video }}
+            resizeMode={dynamicResizeMode}
+            isLooping
+            shouldPlay={false}
+            onLoad={(status) => {
+              if (status.naturalSize) {
+                const {
+                  width: w,
+                  height: h,
+                  orientation: ori,
+                } = status.naturalSize;
+                setNaturalWidth(w);
+                setNaturalHeight(h);
+                if (ori === "portrait" || ori === "landscape") {
+                  setVideoOrientation(ori);
+                }
               }
-            }
-          }}
-          onPlaybackStatusUpdate={(status) => {
-            if (status.isLoaded && status.durationMillis) {
-              setProgress(
-                Math.min(1, status.positionMillis / status.durationMillis)
-              );
-            }
-          }}
-        />
-        ) : null}
+            }}
+            onPlaybackStatusUpdate={(status) => {
+              if (status.isLoaded && status.durationMillis) {
+                setProgress(status.positionMillis / status.durationMillis);
+              }
+            }}
+          />
+        )}
+
         <Animated.View
           style={[styles.playIconContainer, { opacity: heartOpacity }]}
           pointerEvents="none"
@@ -245,6 +285,7 @@ const VideoItem = ({
           },
         ]}
       >
+        {/* Left side: user info + caption */}
         <View style={styles.leftContainer}>
           <View style={styles.userInfo}>
             <Image
@@ -264,15 +305,8 @@ const VideoItem = ({
           </Text>
         </View>
 
-        <View
-          style={[
-            styles.rightContainer,
-            {
-              paddingBottom: bottomSafeOffset + commentBarHeight + 10,
-              justifyContent: "flex-end",
-            },
-          ]}
-        >
+        {/* Right side: actions */}
+        <View style={[styles.rightContainer]}>
           <TouchableOpacity
             ref={likeButtonRef}
             onPress={() =>
@@ -289,22 +323,9 @@ const VideoItem = ({
               name={selectedReaction ? "heart" : "heart-outline"}
               size={30}
               color="white"
-              style={{
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 3,
-              }}
+              style={styles.iconShadow}
             />
-            <Text
-              style={{
-                color: "white",
-                fontSize: 12,
-                marginTop: 5,
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 7,
-              }}
-            >
+            <Text style={styles.iconText}>
               {formatNumber(item.reactions.length)}
             </Text>
           </TouchableOpacity>
@@ -314,112 +335,84 @@ const VideoItem = ({
             onPress={onCommentPress}
           >
             <Ionicons
-              name="chatbubble-ellipses"
+              name="chatbubble-ellipses-outline"
               size={30}
               color="white"
-              style={{
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 3,
-              }}
+              style={styles.iconShadow}
             />
-            <Text
-              style={{
-                color: "white",
-                fontSize: 12,
-                marginTop: 5,
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 7,
-              }}
-            >
+            <Text style={styles.iconText}>
               {formatNumber(item.comments.length)}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.iconContainer}
-            onPress={onCommentPress}
-          >
+          <TouchableOpacity style={styles.iconContainer}>
             <Ionicons
-              name="share-social"
+              name="share-social-outline"
               size={30}
               color="white"
-              style={{
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 3,
-              }}
+              style={styles.iconShadow}
             />
-            <Text
-              style={{
-                color: "white",
-                fontSize: 12,
-                marginTop: 5,
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 7,
-              }}
-            >
-              Share
-            </Text>
+            <Text style={styles.iconText}>Share</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.iconContainer} onPress={toggleMute}>
             <Ionicons
-              name={isMuted ? "volume-mute" : "volume-high"}
+              name={isMuted ? "volume-mute-outline" : "volume-high-outline"}
               size={28}
               color="white"
-              style={{
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 3,
-              }}
+              style={styles.iconShadow}
             />
-            <Text
-              style={{
-                color: "white",
-                fontSize: 12,
-                marginTop: 5,
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 7,
-              }}
-            >
-              {isMuted ? "Mute" : "Sound"}
-            </Text>
+            <Text style={styles.iconText}>{isMuted ? "Mute" : "Sound"}</Text>
           </TouchableOpacity>
+
+          {(isOwnPost || isAdmin) && (
+            <TouchableOpacity
+              style={styles.iconContainer}
+              onPress={handlePostActionsPress}
+            >
+              <Entypo
+                name="dots-three-horizontal"
+                size={28}
+                color="white"
+                style={styles.iconShadow}
+              />
+              <Text style={styles.iconText}>More</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
       {/* Progress Bar */}
       <View
         pointerEvents="none"
-        style={{
-          position: "absolute",
-          left: 10,
-          right: 10,
-          bottom: bottomSafeOffset + commentBarHeight + 5,
-          height: 3,
-          backgroundColor: "rgba(255,255,255,0.25)",
-          borderRadius: 2,
-        }}
+        style={[styles.progressBackground, { bottom: bottomSafeOffset + 43 }]}
       >
         <View
-          style={{
-            width: `${Math.round(progress * 100)}%`,
-            height: "100%",
-            backgroundColor: "#fff",
-            borderRadius: 2,
-          }}
+          style={[
+            styles.progressFill,
+            { width: `${Math.round(progress * 100)}%` },
+          ]}
         />
       </View>
 
+      {/* Reaction Picker */}
       <PostReactionsPicker
         isVisible={pickerVisible}
         onClose={() => setPickerVisible(false)}
         onSelect={handleReactionSelect}
         anchorMeasurements={anchorMeasurements}
+      />
+
+      {/* Post Actions */}
+      <PostActionBottomSheet
+        ref={postActionBottomSheetRef}
+        onClose={() => postActionBottomSheetRef.current?.close()}
+        onDelete={handleDeletePost}
+        onCopyText={handleCopyText}
+        postContent={item.content}
+        isOwnPost={isOwnPost}
+        isAdmin={isAdmin}
+        postOwnerName={`${item.user.firstName} ${item.user.lastName}`}
       />
     </View>
   );
@@ -432,22 +425,21 @@ export default function VideosScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+  const navigation = useNavigation();
 
   const tabBarHeight = useOptionalTabBarHeight();
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
-  const marginTop = 0;
 
-  const [commentBarHeight, setCommentBarHeight] = useState<number>(64); // default until measured
+  const [commentBarHeight, setCommentBarHeight] = useState<number>(64);
 
   const videoPosts = useMemo(
-    () => posts.filter((p) => p.video && p.video.trim() !== ""),
+    () => posts.filter((p) => p.video?.trim()),
     [posts]
   );
 
   const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
   const handleCloseComments = () => bottomSheetRef.current?.close();
 
-  // Once commentBarHeight is measured, recalc swipe height:
   const swipeContainerHeight = height - bottomSafeOffset;
   const itemHeight = swipeContainerHeight;
 
@@ -459,13 +451,7 @@ export default function VideosScreen() {
 
   const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
   const onViewableItemsChanged = useCallback(
-    ({
-      viewableItems: vItems,
-    }: {
-      viewableItems: Array<{ item: Post; key: string }>;
-    }) => {
-      setViewableItems(vItems.map((vi) => vi.key));
-    },
+    ({ viewableItems: vItems }) => setViewableItems(vItems.map((vi) => vi.key)),
     []
   );
 
@@ -482,10 +468,10 @@ export default function VideosScreen() {
         onCommentPress={handleOpenComments}
         insets={insets}
         bottomSafeOffset={bottomSafeOffset}
-        commentBarHeight={commentBarHeight} // <-- pass it
+        commentBarHeight={commentBarHeight}
       />
     ),
-    [viewableItems, insets, isFocused, bottomSafeOffset, commentBarHeight]
+    [viewableItems, isFocused, insets, bottomSafeOffset, commentBarHeight]
   );
 
   if (isLoading) {
@@ -514,32 +500,21 @@ export default function VideosScreen() {
         <View
           style={[
             styles.header,
-            { paddingTop: insets.top + 8, flexDirection: "row", alignItems: "center" },
+            { paddingTop: insets.top + 8, flexDirection: "row" },
           ]}
         >
-          <Ionicons
-            name="chevron-back"
-            size={28}
-            color="white"
-            style={{
-              marginRight: 8,
-              textShadowColor: "black",
-              textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: 7,
-            }}
-          />
-          <Text
-            style={[
-              styles.headerTitle,
-              {
-                textShadowColor: "black",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 7,
-              },
-            ]}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("index")}
+            style={{ marginRight: 8 }}
           >
-            Reels
-          </Text>
+            <Ionicons
+              name="chevron-back"
+              size={28}
+              color="white"
+              style={styles.iconShadow}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Reels</Text>
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
         <Text style={styles.infoText}>No videos have been posted yet.</Text>
@@ -553,37 +528,28 @@ export default function VideosScreen() {
       edges={["bottom"]}
     >
       <StatusBar style="light" />
+
       <View
         style={[
           styles.header,
-          { paddingTop: insets.top + 8, flexDirection: "row", alignItems: "center" },
+          { paddingTop: insets.top + 8, flexDirection: "row" },
         ]}
       >
-        <Ionicons
-          name="chevron-back"
-          size={28}
-          color="white"
-          style={{
-            marginRight: 8,
-            textShadowColor: "black",
-            textShadowOffset: { width: 0, height: 0 },
-            textShadowRadius: 7,
-          }}
-        />
-        <Text
-          style={[
-            styles.headerTitle,
-            {
-              textShadowColor: "black",
-              textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: 7,
-            },
-          ]}
+        <TouchableOpacity
+          onPress={() => navigation.navigate("index")}
+          style={{ marginRight: 0 }}
         >
-          Reels
-        </Text>
+          <Ionicons
+            name="chevron-back"
+            size={28}
+            color="white"
+            style={styles.iconShadow}
+            className="mr-2"
+          />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Reels</Text>
       </View>
-      {/* Remount when commentBarHeight changes to ensure getItemLayout uses up-to-date height */}
+
       <FlatList
         key={commentBarHeight}
         data={videoPosts}
@@ -598,14 +564,13 @@ export default function VideosScreen() {
           offset: itemHeight * i,
           index: i,
         })}
-        decelerationRate="fast"
+        decelerationRate={0.99}
         initialNumToRender={2}
         maxToRenderPerBatch={3}
         windowSize={5}
-        style={{ marginTop }}
         contentContainerStyle={{
-          paddingBottom: bottomSafeOffset,
           paddingTop: 0,
+          paddingBottom: bottomSafeOffset,
         }}
         refreshControl={
           <RefreshControl
@@ -616,9 +581,9 @@ export default function VideosScreen() {
             progressBackgroundColor="black"
           />
         }
-        extraData={commentBarHeight}
       />
-      {/* Single fixed comment mock input */}
+
+      {/* Comment input placeholder */}
       <View
         onLayout={(e) => setCommentBarHeight(e.nativeEvent.layout.height)}
         style={{
@@ -646,16 +611,24 @@ export default function VideosScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
         onClose={handleCloseComments}
+        style={{ zIndex: 100 }}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { ...StyleSheet.absoluteFillObject, backgroundColor: "black" },
+  centered: {
+    flex: 1,
+    backgroundColor: "black",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  infoText: { color: "white", fontSize: 16, marginTop: 10 },
   header: {
     position: "absolute",
     left: 0,
@@ -665,18 +638,11 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     zIndex: 10,
     backgroundColor: "transparent",
-  },
-  headerTitle: { fontSize: 28, fontWeight: "bold", color: "white" },
-  centered: {
-    flex: 1,
-    backgroundColor: "black",
-    justifyContent: "center",
     alignItems: "center",
   },
-  infoText: { color: "white", fontSize: 16, marginTop: 10 },
+  headerTitle: { fontSize: 28, fontWeight: "bold", color: "white" },
   videoContainer: {
     width,
-    height,
     backgroundColor: "black",
     justifyContent: "flex-start",
     alignItems: "center",
@@ -686,7 +652,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
   },
-  video: { width, height },
   playIconContainer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
@@ -702,7 +667,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "flex-start",
-    padding: 15,
+    padding: 10,
+    marginLeft: -10,
   },
   rightContainer: {
     justifyContent: "flex-end",
@@ -719,26 +685,34 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   username: { color: "white", fontWeight: "bold", fontSize: 16 },
-  caption: { color: "white", fontSize: 14, marginRight: 70 },
+  caption: {
+    color: "white",
+    fontSize: 14,
+    marginRight: 70,
+    marginBottom: -20,
+  },
   iconContainer: { alignItems: "center", marginBottom: 25 },
   iconText: {
     color: "white",
     fontSize: 12,
     marginTop: 5,
+  },
+  iconShadow: {
     textShadowColor: "black",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 7,
   },
-  commentMockInput: {
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 24,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
+  progressBackground: {
+    position: "absolute",
+    left: 10,
+    right: 10,
+    height: 3,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderRadius: 2,
   },
-  commentMockPlaceholder: {
-    color: "rgba(255,255,255,0.75)",
-    fontSize: 14,
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 2,
   },
 });

@@ -48,6 +48,7 @@ const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetPro
       )}
       handleIndicatorStyle={styles.handleIndicator}
       backgroundStyle={styles.bottomSheetBackground}
+      style={styles.bottomSheet}
     >
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Comments</Text>
@@ -64,6 +65,9 @@ const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetPro
 };
 
 const styles = StyleSheet.create({
+  bottomSheet: {
+    zIndex: 100,
+  },
   bottomSheetBackground: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,

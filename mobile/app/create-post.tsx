@@ -40,7 +40,7 @@ const CreatePostScreen = () => {
   const placeholderTexts = [
     "What are you grateful for? ✨",
     "Encourage someone today! 🙌",
-    "What's in your heart? ❤️",
+    "What\'s in your heart? ❤️",
   ];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -159,7 +159,8 @@ const CreatePostScreen = () => {
                   maxHeight: 400,
                   paddingTop: 10,
                   paddingBottom: 10,
-                  color: colors.text
+                  color: colors.text,
+                  fontFamily: "Poppins_400Regular",
                 }}
               />
             </Animated.View>
