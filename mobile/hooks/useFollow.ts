@@ -18,9 +18,17 @@ export const useFollow = () => {
       const previousAuthUser = queryClient.getQueryData(["authUser"]);
       const previousAllUsers = queryClient.getQueryData(["allUsers"]);
 
+      // Get the allUsers array directly (it's already transformed by the select function)
+      const allUsersArray = previousAllUsers as User[];
+
+      // Safety check - make sure it's an array
+      if (!Array.isArray(allUsersArray)) {
+        console.warn("allUsers is not an array:", allUsersArray);
+        return { previousAuthUser, previousAllUsers };
+      }
+
       // Find the target user by clerkId to get their _id
-      const allUsers = queryClient.getQueryData(["allUsers"]) as User[];
-      const targetUser = allUsers?.find(
+      const targetUser = allUsersArray.find(
         (user: User) => user.clerkId === userClerkId
       );
 
@@ -48,10 +56,10 @@ export const useFollow = () => {
       });
 
       // Optimistically update the target user's followers count in allUsers
-      queryClient.setQueryData(["allUsers"], (old: any) => {
-        if (!Array.isArray(old)) return old;
+      queryClient.setQueryData(["allUsers"], (oldUsers: any) => {
+        if (!Array.isArray(oldUsers)) return oldUsers;
 
-        return old.map((user: User) => {
+        return oldUsers.map((user: User) => {
           if (user._id === targetUser._id) {
             const currentFollowers = user.followers || [];
             const currentAuthUser = (previousAuthUser as any)?.data;
@@ -104,7 +112,7 @@ export const useFollow = () => {
 
   return {
     followUser,
-    isLoading: false, // Always false since we use optimistic updates
+    isLoading: false,
     error: followMutation.error,
   };
 };
