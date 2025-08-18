@@ -12,7 +12,6 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  Dimensions,
   FlatList,
   Pressable,
   ActivityIndicator,
@@ -21,6 +20,7 @@ import {
   Alert,
   ToastAndroid,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import {
   useSafeAreaInsets,
@@ -47,11 +47,10 @@ import { formatNumber } from "@/utils/formatters";
 import { StatusBar } from "expo-status-bar";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
-const { height, width } = Dimensions.get("window");
 
 /**
  * Safely attempt to read bottom tab bar height.
- * Returns 0 if this screen isn't inside a BottomTabNavigator.
+ * Returns 0 if this screen isn\'t inside a BottomTabNavigator.
  */
 function useOptionalTabBarHeight() {
   try {
@@ -69,6 +68,8 @@ const VideoItem = ({
   insets,
   bottomSafeOffset,
   commentBarHeight,
+  width,
+  height,
 }: {
   item: Post;
   isVisible: boolean;
@@ -77,6 +78,8 @@ const VideoItem = ({
   insets: EdgeInsets;
   bottomSafeOffset: number;
   commentBarHeight: number;
+  width: number;
+  height: number;
 }) => {
   const videoRef = useRef<Video>(null);
   const likeButtonRef = useRef<TouchableOpacity>(null);
@@ -95,7 +98,7 @@ const VideoItem = ({
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<any>(null);
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
-  const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
+  const [naturalHeight, setNaturalHeight] = useState<number | null>(null);  
   const [containerWidth, setContainerWidth] = useState<number>(width);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -140,7 +143,10 @@ const VideoItem = ({
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
       // double-tap => like animation
-      console.log(`[VideoItem - ${item._id}] Double tap. Item reactions before reactToPost:`, item.reactions);
+      console.log(
+        `[VideoItem - ${item._id}] Double tap. Item reactions before reactToPost:`,
+        item.reactions
+      );
       reactToPost({ postId: item._id, reactionType: "like" });
       Animated.sequence([
         Animated.timing(heartOpacity, {
@@ -166,16 +172,11 @@ const VideoItem = ({
     await videoRef.current?.setStatusAsync({ isMuted: next });
   };
 
-  // Compute container heights & resizeMode
-  const computedHeight = useMemo(() => {
-    if (!naturalWidth || !naturalHeight) return height;
-    const aspect = naturalWidth / naturalHeight;
-    return Math.min(height, containerWidth / aspect);
-  }, [naturalWidth, naturalHeight, containerWidth]);
 
   const containerHeight = useMemo(() => {
     return Math.max(0, height - bottomSafeOffset - commentBarHeight);
-  }, [bottomSafeOffset, commentBarHeight]);
+  }, [bottomSafeOffset, commentBarHeight, height]);
+
 
   const dynamicResizeMode = useMemo(() => {
     if (item.videoFit === "full") return ResizeMode.COVER;
@@ -203,7 +204,10 @@ const VideoItem = ({
 
   const handleReactionSelect = (reaction: any) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    reactToPost({ postId: item._id, reactionType: reaction ? reaction.type : null });
+    reactToPost({
+      postId: item._id,
+      reactionType: reaction ? reaction.type : null,
+    });
     setPickerVisible(false);
 
     // Trigger bounce animation for any reaction selection
@@ -247,10 +251,10 @@ const VideoItem = ({
     postActionBottomSheetRef.current?.close();
   };
 
-  const itemOuterHeight = Math.max(0, height - bottomSafeOffset);
+  const itemOuterHeight = height - bottomSafeOffset;
 
   return (
-    <View style={[styles.videoContainer, { height: itemOuterHeight }]}>
+    <View style={[styles.videoContainer, { width, height: itemOuterHeight }]}>
       <Pressable
         style={[styles.videoPressable, { height: containerHeight }]}
         onPress={onContainerPress}
@@ -306,7 +310,7 @@ const VideoItem = ({
           {
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingBottom: bottomSafeOffset + commentBarHeight + 10,
+            paddingBottom: bottomSafeOffset + commentBarHeight,
           },
         ]}
       >
@@ -335,7 +339,9 @@ const VideoItem = ({
           <TouchableOpacity
             ref={likeButtonRef}
             onPress={() => {
-              console.log(`[VideoItem - ${item._id}] Heart icon pressed. Triggering animation.`);
+              console.log(
+                `[VideoItem - ${item._id}] Heart icon pressed. Triggering animation.`
+              );
               reactToPost({
                 postId: item._id,
                 reactionType: currentReaction?.type === "like" ? null : "like",
@@ -360,7 +366,11 @@ const VideoItem = ({
           >
             <Animated.View style={{ transform: [{ scale: heartScale }] }}>
               <Ionicons
-                name={currentReaction?.type === "like" ? "heart-sharp" : "heart-outline"}
+                name={
+                  currentReaction?.type === "like"
+                    ? "heart-sharp"
+                    : "heart-outline"
+                }
                 size={30}
                 color={currentReaction?.type === "like" ? "red" : "white"}
                 style={styles.iconShadow}
@@ -426,7 +436,11 @@ const VideoItem = ({
       {/* Progress Bar */}
       <View
         pointerEvents="none"
-        style={[styles.progressBackground, { bottom: bottomSafeOffset + 43 }]}>
+        style={[
+          styles.progressBackground,
+          { bottom: bottomSafeOffset + commentBarHeight },
+        ]}
+      >
         <View
           style={[
             styles.progressFill,
@@ -466,6 +480,8 @@ export default function VideosScreen() {
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
   const navigation = useNavigation();
+  const { width, height } = useWindowDimensions();
+
 
   const tabBarHeight = useOptionalTabBarHeight();
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
@@ -480,8 +496,8 @@ export default function VideosScreen() {
   const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
   const handleCloseComments = () => bottomSheetRef.current?.close();
 
-  const swipeContainerHeight = height - bottomSafeOffset;
-  const itemHeight = swipeContainerHeight;
+  const itemHeight = height - bottomSafeOffset;
+
 
   const handlePullToRefresh = async () => {
     setIsRefetching(true);
@@ -509,10 +525,21 @@ export default function VideosScreen() {
         insets={insets}
         bottomSafeOffset={bottomSafeOffset}
         commentBarHeight={commentBarHeight}
+        width={width}
+        height={height}
       />
     ),
-    [viewableItems, isFocused, insets, bottomSafeOffset, commentBarHeight]
+    [
+      viewableItems,
+      isFocused,
+      insets,
+      bottomSafeOffset,
+      commentBarHeight,
+      width,
+      height,
+    ]
   );
+
 
   if (isLoading) {
     return (
@@ -540,7 +567,7 @@ export default function VideosScreen() {
         <View
           style={[
             styles.header,
-            { paddingTop: insets.top + 8, flexDirection: "row" },
+            { paddingTop: insets.top + 8, flexDirection: "row", paddingHorizontal: 16 },
           ]}
         >
           <TouchableOpacity
@@ -572,7 +599,7 @@ export default function VideosScreen() {
       <View
         style={[
           styles.header,
-          { paddingTop: insets.top + 8, flexDirection: "row" },
+          { paddingTop: insets.top + 8, flexDirection: "row", paddingHorizontal: 16 },
         ]}
       >
         <TouchableOpacity
@@ -591,7 +618,7 @@ export default function VideosScreen() {
       </View>
 
       <FlatList
-        key={commentBarHeight}
+        key={`${commentBarHeight}-${width}`}
         data={videoPosts}
         renderItem={renderItem}
         keyExtractor={(item) => item._id}
@@ -682,7 +709,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 28, fontWeight: "bold", color: "white" },
   videoContainer: {
-    width,
     backgroundColor: "black",
     justifyContent: "flex-start",
     alignItems: "center",
@@ -702,13 +728,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     zIndex: 5,
+    alignItems: "flex-end",
   },
   leftContainer: {
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "flex-start",
-    padding: 10,
-    marginLeft: -10,
+    paddingLeft: 0,
+    paddingRight: 10,
   },
   rightContainer: {
     justifyContent: "flex-end",
@@ -728,10 +755,8 @@ const styles = StyleSheet.create({
   caption: {
     color: "white",
     fontSize: 14,
-    marginRight: 70,
-    marginBottom: -20,
   },
-  iconContainer: { alignItems: "center", marginBottom: 25 },
+  iconContainer: { alignItems: "center", marginBottom: 5 },
   iconText: {
     color: "white",
     fontSize: 12,
