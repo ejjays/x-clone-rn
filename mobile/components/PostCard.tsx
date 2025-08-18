@@ -52,7 +52,7 @@ interface PostCardProps {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const DRAG_THRESHOLD = 50;
-const SNAP_TO_CLOSE_THRESHOLD = screenHeight / 4; // Close if dragged more than 1/4 of the screen height
+const SNAP_TO_CLOSE_THRESHOLD = screenHeight / 4; 
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -81,15 +81,16 @@ const PostCard = ({
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   const { isDarkMode, colors } = useTheme();
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
-  const [showModalContent, setShowModalContent] = useState(true); // New state for content visibility
+  const [showModalContent, setShowModalContent] = useState(false); 
 
-  const imageTranslateY = useRef(new Animated.Value(0)).current; // Initialize centered
-  const modalFadeAnim = useRef(new Animated.Value(0)).current; // Sole controller for overall modal opacity
-  const contentOpacityAnim = useRef(new Animated.Value(0)).current; // New Animated.Value for content opacity, initialy 0
+  const imageTranslateY = useRef(new Animated.Value(0)).current; 
+  const modalFadeAnim = useRef(new Animated.Value(0)).current; 
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current; 
 
   const openImageModal = useCallback(() => {
     setIsImageModalVisible(true);
-    imageTranslateY.setValue(50); // Start slightly off-center for the movement effect
+    setShowModalContent(true); 
+    imageTranslateY.setValue(50);
     Animated.parallel([
       Animated.timing(modalFadeAnim, {
         toValue: 1,
@@ -97,15 +98,14 @@ const PostCard = ({
         useNativeDriver: true,
       }),
       Animated.spring(imageTranslateY, {
-        // Use spring for a smoother, bouncier movement
         toValue: 0,
         useNativeDriver: true,
         bounciness: 10,
       }),
       Animated.timing(contentOpacityAnim, {
-        toValue: 1,
+        toValue: 1, 
         duration: 300,
-        delay: 600, // Delay content animation by 1 second
+        delay: 600,
         useNativeDriver: true,
       }),
     ]).start();
@@ -120,7 +120,6 @@ const PostCard = ({
         useNativeDriver: true,
       }),
       Animated.timing(modalFadeAnim, {
-        // Animate overall modal opacity to 0
         toValue: 0,
         duration: 250,
         useNativeDriver: true,
@@ -132,21 +131,24 @@ const PostCard = ({
       }),
     ]).start(() => {
       setIsImageModalVisible(false);
-      imageTranslateY.setValue(0); // Reset to initial off-screen position for next open
-      modalFadeAnim.setValue(0); // Reset for next open
-      contentOpacityAnim.setValue(0); // Reset content opacity to hidden
-      setShowModalContent(true); // Reset content visibility
+      imageTranslateY.setValue(0); 
+      modalFadeAnim.setValue(0); 
+      contentOpacityAnim.setValue(0); 
+      setShowModalContent(true); 
     });
   }, []);
 
   const toggleModalContent = useCallback(() => {
-    setShowModalContent((prev) => !prev);
-    Animated.timing(contentOpacityAnim, {
-      toValue: showModalContent ? 0 : 1, // Fade out if currently visible, fade in if hidden
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [showModalContent]);
+    setShowModalContent((prev) => {
+      const newShowModalContent = !prev;
+      Animated.timing(contentOpacityAnim, {
+        toValue: newShowModalContent ? 1 : 0, 
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+      return newShowModalContent;
+    });
+  }, [contentOpacityAnim]); 
 
   const panResponder = useRef(
     PanResponder.create({
@@ -156,7 +158,6 @@ const PostCard = ({
       },
       onPanResponderMove: (_, gestureState) => {
         imageTranslateY.setValue(gestureState.dy);
-        // Directly set modalFadeAnim based on drag distance for a cohesive feel
         const newOpacity =
           1 - Math.abs(gestureState.dy) / SNAP_TO_CLOSE_THRESHOLD;
         modalFadeAnim.setValue(Math.max(0, newOpacity));
@@ -173,7 +174,6 @@ const PostCard = ({
               bounciness: 10,
             }),
             Animated.spring(modalFadeAnim, {
-              // Spring back overall modal opacity to 1
               toValue: 1,
               useNativeDriver: true,
               bounciness: 10,
@@ -202,7 +202,6 @@ const PostCard = ({
       );
     } else if (post.video) {
       setIsMediaLoading(true);
-      // Use a sensible default 16:9 until the video reports natural size
       setVideoHeight(Math.round((screenWidth * 9) / 16));
       setVideoAspectRatio(16 / 9);
     } else {
@@ -231,7 +230,6 @@ const PostCard = ({
         orientation?: "portrait" | "landscape" | undefined;
       };
 
-      // Correct for orientation if provided by expo-av
       const displayedWidth =
         orientation === "portrait" && width > height ? height : width;
       const displayedHeight =
@@ -331,7 +329,6 @@ const PostCard = ({
     );
   };
 
-  // Choose Poppins font family for the post content text based on existing dynamic style
   const contentTextClass =
     !post.image && !post.video
       ? getDynamicPostTextStyle(post.content)
@@ -524,167 +521,186 @@ const PostCard = ({
         anchorMeasurements={anchorMeasurements}
       />
       <Modal visible={isImageModalVisible} transparent={true}>
-        <View>
-          <Animated.View
+        <Animated.View
+          style={[
+            styles.modalContainer,
+            { opacity: modalFadeAnim }, 
+          ]}
+        >
+          {/* Close button - OUTSIDE of content opacity animation */}
+          <Animated.View 
             style={[
-              styles.modalContainer,
-              { opacity: modalFadeAnim }, // Apply modalFadeAnim here
+              { 
+                position: "absolute",
+                top: 40,
+                left: 10, /* Changed from right to left */
+                zIndex: 1000, // Higher z-index
+                opacity: contentOpacityAnim 
+              }
             ]}
           >
-            <Animated.View style={{ opacity: contentOpacityAnim }}>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() =>
-                  closeImageModal(
-                    imageTranslateY.__getValue() > 0 ? "down" : "up"
-                  )
-                }
-              >
-                <AntDesign name="close" size={28} color="white" />
-              </TouchableOpacity>
-            </Animated.View>
-            <Pressable
-              onPress={toggleModalContent}
+            <TouchableOpacity
+              onPress={() =>
+                closeImageModal(
+                  imageTranslateY.__getValue() > 0 ? "down" : "up"
+                )
+              }
               style={{
-                flex: 1,
-                width: "100%",
-                height: "100%",
-                justifyContent: "center",
-                alignItems: "center",
+                backgroundColor: "rgba(0,0,0,0.5)", // Add background for better visibility
+                borderRadius: 20,
+                padding: 8,
               }}
             >
-              <AnimatedImage
-                source={{ uri: post.image }}
-                style={[
-                  styles.fullscreenImage,
-                  { transform: [{ translateY: imageTranslateY }] },
-                ]}
-                resizeMode="contain"
-                {...panResponder.panHandlers}
-              />
-              {showModalContent && (
-                <Animated.View
-                  style={[
-                    styles.modalContentContainer,
-                    { opacity: contentOpacityAnim },
-                  ]}
-                >
-                  {/* User Info and Content */}
-                  <View className="flex-row items-center mb-3">
-                    <Image
-                      source={
-                        post.user.profilePicture
-                          ? { uri: post.user.profilePicture }
-                          : require("../assets/images/default-avatar.png")
-                      }
-                      className="w-10 h-10 rounded-full mr-2"
-                    />
-                    <Text
-                      style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
-                    >
-                      {post.user.firstName} {post.user.lastName}
-                    </Text>
-                  </View>
-                  {post.content && (
-                    <Text
-                      style={{ color: "white", fontSize: 16, marginBottom: 15 }}
-                    >
-                      {post.content}
-                    </Text>
-                  )}
-
-                  {/* Reactions and Comments Count (Modal) */}
-                  {((post.reactions && post.reactions.length > 0) ||
-                    (post.comments && post.comments.length > 0)) && (
-                    <View className="flex-row justify-between items-center py-1">
-                      {post.reactions && post.reactions.length > 0 ? (
-                        <View className="flex-row items-center">
-                          <View className="flex-row">
-                            {getTopThreeReactions().map((reaction) => {
-                              const Emoji =
-                                reactionComponents[
-                                  reaction as keyof typeof reactionComponents
-                                ];
-                              if (!Emoji) {
-                                return null;
-                              }
-                              return (
-                                <Emoji key={reaction} width={20} height={20} />
-                              );
-                            })}
-                          </View>
-                          <Text
-                            className="text-base ml-2"
-                            style={{ color: "white" }}
-                          >
-                            {formatNumber(post.reactions.length)}
-                          </Text>
-                        </View>
-                      ) : (
-                        <View />
-                      )}
-
-                      {post.comments && post.comments.length > 0 && (
-                        <Text className="text-base" style={{ color: "white" }}>
-                          {formatNumber(post.comments.length)}{" "}
-                          {post.comments.length === 1 ? "comment" : "comments"}
-                        </Text>
-                      )}
-                    </View>
-                  )}
-
-                  {/* Post Actions (Modal) */}
-                  <View
-                    className="flex-row justify-around pt-3 mt-3"
-                    style={{
-                      borderTopColor: "rgba(255,255,255,0.2)",
-                      borderTopWidth: 1,
-                    }}
-                  >
-                    <Pressable
-                      ref={likeButtonRef}
-                      onPress={handleQuickPress}
-                      onLongPress={handleLongPress}
-                      className="flex-1 items-center py-2.5"
-                    >
-                      <ReactionButton />
-                    </Pressable>
-
-                    <TouchableOpacity
-                      className="flex-1 flex-row items-center justify-center py-2.5"
-                      onPress={() => onComment(post._id)}
-                    >
-                      <CommentIcon size={22} color="white" />
-                      <Text
-                        className="font-semibold ml-1.5"
-                        style={{ color: "white" }}
-                      >
-                        Comment
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
-                      <ShareIcon size={22} color="white" />
-                      <Text
-                        className="font-semibold ml-1.5"
-                        style={{ color: "white" }}
-                      >
-                        Share
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </Animated.View>
-              )}
-            </Pressable>
+              <AntDesign name="close" size={24} color="white" />
+            </TouchableOpacity>
           </Animated.View>
-          <PostReactionsPicker
-            isVisible={pickerVisible}
-            onClose={() => setPickerVisible(false)}
-            onSelect={handleReactionSelect}
-            anchorMeasurements={anchorMeasurements}
-          />
-        </View>
+
+          <Pressable
+            onPress={toggleModalContent}
+            style={{
+              flex: 1,
+              width: "100%",
+              height: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <AnimatedImage
+              source={{ uri: post.image }}
+              style={[
+                styles.fullscreenImage,
+                { transform: [{ translateY: imageTranslateY }] },
+              ]}
+              resizeMode="contain"
+              {...panResponder.panHandlers}
+            />
+            
+            {/* Content with ONLY opacity animation control */}
+            <Animated.View
+              style={[
+                styles.modalContentContainer,
+                { opacity: contentOpacityAnim }, // Only controlled by animation now
+              ]}
+            >
+              {/* User Info and Content */}
+              <View className="flex-row items-center mb-3">
+                <Image
+                  source={
+                    post.user.profilePicture
+                      ? { uri: post.user.profilePicture }
+                      : require("../assets/images/default-avatar.png")
+                  }
+                  className="w-10 h-10 rounded-full mr-2"
+                />
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {post.user.firstName} {post.user.lastName}
+                </Text>
+              </View>
+              
+              {post.content && (
+                <Text
+                  style={{ color: "white", fontSize: 16, marginBottom: 15 }}
+                >
+                  {post.content}
+                </Text>
+              )}
+
+              {/* Reactions and Comments Count (Modal) */}
+              {((post.reactions && post.reactions.length > 0) ||
+                (post.comments && post.comments.length > 0)) && (
+                <View className="flex-row justify-between items-center py-1">
+                  {post.reactions && post.reactions.length > 0 ? (
+                    <View className="flex-row items-center">
+                      <View className="flex-row">
+                        {getTopThreeReactions().map((reaction) => {
+                          const Emoji =
+                            reactionComponents[
+                              reaction as keyof typeof reactionComponents
+                            ];
+                          if (!Emoji) {
+                            return null;
+                          }
+                          return (
+                            <Emoji key={reaction} width={20} height={20} />
+                          );
+                        })}
+                      </View>
+                      <Text
+                        className="text-base ml-2"
+                        style={{ color: "white" }}
+                      >
+                        {formatNumber(post.reactions.length)}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View />
+                  )}
+
+                  {post.comments && post.comments.length > 0 && (
+                    <Text className="text-base" style={{ color: "white" }}>
+                      {formatNumber(post.comments.length)}{" "}
+                      {post.comments.length === 1 ? "comment" : "comments"}
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              {/* Post Actions (Modal) */}
+              <View
+                className="flex-row justify-around pt-3 mt-3"
+                style={{
+                  borderTopColor: "rgba(255,255,255,0.2)",
+                  borderTopWidth: 1,
+                }}
+              >
+                <Pressable
+                  ref={likeButtonRef}
+                  onPress={handleQuickPress}
+                  onLongPress={handleLongPress}
+                  className="flex-1 items-center py-2.5"
+                >
+                  <ReactionButton />
+                </Pressable>
+
+                <TouchableOpacity
+                  className="flex-1 flex-row items-center justify-center py-2.5"
+                  onPress={() => onComment(post._id)}
+                >
+                  <CommentIcon size={22} color="white" />
+                  <Text
+                    className="font-semibold ml-1.5"
+                    style={{ color: "white" }}
+                  >
+                    Comment
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
+                  <ShareIcon size={22} color="white" />
+                  <Text
+                    className="font-semibold ml-1.5"
+                    style={{ color: "white" }}
+                  >
+                    Share
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          </Pressable>
+        </Animated.View>
       </Modal>
+      <PostReactionsPicker
+        isVisible={pickerVisible}
+        onClose={() => setPickerVisible(false)}
+        onSelect={handleReactionSelect}
+        anchorMeasurements={anchorMeasurements}
+      />
     </>
   );
 };
@@ -696,12 +712,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  closeButton: {
-    position: "absolute",
-    top: 40,
-    right: 130, // Adjust this to keep it consistent
-    zIndex: 1,
-  },
   fullscreenImage: {
     width: "100%",
     height: "100%",
@@ -712,7 +722,7 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 0, // Removed extra space
+    paddingBottom: 20,
     backgroundColor: "rgba(0,0,0,0.7)",
   },
 });
