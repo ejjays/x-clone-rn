@@ -1,7 +1,5 @@
 import type { User } from "@/types";
-import { MoreHorizontal } from "lucide-react-native";
-import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
-import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 
 interface UserCardProps {
@@ -68,7 +66,7 @@ const UserCard = ({
       {/* Profile Picture */}
       <Image
         source={{ uri: profilePicture }}
-        className="w-16 h-16 rounded-full mr-4"
+        className="w-[85px] h-[85px] rounded-full mr-4"
         defaultSource={{
           uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`,
         }}
@@ -76,40 +74,28 @@ const UserCard = ({
 
       {/* User Info */}
       <View className="flex-1">
-        <Text className="text-lg font-semibold" style={{ color: colors.text }}>
+        <Text className="text-xl font-semibold" style={{ color: colors.text }}>
           {user.firstName} {user.lastName}
         </Text>
         <Text className="text-sm" style={{ color: colors.textSecondary }}>
           @{user.username}
         </Text>
-        {user.bio && (
-          <Text
-            className="text-sm mt-1"
-            numberOfLines={2}
-            style={{ color: colors.textSecondary }}
-          >
-            {user.bio}
-          </Text>
-        )}
-      </View>
 
-      {/* Action Buttons */}
-      <View className="flex-row items-center space-x-2">
-        {showMessageButton && (
+        {/* Action Buttons */}
+        <View className="flex-row items-center space-x-2 mt-2">
           <TouchableOpacity
-            className="w-12 h-12 rounded-full items-center justify-center"
-            onPress={handleMessage}
+            className="px-8 py-2 rounded-lg mr-3"
+            style={{ backgroundColor: "#d63b7e" }}
           >
-            <PcmiChatIcon size={30} color={colors.icon} />
+            <Text className="text-white font-semibold">Follow</Text>
           </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          className="w-8 h-8 items-center justify-center"
-          onPress={handleMoreOptions}
-        >
-          <MoreHorizontal size={20} color={colors.textSecondary} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            className="px-6 py-2 rounded-lg"
+            style={{ backgroundColor: "#707070" }}
+          >
+            <Text className="text-white font-semibold">Remove</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
