@@ -82,12 +82,18 @@ const VideoItem = ({
   const likeButtonRef = useRef<TouchableOpacity>(null);
   const postActionBottomSheetRef = useRef<PostActionBottomSheetRef>(null);
   const { currentUser } = useCurrentUser();
-  const { deletePost } = usePosts();
+  const { deletePost, reactToPost, getCurrentUserReaction } = usePosts();
+
+  const currentReaction = useMemo(() => {
+    const reaction = getCurrentUserReaction(item.reactions, currentUser);
+    console.log(`[VideoItem - ${item._id}] Current Reaction:`, reaction);
+    console.log(`[VideoItem - ${item._id}] Item Reactions:`, item.reactions);
+    return reaction;
+  }, [item.reactions, currentUser, item._id]);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<any>(null);
-  const [selectedReaction, setSelectedReaction] = useState<any>(null);
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(width);
@@ -98,6 +104,9 @@ const VideoItem = ({
   const [videoOrientation, setVideoOrientation] = useState<
     "portrait" | "landscape" | null
   >(null);
+
+  // Animation value for the heart icon bounce
+  const heartScale = useRef(new Animated.Value(1)).current; // New animated value
 
   // Autoplay / pause
   useEffect(() => {
@@ -131,7 +140,8 @@ const VideoItem = ({
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
       // double-tap => like animation
-      setSelectedReaction(postReactions.find((r) => r.type === "like") || null);
+      console.log(`[VideoItem - ${item._id}] Double tap. Item reactions before reactToPost:`, item.reactions);
+      reactToPost({ postId: item._id, reactionType: "like" });
       Animated.sequence([
         Animated.timing(heartOpacity, {
           toValue: 1,
@@ -193,8 +203,23 @@ const VideoItem = ({
 
   const handleReactionSelect = (reaction: any) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedReaction(reaction);
+    reactToPost({ postId: item._id, reactionType: reaction ? reaction.type : null });
     setPickerVisible(false);
+
+    // Trigger bounce animation for any reaction selection
+    Animated.sequence([
+      Animated.timing(heartScale, {
+        toValue: 0.8, // Scale down quickly
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(heartScale, {
+        toValue: 1, // Spring back to original size
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
 
   // PostAction handlers
@@ -309,22 +334,38 @@ const VideoItem = ({
         <View style={[styles.rightContainer]}>
           <TouchableOpacity
             ref={likeButtonRef}
-            onPress={() =>
-              handleReactionSelect(
-                selectedReaction
-                  ? null
-                  : postReactions.find((r) => r.type === "like")
-              )
-            }
+            onPress={() => {
+              console.log(`[VideoItem - ${item._id}] Heart icon pressed. Triggering animation.`);
+              reactToPost({
+                postId: item._id,
+                reactionType: currentReaction?.type === "like" ? null : "like",
+              });
+              // Trigger bounce animation on direct like/unlike
+              Animated.sequence([
+                Animated.timing(heartScale, {
+                  toValue: 0.8, // Scale down quickly
+                  duration: 100,
+                  useNativeDriver: true,
+                }),
+                Animated.spring(heartScale, {
+                  toValue: 1, // Spring back to original size
+                  friction: 3,
+                  tension: 40,
+                  useNativeDriver: true,
+                }),
+              ]).start();
+            }}
             onLongPress={handleLongPress}
             style={styles.iconContainer}
           >
-            <Ionicons
-              name={selectedReaction ? "heart" : "heart-outline"}
-              size={30}
-              color="white"
-              style={styles.iconShadow}
-            />
+            <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+              <Ionicons
+                name={currentReaction?.type === "like" ? "heart-sharp" : "heart-outline"}
+                size={30}
+                color={currentReaction?.type === "like" ? "red" : "white"}
+                style={styles.iconShadow}
+              />
+            </Animated.View>
             <Text style={styles.iconText}>
               {formatNumber(item.reactions.length)}
             </Text>
@@ -385,8 +426,7 @@ const VideoItem = ({
       {/* Progress Bar */}
       <View
         pointerEvents="none"
-        style={[styles.progressBackground, { bottom: bottomSafeOffset + 43 }]}
-      >
+        style={[styles.progressBackground, { bottom: bottomSafeOffset + 43 }]}>
         <View
           style={[
             styles.progressFill,
