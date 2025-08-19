@@ -30,6 +30,32 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
     }).start();
   }, [isDarkMode]);
 
+  const startSwitchTheme = (config: {
+    cx?: number;
+    cy?: number;
+    useFade?: boolean;
+  } = {}) => {
+    const { cx, cy, useFade } = config;
+    switchTheme({
+      switchThemeFunction: () => {
+        onToggle();
+      },
+      animationConfig: useFade
+        ? {
+            type: "fade",
+            duration: 500,
+          }
+        : {
+            type: "circular",
+            duration: 900,
+            startingPoint:
+              typeof cx === "number" && typeof cy === "number"
+                ? { cx, cy }
+                : { cxRatio: 0.5, cyRatio: 0.5 },
+          },
+    });
+  };
+
   const handlePress = () => {
     // Simple press feedback
     Animated.sequence([
@@ -45,37 +71,34 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
       }),
     ]).start();
 
-    const startAnimation = (cx?: number, cy?: number) => {
-      switchTheme({
-        switchThemeFunction: () => {
-          onToggle();
-        },
-        animationConfig: {
-          type: "circular",
-          duration: 900,
-          startingPoint:
-            typeof cx === "number" && typeof cy === "number"
-              ? { cx, cy }
-              : { cxRatio: 0.5, cyRatio: 0.5 },
-        },
-      });
-    };
-
     if (buttonRef.current && typeof buttonRef.current.measure === "function") {
-      buttonRef.current.measure(
-        (
-          x: number,
-          y: number,
-          width: number,
-          height: number,
-          px: number,
-          py: number
-        ) => {
-          startAnimation(px + width / 2, py + height / 2);
-        }
-      );
+      try {
+        buttonRef.current.measure(
+          (
+            x: number,
+            y: number,
+            width: number,
+            height: number,
+            px: number,
+            py: number
+          ) => {
+            const hasValidSize = Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
+            const hasValidPos = Number.isFinite(px) && Number.isFinite(py);
+            if (hasValidSize && hasValidPos) {
+              startSwitchTheme({ cx: px + width / 2, cy: py + height / 2 });
+            } else {
+              // Fallback to center-based circular
+              startSwitchTheme();
+            }
+          }
+        );
+      } catch (e) {
+        // Fallback to center-based circular
+        startSwitchTheme();
+      }
     } else {
-      startAnimation();
+      // As a last resort, use fade which should always work
+      startSwitchTheme({ useFade: true });
     }
   };
 
