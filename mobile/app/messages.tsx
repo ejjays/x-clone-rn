@@ -13,13 +13,13 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
-import CustomThemeToggle from "@/components/CustomThemeToggle";
 import { useState, useEffect } from "react";
 import LottieView from "lottie-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/context/ThemeContext";
+import { DarkThemeColors } from "@/constants/Colors";
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } =
@@ -28,7 +28,9 @@ export default function MessagesScreen() {
   const insets = useSafeAreaInsets();
   const { users: allUsers, isLoading: usersLoading } = useAllUsers();
   const { currentUser } = useCurrentUser();
-  const { isDarkMode, toggleTheme, colors } = useTheme(); // Get colors from useTheme hook
+  // Force dark mode for now and get dark theme colors
+  const isDarkMode = true;
+  const colors = DarkThemeColors;
 
   // Filter out current user and get real users
   const realUsers =
@@ -46,9 +48,7 @@ export default function MessagesScreen() {
     setSearchQuery("");
   };
 
-  const handleToggleDarkMode = () => {
-    toggleTheme();
-  };
+  // handleToggleDarkMode is no longer needed as theme is forced
 
   const handleUserPress = (user) => {
     console.log("Selected user:", user);
@@ -148,13 +148,13 @@ export default function MessagesScreen() {
             </Text>
           </View>
           <View className="flex-row items-center">
-            {/* Custom Theme Toggle Component with Wave Animation */}
-            <View className="mr-3">
+            {/* Custom Theme Toggle Component with Wave Animation - Temporarily removed */}
+            {/* <View className="mr-3">
               <CustomThemeToggle
                 isDarkMode={isDarkMode}
                 onToggle={handleToggleDarkMode}
               />
-            </View>
+            </View> */}
 
             <TouchableOpacity
               onPress={handleNewMessage}
