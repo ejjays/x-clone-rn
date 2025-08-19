@@ -29,7 +29,8 @@ import {
 import Animated, { Layout } from "react-native-reanimated";
 import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
 import { StatusBar } from "expo-status-bar";
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import { useTheme } from "@/context/ThemeContext";
+import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
 
 const MOCK_EMOJIS = ["👍", "❤️", "😂", "😮", "😡", "😭"];
 
@@ -38,19 +39,19 @@ export default function ChatScreen() {
   const { client, isConnected, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
-  const { isDarkMode } = useTheme(); // Use useTheme hook
+  const { isDarkMode } = useTheme();
 
   // Define dynamic colors based on dark mode state from context
   const colors = {
-    background: isDarkMode ? "#111827" : "#FFFFFF",
-    cardBackground: isDarkMode ? "#1F2937" : "#F3F4F6",
-    text: isDarkMode ? "#F9FAFB" : "#1F2937",
-    grayText: isDarkMode ? "#D1D5DB" : "#6B7280",
-    border: isDarkMode ? "#374151" : "#E5E7EB",
-    inputBackground: isDarkMode ? "#374151" : "#F9FAFB",
-    inputBorder: isDarkMode ? "#4B5563" : "#D1D5DB",
-    blue500: "#3B82F6", // Tailwind blue-500
-    gray200: isDarkMode ? "#4B5563" : "#E5E7EB", // For received message bubble
+    background: isDarkMode ? DarkThemeColors.background : LightThemeColors.background,
+    cardBackground: isDarkMode ? DarkThemeColors.surface : LightThemeColors.surface,
+    text: isDarkMode ? DarkThemeColors.text : LightThemeColors.text,
+    grayText: isDarkMode ? DarkThemeColors.textSecondary : LightThemeColors.textSecondary,
+    border: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
+    inputBackground: isDarkMode ? DarkThemeColors.surface : LightThemeColors.surface,
+    inputBorder: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
+    blue500: isDarkMode ? DarkThemeColors.blue : LightThemeColors.blue,
+    gray200: isDarkMode ? DarkThemeColors.border : LightThemeColors.border, // For received message bubble
   };
 
 
@@ -355,7 +356,7 @@ export default function ChatScreen() {
                   {message.text && (
                     <Text
                       className={`text-lg leading-6`}
-                      style={{ color: isFromCurrentUser ? colors.background : colors.text }}
+                      style={{ color: isFromCurrentUser ? "white" : colors.text }}
                     >
                       {message.text}
                     </Text>
