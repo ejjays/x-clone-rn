@@ -25,7 +25,6 @@ export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } =
     useStreamChat();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isWaveAnimating, setIsWaveAnimating] = useState(false);
   const insets = useSafeAreaInsets();
   const { users: allUsers, isLoading: usersLoading } = useAllUsers();
   const { currentUser } = useCurrentUser();
@@ -49,14 +48,6 @@ export default function MessagesScreen() {
 
   const handleToggleDarkMode = () => {
     toggleTheme();
-  };
-
-  const handleWaveAnimationStart = () => {
-    setIsWaveAnimating(true);
-  };
-
-  const handleWaveAnimationComplete = () => {
-    setIsWaveAnimating(false);
   };
 
   const handleUserPress = (user) => {
@@ -162,8 +153,6 @@ export default function MessagesScreen() {
               <CustomThemeToggle
                 isDarkMode={isDarkMode}
                 onToggle={handleToggleDarkMode}
-                onWaveAnimationStart={handleWaveAnimationStart}
-                onWaveAnimationComplete={handleWaveAnimationComplete}
               />
             </View>
 
