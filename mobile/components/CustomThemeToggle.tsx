@@ -3,6 +3,7 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  View,
 } from "react-native";
 import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
 import switchTheme from "react-native-theme-switch-animation";
@@ -18,6 +19,7 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
 }) => {
   const animatedValue = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
   const scaleValue = useRef(new Animated.Value(1)).current;
+  const buttonRef = useRef<any>(null);
 
   useEffect(() => {
     Animated.timing(animatedValue, {
@@ -28,7 +30,7 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
     }).start();
   }, [isDarkMode]);
 
-  const handlePress = (event: any) => {
+  const handlePress = () => {
     // Simple press feedback
     Animated.sequence([
       Animated.timing(scaleValue, {
@@ -43,8 +45,7 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
       }),
     ]).start();
 
-    // Start theme switch animation from the press location
-    event?.currentTarget?.measure?.((x: number, y: number, width: number, height: number, px: number, py: number) => {
+    const startAnimation = (cx?: number, cy?: number) => {
       switchTheme({
         switchThemeFunction: () => {
           onToggle();
@@ -52,13 +53,30 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
         animationConfig: {
           type: "circular",
           duration: 900,
-          startingPoint: {
-            cy: py + height / 2,
-            cx: px + width / 2,
-          },
+          startingPoint:
+            typeof cx === "number" && typeof cy === "number"
+              ? { cx, cy }
+              : { cxRatio: 0.5, cyRatio: 0.5 },
         },
       });
-    });
+    };
+
+    if (buttonRef.current && typeof buttonRef.current.measure === "function") {
+      buttonRef.current.measure(
+        (
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+          px: number,
+          py: number
+        ) => {
+          startAnimation(px + width / 2, py + height / 2);
+        }
+      );
+    } else {
+      startAnimation();
+    }
   };
 
   // Animated values for the slider position
@@ -101,70 +119,72 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
           className="relative"
         >
           {/* Main toggle background */}
-          <Animated.View
-            className="relative rounded-full"
-            style={{
-              width: 90,
-              height: 40,
-              backgroundColor,
-              shadowColor: "#000",
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
-              shadowOpacity: 0.1,
-              shadowRadius: 3.84,
-              elevation: 5,
-            }}
-          >
-            {/* Animated slider */}
+          <View ref={buttonRef} collapsable={false}>
             <Animated.View
-              className="absolute rounded-full"
+              className="relative rounded-full"
               style={{
-                width: 30,
-                height: 30,
-                top: 5,
-                left: sliderPosition,
-                backgroundColor: sliderBackgroundColor,
+                width: 90,
+                height: 40,
+                backgroundColor,
                 shadowColor: "#000",
                 shadowOffset: {
                   width: 0,
                   height: 2,
                 },
-                shadowOpacity: 0.25,
+                shadowOpacity: 0.1,
                 shadowRadius: 3.84,
                 elevation: 5,
               }}
-            />
-
-            {/* Sun icon (left side) */}
-            <Animated.View
-              className="absolute"
-              style={{
-                left: 10,
-                top: 10,
-                opacity: sunOpacity,
-              }}
             >
-              <FontAwesome6 name="sun" size={20} color="#ffffff" />
-            </Animated.View>
-
-            {/* Moon icon (right side) */}
-            <Animated.View
-              className="absolute"
-              style={{
-                right: 10,
-                top: 10,
-                opacity: moonOpacity,
-              }}
-            >
-              <Ionicons
-                name="moon"
-                size={20}
-                color={isDarkMode ? "#ffffff" : "#71717a"}
+              {/* Animated slider */}
+              <Animated.View
+                className="absolute rounded-full"
+                style={{
+                  width: 30,
+                  height: 30,
+                  top: 5,
+                  left: sliderPosition,
+                  backgroundColor: sliderBackgroundColor,
+                  shadowColor: "#000",
+                  shadowOffset: {
+                    width: 0,
+                    height: 2,
+                  },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  elevation: 5,
+                }}
               />
+
+              {/* Sun icon (left side) */}
+              <Animated.View
+                className="absolute"
+                style={{
+                  left: 10,
+                  top: 10,
+                  opacity: sunOpacity,
+                }}
+              >
+                <FontAwesome6 name="sun" size={20} color="#ffffff" />
+              </Animated.View>
+
+              {/* Moon icon (right side) */}
+              <Animated.View
+                className="absolute"
+                style={{
+                  right: 10,
+                  top: 10,
+                  opacity: moonOpacity,
+                }}
+              >
+                <Ionicons
+                  name="moon"
+                  size={20}
+                  color={isDarkMode ? "#ffffff" : "#71717a"}
+                />
+              </Animated.View>
             </Animated.View>
-          </Animated.View>
+          </View>
         </TouchableOpacity>
       </Animated.View>
     </>
