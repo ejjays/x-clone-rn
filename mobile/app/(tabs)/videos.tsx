@@ -50,7 +50,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 /**
  * Safely attempt to read bottom tab bar height.
- * Returns 0 if this screen isn't inside a BottomTabNavigator.
+ * Returns 0 if this screen isn\'t inside a BottomTabNavigator.
  */
 function useOptionalTabBarHeight() {
   try {
