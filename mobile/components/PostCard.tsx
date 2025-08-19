@@ -27,6 +27,7 @@ import {
 } from "@/utils/reactions";
 import { FontAwesome, AntDesign, Fontisto } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
+import * as Clipboard from 'expo-clipboard';
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -195,7 +196,7 @@ const PostCard = ({
           setIsMediaLoading(false);
         },
         (error) => {
-          console.error(`Couldn't get image size for ${post.image}:`, error);
+          console.error(`Couldn\'t get image size for ${post.image}:`, error);
           setImageHeight(200);
           setIsMediaLoading(false);
         }
@@ -262,6 +263,13 @@ const PostCard = ({
       setAnchorMeasurements({ pageX, pageY });
       setPickerVisible(true);
     });
+  };
+
+  const handleCopyPostContent = () => {
+    if (post.content) {
+      Clipboard.setStringAsync(post.content);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
   };
 
   const handleReactionSelect = (reactionType: ReactionName) => {
@@ -382,6 +390,7 @@ const PostCard = ({
                 : "text-lg font-normal"
             }`}
             style={{ color: colors.text, fontFamily: postContentFontFamily }}
+            onLongPress={handleCopyPostContent} // Added onLongPress here
           >
             {post.content}
           </Text>

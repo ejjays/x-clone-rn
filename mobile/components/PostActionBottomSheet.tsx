@@ -17,13 +17,15 @@ import {
 } from "react";
 import { Dimensions } from "react-native";
 import ConfirmationAlert from "./ConfirmationAlert";
+import * as Clipboard from 'expo-clipboard';
+import { useTheme } from "@/context/ThemeContext";
 
 interface PostActionBottomSheetProps {
   onClose: () => void;
   onDelete: () => void;
   onCopyText: (text: string) => void;
   postContent?: string;
-  isOwnPost?: boolean;          // NEW: Track if it's user's own post
+  isOwnPost?: boolean;          // NEW: Track if it\'s user\'s own post
   isAdmin?: boolean;            // NEW: Track if user is admin
   postOwnerName?: string;       // NEW: Name of post owner for admin context
 }
@@ -46,8 +48,10 @@ const PostActionBottomSheet = forwardRef<
   const [isDragging, setIsDragging] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { colors } = useTheme(); // Use theme hook
+
   const bottomSheetStyle = useRef({
-    backgroundColor: "#121212",
+    backgroundColor: colors.background, // Use theme background color
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 16,
@@ -130,7 +134,7 @@ const PostActionBottomSheet = forwardRef<
     if (!isDragging) {
       handleClose();
       if (postContent) {
-        onCopyText(postContent);
+        Clipboard.setStringAsync(postContent);
       }
     }
   };
@@ -148,7 +152,7 @@ const PostActionBottomSheet = forwardRef<
   const confirmationTitle = isOwnPost ? "Delete Post" : "Delete Post (Admin Action)";
   const confirmationMessage = isOwnPost 
     ? "Are you sure you want to delete this post? This action cannot be undone."
-    : `Are you sure you want to delete ${postOwnerName}'s post? This action cannot be undone and will be logged as an admin action.`;
+    : `Are you sure you want to delete ${postOwnerName}\'s post? This action cannot be undone and will be logged as an admin action.`;
 
   return (
     <Modal
