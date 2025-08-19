@@ -1,4 +1,3 @@
-// mobile/components/CommentsBottomSheet.tsx
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, Image, Dimensions } from "react-native";
 import BottomSheet, {
@@ -14,7 +13,7 @@ const mockComments = [
     user: "Joey Aromin",
     avatar:
       "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=100&h=100&fit=crop&crop=face",
-    text: "one thing I disagree sa mga sinabi mo. yung mga dati pang reports ng mga aliens ay totoo maaring hindi lahat pero totoo ito. hindi nga lang sila 'aliens' rather the correct term is devil. angels and demons have always been here around us",
+    text: "This is a very insightful discussion! I appreciate the different perspectives shared.",
   },
   {
     id: "2",
@@ -53,7 +52,7 @@ const mockComments = [
 interface CommentsBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheet>;
   onClose: () => void;
-  bottomOffset: number; // Prop for bottom safe area offset (tab bar height)
+  bottomOffset: number;
 }
 
 const CommentsBottomSheet = ({
@@ -65,19 +64,10 @@ const CommentsBottomSheet = ({
   const { colors } = useTheme();
   const { height: screenHeight } = Dimensions.get("window");
 
-  // Calculate the effective height available for the bottom sheet
-  // This ensures the sheet doesn't go below the topInset and above the bottomOffset (tab bar + bottom safe area)
   const totalBottomOffset = bottomOffset + insets.bottom;
   const availableHeight = screenHeight - insets.top - totalBottomOffset;
 
-  // Snap points are now absolute values based on the calculated available height
-  const snapPoints = useMemo(
-    () => [
-      Math.max(200, availableHeight * 0.6), // 60% of available height (minimum 200px)
-      Math.max(300, availableHeight * 0.9), // 90% of available height (minimum 300px)
-    ],
-    [availableHeight]
-  );
+  const snapPoints = useMemo(() => [availableHeight * 0.9], [availableHeight]);
 
   const renderComment = ({ item }: { item: (typeof mockComments)[0] }) => (
     <View style={styles.commentContainer}>
@@ -96,12 +86,12 @@ const CommentsBottomSheet = ({
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={-1}
+      index={0}
       snapPoints={snapPoints}
       enablePanDownToClose
       onClose={onClose}
       topInset={insets.top}
-      bottomInset={totalBottomOffset} // Include both tab bar height and bottom safe area
+      bottomInset={totalBottomOffset}
       backdropComponent={(props) => (
         <BottomSheetBackdrop
           {...props}
@@ -120,7 +110,8 @@ const CommentsBottomSheet = ({
       ]}
       style={styles.bottomSheet}
       bounces={false}
-      android_keyboardInputMode="adjustResize" // Helps with keyboard handling on Android
+      overshootTop={false}
+      android_keyboardInputMode="adjustResize"
     >
       <View
         style={[styles.headerContainer, { borderBottomColor: colors.border }]}
@@ -135,7 +126,7 @@ const CommentsBottomSheet = ({
         renderItem={renderComment}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingBottom: insets.bottom + 20 }, // Add extra padding for bottom safe area
+          { paddingBottom: insets.bottom + 20 },
         ]}
         showsVerticalScrollIndicator={false}
       />
