@@ -137,12 +137,13 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
       {/* Toggle Button */}
       <Animated.View style={{ transform: [{ scale: scaleValue }], zIndex: 9999 }}>
         <TouchableOpacity
+          ref={buttonRef}
           onPress={handlePress}
           activeOpacity={0.8}
           className="relative"
         >
           {/* Main toggle background */}
-          <View ref={buttonRef} collapsable={false}>
+          <View collapsable={false}>
             <Animated.View
               className="relative rounded-full"
               style={{
