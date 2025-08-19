@@ -1,8 +1,9 @@
 // mobile/components/CommentsBottomSheet.tsx
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { View, Text, StyleSheet, Image, Dimensions } from 'react-native'; 
+import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/context/ThemeContext'; 
 
 const mockComments = [
   { id: '1', user: 'Joey Aromin', avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=100&h=100&fit=crop&crop=face', text: 'one thing I disagree sa mga sinabi mo. yung mga dati pang reports ng mga aliens ay totoo maaring hindi lahat pero totoo ito. hindi nga lang sila ‘aliens’ rather the correct term is devil. angels and demons have always been here around us' },
@@ -16,20 +17,30 @@ const mockComments = [
 interface CommentsBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheet>;
   onClose: () => void;
+  bottomOffset: number; // Prop for bottom safe area offset (tab bar height)
 }
 
-const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetProps) => {
+const CommentsBottomSheet = ({ bottomSheetRef, onClose, bottomOffset }: CommentsBottomSheetProps) => {
   const { top: topInset } = useSafeAreaInsets();
+  const { colors } = useTheme(); 
+  const { height: screenHeight } = Dimensions.get('window'); 
+
+  // Calculate the effective height available for the bottom sheet
+  // This ensures the sheet doesn't go below the topInset and above the bottomOffset (tab bar)
+  const availableHeight = screenHeight - topInset - bottomOffset;
   
-  // This snap point setup is correct. 80% for initial open, 95% is the max it can expand to.
-  const snapPoints = useMemo(() => ['80%', '95%'], []);
+  // Snap points are now absolute values based on the calculated available height
+  const snapPoints = useMemo(() => [
+    Math.max(1, availableHeight * 0.8), // 80% of available height
+    Math.max(1, availableHeight * 0.95), // 95% of available height
+  ], [availableHeight]);
 
   const renderComment = ({ item }: { item: typeof mockComments[0] }) => (
     <View style={styles.commentContainer}>
       <Image source={{ uri: item.avatar }} style={styles.avatar} />
-      <View style={styles.commentBubble}>
-        <Text style={styles.commentUser}>{item.user}</Text>
-        <Text style={styles.commentText}>{item.text}</Text>
+      <View style={[styles.commentBubble, { backgroundColor: colors.surface }]}> 
+        <Text style={[styles.commentUser, { color: colors.text }]}>{item.user}</Text> 
+        <Text style={[styles.commentText, { color: colors.text }]}>{item.text}</Text> 
       </View>
     </View>
   );
@@ -37,29 +48,29 @@ const CommentsBottomSheet = ({ bottomSheetRef, onClose }: CommentsBottomSheetPro
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={-1} // Start closed
-      snapPoints={snapPoints}
+      index={-1} 
+      snapPoints={snapPoints} // Use calculated absolute snap points
       enablePanDownToClose
       onClose={onClose}
-      // FIX: Added topInset to respect the device's safe area (e.g., status bar)
       topInset={topInset}
+      // bottomInset={bottomOffset} // REMOVED: Snap points now handle the overall height calculation
       backdropComponent={(props) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
       )}
-      handleIndicatorStyle={styles.handleIndicator}
-      backgroundStyle={styles.bottomSheetBackground}
+      handleIndicatorStyle={[styles.handleIndicator, { backgroundColor: colors.border }]} 
+      backgroundStyle={[styles.bottomSheetBackground, { backgroundColor: colors.background }]} 
       style={styles.bottomSheet}
+      bounces={false} 
     >
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>Comments</Text>
+      <View style={[styles.headerContainer, { borderBottomColor: colors.border }]}> 
+        <Text style={[styles.headerText, { color: colors.text }]}>Comments</Text> 
       </View>
-      <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
-        {mockComments.map((comment) => (
-          <View key={comment.id}>
-            {renderComment({ item: comment })}
-          </View>
-        ))}
-      </BottomSheetScrollView>
+      <BottomSheetFlatList 
+        data={mockComments}
+        keyExtractor={(item) => item.id}
+        renderItem={renderComment}
+        contentContainerStyle={styles.contentContainer} 
+      />
     </BottomSheet>
   );
 };
@@ -69,29 +80,25 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   bottomSheetBackground: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
   handleIndicator: {
-    backgroundColor: '#E0E0E0',
     width: 40,
   },
   headerContainer: {
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   headerText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1C1E21',
   },
   contentContainer: {
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 40, // Keep original paddingBottom for internal content spacing if desired
   },
   commentContainer: {
     flexDirection: 'row',
@@ -105,7 +112,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   commentBubble: {
-    backgroundColor: '#F0F2F5',
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -114,12 +120,10 @@ const styles = StyleSheet.create({
   commentUser: {
     fontWeight: '600',
     fontSize: 14,
-    color: '#050505',
     marginBottom: 1,
   },
   commentText: {
     fontSize: 15,
-    color: '#050505',
     lineHeight: 20,
   },
 });

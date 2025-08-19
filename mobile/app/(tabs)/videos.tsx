@@ -244,8 +244,6 @@ const VideoItem = ({
 
     if (Platform.OS === "android") {
       ToastAndroid.show("Copied to clipboard", ToastAndroid.SHORT);
-    } else {
-      Alert.alert("", "Copied to clipboard");
     }
 
     postActionBottomSheetRef.current?.close();
@@ -427,7 +425,6 @@ const VideoItem = ({
                 color="white"
                 style={styles.iconShadow}
               />
-              <Text style={styles.iconText}>More</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -484,6 +481,8 @@ export default function VideosScreen() {
 
 
   const tabBarHeight = useOptionalTabBarHeight();
+  // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
+  // For the CommentsBottomSheet, we will only pass the tabBarHeight to avoid double counting insets.bottom.
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
 
   const [commentBarHeight, setCommentBarHeight] = useState<number>(64);
@@ -682,7 +681,7 @@ export default function VideosScreen() {
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
         onClose={handleCloseComments}
-        style={{ zIndex: 100 }}
+        bottomOffset={tabBarHeight} // Pass only tabBarHeight
       />
     </SafeAreaView>
   );
