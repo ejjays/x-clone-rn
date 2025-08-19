@@ -1,63 +1,35 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   TouchableOpacity,
   Animated,
   Easing,
-  View,
-  Dimensions,
 } from "react-native";
 import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
+import switchTheme from "react-native-theme-switch-animation";
 
 interface CustomThemeToggleProps {
   isDarkMode: boolean;
   onToggle: () => void;
-  onWaveAnimationStart?: () => void; 
-  onWaveAnimationComplete?: () => void;
 }
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-const MAX_RADIUS = Math.sqrt(
-  SCREEN_WIDTH * SCREEN_WIDTH + SCREEN_HEIGHT * SCREEN_HEIGHT
-);
 
 const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
   isDarkMode,
   onToggle,
-  onWaveAnimationStart,
-  onWaveAnimationComplete,
 }) => {
   const animatedValue = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
   const scaleValue = useRef(new Animated.Value(1)).current;
-  const waveScale = useRef(new Animated.Value(0)).current;
-
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [wavePosition, setWavePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    if (!isAnimating) {
-      Animated.timing(animatedValue, {
-        toValue: isDarkMode ? 1 : 0,
-        duration: 300,
-        easing: Easing.bezier(0.4, 0, 0.2, 1),
-        useNativeDriver: false,
-      }).start();
-    }
-  }, [isDarkMode, isAnimating]);
+    Animated.timing(animatedValue, {
+      toValue: isDarkMode ? 1 : 0,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+      useNativeDriver: false,
+    }).start();
+  }, [isDarkMode]);
 
   const handlePress = (event: any) => {
-    // Get the touch position relative to the screen
-    const { pageX, pageY } = event.nativeEvent;
-    setWavePosition({ x: pageX, y: pageY });
-
-    // Start animation
-    setIsAnimating(true);
-    onWaveAnimationStart?.();
-
-    // Reset wave values
-    waveScale.setValue(0);
-
-    // Press animation
+    // Simple press feedback
     Animated.sequence([
       Animated.timing(scaleValue, {
         toValue: 0.95,
@@ -71,19 +43,21 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
       }),
     ]).start();
 
-    // Wave animation - slower and smoother
-    Animated.timing(waveScale, {
-      toValue: 1,
-      duration: 600, // Increased duration for smoother animation
-      easing: Easing.out(Easing.quad), // Smoother easing
-      useNativeDriver: true,
-    }).start(() => {
-      // Only toggle theme when wave animation is completely done
-      onToggle();
-      
-      // Removed the setTimeout to prevent flickering
-      setIsAnimating(false);
-      onWaveAnimationComplete?.();
+    // Start theme switch animation from the press location
+    event?.currentTarget?.measure?.((x: number, y: number, width: number, height: number, px: number, py: number) => {
+      switchTheme({
+        switchThemeFunction: () => {
+          onToggle();
+        },
+        animationConfig: {
+          type: "circular",
+          duration: 900,
+          startingPoint: {
+            cy: py + height / 2,
+            cx: px + width / 2,
+          },
+        },
+      });
     });
   };
 
@@ -117,51 +91,14 @@ const CustomThemeToggle: React.FC<CustomThemeToggleProps> = ({
     outputRange: [0.6, 1],
   });
 
-  // Wave scale animation - covers entire screen smoothly
-  const waveScaleInterpolated = waveScale.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, (MAX_RADIUS * 2.2) / 50], // Slightly larger for complete coverage
-  });
-
   return (
     <>
-      {/* Wave Effect - positioned absolutely to cover entire screen */}
-      {isAnimating && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 0, // Changed zIndex to 1
-            pointerEvents: "none",
-          }}
-        >
-          <Animated.View
-            style={{
-              position: "absolute",
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              backgroundColor: isDarkMode ? "#ffffff" : "#111827", // Next theme's color
-              left: wavePosition.x - 25,
-              top: wavePosition.y - 25,
-              transform: [{ scale: waveScaleInterpolated }],
-              // Keep wave solid throughout the animation - no opacity changes
-              opacity: 1,
-            }}
-          />
-        </View>
-      )}
-
       {/* Toggle Button */}
       <Animated.View style={{ transform: [{ scale: scaleValue }], zIndex: 9999 }}>
         <TouchableOpacity
           onPress={handlePress}
           activeOpacity={0.8}
           className="relative"
-          disabled={isAnimating}
         >
           {/* Main toggle background */}
           <Animated.View
