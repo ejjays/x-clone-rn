@@ -59,7 +59,8 @@ const REACTION_TO_EMOJI: Record<string, string> = {
 };
 
 export default function ChatScreen() {
-  const { channelId } = useLocalSearchParams<{ channelId: string }>();
+  const params = useLocalSearchParams();
+  const channelId = (params as any)?.channelId as string | undefined;
   const { client, isConnected, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
