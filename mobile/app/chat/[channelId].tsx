@@ -31,8 +31,33 @@ import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "@/context/ThemeContext";
 import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
+import { reactionComponents } from "@/utils/reactions";
 
 const MOCK_EMOJIS = ["👍", "❤️", "😂", "😮", "😡", "😭"];
+
+// Map plain emojis from the picker to Stream Chat reaction types
+const EMOJI_TO_REACTION: Record<string, string> = {
+  "👍": "like",
+  "❤️": "love",
+  "😂": "haha",
+  "😮": "wow",
+  "😡": "angry",
+  "😭": "sad",
+};
+
+// Map any legacy or alternative Stream reaction names to our app's reaction keys
+const REACTION_TO_APP_TYPE: Record<string, keyof typeof reactionComponents> = {
+  like: "like",
+  love: "love",
+  haha: "haha",
+  wow: "wow",
+  angry: "angry",
+  sad: "sad",
+  celebrate: "celebrate",
+  thumbsup: "like",
+  enraged: "angry",
+  kissing_heart: "love",
+};
 
 export default function ChatScreen() {
   const { channelId } = useLocalSearchParams<{ channelId: string }>();
@@ -113,6 +138,10 @@ export default function ChatScreen() {
         ch.on("message.new", handleEvent);
         ch.on("message.updated", handleEvent);
         ch.on("message.deleted", handleEvent);
+        // Refresh list on reaction events as well
+        ch.on("reaction.new", handleEvent);
+        ch.on("reaction.updated", handleEvent);
+        ch.on("reaction.deleted", handleEvent);
 
         setTimeout(() => {
           setLoading(false);
@@ -122,6 +151,9 @@ export default function ChatScreen() {
           ch.off("message.new", handleEvent);
           ch.off("message.updated", handleEvent);
           ch.off("message.deleted", handleEvent);
+          ch.off("reaction.new", handleEvent);
+          ch.off("reaction.updated", handleEvent);
+          ch.off("reaction.deleted", handleEvent);
         };
       } catch (error) {
         console.error("❌ Error initializing channel:", error);
@@ -194,9 +226,39 @@ export default function ChatScreen() {
     }
   };
 
-  const handleReaction = async (reactionType: string) => {
-    console.log(`Mock reaction selected: ${reactionType}`);
-    setSelectedMessage(null);
+  const handleReaction = async (emoji: string) => {
+    try {
+      if (!channel || !selectedMessage) return;
+      const reactionType = EMOJI_TO_REACTION[emoji];
+      if (!reactionType) return;
+
+      const ownReactions: any[] = Array.isArray(selectedMessage.own_reactions)
+        ? selectedMessage.own_reactions
+        : [];
+
+      const hasSameType = ownReactions.some((r: any) => r.type === reactionType);
+
+      if (hasSameType) {
+        await channel.deleteReaction(selectedMessage.id, reactionType);
+      } else {
+        // Remove any existing own reactions of other types, then add new
+        for (const r of ownReactions) {
+          if (r?.type && r.type !== reactionType) {
+            try {
+              await channel.deleteReaction(selectedMessage.id, r.type);
+            } catch (e) {
+              // continue best-effort
+            }
+          }
+        }
+        await channel.sendReaction(selectedMessage.id, { type: reactionType });
+      }
+    } catch (error) {
+      console.error("❌ Error handling reaction:", error);
+      Alert.alert("Error", "Failed to update reaction. Please try again.");
+    } finally {
+      setSelectedMessage(null);
+    }
   };
 
   const handleLongPress = (message: any) => {
@@ -234,7 +296,8 @@ export default function ChatScreen() {
   }) => {
     const isFromCurrentUser = message.user?.id === currentUser?.clerkId;
     const hasReactions =
-      message.latest_reactions && message.latest_reactions.length > 0;
+      (message.reaction_counts && Object.keys(message.reaction_counts).length > 0) ||
+      (message.latest_reactions && message.latest_reactions.length > 0);
     const attachment = message.attachments?.[0];
 
     const messageAbove =
@@ -270,32 +333,35 @@ export default function ChatScreen() {
     const ReactionComponent = () => {
       if (!hasReactions) return null;
 
-      const emojiMap: { [key: string]: string } = {
-        love: "❤️",
-        haha: "😂",
-        wow: "😮",
-        kissing_heart: "😘",
-        enraged: "😡",
-        thumbsup: "👍",
-      };
-      const reactionEmojis = message.latest_reactions
-        .map((r: any) => emojiMap[r.type])
-        .filter(Boolean);
-      const uniqueEmojis = [...new Set(reactionEmojis)];
+      // Prefer counts if available to pick top reactions
+      let reactionTypes: string[] = [];
+      if (message.reaction_counts) {
+        reactionTypes = Object.entries(message.reaction_counts)
+          .filter(([type, count]) => typeof count === "number" && count > 0)
+          .sort((a: any, b: any) => b[1] - a[1])
+          .map(([type]) => type as string);
+      } else if (message.latest_reactions) {
+        const types = message.latest_reactions.map((r: any) => r.type);
+        reactionTypes = Array.from(new Set(types));
+      }
 
-      if (!uniqueEmojis.length) return null;
+      const supportedTypes = reactionTypes
+        .map((type) => REACTION_TO_APP_TYPE[type] || type)
+        .filter((mapped) => mapped in reactionComponents) as (keyof typeof reactionComponents)[];
+
+      if (supportedTypes.length === 0) return null;
 
       return (
         <View className="absolute -bottom-2.5 -right-2 rounded-full p-0.5 shadow flex-row" style={{ backgroundColor: colors.background }}>
-          {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
-            <Text
-              key={idx}
-              className="text-sm"
-              style={{ transform: [{ translateX: -idx * 4 }] }}
-            >
-              {emoji}
-            </Text>
-          ))}
+          {supportedTypes.slice(0, 3).map((type, idx) => {
+            const EmojiIcon = (reactionComponents as any)[type];
+            if (!EmojiIcon) return null;
+            return (
+              <View key={type} style={{ transform: [{ translateX: -idx * 4 }] }}>
+                <EmojiIcon width={20} height={20} />
+              </View>
+            );
+          })}
         </View>
       );
     };
