@@ -22,6 +22,7 @@ import {
   Dimensions,
   // Removed useColorScheme
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -92,12 +93,15 @@ export default function ChatScreen() {
   } | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [quotedMessage, setQuotedMessage] = useState<any | null>(null);
   const [anchorMeasurements, setAnchorMeasurements] = useState<{
     pageX: number;
     pageY: number;
     width: number;
   } | null>(null);
   const messageRefs = useRef<{ [key: string]: View | null }>({});
+  const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
+  const inputRef = useRef<TextInput | null>(null);
 
   useEffect(() => {
     if (!client || !isConnected || !channelId || !currentUser) {
@@ -187,6 +191,10 @@ export default function ChatScreen() {
     try {
       let messageData: any = { text: newMessage.trim() };
 
+      if (quotedMessage?.id) {
+        messageData.quoted_message_id = quotedMessage.id;
+      }
+
       if (selectedMedia) {
         const mediaUrl = await uploadMediaToCloudinary(selectedMedia);
         if (mediaUrl) {
@@ -222,6 +230,7 @@ export default function ChatScreen() {
     } finally {
       setNewMessage("");
       setSelectedMedia(null);
+      setQuotedMessage(null);
       setSending(false);
     }
   };
@@ -299,6 +308,7 @@ export default function ChatScreen() {
       (message.reaction_counts && Object.keys(message.reaction_counts).length > 0) ||
       (message.latest_reactions && message.latest_reactions.length > 0);
     const attachment = message.attachments?.[0];
+    const quoted = message.quoted_message;
 
     const messageAbove =
       index < messages.length - 1 ? messages[index + 1] : null;
@@ -367,6 +377,17 @@ export default function ChatScreen() {
       );
     };
 
+    const renderLeftActions = () => (
+      <View className="justify-center pl-2 pr-1">
+        <View
+          className="px-3 py-2 rounded-full border"
+          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+        >
+          <Ionicons name="arrow-undo-outline" size={20} color={colors.grayText} />
+        </View>
+      </View>
+    );
+
     return (
       <Animated.View layout={Layout.duration(200)}>
         {showTimestamp && (
@@ -400,37 +421,83 @@ export default function ChatScreen() {
               className={`max-w-[80%] ${hasReactions ? "pb-4" : ""}`}
               ref={(el) => (messageRefs.current[message.id] = el)}
             >
-              <TouchableOpacity
-                onLongPress={() => handleLongPress(message)}
-                delayLongPress={200}
-                activeOpacity={0.8}
+              <Swipeable
+                ref={(ref) => (swipeableRefs.current[message.id] = ref)}
+                renderLeftActions={renderLeftActions}
+                onSwipeableLeftOpen={() => {
+                  setQuotedMessage(message);
+                  const ref = swipeableRefs.current[message.id];
+                  if (ref && typeof ref.close === "function") {
+                    ref.close();
+                  }
+                  setTimeout(() => inputRef.current?.focus?.(), 60);
+                }}
+                overshootLeft={false}
+                friction={2}
               >
-                <View
-                  className={`px-4 py-2.5 ${getBubbleStyle()} ${
-                    isFromCurrentUser ? "shadow-sm" : ""
-                  }`}
-                  style={{ backgroundColor: isFromCurrentUser ? colors.blue500 : colors.gray200 }}
+                <TouchableOpacity
+                  onLongPress={() => handleLongPress(message)}
+                  delayLongPress={200}
+                  activeOpacity={0.8}
                 >
-                  {attachment && attachment.type === "image" && (
-                    <Image
-                      source={{
-                        uri: attachment.asset_url || attachment.thumb_url,
-                      }}
-                      className="w-48 h-48 rounded-lg mb-2"
-                    />
-                  )}
+                  <View
+                    className={`px-4 py-2.5 ${getBubbleStyle()} ${
+                      isFromCurrentUser ? "shadow-sm" : ""
+                    }`}
+                    style={{ backgroundColor: isFromCurrentUser ? colors.blue500 : colors.gray200 }}
+                  >
+                    {quoted && (
+                      <View
+                        className="mb-2 px-3 py-2 rounded-xl border"
+                        style={{
+                          backgroundColor: isFromCurrentUser ? "rgba(255,255,255,0.12)" : colors.cardBackground,
+                          borderColor: colors.border,
+                        }}
+                      >
+                        <Text
+                          className="text-xs mb-1 font-semibold"
+                          style={{ color: isFromCurrentUser ? "#E5E7EB" : colors.grayText }}
+                          numberOfLines={1}
+                        >
+                          {quoted.user?.name || "User"}
+                        </Text>
+                        <Text
+                          className="text-xs"
+                          style={{ color: isFromCurrentUser ? "#F3F4F6" : colors.text }}
+                          numberOfLines={2}
+                        >
+                          {quoted.attachments?.[0]
+                            ? quoted.attachments?.[0].type === "image"
+                              ? "Photo"
+                              : quoted.attachments?.[0].type === "video"
+                              ? "Video"
+                              : "Attachment"
+                            : quoted.text || ""}
+                        </Text>
+                      </View>
+                    )}
 
-                  {message.text && (
-                    <Text
-                      className={`text-lg leading-6`}
-                      style={{ color: isFromCurrentUser ? "white" : colors.text }}
-                    >
-                      {message.text}
-                    </Text>
-                  )}
-                </View>
-                <ReactionComponent />
-              </TouchableOpacity>
+                    {attachment && attachment.type === "image" && (
+                      <Image
+                        source={{
+                          uri: attachment.asset_url || attachment.thumb_url,
+                        }}
+                        className="w-48 h-48 rounded-lg mb-2"
+                      />
+                    )}
+
+                    {message.text && (
+                      <Text
+                        className={`text-lg leading-6`}
+                        style={{ color: isFromCurrentUser ? "white" : colors.text }}
+                      >
+                        {message.text}
+                      </Text>
+                    )}
+                  </View>
+                  <ReactionComponent />
+                </TouchableOpacity>
+              </Swipeable>
             </View>
 
             {isFromCurrentUser && <View style={{ width: 8 }} />}
@@ -547,6 +614,30 @@ export default function ChatScreen() {
               backgroundColor: colors.background,
             }}
           >
+            {quotedMessage && (
+              <View
+                className="absolute left-4 right-4 -top-14 px-3 py-2 rounded-xl border flex-row items-center"
+                style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
+              >
+                <View className="flex-1 mr-2">
+                  <Text className="text-xs font-semibold" style={{ color: colors.grayText }} numberOfLines={1}>
+                    Replying to {quotedMessage.user?.name || "User"}
+                  </Text>
+                  <Text className="text-xs" style={{ color: colors.text }} numberOfLines={1}>
+                    {quotedMessage.attachments?.[0]
+                      ? quotedMessage.attachments?.[0].type === "image"
+                        ? "Photo"
+                        : quotedMessage.attachments?.[0].type === "video"
+                        ? "Video"
+                        : "Attachment"
+                      : quotedMessage.text || ""}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setQuotedMessage(null)} className="p-1">
+                  <Ionicons name="close" size={18} color={colors.grayText} />
+                </TouchableOpacity>
+              </View>
+            )}
             {/* Image Picker Button */}
             {selectedMedia ? (
               <TouchableOpacity
@@ -569,6 +660,7 @@ export default function ChatScreen() {
             )}
             <View className="flex-1 mr-3">
               <TextInput
+                ref={inputRef}
                 value={newMessage}
                 onChangeText={setNewMessage}
                 placeholder="Type a message..."
