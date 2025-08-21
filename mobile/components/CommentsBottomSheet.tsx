@@ -10,40 +10,40 @@ import { useTheme } from "@/context/ThemeContext";
 const mockComments = [
   {
     id: "1",
-    user: "Joey Aromin",
+    user: "Test User 1",
     avatar:
       "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=100&h=100&fit=crop&crop=face",
     text: "This is a very insightful discussion! I appreciate the different perspectives shared.",
   },
   {
     id: "2",
-    user: "soshabby.ph",
+    user: "Test User 2",
     avatar:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
     text: "Finally waiting for someone to talk about this here in the Phils",
   },
   {
     id: "3",
-    user: "Anthony Bautista Asoy",
+    user: "Test User 3",
     avatar:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
     text: "Yes Lord!! I am very excited for your coming lord. I OFFER you my life and I will follow you till the end.",
   },
   {
     id: "4",
-    user: "Sarah Lee",
+    user: "Test User 4",
     avatar: "https://randomuser.me/api/portraits/women/7.jpg",
     text: "So inspiring!",
   },
   {
     id: "5",
-    user: "Mike Brown",
+    user: "Test User 5",
     avatar: "https://randomuser.me/api/portraits/men/8.jpg",
     text: "Wow, I never knew this.",
   },
   {
     id: "6",
-    user: "Emily White",
+    user: "Test User6",
     avatar: "https://randomuser.me/api/portraits/women/9.jpg",
     text: "Can't wait for the next one!",
   },
