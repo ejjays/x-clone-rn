@@ -31,32 +31,31 @@ import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "@/context/ThemeContext";
 import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
-import { reactionComponents } from "@/utils/reactions";
 
-const MOCK_EMOJIS = ["👍", "❤️", "😂", "😮", "😡", "😭"];
+const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
 
 // Map plain emojis from the picker to Stream Chat reaction types
 const EMOJI_TO_REACTION: Record<string, string> = {
   "👍": "like",
   "❤️": "love",
-  "😂": "haha",
-  "😮": "wow",
+  "🔥": "fire",
+  "🤣": "haha",
+  "🥲": "smile_tear",
   "😡": "angry",
-  "😭": "sad",
 };
 
-// Map any legacy or alternative Stream reaction names to our app's reaction keys
-const REACTION_TO_APP_TYPE: Record<string, keyof typeof reactionComponents> = {
-  like: "like",
-  love: "love",
-  haha: "haha",
-  wow: "wow",
-  angry: "angry",
-  sad: "sad",
-  celebrate: "celebrate",
-  thumbsup: "like",
-  enraged: "angry",
-  kissing_heart: "love",
+// Map reaction types to plain emojis for rendering on message bubbles
+const REACTION_TO_EMOJI: Record<string, string> = {
+  like: "👍",
+  love: "❤️",
+  fire: "🔥",
+  haha: "🤣",
+  smile_tear: "🥲",
+  angry: "😡",
+  // legacy/aliases mapping if present in the data
+  thumbsup: "👍",
+  enraged: "😡",
+  kissing_heart: "❤️",
 };
 
 export default function ChatScreen() {
@@ -345,23 +344,24 @@ export default function ChatScreen() {
         reactionTypes = Array.from(new Set(types));
       }
 
-      const supportedTypes = reactionTypes
-        .map((type) => REACTION_TO_APP_TYPE[type] || type)
-        .filter((mapped) => mapped in reactionComponents) as (keyof typeof reactionComponents)[];
+      const emojis = reactionTypes
+        .map((type) => REACTION_TO_EMOJI[type] || null)
+        .filter((emoji): emoji is string => !!emoji);
 
-      if (supportedTypes.length === 0) return null;
+      const uniqueEmojis = Array.from(new Set(emojis));
+      if (uniqueEmojis.length === 0) return null;
 
       return (
         <View className="absolute -bottom-2.5 -right-2 rounded-full p-0.5 shadow flex-row" style={{ backgroundColor: colors.background }}>
-          {supportedTypes.slice(0, 3).map((type, idx) => {
-            const EmojiIcon = (reactionComponents as any)[type];
-            if (!EmojiIcon) return null;
-            return (
-              <View key={type} style={{ transform: [{ translateX: -idx * 4 }] }}>
-                <EmojiIcon width={20} height={20} />
-              </View>
-            );
-          })}
+          {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
+            <Text
+              key={`${emoji}-${idx}`}
+              className="text-sm"
+              style={{ transform: [{ translateX: -idx * 4 }] }}
+            >
+              {emoji}
+            </Text>
+          ))}
         </View>
       );
     };
