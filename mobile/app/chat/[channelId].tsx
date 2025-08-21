@@ -60,7 +60,7 @@ const REACTION_TO_EMOJI: Record<string, string> = {
 
 export default function ChatScreen() {
   const params = useLocalSearchParams();
-  const channelId = (params as any)?.channelId as string | undefined;
+  const channelId = typeof params?.channelId === "string" ? (params.channelId as string) : undefined;
   const { client, isConnected, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
@@ -605,27 +605,30 @@ export default function ChatScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      {selectedMessage && anchorMeasurements && (
+      {selectedMessage && anchorMeasurements ? (
         <Modal
-          transparent={true}
-          visible={!!selectedMessage}
+          transparent
+          visible
           onRequestClose={() => setSelectedMessage(null)}
         >
           <TouchableWithoutFeedback onPress={() => setSelectedMessage(null)}>
-            <View className="flex-1"> {/* Simplified this View */}
+            <View className="flex-1">
               <View
                 style={{
                   position: "absolute",
                   top: anchorMeasurements.pageY - 60,
-                  left: 0, // Span full width
-                  right: 0, // Span full width
-                  alignItems: "center", // Center content horizontally
+                  left: 0,
+                  right: 0,
+                  alignItems: "center",
                 }}
               >
-                <View className="flex-row rounded-full p-2 shadow-lg border" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
-                  {MOCK_EMOJIS.map((emoji, index) => (
+                <View
+                  className="flex-row rounded-full p-2 shadow-lg border"
+                  style={{ backgroundColor: colors.background, borderColor: colors.border }}
+                >
+                  {MOCK_EMOJIS.map((emoji) => (
                     <TouchableOpacity
-                      key={index}
+                      key={emoji}
                       onPress={() => handleReaction(emoji)}
                       className="px-3 py-2"
                     >
@@ -637,7 +640,7 @@ export default function ChatScreen() {
             </View>
           </TouchableWithoutFeedback>
         </Modal>
-      )}
+      ) : null}
     </View>
   );
 }
