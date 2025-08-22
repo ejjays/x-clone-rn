@@ -32,6 +32,8 @@ import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "@/context/ThemeContext";
 import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
+// Add expo-system-ui import
+import * as SystemUI from "expo-system-ui";
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
 
@@ -92,6 +94,7 @@ export default function ChatScreen() {
     type: "image" | "video";
   } | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [systemUIHeight, setSystemUIHeight] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [quotedMessage, setQuotedMessage] = useState<any | null>(null);
   const [anchorMeasurements, setAnchorMeasurements] = useState<{
@@ -169,10 +172,23 @@ export default function ChatScreen() {
     initializeChannel();
   }, [client, isConnected, channelId, currentUser]);
 
+  // Track system UI bottom inset
+  useEffect(() => {
+    try {
+      const bottomInset = insets.bottom;
+      setSystemUIHeight(bottomInset);
+    } catch (e) {
+      setSystemUIHeight(insets.bottom);
+    }
+  }, [insets.bottom]);
+
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
-      (e) => setKeyboardHeight(e.endCoordinates.height + 20)
+      (e) => {
+        const extraPadding = Platform.OS === "android" ? systemUIHeight : 0;
+        setKeyboardHeight(e.endCoordinates.height + extraPadding);
+      }
     );
     const keyboardDidHideListener = Keyboard.addListener(
       "keyboardDidHide",
@@ -182,7 +198,7 @@ export default function ChatScreen() {
       keyboardDidShowListener?.remove();
       keyboardDidHideListener?.remove();
     };
-  }, []);
+  }, [systemUIHeight]);
 
   const sendMessage = async () => {
     if (!channel || (!newMessage.trim() && !selectedMedia) || sending) return;
@@ -419,10 +435,14 @@ export default function ChatScreen() {
 
             <View
               className={`max-w-[80%] ${hasReactions ? "pb-4" : ""}`}
-              ref={(el) => (messageRefs.current[message.id] = el)}
+              ref={(el) => {
+                messageRefs.current[message.id] = el;
+              }}
             >
               <Swipeable
-                ref={(ref) => (swipeableRefs.current[message.id] = ref)}
+                ref={(ref) => {
+                  swipeableRefs.current[message.id] = ref;
+                }}
                 renderLeftActions={renderLeftActions}
                 onSwipeableLeftOpen={() => {
                   setQuotedMessage(message);
@@ -512,7 +532,7 @@ export default function ChatScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="50" color="#1DA1F2" />
+          <ActivityIndicator size="large" color="#1DA1F2" />
         </View>
       </SafeAreaView>
     );
@@ -537,7 +557,14 @@ export default function ChatScreen() {
   }
 
   return (
-    <View className="flex-1" style={{ paddingTop: insets.top, backgroundColor: colors.background }}>
+    <SafeAreaView 
+      style={{ 
+        flex: 1, 
+        backgroundColor: colors.background,
+        paddingBottom: 0,
+      }}
+      edges={['top']}
+    >
       <StatusBar style={isDarkMode ? "light" : "dark"} />
       {/* Header */}
       <View className="flex-row items-center p-4 border-b bg-white" style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}>
@@ -581,7 +608,7 @@ export default function ChatScreen() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         <View className="flex-1">
           <FlatList
@@ -592,7 +619,7 @@ export default function ChatScreen() {
             style={{ backgroundColor: colors.background }}
             contentContainerStyle={{
               paddingTop: 16,
-              paddingBottom: keyboardHeight > 0 ? 20 : 16,
+              paddingBottom: keyboardHeight > 0 ? 16 : 80 + systemUIHeight,
             }}
             inverted
             showsVerticalScrollIndicator={false}
@@ -608,8 +635,9 @@ export default function ChatScreen() {
             className="flex-row items-end border-t px-4"
             style={{
               paddingTop: 12,
-              paddingBottom: Math.max(insets.bottom, 16),
-              marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
+              paddingBottom: keyboardHeight > 0 
+                ? (Platform.OS === "ios" ? 12 : 12) 
+                : 12 + systemUIHeight,
               borderTopColor: colors.border,
               backgroundColor: colors.background,
             }}
@@ -733,6 +761,6 @@ export default function ChatScreen() {
           </TouchableWithoutFeedback>
         </Modal>
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 }
