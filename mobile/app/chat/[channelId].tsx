@@ -3,7 +3,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useStreamChat } from "@/context/StreamChatContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { format, isToday, isYesterday } from "date-fns";
 import { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
@@ -17,48 +16,22 @@ import {
   View,
   Image,
   Keyboard,
-  Modal,
-  TouchableWithoutFeedback,
-  Dimensions,
-  // Removed useColorScheme
 } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import Animated, { Layout } from "react-native-reanimated";
 import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "@/context/ThemeContext";
 import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
-// Add expo-system-ui import
 import * as SystemUI from "expo-system-ui";
+import ChatHeader from "@/components/chat/ChatHeader";
+import MessageBubble from "@/components/chat/MessageBubble";
+import MessageInput from "@/components/chat/MessageInput";
+import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
-
-// Map plain emojis from the picker to Stream Chat reaction types
-const EMOJI_TO_REACTION: Record<string, string> = {
-  "👍": "like",
-  "❤️": "love",
-  "🔥": "fire",
-  "🤣": "haha",
-  "🥲": "smile_tear",
-  "😡": "angry",
-};
-
-// Map reaction types to plain emojis for rendering on message bubbles
-const REACTION_TO_EMOJI: Record<string, string> = {
-  like: "👍",
-  love: "❤️",
-  fire: "🔥",
-  haha: "🤣",
-  smile_tear: "🥲",
-  angry: "😡",
-  // legacy/aliases mapping if present in the data
-  thumbsup: "👍",
-  enraged: "😡",
-  kissing_heart: "❤️",
-};
 
 export default function ChatScreen() {
   const params = useLocalSearchParams();
@@ -68,7 +41,6 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const { isDarkMode } = useTheme();
 
-  // Define dynamic colors based on dark mode state from context
   const colors = {
     background: isDarkMode ? DarkThemeColors.background : LightThemeColors.background,
     cardBackground: isDarkMode ? DarkThemeColors.surface : LightThemeColors.surface,
@@ -78,9 +50,8 @@ export default function ChatScreen() {
     inputBackground: isDarkMode ? DarkThemeColors.surface : LightThemeColors.surface,
     inputBorder: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
     blue500: isDarkMode ? DarkThemeColors.blue : LightThemeColors.blue,
-    gray200: isDarkMode ? DarkThemeColors.border : LightThemeColors.border, // For received message bubble
+    gray200: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
   };
-
 
   const [channel, setChannel] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -88,19 +59,12 @@ export default function ChatScreen() {
   const [otherUser, setOtherUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<{
-    uri: string;
-    type: "image" | "video";
-  } | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: "image" | "video" } | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [systemUIHeight, setSystemUIHeight] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [quotedMessage, setQuotedMessage] = useState<any | null>(null);
-  const [anchorMeasurements, setAnchorMeasurements] = useState<{
-    pageX: number;
-    pageY: number;
-    width: number;
-  } | null>(null);
+  const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null);
   const messageRefs = useRef<{ [key: string]: View | null }>({});
   const inputRef = useRef<TextInput | null>(null);
 
@@ -116,19 +80,13 @@ export default function ChatScreen() {
         await ch.watch();
         setChannel(ch);
 
-        const membersArray = Array.isArray(ch.state.members)
-          ? ch.state.members
-          : Object.values(ch.state.members || {});
-        const otherMember = membersArray.find(
-          (member: any) => member?.user?.id !== currentUser.clerkId
-        );
+        const membersArray = Array.isArray(ch.state.members) ? ch.state.members : Object.values(ch.state.members || {});
+        const otherMember = membersArray.find((member: any) => member?.user?.id !== currentUser.clerkId);
 
         if (otherMember?.user) {
           setOtherUser({
             name: otherMember.user.name || "Unknown User",
-            image:
-              otherMember.user.image ||
-              `https://getstream.io/random_png/?name=${otherMember.user.name}`,
+            image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
             online: otherMember.user.online || false,
           });
         }
@@ -143,7 +101,6 @@ export default function ChatScreen() {
         ch.on("message.new", handleEvent);
         ch.on("message.updated", handleEvent);
         ch.on("message.deleted", handleEvent);
-        // Refresh list on reaction events as well
         ch.on("reaction.new", handleEvent);
         ch.on("reaction.updated", handleEvent);
         ch.on("reaction.deleted", handleEvent);
@@ -170,7 +127,6 @@ export default function ChatScreen() {
     initializeChannel();
   }, [client, isConnected, channelId, currentUser]);
 
-  // Track system UI bottom inset
   useEffect(() => {
     try {
       const bottomInset = insets.bottom;
@@ -181,17 +137,11 @@ export default function ChatScreen() {
   }, [insets.bottom]);
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      (e) => {
-        const extraPadding = Platform.OS === "android" ? systemUIHeight : 0;
-        setKeyboardHeight(e.endCoordinates.height + extraPadding);
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => setKeyboardHeight(0)
-    );
+    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) => {
+      const extraPadding = Platform.OS === "android" ? systemUIHeight : 0;
+      setKeyboardHeight(e.endCoordinates.height + extraPadding);
+    });
+    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0));
     return () => {
       keyboardDidShowListener?.remove();
       keyboardDidHideListener?.remove();
@@ -204,35 +154,20 @@ export default function ChatScreen() {
     setSending(true);
     try {
       let messageData: any = { text: newMessage.trim() };
-
-      if (quotedMessage?.id) {
-        messageData.quoted_message_id = quotedMessage.id;
-      }
+      if (quotedMessage?.id) messageData.quoted_message_id = quotedMessage.id;
 
       if (selectedMedia) {
         const mediaUrl = await uploadMediaToCloudinary(selectedMedia);
         if (mediaUrl) {
-          messageData.attachments = [
-            {
-              type: selectedMedia.type,
-              asset_url: mediaUrl,
-              thumb_url: mediaUrl,
-            },
-          ];
+          messageData.attachments = [{ type: selectedMedia.type, asset_url: mediaUrl, thumb_url: mediaUrl }];
         } else {
-          Alert.alert(
-            "Upload Failed",
-            "Could not upload your media. Message not sent."
-          );
+          Alert.alert("Upload Failed", "Could not upload your media. Message not sent.");
           setSending(false);
           return;
         }
       }
 
-      if (
-        !messageData.text &&
-        (!messageData.attachments || messageData.attachments.length === 0)
-      ) {
+      if (!messageData.text && (!messageData.attachments || messageData.attachments.length === 0)) {
         setSending(false);
         return;
       }
@@ -252,26 +187,19 @@ export default function ChatScreen() {
   const handleReaction = async (emoji: string) => {
     try {
       if (!channel || !selectedMessage) return;
-      const reactionType = EMOJI_TO_REACTION[emoji];
+      const reactionTypeMap: Record<string, string> = { "👍": "like", "❤️": "love", "🔥": "fire", "🤣": "haha", "🥲": "smile_tear", "😡": "angry" };
+      const reactionType = reactionTypeMap[emoji];
       if (!reactionType) return;
 
-      const ownReactions: any[] = Array.isArray(selectedMessage.own_reactions)
-        ? selectedMessage.own_reactions
-        : [];
-
+      const ownReactions: any[] = Array.isArray(selectedMessage.own_reactions) ? selectedMessage.own_reactions : [];
       const hasSameType = ownReactions.some((r: any) => r.type === reactionType);
 
       if (hasSameType) {
         await channel.deleteReaction(selectedMessage.id, reactionType);
       } else {
-        // Remove any existing own reactions of other types, then add new
         for (const r of ownReactions) {
           if (r?.type && r.type !== reactionType) {
-            try {
-              await channel.deleteReaction(selectedMessage.id, r.type);
-            } catch (e) {
-              // continue best-effort
-            }
+            try { await channel.deleteReaction(selectedMessage.id, r.type); } catch {}
           }
         }
         await channel.sendReaction(selectedMessage.id, { type: reactionType });
@@ -294,225 +222,6 @@ export default function ChatScreen() {
     }
   };
 
-  const formatMessageTime = (date: Date) => {
-    if (isToday(date))
-      return `TODAY AT ${format(date, "h:mm a").toUpperCase()}`;
-    if (isYesterday(date))
-      return `YESTERDAY AT ${format(date, "d MMM 'AT' h:mm a").toUpperCase()}`;
-    return format(date, "d MMM yyyy 'AT' h:mm a").toUpperCase();
-  };
-
-  const shouldShowTimestamp = (currentMessage: any, previousMessage: any) => {
-    if (!previousMessage) return true;
-    const timeDiff =
-      new Date(currentMessage.created_at).getTime() -
-      new Date(previousMessage.created_at).getTime();
-    return timeDiff > 30 * 60 * 1000;
-  };
-
-  const renderMessage = ({
-    item: message,
-    index,
-  }: {
-    item: any;
-    index: number;
-  }) => {
-    const isFromCurrentUser = message.user?.id === currentUser?.clerkId;
-    const hasReactions =
-      (message.reaction_counts && Object.keys(message.reaction_counts).length > 0) ||
-      (message.latest_reactions && message.latest_reactions.length > 0);
-    const attachment = message.attachments?.[0];
-    const quoted = message.quoted_message;
-
-    const messageAbove =
-      index < messages.length - 1 ? messages[index + 1] : null;
-    const messageBelow = index > 0 ? messages[index - 1] : null;
-
-    const showTimestamp = shouldShowTimestamp(message, messageAbove);
-    const isFirstInGroup =
-      showTimestamp ||
-      !messageAbove ||
-      messageAbove.user?.id !== message.user.id;
-    const isLastInGroup =
-      !messageBelow ||
-      messageBelow.user?.id !== message.user.id ||
-      shouldShowTimestamp(messageBelow, message);
-    const showAvatar = isLastInGroup;
-
-    const getBubbleStyle = () => {
-      let style = "rounded-3xl";
-      if (isFirstInGroup && isLastInGroup) return style;
-      if (isFromCurrentUser) {
-        if (isFirstInGroup) style += " rounded-br-lg";
-        else if (isLastInGroup) style += " rounded-tr-lg";
-        else style += " rounded-tr-lg rounded-br-lg";
-      } else {
-        if (isFirstInGroup) style += " rounded-bl-lg";
-        else if (isLastInGroup) style += " rounded-tl-lg";
-        else style += " rounded-tl-lg rounded-bl-lg";
-      }
-      return style;
-    };
-
-    const ReactionComponent = () => {
-      if (!hasReactions) return null;
-
-      // Prefer counts if available to pick top reactions
-      let reactionTypes: string[] = [];
-      if (message.reaction_counts) {
-        reactionTypes = Object.entries(message.reaction_counts)
-          .filter(([type, count]) => typeof count === "number" && count > 0)
-          .sort((a: any, b: any) => b[1] - a[1])
-          .map(([type]) => type as string);
-      } else if (message.latest_reactions) {
-        const types = message.latest_reactions.map((r: any) => r.type);
-        reactionTypes = Array.from(new Set(types));
-      }
-
-      const emojis = reactionTypes
-        .map((type) => REACTION_TO_EMOJI[type] || null)
-        .filter((emoji): emoji is string => !!emoji);
-
-      const uniqueEmojis = Array.from(new Set(emojis));
-      if (uniqueEmojis.length === 0) return null;
-
-      return (
-        <View
-          style={{
-            position: "absolute",
-            bottom: -4,
-            right: isFromCurrentUser ? 6 : undefined,
-            left: isFromCurrentUser ? undefined : 6,
-            flexDirection: "row",
-            backgroundColor: colors.background,
-            paddingHorizontal: 6,
-            paddingVertical: 2,
-            borderRadius: 999,
-            zIndex: 1,
-            shadowColor: "#000",
-            shadowOpacity: 0.12,
-            shadowRadius: 3,
-            elevation: 1,
-          }}
-        >
-          {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
-            <Text key={`${emoji}-${idx}`} className="text-sm" style={{ marginLeft: idx === 0 ? 0 : 4 }}>
-              {emoji}
-            </Text>
-          ))}
-        </View>
-      );
-    };
-
-    // Swipe-to-reply removed per request
-
-    return (
-      <Animated.View layout={Layout.duration(200)}>
-        {showTimestamp && (
-          <View className="items-center my-6">
-            <View className="px-3 py-1 rounded-full" style={{ backgroundColor: colors.cardBackground }}>
-              <Text className="text-xs font-medium tracking-wide" style={{ color: colors.grayText }}>
-                {formatMessageTime(new Date(message.created_at))}
-              </Text>
-            </View>
-          </View>
-        )}
-
-        <View
-          className={`flex-row items-end ${isLastInGroup ? "mb-2" : "mb-0.5"}`}
-        >
-          <View
-            className={`flex-1 flex-row items-end ${isFromCurrentUser ? "justify-end pr-1" : "justify-start pl-1"}`}
-          >
-            {!isFromCurrentUser && (
-              <View className="mr-2" style={{ width: 32 }}>
-                {showAvatar && otherUser?.image && (
-                  <Image
-                    source={{ uri: otherUser.image }}
-                    className="w-8 h-8 rounded-full"
-                  />
-                )}
-              </View>
-            )}
-
-            <View
-              className={`max-w-[80%]`}
-              style={{ overflow: "visible", position: "relative", paddingBottom: hasReactions ? 14 : 0 }}
-              ref={(el) => {
-                messageRefs.current[message.id] = el;
-              }}
-            >
-              <TouchableOpacity
-                onLongPress={() => handleLongPress(message)}
-                delayLongPress={200}
-                activeOpacity={0.8}
-              >
-                <View
-                  className={`px-4 py-2.5 ${getBubbleStyle()} ${
-                    isFromCurrentUser ? "shadow-sm" : ""
-                  }`}
-                  style={{ backgroundColor: isFromCurrentUser ? colors.blue500 : colors.gray200, overflow: "visible" }}
-                >
-                  {quoted && (
-                    <View
-                      className="mb-2 px-3 py-2 rounded-xl border"
-                      style={{
-                        backgroundColor: isFromCurrentUser ? "rgba(255,255,255,0.12)" : colors.cardBackground,
-                        borderColor: colors.border,
-                      }}
-                    >
-                      <Text
-                        className="text-xs mb-1 font-semibold"
-                        style={{ color: isFromCurrentUser ? "#E5E7EB" : colors.grayText }}
-                        numberOfLines={1}
-                      >
-                        {quoted.user?.name || "User"}
-                      </Text>
-                      <Text
-                        className="text-xs"
-                        style={{ color: isFromCurrentUser ? "#F3F4F6" : colors.text }}
-                        numberOfLines={2}
-                      >
-                        {quoted.attachments?.[0]
-                          ? quoted.attachments?.[0].type === "image"
-                            ? "Photo"
-                            : quoted.attachments?.[0].type === "video"
-                            ? "Video"
-                            : "Attachment"
-                          : quoted.text || ""}
-                      </Text>
-                    </View>
-                  )}
-
-                  {attachment && attachment.type === "image" && (
-                    <Image
-                      source={{
-                        uri: attachment.asset_url || attachment.thumb_url,
-                      }}
-                      className="w-48 h-48 rounded-lg mb-2"
-                    />
-                  )}
-
-                  {message.text && (
-                    <Text
-                      className={`text-lg leading-6`}
-                      style={{ color: isFromCurrentUser ? "white" : colors.text }}
-                    >
-                      {message.text}
-                    </Text>
-                  )}
-                </View>
-                <ReactionComponent />
-              </TouchableOpacity>
-            </View>
-
-            {isFromCurrentUser && <View style={{ width: 8 }} />}
-          </View>
-        </View>
-      </Animated.View>
-    );
-  };
-
   if (isConnecting || loading) {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
@@ -530,224 +239,73 @@ export default function ChatScreen() {
         <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="cloud-offline-outline" size={64} color={colors.grayText} />
-          <Text className="text-xl font-semibold mt-4 mb-2" style={{ color: colors.text }}>
-            Connection Issue
-          </Text>
-          <Text className="text-center" style={{ color: colors.grayText }}>
-            Unable to connect to chat service. Please check your internet
-            connection.
-          </Text>
+          <Text className="text-xl font-semibold mt-4 mb-2" style={{ color: colors.text }}>Connection Issue</Text>
+          <Text className="text-center" style={{ color: colors.grayText }}>Unable to connect to chat service. Please check your internet connection.</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView 
-      style={{ 
-        flex: 1, 
-        backgroundColor: colors.background,
-        paddingBottom: 0,
-      }}
-      edges={['top']}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 0 }} edges={['top']}>
       <StatusBar style={isDarkMode ? "light" : "dark"} />
-      {/* Header */}
-      <View className="flex-row items-center p-4 border-b bg-white" style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}>
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color={colors.grayText} />
-        </TouchableOpacity>
-        {otherUser?.image && (
-          <View className="relative mr-3">
-            <Image
-              source={{ uri: otherUser.image }}
-              className="w-12 h-12 rounded-full"
-            />
-            {otherUser.online && (
-              <View className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white" />
-            )}
-          </View>
-        )}
-        <View className="flex-1 min-w-0">
-          <Text
-            className="font-semibold text-xl"
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={{ color: colors.text }}
-          >
-            {otherUser?.name || "Chat"}
-          </Text>
-          {otherUser && (
-            <Text className="text-sm" style={{ color: colors.grayText }}>
-              {otherUser.online ? "Online" : "Offline"}
-            </Text>
-          )}
-        </View>
-        <TouchableOpacity className="p-2">
-          <Ionicons name="call-outline" size={24} color={colors.grayText} />
-        </TouchableOpacity>
-        <TouchableOpacity className="p-2 ml-2">
-          <Ionicons name="videocam-outline" size={24} color={colors.grayText} />
-        </TouchableOpacity>
-      </View>
 
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-      >
+      <ChatHeader colors={colors} otherUser={otherUser} />
+
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}>
         <View className="flex-1">
           <FlatList
             data={messages}
-            renderItem={renderMessage}
+            renderItem={({ item, index }) => (
+              <View ref={(el) => { if (el) { (messageRefs.current as any)[item.id] = el; } }}>
+                <MessageBubble
+                  message={item}
+                  index={index}
+                  messages={messages}
+                  currentUserId={currentUser?.clerkId}
+                  colors={colors}
+                  otherUser={otherUser}
+                  onLongPress={handleLongPress}
+                />
+              </View>
+            )}
             keyExtractor={(item) => item.id}
             className="flex-1 px-2"
             style={{ backgroundColor: colors.background }}
-            contentContainerStyle={{
-              paddingTop: 16,
-              paddingBottom: keyboardHeight > 0 ? 16 : 80 + systemUIHeight,
-            }}
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: keyboardHeight > 0 ? 16 : 80 + systemUIHeight }}
             inverted
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            onScrollBeginDrag={() => {
-              Keyboard.dismiss();
-              setSelectedMessage(null);
-            }}
+            onScrollBeginDrag={() => { Keyboard.dismiss(); setSelectedMessage(null); }}
           />
 
-          {/* Message Input */}
-          <View
-            className="flex-row items-end border-t px-4"
-            style={{
-              paddingTop: 12,
-              paddingBottom: keyboardHeight > 0 
-                ? (Platform.OS === "ios" ? 12 : 12) 
-                : 12 + systemUIHeight,
-              marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
-              borderTopColor: colors.border,
-              backgroundColor: colors.background,
-            }}
-          >
-            {quotedMessage && (
-              <View
-                className="absolute left-4 right-4 -top-14 px-3 py-2 rounded-xl border flex-row items-center"
-                style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
-              >
-                <View className="flex-1 mr-2">
-                  <Text className="text-xs font-semibold" style={{ color: colors.grayText }} numberOfLines={1}>
-                    Replying to {quotedMessage.user?.name || "User"}
-                  </Text>
-                  <Text className="text-xs" style={{ color: colors.text }} numberOfLines={1}>
-                    {quotedMessage.attachments?.[0]
-                      ? quotedMessage.attachments?.[0].type === "image"
-                        ? "Photo"
-                        : quotedMessage.attachments?.[0].type === "video"
-                        ? "Video"
-                        : "Attachment"
-                      : quotedMessage.text || ""}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => setQuotedMessage(null)} className="p-1">
-                  <Ionicons name="close" size={18} color={colors.grayText} />
-                </TouchableOpacity>
-              </View>
-            )}
-            {/* Image Picker Button */}
-            {selectedMedia ? (
-              <TouchableOpacity
-                onPress={() => setSelectedMedia(null)}
-                className="p-3 rounded-full bg-red-500 mr-2 mb-2"
-              >
-                <Ionicons name="close" size={24} color="white" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={async () => {
-                  const media = await pickMedia();
-                  setSelectedMedia(media);
-                }}
-                className="p-3 rounded-full mr-2 mb-2"
-                style={{ backgroundColor: colors.gray200 }}
-              >
-                <Ionicons name="image-outline" size={24} color={colors.grayText} />
-              </TouchableOpacity>
-            )}
-            <View className="flex-1 mr-3">
-              <TextInput
-                ref={inputRef}
-                value={newMessage}
-                onChangeText={setNewMessage}
-                placeholder="Type a message..."
-                placeholderTextColor={colors.grayText}
-                className="rounded-full px-4 py-3 text-base"
-                style={{ borderColor: colors.inputBorder, color: colors.text, backgroundColor: colors.inputBackground, borderWidth: 1 }}
-                multiline
-                maxLength={500}
-                editable={!sending}
-                textAlignVertical="top"
-                autoCapitalize="sentences"
-                // style={{ minHeight: 48, maxHeight: 120, borderColor: colors.inputBorder, color: colors.text, backgroundColor: colors.inputBackground, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 999 }}
-              />
-            </View>
-            <TouchableOpacity
-              onPress={sendMessage}
-              disabled={(!newMessage.trim() && !selectedMedia) || sending}
-              className={`p-3 rounded-full ${(!newMessage.trim() && !selectedMedia) || sending ? "bg-gray-300" : "bg-blue-500"}`}
-              style={{ marginBottom: 2, backgroundColor: ((!newMessage.trim() && !selectedMedia) || sending) ? colors.gray200 : colors.blue500 }}
-            >
-              {sending ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Ionicons
-                  name="send"
-                  size={20}
-                  color={
-                    (!newMessage.trim() && !selectedMedia) ? colors.grayText : "white"
-                  }
-                />
-              )}
-            </TouchableOpacity>
-          </View>
+          <MessageInput
+            colors={colors}
+            insetsBottom={insets.bottom}
+            keyboardHeight={keyboardHeight}
+            systemUIHeight={systemUIHeight}
+            quotedMessage={quotedMessage}
+            onCancelQuote={() => setQuotedMessage(null)}
+            selectedMedia={selectedMedia}
+            onClearMedia={() => setSelectedMedia(null)}
+            onPickMedia={async () => { const media = await pickMedia(); setSelectedMedia(media); }}
+            inputRef={inputRef}
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            sending={sending}
+            onSend={sendMessage}
+          />
         </View>
       </KeyboardAvoidingView>
 
-      {selectedMessage && anchorMeasurements ? (
-        <Modal
-          transparent
-          visible
-          onRequestClose={() => setSelectedMessage(null)}
-        >
-          <TouchableWithoutFeedback onPress={() => setSelectedMessage(null)}>
-            <View className="flex-1">
-              <View
-                style={{
-                  position: "absolute",
-                  top: anchorMeasurements.pageY - 60,
-                  left: 0,
-                  right: 0,
-                  alignItems: "center",
-                }}
-              >
-                <View
-                  className="flex-row rounded-full p-2 shadow-lg border"
-                  style={{ backgroundColor: colors.background, borderColor: colors.border }}
-                >
-                  {MOCK_EMOJIS.map((emoji) => (
-                    <TouchableOpacity
-                      key={emoji}
-                      onPress={() => handleReaction(emoji)}
-                      className="px-3 py-2"
-                    >
-                      <Text className="text-3xl">{emoji}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
-      ) : null}
+      <ReactionPickerModal
+        visible={!!selectedMessage}
+        anchor={anchorMeasurements}
+        colors={colors}
+        emojis={MOCK_EMOJIS}
+        onPick={handleReaction}
+        onClose={() => setSelectedMessage(null)}
+      />
     </SafeAreaView>
   );
 }
