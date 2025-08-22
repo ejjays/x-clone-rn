@@ -22,7 +22,6 @@ import {
   Dimensions,
   // Removed useColorScheme
 } from "react-native";
-import { Swipeable } from "react-native-gesture-handler";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -103,7 +102,6 @@ export default function ChatScreen() {
     width: number;
   } | null>(null);
   const messageRefs = useRef<{ [key: string]: View | null }>({});
-  const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
   const inputRef = useRef<TextInput | null>(null);
 
   useEffect(() => {
@@ -382,15 +380,19 @@ export default function ChatScreen() {
         <View
           style={{
             position: "absolute",
-            bottom: -6,
-            right: isFromCurrentUser ? 2 : undefined,
-            left: isFromCurrentUser ? undefined : 2,
+            bottom: -4,
+            right: isFromCurrentUser ? 6 : undefined,
+            left: isFromCurrentUser ? undefined : 6,
             flexDirection: "row",
             backgroundColor: colors.background,
             paddingHorizontal: 6,
             paddingVertical: 2,
             borderRadius: 999,
             zIndex: 1,
+            shadowColor: "#000",
+            shadowOpacity: 0.12,
+            shadowRadius: 3,
+            elevation: 1,
           }}
         >
           {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
@@ -402,16 +404,7 @@ export default function ChatScreen() {
       );
     };
 
-    const renderLeftActions = () => (
-      <View className="justify-center pl-2 pr-1">
-        <View
-          className="px-3 py-2 rounded-full border"
-          style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
-        >
-          <Ionicons name="arrow-undo-outline" size={20} color={colors.grayText} />
-        </View>
-      </View>
-    );
+    // Swipe-to-reply removed per request
 
     return (
       <Animated.View layout={Layout.duration(200)}>
@@ -444,90 +437,73 @@ export default function ChatScreen() {
 
             <View
               className={`max-w-[80%]`}
-              style={{ overflow: "visible", position: "relative", paddingBottom: hasReactions ? 18 : 0 }}
+              style={{ overflow: "visible", position: "relative", paddingBottom: hasReactions ? 14 : 0 }}
               ref={(el) => {
                 messageRefs.current[message.id] = el;
               }}
             >
-              <Swipeable
-                ref={(ref) => {
-                  swipeableRefs.current[message.id] = ref;
-                }}
-                renderLeftActions={renderLeftActions}
-                onSwipeableLeftOpen={() => {
-                  setQuotedMessage(message);
-                  const ref = swipeableRefs.current[message.id];
-                  if (ref && typeof ref.close === "function") {
-                    ref.close();
-                  }
-                  setTimeout(() => inputRef.current?.focus?.(), 60);
-                }}
-                overshootLeft={false}
-                friction={2}
+              <TouchableOpacity
+                onLongPress={() => handleLongPress(message)}
+                delayLongPress={200}
+                activeOpacity={0.8}
               >
-                <TouchableOpacity
-                  onLongPress={() => handleLongPress(message)}
-                  delayLongPress={200}
-                  activeOpacity={0.8}
+                <View
+                  className={`px-4 py-2.5 ${getBubbleStyle()} ${
+                    isFromCurrentUser ? "shadow-sm" : ""
+                  }`}
+                  style={{ backgroundColor: isFromCurrentUser ? colors.blue500 : colors.gray200, overflow: "visible" }}
                 >
-                  <View
-                    className={`px-4 py-2.5 ${getBubbleStyle()} ${
-                      isFromCurrentUser ? "shadow-sm" : ""
-                    }`}
-                    style={{ backgroundColor: isFromCurrentUser ? colors.blue500 : colors.gray200, overflow: "visible" }}
-                  >
-                    {quoted && (
-                      <View
-                        className="mb-2 px-3 py-2 rounded-xl border"
-                        style={{
-                          backgroundColor: isFromCurrentUser ? "rgba(255,255,255,0.12)" : colors.cardBackground,
-                          borderColor: colors.border,
-                        }}
-                      >
-                        <Text
-                          className="text-xs mb-1 font-semibold"
-                          style={{ color: isFromCurrentUser ? "#E5E7EB" : colors.grayText }}
-                          numberOfLines={1}
-                        >
-                          {quoted.user?.name || "User"}
-                        </Text>
-                        <Text
-                          className="text-xs"
-                          style={{ color: isFromCurrentUser ? "#F3F4F6" : colors.text }}
-                          numberOfLines={2}
-                        >
-                          {quoted.attachments?.[0]
-                            ? quoted.attachments?.[0].type === "image"
-                              ? "Photo"
-                              : quoted.attachments?.[0].type === "video"
-                              ? "Video"
-                              : "Attachment"
-                            : quoted.text || ""}
-                        </Text>
-                      </View>
-                    )}
-
-                    {attachment && attachment.type === "image" && (
-                      <Image
-                        source={{
-                          uri: attachment.asset_url || attachment.thumb_url,
-                        }}
-                        className="w-48 h-48 rounded-lg mb-2"
-                      />
-                    )}
-
-                    {message.text && (
+                  {quoted && (
+                    <View
+                      className="mb-2 px-3 py-2 rounded-xl border"
+                      style={{
+                        backgroundColor: isFromCurrentUser ? "rgba(255,255,255,0.12)" : colors.cardBackground,
+                        borderColor: colors.border,
+                      }}
+                    >
                       <Text
-                        className={`text-lg leading-6`}
-                        style={{ color: isFromCurrentUser ? "white" : colors.text }}
+                        className="text-xs mb-1 font-semibold"
+                        style={{ color: isFromCurrentUser ? "#E5E7EB" : colors.grayText }}
+                        numberOfLines={1}
                       >
-                        {message.text}
+                        {quoted.user?.name || "User"}
                       </Text>
-                    )}
-                  </View>
-                  <ReactionComponent />
-                </TouchableOpacity>
-              </Swipeable>
+                      <Text
+                        className="text-xs"
+                        style={{ color: isFromCurrentUser ? "#F3F4F6" : colors.text }}
+                        numberOfLines={2}
+                      >
+                        {quoted.attachments?.[0]
+                          ? quoted.attachments?.[0].type === "image"
+                            ? "Photo"
+                            : quoted.attachments?.[0].type === "video"
+                            ? "Video"
+                            : "Attachment"
+                          : quoted.text || ""}
+                      </Text>
+                    </View>
+                  )}
+
+                  {attachment && attachment.type === "image" && (
+                    <Image
+                      source={{
+                        uri: attachment.asset_url || attachment.thumb_url,
+                      }}
+                      className="w-48 h-48 rounded-lg mb-2"
+                    />
+                  )}
+
+                  {message.text && (
+                    <Text
+                      className={`text-lg leading-6`}
+                      style={{ color: isFromCurrentUser ? "white" : colors.text }}
+                    >
+                      {message.text}
+                    </Text>
+                  )}
+                </View>
+                <ReactionComponent />
+              </TouchableOpacity>
             </View>
 
             {isFromCurrentUser && <View style={{ width: 8 }} />}
