@@ -379,13 +379,19 @@ export default function ChatScreen() {
       if (uniqueEmojis.length === 0) return null;
 
       return (
-        <View className="absolute -bottom-2.5 -right-2 rounded-full p-0.5 shadow flex-row" style={{ backgroundColor: colors.background }}>
+        <View
+          style={{
+            marginTop: 6,
+            alignSelf: isFromCurrentUser ? "flex-end" : "flex-start",
+            flexDirection: "row",
+            backgroundColor: colors.background,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 999,
+          }}
+        >
           {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
-            <Text
-              key={`${emoji}-${idx}`}
-              className="text-sm"
-              style={{ transform: [{ translateX: -idx * 4 }] }}
-            >
+            <Text key={`${emoji}-${idx}`} className="text-sm" style={{ marginLeft: idx === 0 ? 0 : 4 }}>
               {emoji}
             </Text>
           ))}
@@ -434,7 +440,8 @@ export default function ChatScreen() {
             )}
 
             <View
-              className={`max-w-[80%] ${hasReactions ? "pb-4" : ""}`}
+              className={`max-w-[80%]`}
+              style={{ overflow: "visible" }}
               ref={(el) => {
                 messageRefs.current[message.id] = el;
               }}
@@ -464,7 +471,7 @@ export default function ChatScreen() {
                     className={`px-4 py-2.5 ${getBubbleStyle()} ${
                       isFromCurrentUser ? "shadow-sm" : ""
                     }`}
-                    style={{ backgroundColor: isFromCurrentUser ? colors.blue500 : colors.gray200 }}
+                    style={{ backgroundColor: isFromCurrentUser ? colors.blue500 : colors.gray200, overflow: "visible" }}
                   >
                     {quoted && (
                       <View
