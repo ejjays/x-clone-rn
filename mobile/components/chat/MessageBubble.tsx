@@ -131,10 +131,15 @@ export default function MessageBubble({
     );
   };
 
+  // when this bubble has reactions, give it extra bottom-margin
+  const reactionOffset = hasReactions ? 24 : 0;
   return (
-    <Animated.View layout={Layout.duration(200)}>
-      {showTimestamp && (
-        <View className="items-center my-6">
+  <Animated.View
+    layout={Layout.duration(200)}
+    style={{ marginBottom: reactionOffset }}
+  >
+    {showTimestamp && (
+      <View className="items-center my-6">
           <View
             className="px-3 py-1 rounded-full"
             style={{ backgroundColor: colors.cardBackground }}
