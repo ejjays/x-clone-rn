@@ -381,13 +381,16 @@ export default function ChatScreen() {
       return (
         <View
           style={{
-            marginTop: 6,
-            alignSelf: isFromCurrentUser ? "flex-end" : "flex-start",
+            position: "absolute",
+            bottom: -6,
+            right: isFromCurrentUser ? 2 : undefined,
+            left: isFromCurrentUser ? undefined : 2,
             flexDirection: "row",
             backgroundColor: colors.background,
             paddingHorizontal: 6,
             paddingVertical: 2,
             borderRadius: 999,
+            zIndex: 1,
           }}
         >
           {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
@@ -441,7 +444,7 @@ export default function ChatScreen() {
 
             <View
               className={`max-w-[80%]`}
-              style={{ overflow: "visible" }}
+              style={{ overflow: "visible", position: "relative", paddingBottom: hasReactions ? 18 : 0 }}
               ref={(el) => {
                 messageRefs.current[message.id] = el;
               }}
@@ -645,6 +648,7 @@ export default function ChatScreen() {
               paddingBottom: keyboardHeight > 0 
                 ? (Platform.OS === "ios" ? 12 : 12) 
                 : 12 + systemUIHeight,
+              marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
               borderTopColor: colors.border,
               backgroundColor: colors.background,
             }}
