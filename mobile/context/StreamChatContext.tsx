@@ -30,7 +30,7 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
 
   // Fetch the Stream token from your backend
   const { data: streamToken, error: tokenError, isLoading: tokenLoading } = useQuery({
-    queryKey: ["streamToken"],
+    queryKey: ["streamToken", user?.id],
     queryFn: () => streamApi.getToken(api),
     enabled: isLoaded && !!user,
     staleTime: 1000 * 60 * 55, // 55 minutes
@@ -49,42 +49,64 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
     STREAM_API_KEY: !!STREAM_API_KEY,
   });
 
-  // Function to connect the user
-  const connectUser = useCallback(async () => {
-    if (user && streamToken && !isConnected && !isConnecting) {
-      setIsConnecting(true);
+  // Ensure the chat client is connected as the current Clerk user
+  const ensureConnectedAsCurrentUser = useCallback(async () => {
+    if (!user || !streamToken) return;
+    // If already connected as the correct user, do nothing
+    if (chatClient.userID === user.id && isConnected) return;
+
+    setIsConnecting(true);
+    try {
+      // If connected as a different user, disconnect first
       if (chatClient.userID && chatClient.userID !== user.id) {
         await chatClient.disconnectUser();
+        setIsConnected(false);
       }
-      if (!chatClient.userID) {
-        try {
-          console.log("🔄 Connecting to Stream Chat...");
-          await chatClient.connectUser(
-            { id: user.id, name: user.fullName ?? user.id, image: user.imageUrl },
-            streamToken.data.token,
-          );
-          console.log("✅ Stream Chat connected successfully!");
-          setIsConnected(true);
-        } catch (error) {
-          console.error("❌ Stream Chat connection failed:", error);
-        } finally {
-          setIsConnecting(false);
-        }
-      }
-    }
-  }, [user, streamToken, isConnected, isConnecting]);
 
-  // Handle connection logic
+      // Connect as the current user if not already
+      if (chatClient.userID !== user.id) {
+        console.log("🔄 Connecting to Stream Chat as", user.id);
+        await chatClient.connectUser(
+          { id: user.id, name: user.fullName ?? user.id, image: user.imageUrl },
+          streamToken.data.token,
+        );
+        console.log("✅ Stream Chat connected successfully!");
+      }
+
+      setIsConnected(true);
+    } catch (error) {
+      console.error("❌ Stream Chat connection failed:", error);
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [user, streamToken, isConnected]);
+
+  // Connect or switch user when Clerk user or token changes
   useEffect(() => {
-    connectUser();
-  }, [connectUser]);
+    ensureConnectedAsCurrentUser();
+  }, [ensureConnectedAsCurrentUser]);
+
+  // Disconnect when user signs out
+  useEffect(() => {
+    if (!user && chatClient.userID) {
+      (async () => {
+        try {
+          await chatClient.disconnectUser();
+        } catch (e) {
+          // ignore
+        } finally {
+          setIsConnected(false);
+        }
+      })();
+    }
+  }, [user]);
 
   // Function to refresh channels
   const refreshChannels = useCallback(async () => {
     if (!chatClient || !user) return;
     try {
       const filter = { type: "messaging", members: { $in: [user.id] } };
-      const sort = { last_message_at: -1 };
+      const sort: any = { last_message_at: -1 };
       const newChannels = await chatClient.queryChannels(filter, sort);
       setChannels(newChannels);
     } catch (error) {
@@ -95,10 +117,15 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
   // Function to create a new channel
   const createChannel = async (memberId: string, name?: string) => {
     if (!chatClient || !user) throw new Error("Chat client not ready");
-    const channel = chatClient.channel("messaging", {
+    const extraData: any = {
       members: [user.id, memberId],
-      name: name,
-    });
+    };
+    if (name) extraData.name = name;
+    const channel = chatClient.channel(
+      "messaging",
+      undefined,
+      extraData
+    );
     await channel.create();
     return channel;
   };
