@@ -153,13 +153,23 @@ export default function ChatScreen() {
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS === "android") {
-        NavigationBar.setBackgroundColorAsync("#ffffff");
-        NavigationBar.setButtonStyleAsync("dark");
+        try {
+          NavigationBar.setVisibilityAsync("visible");
+          NavigationBar.setPositionAsync("absolute");
+          NavigationBar.setBehaviorAsync("inset-swipe");
+          NavigationBar.setBackgroundColorAsync("#ffffff");
+          NavigationBar.setButtonStyleAsync("dark");
+        } catch {}
       }
       return () => {
         if (Platform.OS === "android") {
-          NavigationBar.setBackgroundColorAsync(isDarkMode ? "#000000" : "#ffffff");
-          NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
+          try {
+            NavigationBar.setVisibilityAsync("visible");
+            NavigationBar.setPositionAsync("absolute");
+            NavigationBar.setBehaviorAsync("inset-swipe");
+            NavigationBar.setBackgroundColorAsync(isDarkMode ? "#000000" : "#ffffff");
+            NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
+          } catch {}
         }
       };
     }, [isDarkMode])
