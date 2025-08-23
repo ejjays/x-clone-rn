@@ -1,21 +1,28 @@
 // mobile/hooks/useSignOut.ts
 import { useClerk } from "@clerk/clerk-expo";
-import { Alert } from "react-native";
+import { useState } from "react";
 
 export const useSignOut = () => {
   const { signOut } = useClerk();
+  const [isSignOutAlertVisible, setIsSignOutAlertVisible] = useState(false);
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', onPress: () => signOut() },
-      ],
-      { cancelable: true }
-    );
+    setIsSignOutAlertVisible(true);
   };
 
-  return { handleSignOut };
+  const confirmSignOut = () => {
+    setIsSignOutAlertVisible(false);
+    signOut();
+  };
+
+  const cancelSignOut = () => {
+    setIsSignOutAlertVisible(false);
+  };
+
+  return {
+    handleSignOut,
+    isSignOutAlertVisible,
+    confirmSignOut,
+    cancelSignOut,
+  };
 };

@@ -22,13 +22,14 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import { useTheme } from "@/context/ThemeContext";
+import ConfirmationAlert from "@/components/ConfirmationAlert";
 
 const ProfileScreens = () => {
   const { currentUser, isLoading } = useCurrentUser();
   const insets = useSafeAreaInsets();
-  const { handleSignOut } = useSignOut();
-  const { colors } = useTheme(); // Use useTheme hook
+  const { handleSignOut, isSignOutAlertVisible, confirmSignOut, cancelSignOut } = useSignOut();
+  const { colors } = useTheme();
 
   const {
     posts: userPosts,
@@ -238,6 +239,17 @@ const ProfileScreens = () => {
         saveProfile={saveProfile}
         updateFormField={updateFormField}
         isUpdating={isUpdating}
+      />
+
+      <ConfirmationAlert
+        visible={isSignOutAlertVisible}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        onConfirm={confirmSignOut}
+        onCancel={cancelSignOut}
+        confirmTextColor="#EF4444"
       />
     </View>
   );

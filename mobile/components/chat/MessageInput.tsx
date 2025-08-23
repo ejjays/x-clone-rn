@@ -1,4 +1,3 @@
-// mobile/components/chat/MessageInput.tsx
 import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -24,26 +23,40 @@ export default function MessageInput({ colors, keyboardHeight, systemUIHeight, q
     <View
       className="flex-row items-center border-t px-4"
       style={{
-        paddingTop: 12,
-        paddingBottom: keyboardHeight > 0 ? 12 : 12 + systemUIHeight,
+        paddingTop: 8,
+        paddingBottom: keyboardHeight > 0 ? 8 : 8 + systemUIHeight,
         marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
         borderTopColor: colors.border,
         backgroundColor: colors.background,
       }}
     >
       {quotedMessage && (
-        <View className="absolute left-4 right-4 -top-14 px-3 py-2 rounded-xl border flex-row items-center" style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}>
+        <View
+          className="absolute left-4 right-4 -top-14 px-3 py-2 rounded-xl border flex-row items-center"
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          }}
+        >
           <View className="flex-1 mr-2">
-            <Text className="text-xs font-semibold" style={{ color: colors.grayText }} numberOfLines={1}>
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: colors.grayText }}
+              numberOfLines={1}
+            >
               Replying to {quotedMessage.user?.name || "User"}
             </Text>
-            <Text className="text-xs" style={{ color: colors.text }} numberOfLines={1}>
+            <Text
+              className="text-xs"
+              style={{ color: colors.text }}
+              numberOfLines={1}
+            >
               {quotedMessage.attachments?.[0]
                 ? quotedMessage.attachments?.[0].type === "image"
                   ? "Photo"
                   : quotedMessage.attachments?.[0].type === "video"
-                  ? "Video"
-                  : "Attachment"
+                    ? "Video"
+                    : "Attachment"
                 : quotedMessage.text || ""}
             </Text>
           </View>
@@ -54,11 +67,18 @@ export default function MessageInput({ colors, keyboardHeight, systemUIHeight, q
       )}
 
       {selectedMedia ? (
-        <TouchableOpacity onPress={onClearMedia} className="p-3 rounded-full bg-red-500 mr-2">
+        <TouchableOpacity
+          onPress={onClearMedia}
+          className="p-3 rounded-full bg-red-500 mr-2"
+        >
           <Ionicons name="close" size={24} color="white" />
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity onPress={onPickMedia} className="p-3 rounded-full mr-2" style={{ backgroundColor: colors.gray200 }}>
+        <TouchableOpacity
+          onPress={onPickMedia}
+          className="p-3 rounded-full mr-2"
+          style={{ backgroundColor: colors.gray200 }}
+        >
           <Ionicons name="image-outline" size={24} color={colors.grayText} />
         </TouchableOpacity>
       )}
@@ -71,7 +91,12 @@ export default function MessageInput({ colors, keyboardHeight, systemUIHeight, q
           placeholder="Type a message..."
           placeholderTextColor={colors.grayText}
           className="rounded-full px-4 py-3 text-base"
-          style={{ borderColor: colors.inputBorder, color: colors.text, backgroundColor: colors.inputBackground, borderWidth: 1 }}
+          style={{
+            borderColor: colors.inputBorder,
+            color: colors.text,
+            backgroundColor: colors.inputBackground,
+            borderWidth: 1,
+          }}
           multiline
           maxLength={500}
           editable={!sending}
@@ -80,11 +105,27 @@ export default function MessageInput({ colors, keyboardHeight, systemUIHeight, q
         />
       </View>
 
-      <TouchableOpacity onPress={onSend} disabled={(!newMessage.trim() && !selectedMedia) || sending} className={`p-3 rounded-full ${(!newMessage.trim() && !selectedMedia) || sending ? "bg-gray-300" : "bg-blue-500"}`} style={{ backgroundColor: ((!newMessage.trim() && !selectedMedia) || sending) ? colors.gray200 : colors.blue500 }}>
+      <TouchableOpacity
+        onPress={onSend}
+        disabled={(!newMessage.trim() && !selectedMedia) || sending}
+        className={`p-3 rounded-full ${(!newMessage.trim() && !selectedMedia) || sending ? "bg-gray-300" : "bg-blue-500"}`}
+        style={{
+          backgroundColor:
+            (!newMessage.trim() && !selectedMedia) || sending
+              ? colors.gray200
+              : colors.blue500,
+        }}
+      >
         {sending ? (
           <ActivityIndicator size="small" color="white" />
         ) : (
-          <Ionicons name="send" size={20} color={(!newMessage.trim() && !selectedMedia) ? colors.grayText : "white"} />
+          <Ionicons
+            name="send"
+            size={20}
+            color={
+              !newMessage.trim() && !selectedMedia ? colors.grayText : "white"
+            }
+          />
         )}
       </TouchableOpacity>
     </View>

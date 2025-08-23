@@ -6,6 +6,7 @@ import {
   Pressable,
   PanResponder,
   Animated,
+  StyleSheet,
 } from "react-native";
 import { Entypo, Ionicons } from "@expo/vector-icons";
 import {
@@ -19,15 +20,16 @@ import { Dimensions } from "react-native";
 import ConfirmationAlert from "./ConfirmationAlert";
 import * as Clipboard from 'expo-clipboard';
 import { useTheme } from "@/context/ThemeContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context"; 
 
 interface PostActionBottomSheetProps {
   onClose: () => void;
   onDelete: () => void;
   onCopyText: (text: string) => void;
   postContent?: string;
-  isOwnPost?: boolean;          // NEW: Track if it\'s user\'s own post
-  isAdmin?: boolean;            // NEW: Track if user is admin
-  postOwnerName?: string;       // NEW: Name of post owner for admin context
+  isOwnPost?: boolean;          
+  isAdmin?: boolean;            
+  postOwnerName?: string;       
 }
 
 export interface PostActionBottomSheetRef {
@@ -48,23 +50,22 @@ const PostActionBottomSheet = forwardRef<
   const [isDragging, setIsDragging] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { colors } = useTheme(); // Use theme hook
+  const { colors } = useTheme(); 
+  const insets = useSafeAreaInsets(); 
 
-  const bottomSheetStyle = useRef({
-    backgroundColor: colors.background, // Use theme background color
+  const bottomSheetStyle = {
+    backgroundColor: colors.background, 
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 16,
+    marginBottom: insets.bottom, 
     transform: [{ translateY: translateY }],
-    // Add the white glowing outline to the top edge
-    boxShadow: "0 -1px 5px rgba(255, 255, 255, 0.15)",
-  }).current;
+  };
 
   useImperativeHandle(ref, () => ({
     open: () => {
       setVisible(true);
       Animated.timing(translateY, {
-        toValue: 0,
+        toValue: 0, 
         duration: 300,
         useNativeDriver: true,
       }).start();
@@ -91,7 +92,7 @@ const PostActionBottomSheet = forwardRef<
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
+          translateY.setValue(gestureState.dy); 
         }
       },
       onPanResponderRelease: (_, gestureState) => {
@@ -100,7 +101,7 @@ const PostActionBottomSheet = forwardRef<
           handleClose();
         } else {
           Animated.spring(translateY, {
-            toValue: 0,
+            toValue: 0, 
             useNativeDriver: true,
             bounciness: 0,
           }).start();
@@ -147,7 +148,6 @@ const PostActionBottomSheet = forwardRef<
     }).start(() => setVisible(false));
   };
 
-  // Determine delete text and confirmation message based on admin status
   const deleteText = isOwnPost ? "Delete Post" : "Delete Post (Admin)";
   const confirmationTitle = isOwnPost ? "Delete Post" : "Delete Post (Admin Action)";
   const confirmationMessage = isOwnPost 
