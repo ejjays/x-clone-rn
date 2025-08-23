@@ -75,7 +75,7 @@ const ProfileScreens = () => {
           Profile not available
         </Text>
         <Text className="text-center text-base leading-6 mb-6" style={{ color: colors.textMuted }}>
-          We couldn't load your profile. Please check your connection and try
+          We couldn\'t load your profile. Please check your connection and try
           again.
         </Text>
         <TouchableOpacity
@@ -118,8 +118,9 @@ const ProfileScreens = () => {
               refetchProfile();
               refetchPosts();
             }}
-            colors={[colors.blue]}
-            tintColor={colors.blue}
+            colors={[colors.refreshControlColor]}
+            tintColor={colors.refreshControlColor}
+            progressBackgroundColor={colors.refreshControlBackgroundColor}
           />
         }
       >

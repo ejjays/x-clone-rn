@@ -90,7 +90,14 @@ const NotificationsScreen = () => {
         className="flex-1" style={{ backgroundColor: colors.background }}
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.blue} colors={[colors.blue]} />}
+        refreshControl={
+          <RefreshControl 
+            refreshing={isRefetching} 
+            onRefresh={refetch} 
+            tintColor={colors.refreshControlColor} 
+            colors={[colors.refreshControlColor]} 
+            progressBackgroundColor={colors.refreshControlBackgroundColor} />
+        }
       >
         {isLoading ? (
           <View className="flex-1 items-center justify-center p-8" style={{backgroundColor:colors.background}}>

@@ -77,9 +77,9 @@ const HomeScreen = () => {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handlePullToRefresh}
-            colors={["#1877F2"]}
-            tintColor={"#1877F2"}
-            progressBackgroundColor={colors.surface}
+            colors={[colors.refreshControlColor]}
+            tintColor={colors.refreshControlColor}
+            progressBackgroundColor={colors.refreshControlBackgroundColor}
           />
         }
       >

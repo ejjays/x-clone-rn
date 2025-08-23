@@ -18,6 +18,8 @@ interface CustomChannelListProps {
   refreshing?: boolean;
   searchQuery?: string;
   isDarkMode: boolean; // Add isDarkMode prop
+  refreshControlColor?: string; // Add refreshControlColor prop
+  refreshControlBackgroundColor?: string; // Add refreshControlBackgroundColor prop
 }
 
 interface ChannelMember {
@@ -52,6 +54,8 @@ export default function CustomChannelList({
   refreshing = false,
   searchQuery = "",
   isDarkMode, // Destructure isDarkMode prop
+  refreshControlColor, // Destructure new prop
+  refreshControlBackgroundColor, // Destructure new prop
 }: CustomChannelListProps) {
   const { channels, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
@@ -182,8 +186,9 @@ export default function CustomChannelList({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.blue}
-          colors={[colors.blue]}
+          tintColor={refreshControlColor || colors.blue} // Use prop or fallback
+          colors={[refreshControlColor || colors.blue]} // Use prop or fallback
+          progressBackgroundColor={refreshControlBackgroundColor || colors.border} // Use prop or fallback
         />
       }
       showsVerticalScrollIndicator={false}

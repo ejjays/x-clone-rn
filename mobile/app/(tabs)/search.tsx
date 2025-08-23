@@ -185,8 +185,9 @@ const SearchScreen = () => {
           <RefreshControl
             refreshing={isLoading}
             onRefresh={refetch}
-            tintColor={colors.blue}
-            colors={[colors.blue]}
+            tintColor={colors.refreshControlColor}
+            colors={[colors.refreshControlColor]}
+            progressBackgroundColor={colors.refreshControlBackgroundColor}
           />
         }
       >

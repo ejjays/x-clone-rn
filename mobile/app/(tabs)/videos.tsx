@@ -46,6 +46,7 @@ import type { Post } from "@/types";
 import { formatNumber } from "@/utils/formatters";
 import { StatusBar } from "expo-status-bar";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 
 /**
@@ -478,7 +479,7 @@ export default function VideosScreen() {
   const isFocused = useIsFocused();
   const navigation = useNavigation();
   const { width, height } = useWindowDimensions();
-
+  const { colors } = useTheme(); // Use useTheme hook
 
   const tabBarHeight = useOptionalTabBarHeight();
   // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
@@ -586,11 +587,11 @@ export default function VideosScreen() {
         <Text style={styles.infoText}>No videos have been posted yet.</Text>
       </SafeAreaView>
     );
-  }
+  };
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "black" }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       edges={["bottom"]}
     >
       <StatusBar style="light" />
@@ -642,9 +643,9 @@ export default function VideosScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handlePullToRefresh}
-            colors={["#1877F2"]}
-            tintColor="#1877F2"
-            progressBackgroundColor="black"
+            colors={[colors.refreshControlColor]}
+            tintColor={colors.refreshControlColor}
+            progressBackgroundColor={colors.refreshControlBackgroundColor}
           />
         }
       />
@@ -657,7 +658,7 @@ export default function VideosScreen() {
           left: 0,
           right: 0,
           bottom: bottomSafeOffset,
-          backgroundColor: "black",
+          backgroundColor: colors.background,
           zIndex: 20,
         }}
       >
@@ -666,13 +667,13 @@ export default function VideosScreen() {
           onPress={handleOpenComments}
           style={{
             margin: 12,
-            backgroundColor: "rgba(255,255,255,0.1)",
+            backgroundColor: colors.surface,
             borderRadius: 24,
             paddingVertical: 10,
             paddingHorizontal: 16,
           }}
         >
-          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 14 }}>
+          <Text style={{ color: colors.textMuted, fontSize: 14 }}>
             Add a comment...
           </Text>
         </TouchableOpacity>
@@ -690,7 +691,7 @@ export default function VideosScreen() {
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
-    backgroundColor: "black",
+    backgroundColor: "black", // Keep black for now as videos are full screen
     justifyContent: "center",
     alignItems: "center",
   },
@@ -703,7 +704,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 10,
     zIndex: 10,
-    backgroundColor: "transparent",
+    backgroundColor: "transparent", // Keep transparent for video overlay
     alignItems: "center",
   },
   headerTitle: { fontSize: 28, fontWeight: "bold", color: "white" },
