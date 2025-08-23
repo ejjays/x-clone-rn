@@ -3,7 +3,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useStreamChat } from "@/context/StreamChatContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +26,8 @@ import { StatusBar } from "expo-status-bar";
 import { useTheme } from "@/context/ThemeContext";
 import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
 import * as SystemUI from "expo-system-ui";
+import * as NavigationBar from "expo-navigation-bar";
+import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageBubble from "@/components/chat/MessageBubble";
 import MessageInput from "@/components/chat/MessageInput";
@@ -147,6 +149,21 @@ export default function ChatScreen() {
       keyboardDidHideListener?.remove();
     };
   }, [systemUIHeight]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === "android") {
+        NavigationBar.setBackgroundColorAsync("#ffffff");
+        NavigationBar.setButtonStyleAsync("dark");
+      }
+      return () => {
+        if (Platform.OS === "android") {
+          NavigationBar.setBackgroundColorAsync(isDarkMode ? "#000000" : "#ffffff");
+          NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
+        }
+      };
+    }, [isDarkMode])
+  );
 
   const sendMessage = async () => {
     if (!channel || (!newMessage.trim() && !selectedMedia) || sending) return;
