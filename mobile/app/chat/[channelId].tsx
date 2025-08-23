@@ -153,11 +153,23 @@ export default function ChatScreen() {
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS === "android") {
+        // Ensure nav bar is not edge-to-edge while chatting, so background color is applied
+        try {
+          // Set position relative (content above nav bar) and prefer insets for swipe
+          // Some devices ignore behavior; set both to maximize compatibility
+          NavigationBar.setPositionAsync("relative");
+          NavigationBar.setBehaviorAsync("inset-swipe");
+        } catch {}
         NavigationBar.setBackgroundColorAsync("#ffffff");
         NavigationBar.setButtonStyleAsync("dark");
       }
       return () => {
         if (Platform.OS === "android") {
+          try {
+            // Restore edge-to-edge preference used app-wide
+            NavigationBar.setPositionAsync("absolute");
+            NavigationBar.setBehaviorAsync("overlay-swipe");
+          } catch {}
           NavigationBar.setBackgroundColorAsync(isDarkMode ? "#000000" : "#ffffff");
           NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
         }
