@@ -22,7 +22,7 @@ interface MessageInputProps {
 export default function MessageInput({ colors, keyboardHeight, systemUIHeight, quotedMessage, onCancelQuote, selectedMedia, onClearMedia, onPickMedia, inputRef, newMessage, setNewMessage, sending, onSend }: MessageInputProps) {
   return (
     <View
-      className="flex-row items-end border-t px-4"
+      className="flex-row items-center border-t px-4"
       style={{
         paddingTop: 12,
         paddingBottom: keyboardHeight > 0 ? 12 : 12 + systemUIHeight,
@@ -54,11 +54,11 @@ export default function MessageInput({ colors, keyboardHeight, systemUIHeight, q
       )}
 
       {selectedMedia ? (
-        <TouchableOpacity onPress={onClearMedia} className="p-3 rounded-full bg-red-500 mr-2 mb-2">
+        <TouchableOpacity onPress={onClearMedia} className="p-3 rounded-full bg-red-500 mr-2">
           <Ionicons name="close" size={24} color="white" />
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity onPress={onPickMedia} className="p-3 rounded-full mr-2 mb-2" style={{ backgroundColor: colors.gray200 }}>
+        <TouchableOpacity onPress={onPickMedia} className="p-3 rounded-full mr-2" style={{ backgroundColor: colors.gray200 }}>
           <Ionicons name="image-outline" size={24} color={colors.grayText} />
         </TouchableOpacity>
       )}
@@ -80,7 +80,7 @@ export default function MessageInput({ colors, keyboardHeight, systemUIHeight, q
         />
       </View>
 
-      <TouchableOpacity onPress={onSend} disabled={(!newMessage.trim() && !selectedMedia) || sending} className={`p-3 rounded-full ${(!newMessage.trim() && !selectedMedia) || sending ? "bg-gray-300" : "bg-blue-500"}`} style={{ marginBottom: 2, backgroundColor: ((!newMessage.trim() && !selectedMedia) || sending) ? colors.gray200 : colors.blue500 }}>
+      <TouchableOpacity onPress={onSend} disabled={(!newMessage.trim() && !selectedMedia) || sending} className={`p-3 rounded-full ${(!newMessage.trim() && !selectedMedia) || sending ? "bg-gray-300" : "bg-blue-500"}`} style={{ backgroundColor: ((!newMessage.trim() && !selectedMedia) || sending) ? colors.gray200 : colors.blue500 }}>
         {sending ? (
           <ActivityIndicator size="small" color="white" />
         ) : (
