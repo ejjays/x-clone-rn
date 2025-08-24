@@ -19,6 +19,7 @@ import { StatusBar } from "expo-status-bar";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext"; // Import ThemeProvider and useTheme
 import { LogBox } from "react-native";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
+import { prefetch } from "expo-router/build/link/prefetch";
 
 // Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
@@ -30,6 +31,20 @@ const InitialLayout = () => {
   const { client } = useStreamChat();
   const [fontsLoaded] = useFonts({ Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold });
   const { colors, isDarkMode } = useTheme(); // Use the theme context
+
+  // Prefetch common routes to reduce first tap latency
+  useEffect(() => {
+    const routesToPrefetch = [
+      "/(tabs)",
+      "/(tabs)/search",
+      "/(tabs)/videos",
+      "/(tabs)/notifications",
+      "/(tabs)/profile",
+      "/messages",
+      "/search-posts",
+    ];
+    routesToPrefetch.forEach((r) => prefetch(r).catch(() => {}));
+  }, []);
 
   // Set a global default font for all Text components
   if (!Text.defaultProps) {

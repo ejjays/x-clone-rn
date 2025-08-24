@@ -89,7 +89,7 @@ const SearchPostsScreen = () => {
 
       {/* Header */}
       <View className="flex-row items-center px-2 py-3 border-b" style={{ backgroundColor: DarkThemeColors.surface, borderBottomColor: DarkThemeColors.border }}>
-        <TouchableOpacity onPress={() => router.back()} className="mr-1 p-1">
+        <TouchableOpacity onPressIn={() => router.back()} className="mr-1 p-1">
           <ChevronLeft size={26} color={DarkThemeColors.icon} />
         </TouchableOpacity>
 

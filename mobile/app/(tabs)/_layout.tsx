@@ -121,7 +121,7 @@ const TabsLayout = () => {
             <View className="flex-row space-x-2">
               <TouchableOpacity
                 className="p-2.5 rounded-full"
-                onPress={() => router.push("/search-posts")}
+                onPressIn={() => router.push("/search-posts")}
               >
                 <Search size={29} color="white" />
               </TouchableOpacity>
@@ -149,6 +149,7 @@ const TabsLayout = () => {
                 width: "100%",
                 overflow: "hidden",
               },
+              lazyPreloadDistance: 1,
             }}
             tabBar={(props) => (
               isVideosScreen ? null : (
@@ -165,6 +166,7 @@ const TabsLayout = () => {
                         className="flex-1 items-center justify-center h-full"
                         onPressIn={() => props.navigation.navigate("index")}
                         activeOpacity={0.7}
+                        delayPressIn={0}
                       >
                         <Home
                           size={26}
@@ -182,6 +184,7 @@ const TabsLayout = () => {
                         className="flex-1 items-center justify-center h-full"
                         onPressIn={() => props.navigation.navigate("search")}
                         activeOpacity={0.7}
+                        delayPressIn={0}
                       >
                         <PeopleIcon
                           size={27}
@@ -199,6 +202,7 @@ const TabsLayout = () => {
                         className="flex-1 items-center justify-center h-full"
                         onPressIn={() => props.navigation.navigate("videos")}
                         activeOpacity={0.7}
+                        delayPressIn={0}
                       >
                         <TvMinimalPlay
                           size={26}
@@ -210,6 +214,7 @@ const TabsLayout = () => {
                         className="flex-1 items-center justify-center h-full"
                         onPressIn={() => props.navigation.navigate("notifications")}
                         activeOpacity={0.7}
+                        delayPressIn={0}
                       >
                         <Bell
                           size={26}
@@ -227,6 +232,7 @@ const TabsLayout = () => {
                         className="flex-1 items-center justify-center h-full"
                         onPressIn={() => props.navigation.navigate("profile")}
                         activeOpacity={0.7}
+                        delayPressIn={0}
                       >
                         <Menu
                           size={26}

@@ -162,7 +162,7 @@ const PostDetailsScreen = () => {
           backgroundColor: colors.background,
         }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
+        <TouchableOpacity onPressIn={() => router.back()} className="p-2 -ml-2">
           <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text className="text-xl font-bold ml-4" style={{ color: colors.text }}>

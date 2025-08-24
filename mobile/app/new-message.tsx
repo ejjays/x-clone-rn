@@ -165,7 +165,7 @@ export default function NewMessageScreen() {
           backgroundColor: colors.background,
         }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-4 py-4">
+        <TouchableOpacity onPressIn={() => router.back()} className="mr-4 py-4">
           <Ionicons name="close" size={24} color={colors.icon} />
         </TouchableOpacity>
         <Text className="text-xl font-bold py-4" style={{ color: colors.text }}>

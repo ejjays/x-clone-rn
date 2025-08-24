@@ -103,7 +103,7 @@ const CreatePostScreen = () => {
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200" style={{ borderColor: colors.border }}>
           <View className="flex-row items-center">
-            <TouchableOpacity onPress={() => router.back()} className="p-2">
+            <TouchableOpacity onPressIn={() => router.back()} className="p-2">
               <Ionicons name="chevron-back-sharp" size={24} color={colors.text} />
             </TouchableOpacity>
             <Text className="text-xl font-bold ml-2" style={{ color: colors.text }}>

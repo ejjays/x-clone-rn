@@ -37,17 +37,19 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
   });
 
   // ADD THESE DEBUG LOGS:
-  console.log("🔍 DEBUG - StreamChat State:", {
-    isLoaded,
-    hasUser: !!user,
-    tokenLoading,
-    hasToken: !!streamToken,
-    tokenError,
-    isConnected,
-    isConnecting,
-    channelsCount: channels.length,
-    STREAM_API_KEY: !!STREAM_API_KEY,
-  });
+  if (process.env.EXPO_PUBLIC_DEBUG_LOGS === "1") {
+    console.log("🔍 DEBUG - StreamChat State:", {
+      isLoaded,
+      hasUser: !!user,
+      tokenLoading,
+      hasToken: !!streamToken,
+      tokenError,
+      isConnected,
+      isConnecting,
+      channelsCount: channels.length,
+      STREAM_API_KEY: !!STREAM_API_KEY,
+    });
+  }
 
   // Ensure the chat client is connected as the current Clerk user
   const ensureConnectedAsCurrentUser = useCallback(async () => {

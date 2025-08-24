@@ -80,7 +80,7 @@ const ProfileScreens = () => {
         </Text>
         <TouchableOpacity
           className="px-6 py-3 rounded-full shadow-md"
-          onPress={() => router.push("/(tabs)/")}
+          onPressIn={() => router.push("/(tabs)/")}
           style={{ backgroundColor: colors.blue }}
         >
           <Text className="font-semibold text-white">Go to Home</Text>

@@ -16,7 +16,7 @@ const PostComposer = () => {
           className="w-10 h-10 rounded-full mr-3"
         />
         <TouchableOpacity
-          onPress={() => router.push("/create-post")}
+          onPressIn={() => router.push("/create-post")}
           className="flex-1 rounded-full px-4 py-3"
           activeOpacity={0.7}
           style={{ backgroundColor: colors.surface }}
@@ -26,7 +26,7 @@ const PostComposer = () => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => router.push({
+          onPressIn={() => router.push({
             pathname: "/create-post",
             params: { from: "image" }
           })}

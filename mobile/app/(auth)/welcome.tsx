@@ -41,7 +41,7 @@ export default function Welcome() {
           <TouchableOpacity
             className="flex-1 rounded-2xl py-4"
             style={{ backgroundColor: colors.blue }}
-            onPress={() => router.push("/(auth)/login")}
+            onPressIn={() => router.push("/(auth)/login")}
             activeOpacity={0.85}
           >
             <Text className="font-bold text-lg text-center" style={{ color: "#ffffff" }}>
@@ -52,7 +52,7 @@ export default function Welcome() {
           <TouchableOpacity
             className="flex-1 rounded-2xl py-4"
             style={{ borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}
-            onPress={() => router.push("/(auth)/register")}
+            onPressIn={() => router.push("/(auth)/register")}
             activeOpacity={0.85}
           >
             <Text className="font-semibold text-lg text-center" style={{ color: colors.text }}>

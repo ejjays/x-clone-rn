@@ -122,7 +122,7 @@ export default function Login() {
         </TouchableOpacity>
 
         {/* CREATE ACCOUNT LINK */}
-        <TouchableOpacity className="mb-10" onPress={() => router.push("/(auth)/register")}>
+        <TouchableOpacity className="mb-10" onPressIn={() => router.push("/(auth)/register")}>
           <Text className="text-center text-base font-medium" style={{ color: colors.blue }}>
             Create new account
           </Text>

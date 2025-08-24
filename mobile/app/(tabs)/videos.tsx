@@ -91,8 +91,10 @@ const VideoItem = ({
 
   const currentReaction = useMemo(() => {
     const reaction = getCurrentUserReaction(item.reactions, currentUser);
-    console.log(`[VideoItem - ${item._id}] Current Reaction:`, reaction);
-    console.log(`[VideoItem - ${item._id}] Item Reactions:`, item.reactions);
+    if (process.env.EXPO_PUBLIC_DEBUG_LOGS === "1") {
+      console.log(`[VideoItem - ${item._id}] Current Reaction:`, reaction);
+      console.log(`[VideoItem - ${item._id}] Item Reactions:`, item.reactions);
+    }
     return reaction;
   }, [item.reactions, currentUser, item._id]);
 
@@ -145,10 +147,12 @@ const VideoItem = ({
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
       // double-tap => like animation
-      console.log(
-        `[VideoItem - ${item._id}] Double tap. Item reactions before reactToPost:`,
-        item.reactions
-      );
+      if (process.env.EXPO_PUBLIC_DEBUG_LOGS === "1") {
+        console.log(
+          `[VideoItem - ${item._id}] Double tap. Item reactions before reactToPost:`,
+          item.reactions
+        );
+      }
       reactToPost({ postId: item._id, reactionType: "like" });
       Animated.sequence([
         Animated.timing(heartOpacity, {
