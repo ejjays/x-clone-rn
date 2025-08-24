@@ -13,6 +13,7 @@ import PostActionBottomSheet, {
 import type { Post } from "@/types";
 import { useScroll } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context"; // Import useSafeAreaInsets
 
 const HomeScreen = () => {
   const [isRefetching, setIsRefetching] = useState(false);
@@ -25,6 +26,7 @@ const HomeScreen = () => {
   const { handleScroll } = useScroll();
   const { isDarkMode, colors } = useTheme();
   const [isReactionPickerVisible, setIsReactionPickerVisible] = useState(false);
+  const insets = useSafeAreaInsets(); // Get safe area insets
 
   const handleOpenComments = (postId: string) => {
     router.push(`/post/${postId}`);
@@ -82,6 +84,7 @@ const HomeScreen = () => {
             progressBackgroundColor={colors.refreshControlBackgroundColor}
           />
         }
+        contentContainerStyle={{ paddingBottom: insets.bottom }} // Add padding to the bottom
       >
         <View style={{ backgroundColor: colors.background }}>
           <PostComposer animatedPlaceholder={false} />

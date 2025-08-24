@@ -30,15 +30,8 @@ export default function MessagesScreen() {
   const { colors } = useTheme();
   const [isRefetching, setIsRefetching] = useState(false);
 
-  // handlePullToRefresh is now passed directly to CustomChannelList's onRefresh prop
-  // and not used for an outer ScrollView's RefreshControl.
-  // setIsRefetching will be managed by CustomChannelList's internal refreshing logic
-  // if it uses the passed onRefresh prop to show its own spinner.
-
-  // Force dark mode for now and get dark theme colors
   const isDarkMode = true;
 
-  // Filter out current user and get real users
   const realUsers =
     allUsers?.filter((user) => user._id !== currentUser?._id) || [];
 
@@ -115,15 +108,9 @@ export default function MessagesScreen() {
     }
 
     if (channels.length === 0) {
-      // NoMessagesFound is likely a plain View, so we can wrap it with RefreshControl if needed
-      // But CustomChannelList handles its own refresh, so we'll treat this similarly.
-      return (
-        <NoMessagesFound onRefresh={refreshChannels} />
-      );
+      return <NoMessagesFound onRefresh={refreshChannels} />;
     }
 
-    // CustomChannelList is expected to be a VirtualizedList and handle its own refreshing.
-    // We pass the colors to it for styling its internal RefreshControl.
     return (
       <CustomChannelList
         onRefresh={refreshChannels}
@@ -136,7 +123,14 @@ export default function MessagesScreen() {
   };
 
   return (
-    <View style={{ flex: 1, position: "relative", paddingTop: insets.top, backgroundColor: colors.background }}>
+    <View
+      style={{
+        flex: 1,
+        position: "relative",
+        paddingTop: insets.top,
+        backgroundColor: colors.background,
+      }}
+    >
       <StatusBar style={isDarkMode ? "light" : "dark"} />
 
       {/* Header */}

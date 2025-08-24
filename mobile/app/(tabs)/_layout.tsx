@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   useWindowDimensions,
+  Platform,
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -19,6 +20,8 @@ import { StatusBar } from "expo-status-bar";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
+import * as NavigationBar from 'expo-navigation-bar';
+import { DarkThemeColors } from "@/constants/Colors"; // Import DarkThemeColors
 
 const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
@@ -47,7 +50,21 @@ const TabsLayout = () => {
     tabBarHeight.value = isProfileScreen || isVideosScreen ? 0 : TAB_BAR_HEIGHT;
   }, [isHomeScreen, isProfileScreen, isVideosScreen]);
 
-  // ✅ INSTANT INDICATOR CALCULATION (No animation delays)
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      if (isVideosScreen) {
+        // Hide bottom navigation bar on video screen
+        NavigationBar.setVisibilityAsync('hidden');
+      } else {
+        // Show bottom navigation bar on other screens and set to dark theme
+        NavigationBar.setVisibilityAsync('visible');
+        NavigationBar.setBackgroundColorAsync(DarkThemeColors.background);
+        NavigationBar.setButtonStyleAsync('light');
+      }
+    }
+  }, [isVideosScreen]); // Re-run when isVideosScreen changes
+
+  // ✅ INSTANT INDICULATION CALCULATION (No animation delays)
   const getIndicatorPosition = () => {
     const activeIndex = TAB_ROUTES.indexOf(pathname);
     return activeIndex !== -1 ? activeIndex * (screenWidth / NUM_TABS) : 0;
@@ -86,8 +103,8 @@ const TabsLayout = () => {
         }}
       >
         <StatusBar
-          style={isVideosScreen ? "light" : isDarkMode ? "light" : "dark"}
-          hidden={isVideosScreen} // Add this line to hide the status bar on video screen
+          style={isVideosScreen ? "light" : "light"} // Status bar always visible
+          hidden={false}
         />
 
         <Animated.View style={animatedHeaderStyle}>

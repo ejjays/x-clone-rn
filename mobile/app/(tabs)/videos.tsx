@@ -499,6 +499,11 @@ export default function VideosScreen() {
 
   const itemHeight = height - bottomSafeOffset;
 
+  useEffect(() => {
+    if (isFocused) {
+      handleCloseComments();
+    }
+  }, [isFocused]);
 
   const handlePullToRefresh = async () => {
     setIsRefetching(true);
