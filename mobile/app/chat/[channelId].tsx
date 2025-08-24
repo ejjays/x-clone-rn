@@ -157,8 +157,8 @@ export default function ChatScreen() {
           NavigationBar.setVisibilityAsync("visible");
           NavigationBar.setPositionAsync("absolute");
           NavigationBar.setBehaviorAsync("inset-swipe");
-          NavigationBar.setBackgroundColorAsync("#ffffff");
-          NavigationBar.setButtonStyleAsync("dark");
+          NavigationBar.setBackgroundColorAsync(isDarkMode ? DarkThemeColors.background : LightThemeColors.background);
+          NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
         } catch {}
       }
       return () => {
@@ -167,7 +167,7 @@ export default function ChatScreen() {
             NavigationBar.setVisibilityAsync("visible");
             NavigationBar.setPositionAsync("absolute");
             NavigationBar.setBehaviorAsync("inset-swipe");
-            NavigationBar.setBackgroundColorAsync(isDarkMode ? "#000000" : "#ffffff");
+            NavigationBar.setBackgroundColorAsync(isDarkMode ? DarkThemeColors.background : LightThemeColors.background);
             NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
           } catch {}
         }

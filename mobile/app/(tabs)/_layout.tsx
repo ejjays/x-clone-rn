@@ -87,6 +87,7 @@ const TabsLayout = () => {
       >
         <StatusBar
           style={isVideosScreen ? "light" : isDarkMode ? "light" : "dark"}
+          hidden={isVideosScreen} // Add this line to hide the status bar on video screen
         />
 
         <Animated.View style={animatedHeaderStyle}>
@@ -133,103 +134,105 @@ const TabsLayout = () => {
               },
             }}
             tabBar={(props) => (
-              <Animated.View style={animatedTabBarStyle}>
-                <View
-                  className="border-b"
-                  style={{
-                    backgroundColor: colors.background,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <View className="flex-row justify-around items-center h-full">
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPress={() => props.navigation.navigate("index")}
-                    >
-                      <Home
-                        size={26}
-                        color={
-                          isVideosScreen
-                            ? "white"
-                            : pathname === "/"
-                              ? colors.blue
-                              : "white"
-                        }
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPress={() => props.navigation.navigate("search")}
-                    >
-                      <PeopleIcon
-                        size={27}
-                        color={
-                          isVideosScreen
-                            ? "white"
-                            : pathname === "/search"
-                              ? colors.blue
-                              : "white"
-                        }
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPress={() => props.navigation.navigate("videos")}
-                    >
-                      <TvMinimalPlay
-                        size={26}
-                        color={isVideosScreen ? colors.blue : "white"}
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPress={() => props.navigation.navigate("notifications")}
-                    >
-                      <Bell
-                        size={26}
-                        color={
-                          isVideosScreen
-                            ? "white"
-                            : pathname === "/notifications"
-                              ? colors.blue
-                              : "white"
-                        }
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPress={() => props.navigation.navigate("profile")}
-                    >
-                      <Menu
-                        size={26}
-                        color={pathname === "/profile" ? colors.blue : "white"}
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* ✅ INSTANT INDICATOR - NO ANIMATION DELAYS */}
+              isVideosScreen ? null : (
+                <Animated.View style={animatedTabBarStyle}>
                   <View
-                    className="absolute bottom-0 left-0 right-0 h-0.5"
-                    style={{ backgroundColor: colors.border }}
+                    className="border-b"
+                    style={{
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    }}
                   >
+                    <View className="flex-row justify-around items-center h-full">
+                      <TouchableOpacity
+                        className="flex-1 items-center justify-center h-full"
+                        onPress={() => props.navigation.navigate("index")}
+                      >
+                        <Home
+                          size={26}
+                          color={
+                            isVideosScreen
+                              ? "white"
+                              : pathname === "/"
+                                ? colors.blue
+                                : "white"
+                          }
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        className="flex-1 items-center justify-center h-full"
+                        onPress={() => props.navigation.navigate("search")}
+                      >
+                        <PeopleIcon
+                          size={27}
+                          color={
+                            isVideosScreen
+                              ? "white"
+                              : pathname === "/search"
+                                ? colors.blue
+                                : "white"
+                          }
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        className="flex-1 items-center justify-center h-full"
+                        onPress={() => props.navigation.navigate("videos")}
+                      >
+                        <TvMinimalPlay
+                          size={26}
+                          color={isVideosScreen ? colors.blue : "white"}
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        className="flex-1 items-center justify-center h-full"
+                        onPress={() => props.navigation.navigate("notifications")}
+                      >
+                        <Bell
+                          size={26}
+                          color={
+                            isVideosScreen
+                              ? "white"
+                              : pathname === "/notifications"
+                                ? colors.blue
+                                : "white"
+                          }
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        className="flex-1 items-center justify-center h-full"
+                        onPress={() => props.navigation.navigate("profile")}
+                      >
+                        <Menu
+                          size={26}
+                          color={pathname === "/profile" ? colors.blue : "white"}
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* ✅ INSTANT INDICATOR - NO ANIMATION DELAYS */}
                     <View
-                      className="h-full bg-blue-500"
-                      style={{
-                        width: `${100 / NUM_TABS}%`,
-                        transform: [
-                          {
-                            translateX: getIndicatorPosition(),
-                          },
-                        ],
-                      }}
-                    />
+                      className="absolute bottom-0 left-0 right-0 h-0.5"
+                      style={{ backgroundColor: colors.border }}
+                    >
+                      <View
+                        className="h-full bg-blue-500"
+                        style={{
+                          width: `${100 / NUM_TABS}%`,
+                          transform: [
+                            {
+                              translateX: getIndicatorPosition(),
+                            },
+                          ],
+                        }}
+                      />
+                    </View>
                   </View>
-                </View>
-              </Animated.View>
+                </Animated.View>
+              )
             )}
           >
             <MaterialTopTabs.Screen name="index" />

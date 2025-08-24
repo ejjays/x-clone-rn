@@ -158,7 +158,7 @@ export default function MessagesScreen() {
             className="w-10 h-10 rounded-full items-center justify-center mr-1"
             disabled={!client || !isConnected}
           >
-            <Ionicons name="create" size={27} color={colors.icon} />
+            <Ionicons name="create-outline" size={27} color={colors.icon} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleBack}

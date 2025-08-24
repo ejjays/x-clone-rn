@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -31,6 +31,7 @@ import { Ionicons, Entypo } from "@expo/vector-icons";
 import { Video, ResizeMode } from "expo-av";
 import BottomSheet from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
+import * as NavigationBar from "expo-navigation-bar";
 
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
 import PostReactionsPicker, {
@@ -479,7 +480,7 @@ export default function VideosScreen() {
   const isFocused = useIsFocused();
   const navigation = useNavigation();
   const { width, height } = useWindowDimensions();
-  const { colors } = useTheme(); // Use useTheme hook
+  const { colors, isDarkMode } = useTheme(); // Use useTheme hook
 
   const tabBarHeight = useOptionalTabBarHeight();
   // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
@@ -514,6 +515,34 @@ export default function VideosScreen() {
   useEffect(() => {
     if (!isFocused) setViewableItems([]);
   }, [isFocused]);
+
+  // Effect to hide/show the system navigation bar on Android
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === "android") {
+        try {
+          NavigationBar.setVisibilityAsync("hidden");
+          NavigationBar.setBehaviorAsync("overlay-swipe");
+          NavigationBar.setBackgroundColorAsync("transparent");
+        } catch (e) {
+          console.error("Error hiding navigation bar:", e);
+        }
+      }
+      return () => {
+        if (Platform.OS === "android") {
+          try {
+            // Restore default navigation bar settings
+            NavigationBar.setVisibilityAsync("visible");
+            NavigationBar.setBehaviorAsync("inset-swipe"); // Or 'height'
+            NavigationBar.setBackgroundColorAsync(isDarkMode ? "#000000" : "#ffffff"); // Restore based on theme
+            NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
+          } catch (e) {
+            console.error("Error restoring navigation bar:", e);
+          }
+        }
+      };
+    }, [isDarkMode])
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: Post }) => (
