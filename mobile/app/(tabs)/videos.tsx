@@ -180,8 +180,10 @@ const VideoItem = ({
 
 
   const containerHeight = useMemo(() => {
-    return Math.max(0, height - bottomSafeOffset - commentBarHeight);
-  }, [bottomSafeOffset, commentBarHeight, height]);
+    // Make each reel occupy the full viewport height to prevent the next
+    // video from peeking at the bottom.
+    return height;
+  }, [height]);
 
 
   const dynamicResizeMode = useMemo(() => {
@@ -255,7 +257,7 @@ const VideoItem = ({
     postActionBottomSheetRef.current?.close();
   };
 
-  const itemOuterHeight = height - bottomSafeOffset;
+  const itemOuterHeight = height;
 
   return (
     <View style={[styles.videoContainer, { width, height: itemOuterHeight }]}>
@@ -501,7 +503,8 @@ export default function VideosScreen() {
   const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
   const handleCloseComments = () => bottomSheetRef.current?.close();
 
-  const itemHeight = height - bottomSafeOffset;
+  // Each item should be exactly the screen height for perfect paging
+  const itemHeight = height;
 
   useEffect(() => {
     if (isFocused) {
@@ -673,10 +676,12 @@ export default function VideosScreen() {
         initialNumToRender={2}
         maxToRenderPerBatch={3}
         windowSize={5}
-        contentContainerStyle={{
-          paddingTop: 0,
-          paddingBottom: bottomSafeOffset,
-        }}
+        contentContainerStyle={{ paddingTop: 0, paddingBottom: 0 }}
+        snapToInterval={itemHeight}
+        snapToAlignment="start"
+        disableIntervalMomentum
+        removeClippedSubviews
+        overScrollMode="never"
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
