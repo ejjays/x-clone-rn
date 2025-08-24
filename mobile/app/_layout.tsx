@@ -1,3 +1,8 @@
+import "react-native-gesture-handler";
+import "react-native-reanimated";
+import { enableScreens } from "react-native-screens";
+
+enableScreens(true);
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack, router } from "expo-router";

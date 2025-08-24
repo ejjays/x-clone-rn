@@ -139,8 +139,8 @@ const TabsLayout = () => {
           <MaterialTopTabs
             screenOptions={{
               tabBarShowLabel: false,
-              lazy: false,
-              animationEnabled: true,
+              lazy: true,
+              animationEnabled: false,
               swipeEnabled: false,
               tabBarStyle: { elevation: 0 },
               sceneContainerStyle: {
@@ -163,7 +163,8 @@ const TabsLayout = () => {
                     <View className="flex-row justify-around items-center h-full">
                       <TouchableOpacity
                         className="flex-1 items-center justify-center h-full"
-                        onPress={() => props.navigation.navigate("index")}
+                        onPressIn={() => props.navigation.navigate("index")}
+                        activeOpacity={0.7}
                       >
                         <Home
                           size={26}
@@ -179,7 +180,8 @@ const TabsLayout = () => {
 
                       <TouchableOpacity
                         className="flex-1 items-center justify-center h-full"
-                        onPress={() => props.navigation.navigate("search")}
+                        onPressIn={() => props.navigation.navigate("search")}
+                        activeOpacity={0.7}
                       >
                         <PeopleIcon
                           size={27}
@@ -195,7 +197,8 @@ const TabsLayout = () => {
 
                       <TouchableOpacity
                         className="flex-1 items-center justify-center h-full"
-                        onPress={() => props.navigation.navigate("videos")}
+                        onPressIn={() => props.navigation.navigate("videos")}
+                        activeOpacity={0.7}
                       >
                         <TvMinimalPlay
                           size={26}
@@ -205,7 +208,8 @@ const TabsLayout = () => {
 
                       <TouchableOpacity
                         className="flex-1 items-center justify-center h-full"
-                        onPress={() => props.navigation.navigate("notifications")}
+                        onPressIn={() => props.navigation.navigate("notifications")}
+                        activeOpacity={0.7}
                       >
                         <Bell
                           size={26}
@@ -221,7 +225,8 @@ const TabsLayout = () => {
 
                       <TouchableOpacity
                         className="flex-1 items-center justify-center h-full"
-                        onPress={() => props.navigation.navigate("profile")}
+                        onPressIn={() => props.navigation.navigate("profile")}
+                        activeOpacity={0.7}
                       >
                         <Menu
                           size={26}
