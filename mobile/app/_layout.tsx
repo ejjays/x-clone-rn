@@ -1,11 +1,10 @@
 import * as Notifications from "expo-notifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Stack, router } from "expo-router";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 
 export default function RootLayout() {
-  const router = useRouter();
   const { queued } = useOfflineSync();
 
   // Handle notification tap for deep linking to chat
@@ -21,12 +20,7 @@ export default function RootLayout() {
     return () => sub.remove();
   }, []);
 
-  // Only block for auth loading, NOT for Stream Chat client
   return (
-    <html lang="en">
-      <body>
-        {children}
-      </body>
-    </html>
+    <Stack screenOptions={{ headerShown: false }} />
   );
 }
