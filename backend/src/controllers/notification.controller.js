@@ -2,7 +2,6 @@ import asyncHandler from "express-async-handler";
 import { getAuth } from "@clerk/express";
 import Notification from "../models/notification.model.js";
 import User from "../models/user.model.js";
-import fetch from "node-fetch";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
@@ -107,8 +106,6 @@ export const streamWebhook = async (req, res) => {
     return res.status(500).json({ message: "Webhook error" });
   }
 };
-
-import User from "../models/user.model.js";
 
 export const getNotifications = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
