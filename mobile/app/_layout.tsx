@@ -16,10 +16,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { ThemeProvider, useTheme } from "@/context/ThemeContext"; // Import ThemeProvider and useTheme
+import { ThemeProvider, useTheme } from "@/context/ThemeContext"; 
 import { LogBox } from "react-native";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
-import { prefetch } from "expo-router/build/link/prefetch";
+import { prefetch } from "expo-router";
 
 // Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
@@ -34,17 +34,20 @@ const InitialLayout = () => {
 
   // Prefetch common routes to reduce first tap latency
   useEffect(() => {
-    const routesToPrefetch = [
-      "/(tabs)",
-      "/(tabs)/search",
-      "/(tabs)/videos",
-      "/(tabs)/notifications",
-      "/(tabs)/profile",
-      "/messages",
-      "/search-posts",
-    ];
-    routesToPrefetch.forEach((r) => prefetch(r).catch(() => {}));
-  }, []);
+  const routesToPrefetch = [
+    "/(tabs)",
+    "/(tabs)/search",
+    "/(tabs)/videos", 
+    "/(tabs)/notifications",
+    "/(tabs)/profile",
+    "/messages",
+    "/search-posts",
+  ];
+  
+  routesToPrefetch.forEach((route) => {
+    router.prefetch(route).catch(() => {});
+  });
+}, []);
 
   // Set a global default font for all Text components
   if (!Text.defaultProps) {
