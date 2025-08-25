@@ -92,42 +92,54 @@ const InitialLayout = () => {
     );
   }
 
-  // Don\'t block the UI on fonts; render immediately and let fonts load in the background
+  // Don't block the UI on fonts; render immediately and let fonts load in the background
   return (
     <OverlayProvider value={{ style: streamChatTheme }}>
       <StatusBar style={isDarkMode ? "light" : "dark"} backgroundColor={colors.background} />
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
       {client ? (
         <Chat client={client}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: "slide_from_right",
+              contentStyle: { backgroundColor: colors.background },
+            }}
+          >
+            <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
+            <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
             <Stack.Screen
               name="create-post"
-              options={{ presentation: "modal" }}
+              options={{ presentation: "modal", animation: "slide_from_bottom" }}
             />
-            <Stack.Screen name="post/[postId]" />
-            <Stack.Screen name="messages" />
-            <Stack.Screen name="chat/[channelId]" />
-            <Stack.Screen name="new-message" />
-            <Stack.Screen name="search-posts" />
-            <Stack.Screen name="sso-callback" />
+            <Stack.Screen name="post/[postId]" options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="messages" options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="chat/[channelId]" options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="new-message" options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="search-posts" options={{ animation: "fade" }} />
+            <Stack.Screen name="sso-callback" options={{ animation: "none" }} />
           </Stack>
         </Chat>
       ) : (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: "slide_from_right",
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
+          <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
           <Stack.Screen
             name="create-post"
-            options={{ presentation: "modal" }}
+            options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />
-          <Stack.Screen name="post/[postId]" />
-          <Stack.Screen name="messages" />
-          <Stack.Screen name="chat/[channelId]" />
-          <Stack.Screen name="new-message" />
-          <Stack.Screen name="search-posts" />
-          <Stack.Screen name="sso-callback" />
+          <Stack.Screen name="post/[postId]" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="messages" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="chat/[channelId]" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="new-message" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen name="search-posts" options={{ animation: "fade" }} />
+          <Stack.Screen name="sso-callback" options={{ animation: "none" }} />
         </Stack>
       )}
     </OverlayProvider>
