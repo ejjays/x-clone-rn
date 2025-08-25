@@ -19,7 +19,6 @@ import { StatusBar } from "expo-status-bar";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext"; 
 import { LogBox } from "react-native";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
-import { prefetch } from "expo-router";
 
 // Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
@@ -30,24 +29,7 @@ const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const { client } = useStreamChat();
   const [fontsLoaded] = useFonts({ Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold });
-  const { colors, isDarkMode } = useTheme(); // Use the theme context
-
-  // Prefetch common routes to reduce first tap latency
-  useEffect(() => {
-  const routesToPrefetch = [
-    "/(tabs)",
-    "/(tabs)/search",
-    "/(tabs)/videos", 
-    "/(tabs)/notifications",
-    "/(tabs)/profile",
-    "/messages",
-    "/search-posts",
-  ];
-  
-  routesToPrefetch.forEach((route) => {
-    router.prefetch(route).catch(() => {});
-  });
-}, []);
+  const { colors, isDarkMode } = useTheme();
 
   // Set a global default font for all Text components
   if (!Text.defaultProps) {
@@ -67,12 +49,35 @@ const InitialLayout = () => {
     }
   }
 
+  // Handle navigation and prefetching AFTER the navigation system is ready
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/(auth)");
-    } else if (isLoaded && isSignedIn) {
-      router.push("/(tabs)");
-    }
+    if (!isLoaded) return;
+
+    // Use setTimeout to ensure navigation happens after the current render cycle
+    const handleNavigation = setTimeout(() => {
+      if (!isSignedIn) {
+        router.push("/(auth)");
+      } else {
+        router.push("/(tabs)");
+      }
+
+      // Prefetch common routes after navigation is complete
+      const routesToPrefetch = [
+        "/(tabs)",
+        "/(tabs)/search",
+        "/(tabs)/videos", 
+        "/(tabs)/notifications",
+        "/(tabs)/profile",
+        "/messages",
+        "/search-posts",
+      ];
+      
+      routesToPrefetch.forEach((route) => {
+        router.prefetch(route).catch(() => {});
+      });
+    }, 100); // Small delay to ensure navigation system is ready
+
+    return () => clearTimeout(handleNavigation);
   }, [isLoaded, isSignedIn]);
 
   // Only block for auth loading, NOT for Stream Chat client
