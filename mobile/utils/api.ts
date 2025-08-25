@@ -2,6 +2,8 @@
 import axios, { type AxiosInstance } from "axios"
 import { useAuth } from "@clerk/clerk-expo"
 import React from "react" // Import React to use useMemo
+import { offlineQueue } from "@/utils/offline/OfflineQueue"
+import { getIsOnline } from "@/utils/offline/network"
 
 // --- Configuration ---
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL
@@ -33,12 +35,29 @@ export const createApiClient = (getToken: () => Promise<string | null>): AxiosIn
 
   api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
       console.error("❌ API Error:", {
         status: error.response?.status,
         url: error.config?.url,
         message: error.response?.data?.error || error.message,
       })
+      // For common mutation endpoints, enqueue when offline
+      if (!error.response) {
+        const cfg = error.config || {}
+        try {
+          const isOnline = await getIsOnline()
+          if (!isOnline && cfg.method && cfg.url) {
+            // Infer action type based on URL heuristics
+            if (cfg.url.includes("/comments/post/") && cfg.method === "post") {
+              const postId = (cfg.url.match(/\/comments\/post\/(.+)$/) || [])[1]
+              await offlineQueue.enqueue({ type: "comment_create", payload: { postId, content: cfg.data?.content ?? JSON.parse(cfg.data || '{}').content } })
+            } else if (/\/comments\/.+\/like$/.test(cfg.url) && cfg.method === "post") {
+              const commentId = (cfg.url.match(/\/comments\/(.+)\/like$/) || [])[1]
+              await offlineQueue.enqueue({ type: "comment_like", payload: { commentId } })
+            }
+          }
+        } catch {}
+      }
       return Promise.reject(error)
     },
   )

@@ -23,6 +23,9 @@ import {
 } from "react-native-safe-area-context";
 import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
 import { StatusBar } from "expo-status-bar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StorageKeys } from "@/utils/offline/storageKeys";
+import { offlineQueue } from "@/utils/offline/OfflineQueue";
 import { useTheme } from "@/context/ThemeContext";
 import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
 import * as SystemUI from "expo-system-ui";
@@ -71,9 +74,20 @@ export default function ChatScreen() {
   const inputRef = useRef<TextInput | null>(null);
 
   useEffect(() => {
-    if (!client || !isConnected || !channelId || !currentUser) {
-      return;
-    }
+    if (!channelId) return;
+
+    // Hydrate cached messages for offline display
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(StorageKeys.CHAT_MESSAGES(channelId));
+        if (raw) {
+          const snapshot = JSON.parse(raw);
+          if (Array.isArray(snapshot)) setMessages(snapshot);
+        }
+      } catch {}
+    })();
+
+    if (!client || !isConnected || !currentUser) return;
 
     const initializeChannel = async () => {
       try {
@@ -96,9 +110,24 @@ export default function ChatScreen() {
         const handleEvent = (event: any) => {
           const eventChannel = event.channel || ch;
           setMessages(eventChannel.state.messages.slice().reverse());
+          // Persist a small snapshot for offline
+          try {
+            const snapshot = (eventChannel.state.messages || [])
+              .slice(-50)
+              .reverse()
+              .map((m: any) => ({ id: m.id, text: m.text, user: m.user, attachments: m.attachments, created_at: m.created_at }));
+            AsyncStorage.setItem(StorageKeys.CHAT_MESSAGES(channelId), JSON.stringify(snapshot)).catch(() => {});
+          } catch {}
         };
 
         setMessages(ch.state.messages.slice().reverse());
+        try {
+          const snapshot = (ch.state.messages || [])
+            .slice(-50)
+            .reverse()
+            .map((m: any) => ({ id: m.id, text: m.text, user: m.user, attachments: m.attachments, created_at: m.created_at }));
+          AsyncStorage.setItem(StorageKeys.CHAT_MESSAGES(channelId), JSON.stringify(snapshot)).catch(() => {});
+        } catch {}
 
         ch.on("message.new", handleEvent);
         ch.on("message.updated", handleEvent);
@@ -199,7 +228,16 @@ export default function ChatScreen() {
         return;
       }
 
-      await channel.sendMessage(messageData);
+      try {
+        await channel.sendMessage(messageData);
+      } catch (err: any) {
+        // If offline, enqueue for later delivery
+        if (!err?.response) {
+          await offlineQueue.enqueue({ type: "chat_message_send", payload: { channelId, text: messageData.text, attachments: messageData.attachments } });
+        } else {
+          throw err;
+        }
+      }
     } catch (error) {
       console.error("❌ Error sending message:", error);
       Alert.alert("Error", "Failed to send message.");

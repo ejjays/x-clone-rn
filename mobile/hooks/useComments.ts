@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
 import { useApiClient, commentApi } from "../utils/api";
+import { offlineQueue } from "@/utils/offline/OfflineQueue";
 
 export const useComments = () => {
   const [commentText, setCommentText] = useState("");
@@ -19,8 +20,14 @@ export const useComments = () => {
       // This will refetch all posts, which includes the new comment counts and details
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-    onError: () => {
-      Alert.alert("Error", "Failed to post comment. Try again.");
+    onError: async (err: any, vars: { postId: string; content: string }) => {
+      if (!err?.response) {
+        await offlineQueue.enqueue({ type: "comment_create", payload: { postId: vars.postId, content: vars.content } });
+        setCommentText("");
+        queryClient.invalidateQueries({ queryKey: ["posts"] });
+      } else {
+        Alert.alert("Error", "Failed to post comment. Try again.");
+      }
     },
   });
 

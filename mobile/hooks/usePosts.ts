@@ -3,6 +3,10 @@ import { useApiClient, postApi } from "../utils/api";
 import type { Post, User, Reaction } from "@/types";
 import { Alert } from "react-native";
 import { useCurrentUser } from "./useCurrentUser";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StorageKeys } from "@/utils/offline/storageKeys";
+import { useEffect } from "react";
+import { offlineQueue } from "@/utils/offline/OfflineQueue";
 
 export const usePosts = (username?: string) => {
   const api = useApiClient();
@@ -21,7 +25,36 @@ export const usePosts = (username?: string) => {
       const response = username ? await postApi.getUserPosts(api, username) : await postApi.getPosts(api);
       return response.data.posts;
     },
+    // Hydrate quickly from storage to display offline content, then network update
+    select: (data) => data,
+    onSuccess: async (data) => {
+      try {
+        if (username) {
+          await AsyncStorage.setItem(StorageKeys.POSTS_BY_USERNAME(username), JSON.stringify(data));
+        } else {
+          await AsyncStorage.setItem(StorageKeys.POSTS_ALL, JSON.stringify(data));
+        }
+      } catch {}
+    },
   });
+
+  // Hydrate posts from storage on mount for instant offline view
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const key = username ? StorageKeys.POSTS_BY_USERNAME(username) : StorageKeys.POSTS_ALL;
+        const raw = await AsyncStorage.getItem(key);
+        if (raw && !cancelled) {
+          const parsed = JSON.parse(raw) as Post[];
+          queryClient.setQueryData<Post[]>(queryKey, (prev) => prev || parsed);
+        }
+      } catch {}
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [username]);
 
   const reactToPostMutation = useMutation({
     mutationFn: ({ postId, reactionType }: { postId: string; reactionType: string }) =>
@@ -58,11 +91,16 @@ export const usePosts = (username?: string) => {
 
       return { previousPosts };
     },
-    onError: (_err, _vars, context) => {
+    onError: async (err: any, vars, context) => {
       if (context?.previousPosts) {
         queryClient.setQueryData(queryKey, context.previousPosts);
       }
-      Alert.alert("Error", "Could not update reaction. Please try again.");
+      // If offline, enqueue action for later sync
+      if (!err?.response) {
+        await offlineQueue.enqueue({ type: "post_reaction", payload: { postId: vars.postId, reactionType: vars.reactionType } });
+      } else {
+        Alert.alert("Error", "Could not update reaction. Please try again.");
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });

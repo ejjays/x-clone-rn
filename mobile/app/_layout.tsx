@@ -7,7 +7,7 @@ import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack, router } from "expo-router";
 import "../global.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, Text } from "react-native";
 import { OverlayProvider, Chat } from "stream-chat-react-native";
@@ -15,7 +15,13 @@ import { streamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
+import { persistAuthState } from "@/utils/offline/network";
 import { StatusBar } from "expo-status-bar";
+import { queryClient } from "@/utils/offline/network";
+import { setupReactQueryPersistence, restoreReactQueryPersistence } from "@/utils/offline/persist";
+import { useEffect as useReactEffect } from "react";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { LogBox } from "react-native";
 import {
@@ -28,7 +34,7 @@ import {
 // Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
 
-const queryClient = new QueryClient();
+// queryClient is centralized in utils/offline/network to keep online/focus managers consistent
 
 const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
@@ -92,6 +98,22 @@ const InitialLayout = () => {
     return () => clearTimeout(handleNavigation);
   }, [isLoaded, isSignedIn]);
 
+  // Persist auth state for instant offline boot
+  useEffect(() => {
+    if (isLoaded) {
+      persistAuthState(Boolean(isSignedIn)).catch(() => {});
+    }
+  }, [isLoaded, isSignedIn]);
+
+  // Bootstrapping: restore React Query persistence once
+  useReactEffect(() => {
+    restoreReactQueryPersistence(queryClient).finally(() => {
+      setupReactQueryPersistence(queryClient);
+    });
+  }, []);
+
+  const { queued } = useOfflineSync();
+
   // Only block for auth loading, NOT for Stream Chat client
   if (!isLoaded) {
     return (
@@ -108,6 +130,7 @@ const InitialLayout = () => {
         style={isDarkMode ? "light" : "dark"}
         backgroundColor={colors.background}
       />
+      <OfflineBanner queued={queued} />
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
       {client ? (
         <Chat client={client}>

@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { StreamChat } from "stream-chat";
 import { useApiClient, streamApi } from "../utils/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StorageKeys } from "@/utils/offline/storageKeys";
 
 // --- Types ---
 interface StreamChatContextType {
@@ -111,6 +113,16 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
       const sort: any = { last_message_at: -1 };
       const newChannels = await chatClient.queryChannels(filter, sort);
       setChannels(newChannels);
+      // Persist a light snapshot for offline display
+      const snapshot = newChannels.map((ch: any) => ({
+        id: ch.id,
+        state: {
+          last_message_at: ch.state?.last_message_at,
+          members: ch.state?.members,
+          messages: (ch.state?.messages || []).slice(-30).map((m: any) => ({ id: m.id, text: m.text, user: m.user, attachments: m.attachments, created_at: m.created_at })),
+        },
+      }));
+      await AsyncStorage.setItem(StorageKeys.CHAT_CHANNELS, JSON.stringify(snapshot));
     } catch (error) {
       console.error("❌ Failed to refresh channels:", error);
     }
@@ -131,6 +143,19 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
     await channel.create();
     return channel;
   };
+
+  // Hydrate channels from storage for offline
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(StorageKeys.CHAT_CHANNELS);
+        if (raw) {
+          const snapshot = JSON.parse(raw);
+          setChannels(snapshot);
+        }
+      } catch {}
+    })();
+  }, []);
 
   // Refresh channels when connection is established
   useEffect(() => {

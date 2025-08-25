@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient, userApi } from "../utils/api";
 import { Alert } from "react-native";
 import type { User } from "@/types";
+import { offlineQueue } from "@/utils/offline/OfflineQueue";
 
 export const useFollow = () => {
   const api = useApiClient();
@@ -85,16 +86,20 @@ export const useFollow = () => {
 
       return { previousAuthUser, previousAllUsers };
     },
-    onError: (error: any, userClerkId: string, context: any) => {
+    onError: async (error: any, userClerkId: string, context: any) => {
       // Roll back the optimistic updates
       queryClient.setQueryData(["authUser"], context?.previousAuthUser);
       queryClient.setQueryData(["allUsers"], context?.previousAllUsers);
 
       console.error("Follow/Unfollow error:", error);
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Failed to update follow status"
-      );
+      if (!error?.response) {
+        await offlineQueue.enqueue({ type: "user_profile_update", payload: { followClerkId: userClerkId } });
+      } else {
+        Alert.alert(
+          "Error",
+          error.response?.data?.message || "Failed to update follow status"
+        );
+      }
     },
     onSettled: () => {
       // Always refetch to ensure data consistency

@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useApiClient, userApi } from "../utils/api";
 import { useEffect, useState } from "react";
 import type { User } from "@/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StorageKeys } from "@/utils/offline/storageKeys";
 
 export const useCurrentUser = () => {
   const api = useApiClient();
@@ -27,8 +29,9 @@ export const useCurrentUser = () => {
   });
 
   useEffect(() => {
-    if (data) {
+    if (data && userId) {
       setCurrentUser(data as User);
+      AsyncStorage.setItem(StorageKeys.USER_PROFILE(userId), JSON.stringify(data)).catch(() => {});
     }
   }, [data]);
 
@@ -38,6 +41,25 @@ export const useCurrentUser = () => {
       setCurrentUser(null);
     }
   }, [isSignedIn, userId]);
+
+  // Hydrate from storage on mount for instant offline profile
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (userId) {
+        const raw = await AsyncStorage.getItem(StorageKeys.USER_PROFILE(userId));
+        if (raw && !cancelled) {
+          try {
+            const parsed = JSON.parse(raw) as User;
+            setCurrentUser((prev) => prev ?? parsed);
+          } catch {}
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   return { currentUser, setCurrentUser, isLoading, error, refetch };
 };

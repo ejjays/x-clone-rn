@@ -1,6 +1,7 @@
-// mobile/hooks/useSignOut.ts
 import { useClerk } from "@clerk/clerk-expo";
 import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StorageKeys } from "@/utils/offline/storageKeys";
 
 export const useSignOut = () => {
   const { signOut } = useClerk();
@@ -10,9 +11,13 @@ export const useSignOut = () => {
     setIsSignOutAlertVisible(true);
   };
 
-  const confirmSignOut = () => {
+  const confirmSignOut = async () => {
     setIsSignOutAlertVisible(false);
-    signOut();
+    try {
+      await signOut();
+    } finally {
+      await AsyncStorage.multiRemove([StorageKeys.AUTH_STATE, StorageKeys.LAST_USER_ID]).catch(() => {});
+    }
   };
 
   const cancelSignOut = () => {
