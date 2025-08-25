@@ -1,3 +1,4 @@
+import { setupStreamWebhook } from './config/streamWebhook.js';
 // backend/src/server.js
 import express from "express";
 import cors from "cors";
@@ -128,8 +129,17 @@ app.use("*", (req, res) => {
 
 // Start server
 if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
+  app.listen(PORT, async () => {
     console.log(`🚀 Server running on port ${PORT}`);
+   
+    // Setup webhook programmatically using correct method
+    const webhookSetup = await setupStreamWebhook();
+   
+    if (webhookSetup) {
+      console.log('🚀 Push notifications are now active!');
+    } else {
+      console.log('⚠️ Webhook setup failed - check your Stream credentials');
+    }
     console.log(`📍 Health check: http://localhost:${PORT}/`);
     console.log(`📍 API health: http://localhost:${PORT}/api/health`);
   });
