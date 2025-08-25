@@ -58,6 +58,15 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    pushToken: {
+      type: String,
+      default: "",
+      index: true,
+    },
+    pushNotificationsEnabled: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
