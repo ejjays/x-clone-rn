@@ -16,9 +16,14 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { ThemeProvider, useTheme } from "@/context/ThemeContext"; 
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { LogBox } from "react-native";
-import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
+import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from "@expo-google-fonts/poppins";
 
 // Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
@@ -28,7 +33,11 @@ const queryClient = new QueryClient();
 const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const { client } = useStreamChat();
-  const [fontsLoaded] = useFonts({ Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold });
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+  });
   const { colors, isDarkMode } = useTheme();
 
   // Set a global default font for all Text components
@@ -65,16 +74,16 @@ const InitialLayout = () => {
       const routesToPrefetch = [
         "/(tabs)",
         "/(tabs)/search",
-        "/(tabs)/videos", 
+        "/(tabs)/videos",
         "/(tabs)/notifications",
         "/(tabs)/profile",
         "/messages",
         "/search-posts",
       ];
-      
+
       routesToPrefetch.forEach((route) => {
         const prefetchPromise = router.prefetch(route);
-        if (prefetchPromise && typeof prefetchPromise.catch === 'function') {
+        if (prefetchPromise && typeof prefetchPromise.catch === "function") {
           prefetchPromise.catch(() => {});
         }
       });
@@ -95,7 +104,10 @@ const InitialLayout = () => {
   // Don't block the UI on fonts; render immediately and let fonts load in the background
   return (
     <OverlayProvider value={{ style: streamChatTheme }}>
-      <StatusBar style={isDarkMode ? "light" : "dark"} backgroundColor={colors.background} />
+      <StatusBar
+        style={isDarkMode ? "light" : "dark"}
+        backgroundColor={colors.background}
+      />
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
       {client ? (
         <Chat client={client}>
@@ -110,12 +122,24 @@ const InitialLayout = () => {
             <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
             <Stack.Screen
               name="create-post"
-              options={{ presentation: "modal", animation: "slide_from_bottom" }}
+              options={{
+                presentation: "modal",
+                animation: "slide_from_bottom",
+              }}
             />
-            <Stack.Screen name="post/[postId]" options={{ animation: "slide_from_right" }} />
-            <Stack.Screen name="messages" options={{ animation: "slide_from_right" }} />
-            <Stack.Screen name="chat/[channelId]" options={{ animation: "slide_from_right" }} />
-            <Stack.Screen name="new-message" options={{ animation: "slide_from_right" }} />
+            <Stack.Screen
+              name="post/[postId]"
+              options={{ animation: "slide_from_right" }}
+            />
+            <Stack.Screen name="messages" options={{ animation: "fade" }} />
+            <Stack.Screen
+              name="chat/[channelId]"
+              options={{ animation: "slide_from_right" }}
+            />
+            <Stack.Screen
+              name="new-message"
+              options={{ animation: "slide_from_bottom" }}
+            />
             <Stack.Screen name="search-posts" options={{ animation: "fade" }} />
             <Stack.Screen name="sso-callback" options={{ animation: "none" }} />
           </Stack>
@@ -134,10 +158,22 @@ const InitialLayout = () => {
             name="create-post"
             options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />
-          <Stack.Screen name="post/[postId]" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="messages" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="chat/[channelId]" options={{ animation: "slide_from_right" }} />
-          <Stack.Screen name="new-message" options={{ animation: "slide_from_right" }} />
+          <Stack.Screen
+            name="post/[postId]"
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="messages"
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="chat/[channelId]"
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="new-message"
+            options={{ animation: "slide_from_right" }}
+          />
           <Stack.Screen name="search-posts" options={{ animation: "fade" }} />
           <Stack.Screen name="sso-callback" options={{ animation: "none" }} />
         </Stack>
