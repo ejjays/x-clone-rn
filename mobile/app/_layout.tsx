@@ -73,7 +73,10 @@ const InitialLayout = () => {
       ];
       
       routesToPrefetch.forEach((route) => {
-        router.prefetch(route).catch(() => {});
+        const prefetchPromise = router.prefetch(route);
+        if (prefetchPromise && typeof prefetchPromise.catch === 'function') {
+          prefetchPromise.catch(() => {});
+        }
       });
     }, 100); // Small delay to ensure navigation system is ready
 
@@ -89,7 +92,7 @@ const InitialLayout = () => {
     );
   }
 
-  // Don't block the UI on fonts; render immediately and let fonts load in the background
+  // Don\'t block the UI on fonts; render immediately and let fonts load in the background
   return (
     <OverlayProvider value={{ style: streamChatTheme }}>
       <StatusBar style={isDarkMode ? "light" : "dark"} backgroundColor={colors.background} />
