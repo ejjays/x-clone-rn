@@ -1,6 +1,7 @@
 import { clerkClient } from "@clerk/express";
 import { streamClient } from "../config/stream.js";
 import User from "../models/user.model.js";
+import { sendToClerkIds } from "../utils/push.js";
 
 export const getStreamToken = async (req, res) => {
 	try {
@@ -120,4 +121,52 @@ export const getChannels = async (req, res) => {
 			details: error.message,
 		});
 	}
+};
+
+// Webhook to receive Stream Chat events and send push notifications for new messages
+export const streamWebhook = async (req, res) => {
+  try {
+    const event = req.body;
+    if (event.type !== "message.new") {
+      return res.status(200).json({ received: true });
+    }
+
+    const message = event.message;
+    const channel = event.channel;
+    const senderId = message?.user?.id;
+    const members = channel?.members || {};
+    const allIds = Object.keys(members);
+    const recipientIds = allIds.filter((id) => id !== senderId);
+    if (recipientIds.length === 0) return res.status(200).json({ skipped: true });
+
+    // Only notify users who are currently offline based on Stream presence
+    const offlineRecipientIds = recipientIds.filter((id) => {
+      const m = members[id];
+      const online = Boolean(m?.user?.online);
+      return !online;
+    });
+
+    if (offlineRecipientIds.length === 0) return res.status(200).json({ delivered: false, recipients: 0, reason: "all online" });
+
+    const title = `New message from ${message?.user?.name || "Someone"}`;
+    const body = (message?.text || "Sent an attachment").slice(0, 120);
+    const data = {
+      channelId: channel?.id,
+      senderId,
+      messageId: message?.id,
+    };
+
+    const result = await sendToClerkIds({
+      clerkIds: offlineRecipientIds,
+      title,
+      body,
+      data,
+      type: "chat_message",
+    });
+
+    return res.status(200).json({ delivered: true, recipients: result.sent });
+  } catch (error) {
+    console.error("❌ Error in streamWebhook:", error);
+    return res.status(500).json({ error: "Webhook processing failed" });
+  }
 };

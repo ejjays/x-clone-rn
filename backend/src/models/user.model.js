@@ -58,6 +58,22 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    // Expo push notifications
+    pushToken: {
+      type: String,
+      default: null,
+    },
+    pushNotificationsEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    notificationPreferences: {
+      messages: { type: Boolean, default: true },
+      follows: { type: Boolean, default: true },
+      postReactions: { type: Boolean, default: true },
+      mentions: { type: Boolean, default: true },
+      system: { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );

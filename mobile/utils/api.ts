@@ -101,3 +101,16 @@ export const streamApi = {
     api.post("/stream/channel", data),
   getChannels: (api: AxiosInstance) => api.get("/stream/channels"),
 } 
+
+export const pushApi = {
+  registerToken: (api: AxiosInstance, token: string) => api.post("/push/register-token", { token }),
+  toggle: (
+    api: AxiosInstance,
+    enabled: boolean,
+    preferences?: any,
+  ) => api.post("/push/toggle-notifications", { enabled, preferences }),
+  sendSelf: (
+    api: AxiosInstance,
+    payload: { title: string; body: string; data?: any },
+  ) => api.post("/push/send-notification", payload),
+}

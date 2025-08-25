@@ -5,6 +5,7 @@ import { StreamChat } from "stream-chat";
 import { useApiClient, streamApi } from "../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StorageKeys } from "@/utils/offline/storageKeys";
+import * as Notifications from "expo-notifications";
 
 // --- Types ---
 interface StreamChatContextType {
@@ -127,6 +128,23 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
       console.error("❌ Failed to refresh channels:", error);
     }
   }, [chatClient, user]); // Corrected dependency
+
+  // Push notification for new messages when app is backgrounded
+  useEffect(() => {
+    if (!chatClient || !user) return;
+    const onMessageNew = async (event: any) => {
+      try {
+        const state = await Notifications.getPermissionsAsync();
+        if (state.status !== "granted") return;
+        const isForeground = true; // Expo handler will display when foreground; push used mainly from backend webhook
+        // No-op here; backend webhook handles real push to recipients
+      } catch {}
+    };
+    chatClient.on("message.new", onMessageNew);
+    return () => {
+      chatClient.off("message.new", onMessageNew);
+    };
+  }, [chatClient, user]);
 
   // Function to create a new channel
   const createChannel = async (memberId: string, name?: string) => {

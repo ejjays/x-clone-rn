@@ -6,6 +6,8 @@ import {
   syncUser,
   updateUserProfile,
   getAllUsers,
+  savePushToken,
+  setPushPreferences,
 } from "../controllers/user.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
@@ -20,5 +22,7 @@ router.get("/me", protectRoute, getCurrentUser);
 router.get("/all", protectRoute, getAllUsers);
 router.put("/profile", protectRoute, updateUserProfile);
 router.post("/follow/:userId", protectRoute, followUnfollowUser);
+router.post("/push/token", protectRoute, savePushToken);
+router.post("/push/preferences", protectRoute, setPushPreferences);
 
 export default router;

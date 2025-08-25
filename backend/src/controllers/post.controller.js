@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 import { getAuth } from "@clerk/express";
 import Notification from "../models/notification.model.js";
 import Comment from "../models/comment.model.js";
+import { sendToClerkIds } from "../utils/push.js";
 
 // --- HELPER TO POPULATE POSTS ---
 const populatePost = (query) =>
@@ -117,6 +118,17 @@ export const reactToPost = asyncHandler(async (req, res) => {
         type: "like",
         post: postId,
       });
+      // Push for post reaction
+      const postOwner = await User.findById(post.user).select("clerkId");
+      if (postOwner?.clerkId) {
+        await sendToClerkIds({
+          clerkIds: [postOwner.clerkId],
+          title: `${user.username || "Someone"} reacted to your post`,
+          body: (post.content || "").slice(0, 80),
+          type: "like",
+          data: { type: "post_reaction", postId },
+        });
+      }
     }
   } 
 

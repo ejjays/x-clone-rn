@@ -22,6 +22,8 @@ export interface User {
   followers?: string[];
   following?: string[];
   createdAt?: string;
+  pushToken?: string | null;
+  pushNotificationsEnabled?: boolean;
 }
 
 export interface Reaction {

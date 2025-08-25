@@ -4,6 +4,7 @@ import Comment from "../models/comment.model.js"
 import Post from "../models/post.model.js"
 import User from "../models/user.model.js"
 import Notification from "../models/notification.model.js"
+import { sendToClerkIds } from "../utils/push.js"
 
 export const getComments = asyncHandler(async (req, res) => {
   const { postId } = req.params
@@ -47,6 +48,16 @@ export const createComment = asyncHandler(async (req, res) => {
       post: postId,
       comment: comment._id,
     })
+    const postOwner = await User.findById(post.user).select("clerkId")
+    if (postOwner?.clerkId) {
+      await sendToClerkIds({
+        clerkIds: [postOwner.clerkId],
+        title: `${user.username || "Someone"} commented on your post`,
+        body: content.slice(0, 80),
+        type: "comment",
+        data: { type: "post_comment", postId, commentId: String(comment._id) },
+      })
+    }
   }
 
   const populatedComment = await Comment.findById(comment._id).populate(

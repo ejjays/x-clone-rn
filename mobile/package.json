@@ -79,7 +79,9 @@
     "react-native-webview": "13.13.5",
     "socket.io-client": "^4.8.1",
     "stream-chat": "^9.10.0",
-    "stream-chat-react-native": "^8.0.0"
+    "stream-chat-react-native": "^8.0.0",
+    "expo-notifications": "~0.31.4",
+    "expo-device": "~7.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

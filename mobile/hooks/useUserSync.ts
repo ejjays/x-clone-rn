@@ -1,3 +1,26 @@
+import { useEffect } from "react";
+import { useAuth } from "@clerk/clerk-expo";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useApiClient, pushApi } from "@/utils/api";
+
+export const useUserSync = () => {
+  const { isSignedIn } = useAuth();
+  const { pushToken } = usePushNotifications();
+  const api = useApiClient();
+
+  useEffect(() => {
+    (async () => {
+      if (isSignedIn && pushToken) {
+        try {
+          await pushApi.registerToken(api, pushToken);
+        } catch (e) {
+          // noop
+        }
+      }
+    })();
+  }, [isSignedIn, pushToken, api]);
+};
+
 import { useAuth } from "@clerk/clerk-expo";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";

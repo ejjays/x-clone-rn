@@ -2,6 +2,9 @@ import User from "../models/user.model.js";
 import Post from "../models/post.model.js";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 import { streamClient } from "../config/stream.js";
+import asyncHandler from "express-async-handler";
+import Notification from "../models/notification.model.js";
+import { sendToClerkIds } from "../utils/push.js";
 
 /**
  * @description Sync user from Clerk to the database and Stream
@@ -176,6 +179,17 @@ export const followUnfollowUser = async (req, res) => {
 			// Follow user
 			await User.updateOne({ _id: currentUser._id }, { $push: { following: userToFollow._id } });
 			await User.updateOne({ _id: userToFollow._id }, { $push: { followers: currentUser._id } });
+			// Create follow notification and push
+			try {
+				await Notification.create({ from: currentUser._id, to: userToFollow._id, type: "follow" });
+				await sendToClerkIds({
+					clerkIds: [userToFollow.clerkId],
+					title: `${currentUser.username || "Someone"} started following you`,
+					body: "Tap to view their profile",
+					type: "follow",
+					data: { type: "follow", userId: currentUser.clerkId },
+				});
+			} catch {}
 			res.status(200).json({ message: "User followed successfully" });
 		}
 	} catch (error) {
@@ -230,3 +244,24 @@ export const updateUserProfile = async (req, res) => {
 		res.status(500).json({ message: error.message });
 	}
 };
+
+// --- Push helpers in user controller for convenience ---
+export const savePushToken = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ message: "Token is required" });
+  const user = await User.findOneAndUpdate({ clerkId: req.auth.userId }, { $set: { pushToken: token } }, { new: true });
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.status(200).json({ pushToken: user.pushToken });
+});
+
+export const setPushPreferences = asyncHandler(async (req, res) => {
+  const { enabled, preferences } = req.body;
+  const user = await User.findOne({ clerkId: req.auth.userId });
+  if (!user) return res.status(404).json({ message: "User not found" });
+  if (typeof enabled === "boolean") user.pushNotificationsEnabled = enabled;
+  if (preferences && typeof preferences === "object") {
+    user.notificationPreferences = { ...user.notificationPreferences, ...preferences };
+  }
+  await user.save();
+  res.status(200).json({ enabled: user.pushNotificationsEnabled, preferences: user.notificationPreferences });
+});

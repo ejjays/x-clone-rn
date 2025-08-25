@@ -24,6 +24,7 @@ import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { LogBox } from "react-native";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import {
   useFonts,
   Poppins_400Regular,
@@ -45,6 +46,7 @@ const InitialLayout = () => {
     Poppins_700Bold,
   });
   const { colors, isDarkMode } = useTheme();
+  const { sendTestNotification } = usePushNotifications();
 
   // Set a global default font for all Text components
   if (!Text.defaultProps) {
