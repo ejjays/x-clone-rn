@@ -18,7 +18,7 @@ export const setupStreamWebhook = async () => {
           name: "expo_push_webhook",
           enabled: true,
           hook_type: "webhook",
-          url: webhookUrl,
+          webhook_url: webhookUrl,
           event_types: ["message.new"],
           description: "Expo push relay for chat messages",
         },
