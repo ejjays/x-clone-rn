@@ -1,29 +1,31 @@
-import { StreamChat } from 'stream-chat';
-
-// Initialize Stream Chat server client
-const serverClient = StreamChat.getInstance(
-  process.env.STREAM_API_KEY,
-  process.env.STREAM_SECRET_KEY
-);
+import { streamClient } from "./stream.js";
 
 export const setupStreamWebhook = async () => {
   try {
-    // CORRECT METHOD: updateAppSettings with event_hooks
-    await serverClient.updateAppSettings({
+    const hasKeys = Boolean(process.env.STREAM_API_KEY && process.env.STREAM_SECRET_KEY);
+    if (!hasKeys) {
+      console.log("❌ STREAM_API_KEY/STREAM_SECRET_KEY are missing");
+      return false;
+    }
+
+    const vercelBase = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://x-clone-rn-one.vercel.app";
+    const webhookUrl = `${vercelBase}/api/push/stream-webhook`;
+
+    await streamClient.updateAppSettings({
       event_hooks: [
         {
           hook_type: "webhook",
-          webhook_url: "https://x-clone-rn-one.vercel.app/api/push/stream-webhook",
-          event_types: ["message.new"] // This triggers push notifications!
-        }
-      ]
+          webhook_url: webhookUrl,
+          event_types: ["message.new"],
+        },
+      ],
     });
-   
-    console.log('✅ Stream webhook configured successfully!');
+
+    console.log("✅ Stream webhook configured successfully!");
     return true;
   } catch (error) {
-    console.log('❌ Webhook setup error:', error.message);
-    console.log('❌ Make sure STREAM_API_KEY and STREAM_SECRET are set correctly');
+    console.log("❌ Webhook setup error:", error.message);
+    console.log("❌ Make sure STREAM_API_KEY and STREAM_SECRET_KEY are set correctly");
     return false;
   }
 };
