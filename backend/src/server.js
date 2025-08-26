@@ -1,5 +1,4 @@
 import { setupStreamWebhook } from './config/streamWebhook.js';
-// backend/src/server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -61,30 +60,53 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Connect to database
-try {
-  await connectDB();
-  console.log("✅ Database connected successfully");
-} catch (error) {
-  console.error("❌ Database connection failed:", error);
-  if (process.env.NODE_ENV !== "production") {
-    process.exit(1);
+// Initialize webhook setup function (works in both dev and production)
+const initializeWebhook = async () => {
+  try {
+    console.log('🔧 Initializing Stream webhook configuration...');
+    const webhookSetup = await setupStreamWebhook();
+    
+    if (webhookSetup) {
+      console.log('🚀 Push notifications are now active!');
+      console.log('✅ Stream webhook configured successfully');
+    } else {
+      console.log('⚠️ Webhook setup failed - check your Stream credentials');
+      console.log('❌ Make sure STREAM_API_KEY and STREAM_SECRET_KEY are set');
+    }
+  } catch (error) {
+    console.error('❌ Webhook initialization error:', error.message);
+    console.error('🔍 Check your Stream credentials and network connectivity');
   }
-}
+};
 
-// Routes with proper error handling
-try {
-  app.use("/api/users", userRoutes);
-  app.use("/api/posts", postRoutes);
-  app.use("/api/comments", commentRoutes);
-  app.use("/api/notifications", notificationRoutes);
-  app.use("/api/stream", streamRoutes);
-  app.use("/api/push", pushRoutes);
+// Connect to database
+const initializeDatabase = async () => {
+  try {
+    await connectDB();
+    console.log("✅ Database connected successfully");
+  } catch (error) {
+    console.error("❌ Database connection failed:", error);
+    if (process.env.NODE_ENV !== "production") {
+      process.exit(1);
+    }
+  }
+};
 
-  console.log("✅ All routes registered successfully");
-} catch (error) {
-  console.error("❌ Error registering routes:", error);
-}
+// Setup routes
+const setupRoutes = () => {
+  try {
+    app.use("/api/users", userRoutes);
+    app.use("/api/posts", postRoutes);
+    app.use("/api/comments", commentRoutes);
+    app.use("/api/notifications", notificationRoutes);
+    app.use("/api/stream", streamRoutes);
+    app.use("/api/push", pushRoutes);
+
+    console.log("✅ All routes registered successfully");
+  } catch (error) {
+    console.error("❌ Error registering routes:", error);
+  }
+};
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
@@ -127,22 +149,39 @@ app.use("*", (req, res) => {
   });
 });
 
-// Start server
+// Main initialization function (runs in both development and production)
+const initializeApp = async () => {
+  try {
+    // Initialize database
+    await initializeDatabase();
+    
+    // Setup routes
+    setupRoutes();
+    
+    // Initialize webhook configuration (CRITICAL FIX - runs in production too!)
+    await initializeWebhook();
+    
+    console.log('🎉 Application initialization complete!');
+  } catch (error) {
+    console.error('❌ Application initialization failed:', error);
+  }
+};
+
+// Start server (development only - Vercel handles this in production)
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, async () => {
     console.log(`🚀 Server running on port ${PORT}`);
-   
-    // Setup webhook programmatically using correct method
-    const webhookSetup = await setupStreamWebhook();
-   
-    if (webhookSetup) {
-      console.log('🚀 Push notifications are now active!');
-    } else {
-      console.log('⚠️ Webhook setup failed - check your Stream credentials');
-    }
     console.log(`📍 Health check: http://localhost:${PORT}/`);
     console.log(`📍 API health: http://localhost:${PORT}/api/health`);
+    console.log('🔧 Development mode - initializing application...');
+    
+    // Initialize everything in development
+    await initializeApp();
   });
+} else {
+  // Production mode (Vercel) - initialize without starting server
+  console.log('🚀 Production mode - initializing application...');
+  initializeApp().catch(console.error);
 }
 
 export default app;
