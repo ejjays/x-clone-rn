@@ -18,18 +18,22 @@ import {
   Image,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 import ConfirmationAlert from "@/components/ConfirmationAlert";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import * as Clipboard from "expo-clipboard";
 
 const ProfileScreens = () => {
   const { currentUser, isLoading } = useCurrentUser();
   const insets = useSafeAreaInsets();
   const { handleSignOut, isSignOutAlertVisible, confirmSignOut, cancelSignOut } = useSignOut();
   const { colors } = useTheme();
+  const { expoPushToken, permissionStatus, isRegistered, sendTestNotification } = usePushNotifications();
 
   const {
     posts: userPosts,
@@ -221,6 +225,47 @@ const ProfileScreens = () => {
               {currentUser.bio}
             </Text>
           )}
+        </View>
+
+        {/* Debug: Push Token & Test */}
+        <View className="px-6 py-4 border-b" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+          <Text className="text-lg font-bold" style={{ color: colors.text }}>Debug</Text>
+          <Text className="text-sm mt-2" style={{ color: colors.textMuted }}>Expo Push Token</Text>
+          <View className="mt-2 flex-row items-center justify-between rounded-lg px-3 py-2 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="middle"
+              className="flex-1 mr-3"
+              style={{ color: colors.textSecondary }}
+            >
+              {expoPushToken || "Not available yet"}
+            </Text>
+            <TouchableOpacity
+              className="px-3 py-1.5 rounded-full"
+              onPress={async () => {
+                if (!expoPushToken) {
+                  Alert.alert("Token not available", "Open the app on a device and allow notifications.");
+                  return;
+                }
+                try {
+                  await Clipboard.setStringAsync(expoPushToken);
+                  Alert.alert("Copied", "Expo push token copied to clipboard.");
+                } catch {}
+              }}
+            >
+              <Text style={{ color: colors.blue }}>Copy</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            className="mt-3 px-4 py-2 rounded-full items-center"
+            onPress={() => sendTestNotification({ title: "Test", body: "Hello from app" })}
+            style={{ backgroundColor: colors.blue }}
+          >
+            <Text className="font-semibold text-white">Send Test Notification</Text>
+          </TouchableOpacity>
+          <Text className="text-xs mt-2" style={{ color: colors.textMuted }}>
+            Status: {permissionStatus} {isRegistered ? "(registered)" : "(not registered)"}
+          </Text>
         </View>
 
         <View className="px-6 py-4 border-b" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
