@@ -42,12 +42,12 @@ app.use(async (req, res, next) => {
     return next();
   }
   // Bypass DB readiness for webhook config/setup endpoints to allow diagnostics
-  const bypassDbPaths = new Set([
-    '/api/push/stream-webhook',
-    '/api/push/debug-webhook-setup',
-    '/api/push/debug-webhook-config',
-  ]);
-  if (bypassDbPaths.has(req.path)) {
+  const url = req.originalUrl || req.path;
+  if (
+    url.startsWith('/api/push/stream-webhook') ||
+    url.startsWith('/api/push/debug-webhook-setup') ||
+    url.startsWith('/api/push/debug-webhook-config')
+  ) {
     return next();
   }
   if (mongoose.connection?.readyState === 1) {

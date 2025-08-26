@@ -112,6 +112,7 @@ export const sendNotification = async (req, res) => {
 export const streamWebhook = async (req, res) => {
   try {
     const event = req.body;
+    console.log("📩 Stream webhook received:", { type: event?.type, cid: event?.cid, channel_id: event?.channel_id });
     if (event.type !== "message.new") return res.status(200).json({ ok: true });
 
     const channelId = event.channel_id || event.channel?.id;

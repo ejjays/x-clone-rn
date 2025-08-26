@@ -18,7 +18,7 @@ export const streamClient = StreamChat.getInstance(
   ENV.STREAM_API_KEY,
   ENV.STREAM_SECRET_KEY,
   {
-    timeout: Number(process.env.STREAM_HTTP_TIMEOUT_MS) || 10_000,
+    timeout: Number(process.env.STREAM_HTTP_TIMEOUT_MS) || 20_000,
     httpsAgent,
   }
 );
