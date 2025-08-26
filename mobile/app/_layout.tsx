@@ -1,48 +1,124 @@
+import "react-native-gesture-handler";
+import "react-native-reanimated";
+import { enableScreens } from "react-native-screens";
+
+enableScreens(true);
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { Stack, router } from "expo-router";
+import "../global.css";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ActivityIndicator, View, Text } from "react-native";
+import { OverlayProvider, Chat } from "stream-chat-react-native";
+import { streamChatTheme } from "@/utils/StreamChatTheme";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
+import { useEffect } from "react";
+import { persistAuthState } from "@/utils/offline/network";
+import { StatusBar } from "expo-status-bar";
+import { queryClient } from "@/utils/offline/network";
+import { setupReactQueryPersistence, restoreReactQueryPersistence } from "@/utils/offline/persist";
+import { useEffect as useReactEffect } from "react";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { LogBox } from "react-native";
+import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from "@expo-google-fonts/poppins";
+// ADD THESE IMPORTS FOR PUSH NOTIFICATIONS
 import * as Notifications from "expo-notifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { useEffect } from "react";
-import { Stack, router } from "expo-router";
-import { useOfflineSync } from "@/hooks/useOfflineSync";
-import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
-import { StreamChatProvider } from "@/context/StreamChatContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import * as SecureStore from "expo-secure-store";
 
-// Create a QueryClient instance (required for StreamChatProvider)
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 2,
-    },
-  },
-});
+// Suppress dev warning from libraries that schedule updates in useInsertionEffect
+LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
 
-// Token cache for Clerk
-const tokenCache = {
-  async getToken(key: string) {
-    try {
-      return SecureStore.getItemAsync(key);
-    } catch (err) {
-      return null;
-    }
-  },
-  async saveToken(key: string, value: string) {
-    try {
-      return SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
-    }
-  },
-};
+// queryClient is centralized in utils/offline/network to keep online/focus managers consistent
 
-// Create a separate component for hooks that need all providers
-function AppContent() {
-  const { queued } = useOfflineSync();
+const InitialLayout = () => {
+  const { isLoaded, isSignedIn } = useAuth();
+  const { client } = useStreamChat();
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+  });
+  const { colors, isDarkMode } = useTheme();
+  
+  // ADD PUSH NOTIFICATIONS HOOK HERE
   const { expoPushToken } = usePushNotifications();
 
-  // Handle notification tap for deep linking to chat
+  // Set a global default font for all Text components
+  if (!Text.defaultProps) {
+    Text.defaultProps = {} as any;
+  }
+  if (!Text.defaultProps.style) {
+    Text.defaultProps.style = { fontFamily: "Poppins_400Regular" };
+  } else {
+    const prev = Text.defaultProps.style as any;
+    const alreadyApplied = Array.isArray(prev)
+      ? prev.some((s) => (s as any)?.fontFamily === "Poppins_400Regular")
+      : (prev as any)?.fontFamily === "Poppins_400Regular";
+    if (!alreadyApplied) {
+      Text.defaultProps.style = Array.isArray(prev)
+        ? [...prev, { fontFamily: "Poppins_400Regular" }]
+        : [prev, { fontFamily: "Poppins_400Regular" }];
+    }
+  }
+
+  // Handle navigation and prefetching AFTER the navigation system is ready
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    // Use setTimeout to ensure navigation happens after the current render cycle
+    const handleNavigation = setTimeout(() => {
+      if (!isSignedIn) {
+        router.push("/(auth)");
+      } else {
+        router.push("/(tabs)");
+      }
+
+      // Prefetch common routes after navigation is complete
+      const routesToPrefetch = [
+        "/(tabs)",
+        "/(tabs)/search",
+        "/(tabs)/videos",
+        "/(tabs)/notifications",
+        "/(tabs)/profile",
+        "/messages",
+        "/search-posts",
+      ];
+
+      routesToPrefetch.forEach((route) => {
+        const prefetchPromise = router.prefetch(route);
+        if (prefetchPromise && typeof prefetchPromise.catch === "function") {
+          prefetchPromise.catch(() => {});
+        }
+      });
+    }, 100); // Small delay to ensure navigation system is ready
+
+    return () => clearTimeout(handleNavigation);
+  }, [isLoaded, isSignedIn]);
+
+  // Persist auth state for instant offline boot
+  useEffect(() => {
+    if (isLoaded) {
+      persistAuthState(Boolean(isSignedIn)).catch(() => {});
+    }
+  }, [isLoaded, isSignedIn]);
+
+  // Bootstrapping: restore React Query persistence once
+  useReactEffect(() => {
+    restoreReactQueryPersistence(queryClient).finally(() => {
+      setupReactQueryPersistence(queryClient);
+    });
+  }, []);
+
+  // ADD NOTIFICATION HANDLING FOR DEEP LINKING
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
@@ -57,29 +133,122 @@ function AppContent() {
     return () => sub.remove();
   }, []);
 
-  return <Stack screenOptions={{ headerShown: false }} />;
-}
+  const { queued } = useOfflineSync();
 
-export default function RootLayout() {
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
-
-  if (!publishableKey) {
-    throw new Error(
-      "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env"
+  // Only block for auth loading, NOT for Stream Chat client
+  if (!isLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#1DA1F2" />
+      </View>
     );
   }
 
+  // Don't block the UI on fonts; render immediately and let fonts load in the background
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-          <ClerkLoaded>
+    <OverlayProvider value={{ style: streamChatTheme }}>
+      <StatusBar
+        style={isDarkMode ? "light" : "dark"}
+        backgroundColor={colors.background}
+      />
+      <OfflineBanner queued={queued} />
+      {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
+      {client ? (
+        <Chat client={client}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: "slide_from_right",
+              contentStyle: { backgroundColor: colors.background },
+            }}
+          >
+            <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
+            <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
+            <Stack.Screen
+              name="create-post"
+              options={{
+                presentation: "modal",
+                animation: "slide_from_bottom",
+              }}
+            />
+            <Stack.Screen
+              name="post/[postId]"
+              options={{ animation: "slide_from_right" }}
+            />
+            <Stack.Screen name="messages" options={{ animation: "fade" }} />
+            <Stack.Screen
+              name="chat/[channelId]"
+              options={{ animation: "slide_from_right" }}
+            />
+            <Stack.Screen
+              name="new-message"
+              options={{ animation: "slide_from_bottom" }}
+            />
+            <Stack.Screen name="search-posts" options={{ animation: "fade" }} />
+            <Stack.Screen name="sso-callback" options={{ animation: "none" }} />
+          </Stack>
+        </Chat>
+      ) : (
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: "slide_from_right",
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
+          <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
+          <Stack.Screen
+            name="create-post"
+            options={{ presentation: "modal", animation: "slide_from_bottom" }}
+          />
+          <Stack.Screen
+            name="post/[postId]"
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="messages"
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="chat/[channelId]"
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="new-message"
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen name="search-posts" options={{ animation: "fade" }} />
+          <Stack.Screen name="sso-callback" options={{ animation: "none" }} />
+        </Stack>
+      )}
+    </OverlayProvider>
+  );
+};
+
+export default function RootLayout() {
+  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!publishableKey) {
+    throw new Error("Missing Clerk Publishable Key");
+  }
+
+  return (
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryClientProvider client={queryClient}>
+          <ClerkProvider
+            publishableKey={publishableKey}
+            tokenCache={tokenCache}
+          >
             <StreamChatProvider>
-              <AppContent />
+              <ThemeProvider>
+                <InitialLayout />
+              </ThemeProvider>
             </StreamChatProvider>
-          </ClerkLoaded>
-        </ClerkProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+          </ClerkProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
