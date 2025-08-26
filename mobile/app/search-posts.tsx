@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -20,9 +20,9 @@ import { DarkThemeColors } from "@/constants/Colors";
 
 const SearchPostsScreen = () => {
   const [searchText, setSearchText] = useState("");
-  const [searchResults, setSearchResults] = useState<Post[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [debouncedText, setDebouncedText] = useState("");
 
   const insets = useSafeAreaInsets();
   const { currentUser } = useCurrentUser();
@@ -34,40 +34,38 @@ const SearchPostsScreen = () => {
     setRecentSearches(["React Native", "JavaScript", "Mobile Development"]);
   }, []);
 
-  // Search functionality
+  // Debounce search text updates
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedText(searchText), 300);
+    return () => clearTimeout(t);
+  }, [searchText]);
+
+  // Display a brief loading indicator on text change
   useEffect(() => {
     if (searchText.trim().length === 0) {
-      setSearchResults([]);
       setIsSearching(false);
       return;
     }
-
     setIsSearching(true);
+    const t = setTimeout(() => setIsSearching(false), 300);
+    return () => clearTimeout(t);
+  }, [searchText]);
 
-    // Simulate search delay
-    const searchTimeout = setTimeout(() => {
-      const filteredPosts = posts.filter((post: Post) => {
-        const searchLower = searchText.toLowerCase();
+  // Compute filtered results from posts and debounced text
+  const filteredPosts = useMemo(() => {
+    const t = debouncedText.trim().toLowerCase();
+    if (t.length === 0) return [] as Post[];
 
-        const contentMatch = post.content.toLowerCase().includes(searchLower);
-        
-        // Safely access author properties, defaulting to empty string if undefined
-        const authorFirstName = post.author?.firstName?.toLowerCase() || '';
-        const authorLastName = post.author?.lastName?.toLowerCase() || '';
-        const authorUsername = post.author?.username?.toLowerCase() || '';
-
-        const authorMatch = `${authorFirstName} ${authorLastName}`.includes(searchLower);
-        const usernameMatch = authorUsername.includes(searchLower);
-
-        return contentMatch || authorMatch || usernameMatch;
-      });
-
-      setSearchResults(filteredPosts);
-      setIsSearching(false);
-    }, 300);
-
-    return () => clearTimeout(searchTimeout);
-  }, [searchText, posts]);
+    return posts.filter((post: Post) => {
+      const contentMatch = (post.content || "").toLowerCase().includes(t);
+      const authorFirstName = post.author?.firstName?.toLowerCase() || '';
+      const authorLastName = post.author?.lastName?.toLowerCase() || '';
+      const authorUsername = post.author?.username?.toLowerCase() || '';
+      const authorMatch = `${authorFirstName} ${authorLastName}`.includes(t);
+      const usernameMatch = authorUsername.includes(t);
+      return contentMatch || authorMatch || usernameMatch;
+    });
+  }, [debouncedText, posts]);
 
   const handleRecentSearchPress = (search: string) => {
     setSearchText(search);
@@ -75,7 +73,6 @@ const SearchPostsScreen = () => {
 
   const clearSearch = () => {
     setSearchText("");
-    setSearchResults([]);
   };
 
   const handlePostMenuOpen = (post: Post) => {
@@ -154,7 +151,7 @@ const SearchPostsScreen = () => {
                 <ActivityIndicator size="large" color="#1877F2" />
                 <Text className="mt-4" style={{ color: DarkThemeColors.textSecondary }}>Searching posts...</Text>
               </View>
-            ) : searchResults.length === 0 ? (
+            ) : filteredPosts.length === 0 ? (
               <View className="items-center justify-center py-12 px-8">
                 <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: DarkThemeColors.surface }}>
                   <Search size={32} color={DarkThemeColors.textSecondary} />
@@ -170,12 +167,12 @@ const SearchPostsScreen = () => {
               <View>
                 <View className="px-4 py-3" style={{ backgroundColor: DarkThemeColors.surface }}>
                   <Text className="text-sm font-medium" style={{ color: DarkThemeColors.textSecondary }}>
-                    {searchResults.length} result
-                    {searchResults.length !== 1 ? "s" : ""} for "{searchText}"
+                    {filteredPosts.length} result
+                    {filteredPosts.length !== 1 ? "s" : ""} for "{searchText}"
                   </Text>
                 </View>
 
-                {searchResults.map((post: Post, index: number) => (
+                {filteredPosts.map((post: Post, index: number) => (
                   <View key={post._id}>
                     <PostCard
                       post={post}
@@ -189,7 +186,7 @@ const SearchPostsScreen = () => {
                       )}
                       onOpenPostMenu={handlePostMenuOpen}
                     />
-                    {index < searchResults.length - 1 && (
+                    {index < filteredPosts.length - 1 && (
                       <View className="h-px mx-4" style={{ backgroundColor: DarkThemeColors.border }} />
                     )}
                   </View>
