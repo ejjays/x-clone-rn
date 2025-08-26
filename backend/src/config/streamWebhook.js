@@ -15,27 +15,45 @@ export const setupStreamWebhook = async () => {
       return false;
     }
 
-    // Use Stream Chat v2 multi-event hooks API
-    await streamClient.updateAppSettings({
-      event_hooks: [
-        {
-          id: "expo_push_webhook", // stable id to upsert
-          name: "expo_push_webhook",
+    // Fetch existing settings and event hooks
+    const settings = await streamClient.getAppSettings();
+    const existingHooks = settings?.event_hooks || settings?.app?.event_hooks || [];
+
+    // Update existing webhook hooks to canonical URL; ensure event_types and enabled
+    let updated = false;
+    const nextHooks = existingHooks.map((hook) => {
+      if (hook.hook_type === "webhook") {
+        updated = true;
+        return {
+          ...hook,
           enabled: true,
-          hook_type: "webhook",
           webhook_url: webhookUrl,
           event_types: ["message.new"],
-          description: "Expo push relay for chat messages",
-        },
-      ],
+        };
+      }
+      return hook;
     });
+
+    // If no webhook hook existed, append ours
+    if (!updated) {
+      nextHooks.push({
+        name: "expo_push_webhook",
+        enabled: true,
+        hook_type: "webhook",
+        webhook_url: webhookUrl,
+        event_types: ["message.new"],
+        description: "Expo push relay for chat messages",
+      });
+    }
+
+    // Apply updated hooks
+    await streamClient.updateAppSettings({ event_hooks: nextHooks });
 
     console.log("✅ Stream webhook configured successfully (event_hooks)!");
     console.log("🔗 Stream webhook URL:", webhookUrl);
     return true;
   } catch (error) {
     console.log("❌ Webhook setup error (event_hooks):", error.message);
-    // No fallback to deprecated fields to avoid v2 rejection; just instruct via logs
     console.log("❌ Make sure STREAM_API_KEY and STREAM_SECRET_KEY are set correctly");
     return false;
   }
