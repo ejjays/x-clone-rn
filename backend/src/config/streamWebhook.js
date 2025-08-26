@@ -8,8 +8,8 @@ export const setupStreamWebhook = async () => {
       return false;
     }
 
-    const vercelBase = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://x-clone-rn-one.vercel.app";
-    const webhookUrl = `${vercelBase}/api/push/stream-webhook`;
+    const base = process.env.EXTERNAL_BASE_URL || "https://x-clone-rn-one.vercel.app";
+    const webhookUrl = `${base}/api/push/stream-webhook`;
     if (!webhookUrl || !webhookUrl.startsWith("http")) {
       console.log("❌ Invalid webhook URL computed:", webhookUrl);
       return false;
