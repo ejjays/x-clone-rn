@@ -5,6 +5,7 @@ import { Stack, router } from "expo-router";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
 import { StreamChatProvider } from "@/context/StreamChatContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 
@@ -36,7 +37,7 @@ const tokenCache = {
   },
 };
 
-// Create a separate component for hooks that need Clerk and StreamChat
+// Create a separate component for hooks that need all providers
 function AppContent() {
   const { queued } = useOfflineSync();
   const { expoPushToken } = usePushNotifications();
@@ -70,13 +71,15 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-        <ClerkLoaded>
-          <StreamChatProvider>
-            <AppContent />
-          </StreamChatProvider>
-        </ClerkLoaded>
-      </ClerkProvider>
+      <ThemeProvider>
+        <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+          <ClerkLoaded>
+            <StreamChatProvider>
+              <AppContent />
+            </StreamChatProvider>
+          </ClerkLoaded>
+        </ClerkProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
