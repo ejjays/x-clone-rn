@@ -22,8 +22,9 @@ export const useUserSync = () => {
     },
   });
 
+  // Trigger ONCE per sign-in session to avoid infinite loops on 503
   useEffect(() => {
-    if (isSignedIn && api && !syncUserMutation.isPending && !syncUserMutation.isSuccess) {
+    if (isSignedIn && !syncUserMutation.isPending && !syncUserMutation.isSuccess) {
       const task = InteractionManager.runAfterInteractions(() => {
         if (process.env.EXPO_PUBLIC_DEBUG_LOGS === "1") {
           console.log("🔄 Attempting to sync user to backend database...");
@@ -32,7 +33,7 @@ export const useUserSync = () => {
       });
       return () => task.cancel();
     }
-  }, [isSignedIn, api]);
+  }, [isSignedIn]);
 
   return {
     isSyncing: syncUserMutation.isPending,
