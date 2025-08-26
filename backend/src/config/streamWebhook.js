@@ -3,7 +3,7 @@ import { StreamChat } from 'stream-chat';
 // Initialize Stream Chat server client
 const serverClient = StreamChat.getInstance(
   process.env.STREAM_API_KEY,
-  process.env.STREAM_SECRET
+  process.env.STREAM_SECRET_KEY
 );
 
 export const setupStreamWebhook = async () => {
