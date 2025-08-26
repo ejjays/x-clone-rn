@@ -95,6 +95,12 @@ const initializeDatabase = async () => {
 // Setup routes
 const setupRoutes = () => {
   try {
+    // Simple request logger to aid production debugging
+    app.use((req, _res, next) => {
+      console.log(`➡️ ${req.method} ${req.originalUrl}`);
+      next();
+    });
+
     app.use("/api/users", userRoutes);
     app.use("/api/posts", postRoutes);
     app.use("/api/comments", commentRoutes);
@@ -107,6 +113,9 @@ const setupRoutes = () => {
     console.error("❌ Error registering routes:", error);
   }
 };
+
+// Register routes synchronously so they are available immediately (even during cold start)
+setupRoutes();
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
@@ -154,9 +163,6 @@ const initializeApp = async () => {
   try {
     // Initialize database
     await initializeDatabase();
-    
-    // Setup routes
-    setupRoutes();
     
     // Initialize webhook configuration (CRITICAL FIX - runs in production too!)
     await initializeWebhook();

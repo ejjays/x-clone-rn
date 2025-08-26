@@ -14,6 +14,8 @@ export const usePushNotifications = () => {
   const responseListener = useRef<Notifications.Subscription | null>(null);
   const receivedListener = useRef<Notifications.Subscription | null>(null);
   const [pushToken, setPushToken] = useState<string | null>(null);
+  // Backward compat alias for existing usages
+  const expoPushToken = pushToken;
   const [permissionStatus, setPermissionStatus] = useState<PushPermissionStatus>("undetermined");
   const [isRegistered, setIsRegistered] = useState(false);
 
@@ -109,6 +111,7 @@ export const usePushNotifications = () => {
   return {
     permissionStatus,
     pushToken,
+    expoPushToken,
     isRegistered,
     toggleNotifications,
     sendTestNotification,

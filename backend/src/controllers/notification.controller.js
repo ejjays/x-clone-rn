@@ -17,8 +17,16 @@ export const registerPushToken = async (req, res) => {
       { $set: { pushToken: token, pushNotificationsEnabled: true } },
       { new: true },
     );
+
+    console.log("✅ Registered push token for user:", {
+      clerkId: userId,
+      hasToken: Boolean(user?.pushToken),
+      tokenSuffix: token ? token.slice(-6) : undefined,
+    });
+
     return res.status(200).json({ ok: true, pushToken: user.pushToken });
   } catch (e) {
+    console.error("❌ Failed to register push token:", e?.message);
     return res.status(500).json({ message: "Failed to register token" });
   }
 };
@@ -33,8 +41,10 @@ export const toggleNotifications = async (req, res) => {
       { $set: { pushNotificationsEnabled: !!enabled } },
       { new: true },
     );
+    console.log("🔔 Toggled notifications:", { clerkId: userId, enabled: user?.pushNotificationsEnabled });
     return res.status(200).json({ ok: true, enabled: user.pushNotificationsEnabled });
   } catch (e) {
+    console.error("❌ Failed to toggle notifications:", e?.message);
     return res.status(500).json({ message: "Failed to toggle notifications" });
   }
 };
@@ -47,13 +57,18 @@ export const sendPushToTokens = async ({ messages }) => {
   }
   for (const chunk of chunks) {
     try {
-      await fetch(EXPO_PUSH_URL, {
+      console.log("📤 Sending Expo push chunk:", chunk.map(m => ({ toSuffix: m.to?.slice(-6), title: m.title })));
+      const response = await fetch(EXPO_PUSH_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(chunk),
       });
+      const text = await response.text();
+      let json;
+      try { json = JSON.parse(text); } catch { json = text; }
+      console.log("📥 Expo push response:", { status: response.status, body: json });
     } catch (e) {
-      // log and continue
+      console.error("❌ Expo push request failed:", e?.message);
     }
   }
 };
@@ -67,6 +82,14 @@ export const sendNotification = async (req, res) => {
     if (toSelf) target = await User.findOne({ clerkId: userId, pushNotificationsEnabled: true, pushToken: { $ne: "" } });
     else if (toClerkId) target = await User.findOne({ clerkId: toClerkId, pushNotificationsEnabled: true, pushToken: { $ne: "" } });
     if (!target) return res.status(404).json({ message: "No target with push token" });
+
+    console.log("🔔 Sending notification:", {
+      from: userId,
+      to: target.clerkId,
+      toSuffix: target.pushToken?.slice(-6),
+      title: title || "Notification",
+    });
+
     await sendPushToTokens({
       messages: [
         {
@@ -80,6 +103,7 @@ export const sendNotification = async (req, res) => {
     });
     return res.status(200).json({ ok: true });
   } catch (e) {
+    console.error("❌ Failed to send notification:", e?.message);
     return res.status(500).json({ message: "Failed to send notification" });
   }
 };
@@ -100,9 +124,11 @@ export const streamWebhook = async (req, res) => {
       sound: "default",
       data: { type: "chat_message", channelId, senderId, messageId: event.message?.id },
     }));
+    console.log("📨 Webhook fanout:", { recipients: users.map(u => ({ clerkId: u.clerkId, toSuffix: u.pushToken?.slice(-6) })) });
     if (messages.length > 0) await sendPushToTokens({ messages });
     return res.status(200).json({ ok: true });
   } catch (e) {
+    console.error("❌ Webhook error:", e?.message);
     return res.status(500).json({ message: "Webhook error" });
   }
 };
