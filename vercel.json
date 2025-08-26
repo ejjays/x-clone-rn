@@ -14,8 +14,8 @@
   ],
   "functions": {
     "backend/src/server.js": {
-      "maxDuration": 10,
-      "memory": 1024,
+      "maxDuration": 30,
+      "memory": 1536,
       "runtime": "nodejs20.x"
     }
   },

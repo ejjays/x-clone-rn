@@ -13,6 +13,7 @@ import commentRoutes from "./routes/comment.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import streamRoutes from "./routes/stream.route.js";
 import pushRoutes from "./routes/push.route.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -34,6 +35,15 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(clerkMiddleware());
+
+// Quick DB readiness check middleware (non-blocking, but fails fast if disconnected)
+app.use((req, res, next) => {
+  const isConnected = mongoose.connection?.readyState === 1; // 1 = connected
+  if (!isConnected && req.path.startsWith('/api/')) {
+    return res.status(503).json({ error: 'Service Unavailable', message: 'Database not connected yet, please retry.' });
+  }
+  next();
+});
 
 // Health check endpoint
 app.get("/", (req, res) => {
