@@ -3,10 +3,30 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useEffect } from "react";
 import { Stack, router } from "expo-router";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
 
-export default function RootLayout() {
+// Token cache for Clerk
+const tokenCache = {
+  async getToken(key: string) {
+    try {
+      return SecureStore.getItemAsync(key);
+    } catch (err) {
+      return null;
+    }
+  },
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value);
+    } catch (err) {
+      return;
+    }
+  },
+};
+
+// Create a separate component for hooks that need Clerk
+function AppContent() {
   const { queued } = useOfflineSync();
-
   const { expoPushToken } = usePushNotifications();
 
   // Handle notification tap for deep linking to chat
@@ -25,4 +45,22 @@ export default function RootLayout() {
   }, []);
 
   return <Stack screenOptions={{ headerShown: false }} />;
+}
+
+export default function RootLayout() {
+  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+
+  if (!publishableKey) {
+    throw new Error(
+      "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env"
+    );
+  }
+
+  return (
+    <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+      <ClerkLoaded>
+        <AppContent />
+      </ClerkLoaded>
+    </ClerkProvider>
+  );
 }
