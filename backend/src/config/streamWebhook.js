@@ -11,13 +11,15 @@ export const setupStreamWebhook = async () => {
     const vercelBase = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://x-clone-rn-one.vercel.app";
     const webhookUrl = `${vercelBase}/api/push/stream-webhook`;
 
-    // Use Stream Chat v2 event hooks API (type is required)
+    // Use Stream Chat v2 multi-event hooks API
     await streamClient.updateAppSettings({
       event_hooks: [
         {
-          type: "webhook",
+          name: "expo_push_webhook",
+          enabled: true,
+          hook_type: "webhook",
           url: webhookUrl,
-          events: ["message.new"],
+          event_types: ["message.new"],
           description: "Expo push relay for chat messages",
         },
       ],
