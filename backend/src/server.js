@@ -36,10 +36,18 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(clerkMiddleware());
 
-// Quick DB readiness check middleware (non-blocking, but fails fast if disconnected)
-app.use((req, res, next) => {
-  const isConnected = mongoose.connection?.readyState === 1; // 1 = connected
-  if (!isConnected && req.path.startsWith('/api/')) {
+// Quick DB readiness check middleware with on-demand reconnect (skip health)
+app.use(async (req, res, next) => {
+  if (!req.path.startsWith('/api') || req.path === '/api/health') {
+    return next();
+  }
+  if (mongoose.connection?.readyState === 1) {
+    return next();
+  }
+  try {
+    await connectDB();
+  } catch {}
+  if (mongoose.connection?.readyState !== 1) {
     return res.status(503).json({ error: 'Service Unavailable', message: 'Database not connected yet, please retry.' });
   }
   next();
