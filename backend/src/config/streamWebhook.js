@@ -23,6 +23,7 @@ export const setupStreamWebhook = async () => {
     });
 
     console.log("✅ Stream webhook configured successfully (event_hooks)!");
+    console.log("🔗 Stream webhook URL:", webhookUrl);
     return true;
   } catch (error) {
     console.log("❌ Webhook setup error (event_hooks):", error.message);

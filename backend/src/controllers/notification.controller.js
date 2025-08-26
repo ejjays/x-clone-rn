@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import { getAuth } from "@clerk/express";
 import Notification from "../models/notification.model.js";
 import User from "../models/user.model.js";
+import { streamClient } from "../config/stream.js";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
@@ -115,8 +116,10 @@ export const streamWebhook = async (req, res) => {
 
     const channelId = event.channel_id || event.channel?.id;
     const senderId = event.user?.id;
+    const channelType = event.channel?.type || "messaging";
+    const cid = event.cid || (channelId ? `${channelType}:${channelId}` : undefined);
 
-    // Members shape can be an object map or an array
+    // Members shape can be an object map or an array; otherwise fetch from Stream
     let memberIds = [];
     if (Array.isArray(event.members)) {
       memberIds = event.members.map((m) => (typeof m === "string" ? m : m.user_id || m.user?.id)).filter(Boolean);
@@ -124,11 +127,23 @@ export const streamWebhook = async (req, res) => {
       memberIds = Object.keys(event.members);
     }
 
-    const recipients = memberIds.filter((m) => m !== senderId);
+    if ((!memberIds || memberIds.length === 0) && cid) {
+      try {
+        const channels = await streamClient.queryChannels({ cid: { $eq: cid } }, {}, { state: true });
+        const ch = channels?.[0];
+        const memberMap = ch?.state?.members || {};
+        memberIds = Object.keys(memberMap);
+        console.log("🔎 Webhook member fallback fetched:", { cid, fetchedCount: memberIds.length });
+      } catch (e) {
+        console.log("⚠️ Failed to fetch channel members for webhook:", { cid, error: e?.message });
+      }
+    }
+
+    const recipients = (memberIds || []).filter((m) => m !== senderId);
     const users = await User.find({ clerkId: { $in: recipients }, pushNotificationsEnabled: true, pushToken: { $ne: "" } });
 
     if (!users.length) {
-      console.log("ℹ️ Webhook received but no recipients with tokens:", { channelId, senderId, recipients });
+      console.log("ℹ️ Webhook received but no recipients with tokens:", { channelId, senderId, recipientsCount: recipients.length });
       return res.status(200).json({ ok: true, delivered: 0 });
     }
 
@@ -139,7 +154,7 @@ export const streamWebhook = async (req, res) => {
       sound: "default",
       data: { type: "chat_message", channelId, senderId, messageId: event.message?.id },
     }));
-    console.log("📨 Webhook fanout:", { recipients: users.map(u => ({ clerkId: u.clerkId, toSuffix: u.pushToken?.slice(-6) })) });
+    console.log("📨 Webhook fanout:", { cid, recipients: users.map(u => ({ clerkId: u.clerkId, toSuffix: u.pushToken?.slice(-6) })) });
     await sendPushToTokens({ messages });
     return res.status(200).json({ ok: true, delivered: users.length });
   } catch (e) {
