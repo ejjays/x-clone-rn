@@ -12,13 +12,8 @@ export const setupStreamWebhook = async () => {
     const webhookUrl = `${vercelBase}/api/push/stream-webhook`;
 
     await streamClient.updateAppSettings({
-      event_hooks: [
-        {
-          hook_type: "webhook",
-          webhook_url: webhookUrl,
-          event_types: ["message.new"],
-        },
-      ],
+      webhook_url: webhookUrl,
+      webhook_events: ["message.new"],
     });
 
     console.log("✅ Stream webhook configured successfully!");

@@ -17,7 +17,8 @@
         "backgroundColor": "#242526"
       },
       "edgeToEdgeEnabled": false,
-      "package": "com.ejjays.mobile"
+      "package": "com.ejjays.mobile",
+      "googleServicesFile": "./google-services.json"
     },
     "androidNavigationBar": {
       "backgroundColor": "#242526",
