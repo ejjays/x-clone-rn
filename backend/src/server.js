@@ -41,6 +41,15 @@ app.use(async (req, res, next) => {
   if (!req.path.startsWith('/api') || req.path === '/api/health') {
     return next();
   }
+  // Bypass DB readiness for webhook config/setup endpoints to allow diagnostics
+  const bypassDbPaths = new Set([
+    '/api/push/stream-webhook',
+    '/api/push/debug-webhook-setup',
+    '/api/push/debug-webhook-config',
+  ]);
+  if (bypassDbPaths.has(req.path)) {
+    return next();
+  }
   if (mongoose.connection?.readyState === 1) {
     return next();
   }

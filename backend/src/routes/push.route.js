@@ -29,4 +29,16 @@ router.post('/debug-webhook-setup', async (req, res) => {
   }
 });
 
+// New: Inspect current Stream event_hooks configuration
+router.get('/debug-webhook-config', async (req, res) => {
+  try {
+    const { streamClient } = await import('../config/stream.js');
+    const settings = await streamClient.getAppSettings();
+    const eventHooks = settings?.event_hooks || settings?.app?.event_hooks || [];
+    res.json({ event_hooks: eventHooks, timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message, timestamp: new Date().toISOString() });
+  }
+});
+
 export default router;
