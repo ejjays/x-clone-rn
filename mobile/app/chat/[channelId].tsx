@@ -21,7 +21,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { pickMedia, uploadMediaToCloudinary } from "@/utils/mediaPicker";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StorageKeys } from "@/utils/offline/storageKeys";
@@ -33,26 +32,37 @@ import * as NavigationBar from "expo-navigation-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageBubble from "@/components/chat/MessageBubble";
-import MessageInput from "@/components/chat/MessageInput";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
+import { Channel, MessageInput, MessageList } from "stream-chat-expo"; // Import Stream's MessageInput and MessageList
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
 
 export default function ChatScreen() {
   const params = useLocalSearchParams();
-  const channelId = typeof params?.channelId === "string" ? (params.channelId as string) : undefined;
+  const channelId =
+    typeof params?.channelId === "string"
+      ? (params.channelId as string)
+      : undefined;
   const { client, isConnected, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
   const { isDarkMode } = useTheme();
 
   const colors = {
-    background: isDarkMode ? DarkThemeColors.background : LightThemeColors.background,
-    cardBackground: isDarkMode ? DarkThemeColors.surface : LightThemeColors.surface,
+    background: isDarkMode
+      ? DarkThemeColors.background
+      : LightThemeColors.background,
+    cardBackground: isDarkMode
+      ? DarkThemeColors.surface
+      : LightThemeColors.surface,
     text: isDarkMode ? DarkThemeColors.text : LightThemeColors.text,
-    grayText: isDarkMode ? DarkThemeColors.textSecondary : LightThemeColors.textSecondary,
+    grayText: isDarkMode
+      ? DarkThemeColors.textSecondary
+      : LightThemeColors.textSecondary,
     border: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
-    inputBackground: isDarkMode ? DarkThemeColors.surface : LightThemeColors.surface,
+    inputBackground: isDarkMode
+      ? DarkThemeColors.surface
+      : LightThemeColors.surface,
     inputBorder: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
     blue500: isDarkMode ? DarkThemeColors.blue : LightThemeColors.blue,
     gray200: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
@@ -64,12 +74,15 @@ export default function ChatScreen() {
   const [otherUser, setOtherUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: "image" | "video" } | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [systemUIHeight, setSystemUIHeight] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [quotedMessage, setQuotedMessage] = useState<any | null>(null);
-  const [anchorMeasurements, setAnchorMeasurements] = useState<{ pageX: number; pageY: number; width: number } | null>(null);
+  const [anchorMeasurements, setAnchorMeasurements] = useState<{
+    pageX: number;
+    pageY: number;
+    width: number;
+  } | null>(null);
   const messageRefs = useRef<{ [key: string]: View | null }>({});
   const inputRef = useRef<TextInput | null>(null);
 
@@ -79,7 +92,9 @@ export default function ChatScreen() {
     // Hydrate cached messages for offline display
     (async () => {
       try {
-        const raw = await AsyncStorage.getItem(StorageKeys.CHAT_MESSAGES(channelId));
+        const raw = await AsyncStorage.getItem(
+          StorageKeys.CHAT_MESSAGES(channelId)
+        );
         if (raw) {
           const snapshot = JSON.parse(raw);
           if (Array.isArray(snapshot)) setMessages(snapshot);
@@ -96,13 +111,19 @@ export default function ChatScreen() {
         await ch.watch();
         setChannel(ch);
 
-        const membersArray = Array.isArray(ch.state.members) ? ch.state.members : Object.values(ch.state.members || {});
-        const otherMember = membersArray.find((member: any) => member?.user?.id !== currentUser.clerkId);
+        const membersArray = Array.isArray(ch.state.members)
+          ? ch.state.members
+          : Object.values(ch.state.members || {});
+        const otherMember = membersArray.find(
+          (member: any) => member?.user?.id !== currentUser.clerkId
+        );
 
         if (otherMember?.user) {
           setOtherUser({
             name: otherMember.user.name || "Unknown User",
-            image: otherMember.user.image || `https://getstream.io/random_png/?name=${otherMember.user.name}`,
+            image:
+              otherMember.user.image ||
+              `https://getstream.io/random_png/?name=${otherMember.user.name}`,
             online: otherMember.user.online || false,
           });
         }
@@ -115,8 +136,17 @@ export default function ChatScreen() {
             const snapshot = (eventChannel.state.messages || [])
               .slice(-50)
               .reverse()
-              .map((m: any) => ({ id: m.id, text: m.text, user: m.user, attachments: m.attachments, created_at: m.created_at }));
-            AsyncStorage.setItem(StorageKeys.CHAT_MESSAGES(channelId), JSON.stringify(snapshot)).catch(() => {});
+              .map((m: any) => ({
+                id: m.id,
+                text: m.text,
+                user: m.user,
+                attachments: m.attachments,
+                created_at: m.created_at,
+              }));
+            AsyncStorage.setItem(
+              StorageKeys.CHAT_MESSAGES(channelId),
+              JSON.stringify(snapshot)
+            ).catch(() => {});
           } catch {}
         };
 
@@ -125,8 +155,17 @@ export default function ChatScreen() {
           const snapshot = (ch.state.messages || [])
             .slice(-50)
             .reverse()
-            .map((m: any) => ({ id: m.id, text: m.text, user: m.user, attachments: m.attachments, created_at: m.created_at }));
-          AsyncStorage.setItem(StorageKeys.CHAT_MESSAGES(channelId), JSON.stringify(snapshot)).catch(() => {});
+            .map((m: any) => ({
+              id: m.id,
+              text: m.text,
+              user: m.user,
+              attachments: m.attachments,
+              created_at: m.created_at,
+            }));
+          AsyncStorage.setItem(
+            StorageKeys.CHAT_MESSAGES(channelId),
+            JSON.stringify(snapshot)
+          ).catch(() => {});
         } catch {}
 
         ch.on("message.new", handleEvent);
@@ -168,11 +207,17 @@ export default function ChatScreen() {
   }, [insets.bottom]);
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", (e) => {
-      const extraPadding = Platform.OS === "android" ? systemUIHeight : 0;
-      setKeyboardHeight(e.endCoordinates.height + extraPadding);
-    });
-    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0));
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      (e) => {
+        const extraPadding = Platform.OS === "android" ? systemUIHeight : 0;
+        setKeyboardHeight(e.endCoordinates.height + extraPadding);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => setKeyboardHeight(0)
+    );
     return () => {
       keyboardDidShowListener?.remove();
       keyboardDidHideListener?.remove();
@@ -186,7 +231,11 @@ export default function ChatScreen() {
           NavigationBar.setVisibilityAsync("visible");
           NavigationBar.setPositionAsync("absolute");
           NavigationBar.setBehaviorAsync("inset-swipe");
-          NavigationBar.setBackgroundColorAsync(isDarkMode ? DarkThemeColors.background : LightThemeColors.background);
+          NavigationBar.setBackgroundColorAsync(
+            isDarkMode
+              ? DarkThemeColors.background
+              : LightThemeColors.background
+          );
           NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
         } catch {}
       }
@@ -196,7 +245,11 @@ export default function ChatScreen() {
             NavigationBar.setVisibilityAsync("visible");
             NavigationBar.setPositionAsync("absolute");
             NavigationBar.setBehaviorAsync("inset-swipe");
-            NavigationBar.setBackgroundColorAsync(isDarkMode ? DarkThemeColors.background : LightThemeColors.background);
+            NavigationBar.setBackgroundColorAsync(
+              isDarkMode
+                ? DarkThemeColors.background
+                : LightThemeColors.background
+            );
             NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
           } catch {}
         }
@@ -205,25 +258,17 @@ export default function ChatScreen() {
   );
 
   const sendMessage = async () => {
-    if (!channel || (!newMessage.trim() && !selectedMedia) || sending) return;
+    if (!channel || !newMessage.trim() || sending) return;
 
     setSending(true);
     try {
       let messageData: any = { text: newMessage.trim() };
       if (quotedMessage?.id) messageData.quoted_message_id = quotedMessage.id;
 
-      if (selectedMedia) {
-        const mediaUrl = await uploadMediaToCloudinary(selectedMedia);
-        if (mediaUrl) {
-          messageData.attachments = [{ type: selectedMedia.type, asset_url: mediaUrl, thumb_url: mediaUrl }];
-        } else {
-          Alert.alert("Upload Failed", "Could not upload your media. Message not sent.");
-          setSending(false);
-          return;
-        }
-      }
-
-      if (!messageData.text && (!messageData.attachments || messageData.attachments.length === 0)) {
+      if (
+        !messageData.text &&
+        (!messageData.attachments || messageData.attachments.length === 0)
+      ) {
         setSending(false);
         return;
       }
@@ -233,7 +278,14 @@ export default function ChatScreen() {
       } catch (err: any) {
         // If offline, enqueue for later delivery
         if (!err?.response) {
-          await offlineQueue.enqueue({ type: "chat_message_send", payload: { channelId, text: messageData.text, attachments: messageData.attachments } });
+          await offlineQueue.enqueue({
+            type: "chat_message_send",
+            payload: {
+              channelId,
+              text: messageData.text,
+              attachments: messageData.attachments,
+            },
+          });
         } else {
           throw err;
         }
@@ -243,7 +295,6 @@ export default function ChatScreen() {
       Alert.alert("Error", "Failed to send message.");
     } finally {
       setNewMessage("");
-      setSelectedMedia(null);
       setQuotedMessage(null);
       setSending(false);
     }
@@ -252,19 +303,32 @@ export default function ChatScreen() {
   const handleReaction = async (emoji: string) => {
     try {
       if (!channel || !selectedMessage) return;
-      const reactionTypeMap: Record<string, string> = { "👍": "like", "❤️": "love", "🔥": "fire", "🤣": "haha", "🥲": "smile_tear", "😡": "angry" };
+      const reactionTypeMap: Record<string, string> = {
+        "👍": "like",
+        "❤️": "love",
+        "🔥": "fire",
+        "🤣": "haha",
+        "🥲": "smile_tear",
+        "😡": "angry",
+      };
       const reactionType = reactionTypeMap[emoji];
       if (!reactionType) return;
 
-      const ownReactions: any[] = Array.isArray(selectedMessage.own_reactions) ? selectedMessage.own_reactions : [];
-      const hasSameType = ownReactions.some((r: any) => r.type === reactionType);
+      const ownReactions: any[] = Array.isArray(selectedMessage.own_reactions)
+        ? selectedMessage.own_reactions
+        : [];
+      const hasSameType = ownReactions.some(
+        (r: any) => r.type === reactionType
+      );
 
       if (hasSameType) {
         await channel.deleteReaction(selectedMessage.id, reactionType);
       } else {
         for (const r of ownReactions) {
           if (r?.type && r.type !== reactionType) {
-            try { await channel.deleteReaction(selectedMessage.id, r.type); } catch {}
+            try {
+              await channel.deleteReaction(selectedMessage.id, r.type);
+            } catch {}
           }
         }
         await channel.sendReaction(selectedMessage.id, { type: reactionType });
@@ -289,7 +353,10 @@ export default function ChatScreen() {
 
   if (isConnecting || loading) {
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+      >
         <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1DA1F2" />
@@ -300,67 +367,60 @@ export default function ChatScreen() {
 
   if (!client || !isConnected) {
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+      >
         <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View className="flex-1 items-center justify-center px-8">
-          <Ionicons name="cloud-offline-outline" size={64} color={colors.grayText} />
-          <Text className="text-xl font-semibold mt-4 mb-2" style={{ color: colors.text }}>Connection Issue</Text>
-          <Text className="text-center" style={{ color: colors.grayText }}>Unable to connect to chat service. Please check your internet connection.</Text>
+          <Ionicons
+            name="cloud-offline-outline"
+            size={64}
+            color={colors.grayText}
+          />
+          <Text
+            className="text-xl font-semibold mt-4 mb-2"
+            style={{ color: colors.text }}
+          >
+            Connection Issue
+          </Text>
+          <Text className="text-center" style={{ color: colors.grayText }}>
+            Unable to connect to chat service. Please check your internet
+            connection.
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 0 }} edges={['top']}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 0 }}
+      edges={["top"]}
+    >
       <StatusBar style={isDarkMode ? "light" : "dark"} />
 
       <ChatHeader colors={colors} otherUser={otherUser} />
 
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}>
-        <View className="flex-1">
-          <FlatList
-            data={messages}
-            renderItem={({ item, index }) => (
-              <View ref={(el) => { if (el) { (messageRefs.current as any)[item.id] = el; } }}>
-                <MessageBubble
-                  message={item}
-                  index={index}
-                  messages={messages}
-                  currentUserId={currentUser?.clerkId}
-                  colors={colors}
-                  otherUser={otherUser}
-                  onLongPress={handleLongPress}
-                />
-              </View>
-            )}
-            keyExtractor={(item) => item.id}
-            className="flex-1 px-2"
-            style={{ backgroundColor: colors.background }}
-            contentContainerStyle={{ paddingTop: 16, paddingBottom: keyboardHeight > 0 ? 16 : 80 + systemUIHeight }}
-            inverted
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            onScrollBeginDrag={() => { Keyboard.dismiss(); setSelectedMessage(null); }}
-          />
-
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      >
+        <Channel channel={channel}>
+          <MessageList />
           <MessageInput
-            colors={colors}
-            insetsBottom={insets.bottom}
-            keyboardHeight={keyboardHeight}
-            systemUIHeight={systemUIHeight}
-            quotedMessage={quotedMessage}
-            onCancelQuote={() => setQuotedMessage(null)}
-            selectedMedia={selectedMedia}
-            onClearMedia={() => setSelectedMedia(null)}
-            onPickMedia={async () => { const media = await pickMedia(); setSelectedMedia(media); }}
-            inputRef={inputRef}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            sending={sending}
-            onSend={sendMessage}
+            hasImagePicker={true}
+            hasFilePicker={true}
+            // Optional: Customize attachment types if needed
+            attachmentPickerProps={{
+              imagePickerProps: {
+                quality: 0.8,
+                allowsEditing: true,
+              }
+            }}
           />
-        </View>
+        </Channel>
       </KeyboardAvoidingView>
 
       <ReactionPickerModal

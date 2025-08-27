@@ -1,62 +1,65 @@
-// mobile/utils/mediaPicker.ts
 import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 
 interface Media {
   uri: string;
   type: 'image' | 'video';
+  name: string;
+  mimeType: string;
 }
 
 export const pickMedia = async (): Promise<Media | null> => {
-  if (Platform.OS !== 'web') {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Sorry, we need media library permissions to make this work!');
-      return null;
-    }
-  }
-
-  let result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.All,
-    allowsEditing: true,
-    aspect: [4, 3],
-    quality: 1,
-  });
-
-  if (!result.canceled && result.assets && result.assets.length > 0) {
-    const asset = result.assets[0];
-    return { uri: asset.uri, type: asset.type as 'image' | 'video' };
-  }
-
-
-  return null;
-};
-
-export const uploadMediaToCloudinary = async (media: Media): Promise<string | null> => {
-  const formData = new FormData();
-  formData.append('file', {
-    uri: media.uri,
-    type: `${media.type}/${media.uri.split('.').pop()}`,
-    name: `${media.type}.${media.uri.split('.').pop()}`,
-  } as any); // Type assertion might be needed depending on the exact FormData type definition
-  
-  // FIX: The 'upload_preset' key was missing here.
-  formData.append('upload_preset', 'aivq0snq'); // Replace with your Cloudinary upload preset
-
   try {
-    const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/dtna5t2em/${media.type}/upload`, // Replace with your Cloudinary cloud name
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+    // Request permissions
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required', 
+          'Please grant media library permissions to upload images and videos.'
+        );
+        return null;
       }
-    );
-    return response.data.secure_url;
+    }
+
+    // Launch image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+      allowsMultipleSelection: false,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      
+      // Validate file size (Stream has a 100MB default limit)
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      if (asset.fileSize && asset.fileSize > maxSize) {
+        Alert.alert(
+          'File Too Large', 
+          'Please select a file smaller than 100MB.'
+        );
+        return null;
+      }
+
+      // Get file extension and name
+      const uriParts = asset.uri.split('/');
+      const fileName = uriParts[uriParts.length - 1] || `media_${Date.now()}`;
+      
+      return { 
+        uri: asset.uri, 
+        type: asset.type as 'image' | 'video',
+        name: fileName,
+        mimeType: asset.mimeType || (asset.type === 'video' ? 'video/mp4' : 'image/jpeg')
+      };
+    }
+
+    return null;
   } catch (error) {
-    console.error('Error uploading media to Cloudinary:', error);
+    console.error('❌ Error picking media:', error);
+    Alert.alert('Error', 'Failed to pick media. Please try again.');
     return null;
   }
 };
