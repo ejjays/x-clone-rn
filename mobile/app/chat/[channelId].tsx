@@ -33,7 +33,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
-import { Chat, Channel, MessageList } from "stream-chat-expo"; // Keep Stream's MessageList
+import { Chat, Channel, MessageList, OverlayProvider } from "stream-chat-expo"; // Keep Stream's MessageList and add OverlayProvider
 import MessageInput from "@/components/chat/MessageInput"; // Use custom MessageInput
 import { pickMedia } from "@/utils/mediaPicker";
 import { uploadMediaToCloudinary } from "@/utils/cloudinary";
@@ -447,27 +447,29 @@ export default function ChatScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         {client && channel && ( // Ensure both client and channel are not null before rendering Chat
-          <Chat client={client}>
-            <Channel channel={channel}>
-              <MessageList />
-              <MessageInput
-                colors={colors}
-                insetsBottom={insets.bottom}
-                keyboardHeight={keyboardHeight}
-                systemUIHeight={systemUIHeight}
-                quotedMessage={quotedMessage}
-                onCancelQuote={() => setQuotedMessage(null)}
-                selectedMedia={selectedMedia}
-                onClearMedia={onClearMedia}
-                onPickMedia={onPickMedia}
-                inputRef={inputRef}
-                newMessage={newMessage}
-                setNewMessage={setNewMessage}
-                sending={sending}
-                onSend={sendMessage}
-              />
-            </Channel>
-          </Chat>
+          <OverlayProvider>
+            <Chat client={client}>
+              <Channel channel={channel}>
+                <MessageList />
+                <MessageInput
+                  colors={colors}
+                  insetsBottom={insets.bottom}
+                  keyboardHeight={keyboardHeight}
+                  systemUIHeight={systemUIHeight}
+                  quotedMessage={quotedMessage}
+                  onCancelQuote={() => setQuotedMessage(null)}
+                  selectedMedia={selectedMedia}
+                  onClearMedia={onClearMedia}
+                  onPickMedia={onPickMedia}
+                  inputRef={inputRef}
+                  newMessage={newMessage}
+                  setNewMessage={setNewMessage}
+                  sending={sending}
+                  onSend={sendMessage}
+                />
+              </Channel>
+            </Chat>
+          </OverlayProvider>
         )}
       </KeyboardAvoidingView>
 
