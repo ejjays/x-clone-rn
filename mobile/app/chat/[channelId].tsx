@@ -33,7 +33,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
-import { Channel, MessageInput, MessageList } from "stream-chat-expo"; // Import Stream's MessageInput and MessageList
+import { Chat, Channel, MessageInput, MessageList } from "stream-chat-expo"; // Import Stream's MessageInput and MessageList
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
 
@@ -407,20 +407,24 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-        <Channel channel={channel}>
-          <MessageList />
-          <MessageInput
-            hasImagePicker={true}
-            hasFilePicker={true}
-            // Optional: Customize attachment types if needed
-            attachmentPickerProps={{
-              imagePickerProps: {
-                quality: 0.8,
-                allowsEditing: true,
-              }
-            }}
-          />
-        </Channel>
+        {client && channel && ( // Ensure both client and channel are not null before rendering Chat
+          <Chat client={client}>
+            <Channel channel={channel}>
+              <MessageList />
+              <MessageInput
+                hasImagePicker={true}
+                hasFilePicker={true}
+                // Optional: Customize attachment types if needed
+                attachmentPickerProps={{
+                  imagePickerProps: {
+                    quality: 0.8,
+                    allowsEditing: true,
+                  }
+                }}
+              />
+            </Channel>
+          </Chat>
+        )}
       </KeyboardAvoidingView>
 
       <ReactionPickerModal
