@@ -33,10 +33,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
-import { Chat, Channel, MessageList, OverlayProvider } from "stream-chat-expo"; // Keep Stream's MessageList and add OverlayProvider
+import { Chat, Channel, MessageList, MessageInput, OverlayProvider } from "stream-chat-expo"; // Use built-in MessageInput
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
-import MessageInput from "@/components/chat/MessageInput"; // Use custom MessageInput
-import { pickMedia } from "@/utils/mediaPicker";
 import { uploadMediaToCloudinary } from "@/utils/cloudinary";
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
@@ -78,7 +76,6 @@ export default function ChatScreen() {
   const [otherUser, setOtherUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: "image" | "video" } | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [systemUIHeight, setSystemUIHeight] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
@@ -262,83 +259,7 @@ export default function ChatScreen() {
     }, [isDarkMode])
   );
 
-  const sendMessage = async () => {
-    if (!channel || sending) return;
-    if (!newMessage.trim() && !selectedMedia) return;
-
-    setSending(true);
-    try {
-      let messageData: any = {};
-      if (newMessage.trim()) {
-        messageData.text = newMessage.trim();
-      }
-      if (quotedMessage?.id) messageData.quoted_message_id = quotedMessage.id;
-
-      if (selectedMedia) {
-        if (selectedMedia.type !== "image") {
-          Alert.alert("Images Only", "Please select an image for chat messages.");
-          setSending(false);
-          return;
-        }
-        const uploadedUrl = await uploadMediaToCloudinary({ uri: selectedMedia.uri, type: "image" });
-        if (!uploadedUrl) {
-          Alert.alert("Upload Failed", "Could not upload your image. Please try again.");
-          setSending(false);
-          return;
-        }
-        messageData.attachments = [
-          {
-            type: "image",
-            image_url: uploadedUrl,
-            thumb_url: uploadedUrl,
-            asset_url: uploadedUrl,
-          },
-        ];
-      }
-
-      try {
-        await channel.sendMessage(messageData);
-      } catch (err: any) {
-        // If offline, enqueue for later delivery
-        if (!err?.response && !selectedMedia) {
-          await offlineQueue.enqueue({
-            type: "chat_message_send",
-            payload: {
-              channelId,
-              text: messageData.text,
-              attachments: messageData.attachments,
-            },
-          });
-        } else {
-          throw err;
-        }
-      }
-    } catch (error) {
-      console.error("❌ Error sending message:", error);
-      Alert.alert("Error", "Failed to send message.");
-    } finally {
-      setNewMessage("");
-      setQuotedMessage(null);
-      setSelectedMedia(null);
-      setSending(false);
-    }
-  };
-
-  const onPickMedia = async () => {
-    try {
-      const media = await pickMedia();
-      if (!media) return;
-      if (media.type !== "image") {
-        Alert.alert("Images Only", "Please select an image for chat messages.");
-        return;
-      }
-      setSelectedMedia({ uri: media.uri, type: "image" });
-    } catch (e) {
-      Alert.alert("Error", "Failed to pick an image. Please try again.");
-    }
-  };
-
-  const onClearMedia = () => setSelectedMedia(null);
+  // Let built-in MessageInput handle sending. Only provide upload override through Channel props below.
 
   const handleReaction = async (emoji: string) => {
     try {
@@ -450,24 +371,13 @@ export default function ChatScreen() {
         {client && channel && ( // Ensure both client and channel are not null before rendering Chat
           <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
             <Chat client={client}>
-              <Channel channel={channel}>
+              <Channel channel={channel} doFileUploadRequest={async (file: any) => {
+                const url = await uploadMediaToCloudinary({ uri: file?.uri, type: "image" });
+                if (!url) throw new Error("Cloudinary upload failed");
+                return { file: url, thumb_url: url } as any;
+              }}>
                 <MessageList />
-                <MessageInput
-                  colors={colors}
-                  insetsBottom={insets.bottom}
-                  keyboardHeight={keyboardHeight}
-                  systemUIHeight={systemUIHeight}
-                  quotedMessage={quotedMessage}
-                  onCancelQuote={() => setQuotedMessage(null)}
-                  selectedMedia={selectedMedia}
-                  onClearMedia={onClearMedia}
-                  onPickMedia={onPickMedia}
-                  inputRef={inputRef}
-                  newMessage={newMessage}
-                  setNewMessage={setNewMessage}
-                  sending={sending}
-                  onSend={sendMessage}
-                />
+                <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
               </Channel>
             </Chat>
           </OverlayProvider>
