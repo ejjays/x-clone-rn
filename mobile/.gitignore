@@ -38,5 +38,3 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
-
-google-services.json

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "622778462877",
+    "project_id": "pcmix-clone-rn",
+    "storage_bucket": "pcmix-clone-rn.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:622778462877:android:6ba50b336541a61c481a74",
+        "android_client_info": {
+          "package_name": "com.ejjays.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3GCZqYMMusFv1F-ZskE3nqzl-dshTJcU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
