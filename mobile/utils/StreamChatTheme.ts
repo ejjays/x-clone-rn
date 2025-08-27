@@ -3,8 +3,10 @@ import { DarkThemeColors, LightThemeColors } from "@/constants/Colors";
 
 export const createStreamChatTheme = (
   isDarkMode: boolean,
+  options?: { bottomInset?: number },
 ): DeepPartial<Theme> => {
   const base = isDarkMode ? DarkThemeColors : LightThemeColors;
+  const bottomInset = options?.bottomInset ?? 0;
 
   return {
     colors: {
@@ -37,7 +39,8 @@ export const createStreamChatTheme = (
         borderTopWidth: 1,
         borderTopColor: base.border,
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingTop: 12,
+        paddingBottom: bottomInset,
       },
       inputBox: {
         backgroundColor: base.surface,

@@ -356,8 +356,8 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 0 }}
-      edges={["top"]}
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={["top", "bottom"]}
     >
       <StatusBar style={isDarkMode ? "light" : "dark"} />
 
@@ -365,7 +365,7 @@ export default function ChatScreen() {
 
       <View className="flex-1">
         {client && channel && ( // Ensure both client and channel are not null before rendering Chat
-          <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
+          <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode, { bottomInset: insets.bottom }) }}>
             <Chat client={client}>
               <Channel
                 channel={channel}
@@ -378,7 +378,7 @@ export default function ChatScreen() {
                   return { file: url, thumb_url: url } as any;
                 }}
               >
-                <MessageList />
+                <MessageList keyboardVerticalOffset={insets.bottom} />
                 <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
               </Channel>
             </Chat>
