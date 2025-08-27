@@ -11,7 +11,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, Text } from "react-native";
 import { OverlayProvider, Chat } from "stream-chat-react-native";
-import { streamChatTheme } from "@/utils/StreamChatTheme";
+import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { useEffect } from "react";
@@ -146,7 +146,7 @@ const InitialLayout = () => {
 
   // Don't block the UI on fonts; render immediately and let fonts load in the background
   return (
-    <OverlayProvider value={{ style: streamChatTheme }}>
+    <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
       <StatusBar
         style={isDarkMode ? "light" : "dark"}
         backgroundColor={colors.background}

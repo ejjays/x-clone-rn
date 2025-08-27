@@ -1,62 +1,70 @@
-import type { DeepPartial, Theme } from "stream-chat-react-native"
+import type { DeepPartial, Theme } from "stream-chat-react-native";
+import { DarkThemeColors, LightThemeColors } from "@/constants/Colors";
 
-export const streamChatTheme: DeepPartial<Theme> = {
-  colors: {
-    primary: "#1DA1F2",
-    secondary: "#1877F2",
-    accent_blue: "#1DA1F2",
-    accent_green: "#20BD5F",
-    accent_red: "#FF3742",
-    bg_gradient_end: "#F7F7F7",
-    bg_gradient_start: "#FCFCFC",
-    black: "#000000",
-    blue_alice: "#00D4FF",
-    border: "#E8E8E8",
-    grey: "#7A7A7A",
-    grey_gainsboro: "#DBDBDB",
-    grey_whisper: "#ECEBEB",
-    icon: "#7A7A7A",
-    modal: "#FFFFFF",
-    overlay: "rgba(0, 0, 0, 0.5)",
-    shadow_icon: "#00000080",
-    targetedMessageBackground: "#FBF4DD",
-    transparent: "transparent",
-    white: "#FFFFFF",
-    white_smoke: "#F2F2F2",
-    white_snow: "#FCFCFC",
-  },
-  messageInput: {
-    container: {
-      backgroundColor: "#FFFFFF",
-      borderTopWidth: 1,
-      borderTopColor: "#E8E8E8",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+export const createStreamChatTheme = (
+  isDarkMode: boolean,
+): DeepPartial<Theme> => {
+  const base = isDarkMode ? DarkThemeColors : LightThemeColors;
+
+  return {
+    colors: {
+      primary: base.blue,
+      secondary: base.blue,
+      accent_blue: base.blue,
+      accent_green: "#20BD5F",
+      accent_red: "#FF3742",
+      bg_gradient_end: base.background,
+      bg_gradient_start: base.background,
+      black: "#000000",
+      blue_alice: base.blue,
+      border: base.border,
+      grey: base.textSecondary,
+      grey_gainsboro: base.border,
+      grey_whisper: base.border,
+      icon: base.icon,
+      modal: base.card,
+      overlay: "rgba(0, 0, 0, 0.5)",
+      shadow_icon: "#00000080",
+      targetedMessageBackground: isDarkMode ? base.surface : "#FBF4DD",
+      transparent: "transparent",
+      white: base.card,
+      white_smoke: base.surface,
+      white_snow: base.background,
     },
-    inputBox: {
-      backgroundColor: "#F7F7F7",
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: "#E8E8E8",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      fontSize: 16,
-      maxHeight: 100,
+    messageInput: {
+      container: {
+        backgroundColor: base.card,
+        borderTopWidth: 1,
+        borderTopColor: base.border,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+      },
+      inputBox: {
+        backgroundColor: base.surface,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: base.border,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        fontSize: 16,
+        maxHeight: 100,
+        color: base.text,
+      },
+      sendButton: {
+        backgroundColor: base.blue,
+        borderRadius: 20,
+        width: 36,
+        height: 36,
+        justifyContent: "center",
+        alignItems: "center",
+        marginLeft: 8,
+      },
     },
-    sendButton: {
-      backgroundColor: "#1DA1F2",
-      borderRadius: 20,
-      width: 36,
-      height: 36,
-      justifyContent: "center",
-      alignItems: "center",
-      marginLeft: 8,
+    messageList: {
+      container: {
+        backgroundColor: base.background,
+        flex: 1,
+      },
     },
-  },
-  messageList: {
-    container: {
-      backgroundColor: "#FFFFFF",
-      flex: 1,
-    },
-  },
-}
+  };
+};
