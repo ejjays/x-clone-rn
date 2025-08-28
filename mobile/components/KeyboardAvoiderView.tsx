@@ -6,7 +6,7 @@ interface KeyboardAvoiderViewProps {
   style?: any;
 }
 
-export default function KeyboardAvoiderView({ children, extraSpace = 8, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
+export default function KeyboardAvoiderView({ children, extraSpace = 6, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
   const translateY = useRef(new Animated.Value(0)).current;
   const subs = useRef<EmitterSubscription[]>([]);
 
