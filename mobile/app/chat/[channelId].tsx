@@ -76,8 +76,6 @@ export default function ChatScreen() {
   const [otherUser, setOtherUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [systemUIHeight, setSystemUIHeight] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [quotedMessage, setQuotedMessage] = useState<any | null>(null);
   const [anchorMeasurements, setAnchorMeasurements] = useState<{
@@ -199,32 +197,7 @@ export default function ChatScreen() {
     initializeChannel();
   }, [client, isConnected, channelId, currentUser]);
 
-  useEffect(() => {
-    try {
-      const bottomInset = insets.bottom;
-      setSystemUIHeight(bottomInset);
-    } catch (e) {
-      setSystemUIHeight(insets.bottom);
-    }
-  }, [insets.bottom]);
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      (e) => {
-        const extraPadding = Platform.OS === "android" ? systemUIHeight : 0;
-        setKeyboardHeight(e.endCoordinates.height + extraPadding);
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => setKeyboardHeight(0)
-    );
-    return () => {
-      keyboardDidShowListener?.remove();
-      keyboardDidHideListener?.remove();
-    };
-  }, [systemUIHeight]);
+  // Remove manual keyboard tracking; rely on OS resize + KeyboardAvoidingView
 
   useFocusEffect(
     useCallback(() => {
@@ -364,22 +337,18 @@ export default function ChatScreen() {
       <ChatHeader colors={colors} otherUser={otherUser} />
 
       <View className="flex-1">
-        {client && channel && ( // Ensure both client and channel are not null before rendering Chat
+        {client && channel && (
           <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
             <Chat client={client}>
-              <Channel
-                channel={channel}
-                keyboardBehavior={Platform.OS === "ios" ? "padding" : "height"}
-                keyboardVerticalOffset={Platform.OS === "ios" ? insets.bottom : 0}
-                additionalKeyboardAvoidingViewProps={{ style: { flex: 1 } }}
-                doFileUploadRequest={async (file: any) => {
-                  const url = await uploadMediaToCloudinary({ uri: file?.uri, type: "image" });
-                  if (!url) throw new Error("Cloudinary upload failed");
-                  return { file: url, thumb_url: url } as any;
-                }}
-              >
-                <MessageList />
-                <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
+              <Channel channel={channel}>
+                <KeyboardAvoidingView
+                  style={{ flex: 1 }}
+                  behavior={Platform.OS === "ios" ? "padding" : "height"}
+                  keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+                >
+                  <MessageList />
+                  <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
+                </KeyboardAvoidingView>
               </Channel>
             </Chat>
           </OverlayProvider>
