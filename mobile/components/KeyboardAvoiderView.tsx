@@ -18,13 +18,12 @@ export default function KeyboardAvoiderView({ children, extraSpace = 8, style }:
       input.measure?.((x: number, y: number, w: number, h: number, pageX: number, pageY: number) => {
         const inputBottom = pageY + h;
         const keyboardTop = e.endCoordinates?.screenY ?? 0;
-        let androidPannedBy = 0;
-        if (Platform.OS === 'android') {
-          // Compensate for Android's own pan/resize
-          androidPannedBy = Math.max(inputBottom - keyboardTop, 0);
-        }
+        // Compute the exact additional shift needed so the input sits just above the keyboard
         let shift = inputBottom + extraSpace - keyboardTop;
-        if (Platform.OS === 'android') shift += androidPannedBy;
+        // On Android, the window already resizes/pans. Do NOT add extra pan; only apply remaining positive gap.
+        if (Platform.OS === 'android') {
+          shift = Math.max(shift, 0);
+        }
         if (shift < 0) shift = 0;
         Animated.timing(translateY, {
           toValue: -shift,
