@@ -19,7 +19,7 @@
       "edgeToEdgeEnabled": false,
       "package": "com.ejjays.mobile",
       "googleServicesFile": "./google-services.json",
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "pan"
     },
     "androidNavigationBar": {
       "backgroundColor": "#242526",
