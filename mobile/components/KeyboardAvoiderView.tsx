@@ -17,7 +17,9 @@ export default function KeyboardAvoiderView({ children, extraSpace = 8, style }:
       // Measure the currently focused input to compute how far to lift
       input.measure?.((x: number, y: number, w: number, h: number, pageX: number, pageY: number) => {
         const inputBottom = pageY + h;
-        const keyboardTop = e.endCoordinates?.screenY ?? 0;
+        // Use screenY - height if available to capture any accessory rows above the primary keyboard
+        const end = e.endCoordinates as any;
+        const keyboardTop = end?.screenY ?? 0;
         // Compute the exact additional shift needed so the input sits just above the keyboard
         let shift = inputBottom + extraSpace - keyboardTop;
         // On Android, the window already resizes/pans. Do NOT add extra pan; only apply remaining positive gap.
