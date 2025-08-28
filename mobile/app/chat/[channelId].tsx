@@ -365,20 +365,20 @@ export default function ChatScreen() {
 
       <View className="flex-1">
         {client && channel && ( // Ensure both client and channel are not null before rendering Chat
-          <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode, { bottomInset: insets.bottom }) }}>
+          <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
             <Chat client={client}>
               <Channel
                 channel={channel}
-                bottomInset={insets.bottom}
                 keyboardBehavior={Platform.OS === "ios" ? "padding" : "height"}
-                keyboardVerticalOffset={insets.bottom}
+                keyboardVerticalOffset={0}
+                additionalKeyboardAvoidingViewProps={{ style: { flex: 1 } }}
                 doFileUploadRequest={async (file: any) => {
                   const url = await uploadMediaToCloudinary({ uri: file?.uri, type: "image" });
                   if (!url) throw new Error("Cloudinary upload failed");
                   return { file: url, thumb_url: url } as any;
                 }}
               >
-                <MessageList keyboardVerticalOffset={insets.bottom} />
+                <MessageList />
                 <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
               </Channel>
             </Chat>

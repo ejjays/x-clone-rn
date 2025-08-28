@@ -146,7 +146,7 @@ const InitialLayout = () => {
 
   // Don't block the UI on fonts; render immediately and let fonts load in the background
   return (
-    <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode, { bottomInset: 0 }) }}>
+    <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
       <StatusBar
         style={isDarkMode ? "light" : "dark"}
         backgroundColor={colors.background}
