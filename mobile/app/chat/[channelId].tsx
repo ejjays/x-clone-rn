@@ -369,6 +369,8 @@ export default function ChatScreen() {
             <Chat client={client}>
               <Channel
                 channel={channel}
+                keyboardBehavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? insets.bottom : 0}
                 additionalKeyboardAvoidingViewProps={{ style: { flex: 1 } }}
                 doFileUploadRequest={async (file: any) => {
                   const url = await uploadMediaToCloudinary({ uri: file?.uri, type: "image" });
