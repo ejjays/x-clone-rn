@@ -35,7 +35,6 @@ import MessageBubble from "@/components/chat/MessageBubble";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
 import { Chat, Channel, MessageList, MessageInput, OverlayProvider } from "stream-chat-expo"; // Use built-in MessageInput
 import KeyboardAvoiderView from "@/components/KeyboardAvoiderView";
-import AndroidKeyboardAvoider from "@/components/AndroidKeyboardAvoider";
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { uploadMediaToCloudinary } from "@/utils/cloudinary";
 
@@ -342,22 +341,17 @@ export default function ChatScreen() {
         {client && channel && (
           <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
             <Chat client={client}>
-              <Channel 
-                channel={channel}
-                keyboardBehavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={0}
-                additionalKeyboardAvoidingViewProps={{ style: { flex: 1 } }}
-              >
+              <Channel channel={channel}>
                 {Platform.OS === 'ios' ? (
                   <KeyboardAvoiderView baseGap={0} extraSpace={10}>
                     <MessageList />
                     <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
                   </KeyboardAvoiderView>
                 ) : (
-                  <AndroidKeyboardAvoider extraSpace={12}>
+                  <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={0} style={{ flex: 1 }}>
                     <MessageList />
                     <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
-                  </AndroidKeyboardAvoider>
+                  </KeyboardAvoidingView>
                 )}
               </Channel>
             </Chat>
