@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   Platform,
 } from "react-native";
+import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -20,7 +21,7 @@ import { StatusBar } from "expo-status-bar";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
-import * as NavigationBar from 'expo-navigation-bar';
+import * as NavigationBar from "expo-navigation-bar";
 import { DarkThemeColors } from "@/constants/Colors"; // Import DarkThemeColors
 
 const { Navigator } = createMaterialTopTabNavigator();
@@ -51,15 +52,15 @@ const TabsLayout = () => {
   }, [isHomeScreen, isProfileScreen, isVideosScreen]);
 
   useEffect(() => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       if (isVideosScreen) {
         // Hide bottom navigation bar on video screen
-        NavigationBar.setVisibilityAsync('hidden');
+        NavigationBar.setVisibilityAsync("hidden");
       } else {
         // Show bottom navigation bar on other screens and set to dark theme
-        NavigationBar.setVisibilityAsync('visible');
+        NavigationBar.setVisibilityAsync("visible");
         NavigationBar.setBackgroundColorAsync(DarkThemeColors.background);
-        NavigationBar.setButtonStyleAsync('light');
+        NavigationBar.setButtonStyleAsync("light");
       }
     }
   }, [isVideosScreen]); // Re-run when isVideosScreen changes
@@ -86,6 +87,7 @@ const TabsLayout = () => {
     router.push("/messages");
   };
 
+  const [fontsLoaded] = useFonts({ Lato_700Bold });
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
   return (
@@ -113,8 +115,12 @@ const TabsLayout = () => {
             style={{ backgroundColor: colors.background }}
           >
             <Text
-              className="text-4xl font-extrabold ml-1"
-              style={{ color: "white" }}
+              className="text-4xl ml-1"
+              style={{
+                color: "white",
+                fontFamily: fontsLoaded ? "Lato_700Bold" : undefined,
+                fontWeight: fontsLoaded ? "normal" : "bold",
+              }}
             >
               pcmi
             </Text>
@@ -151,7 +157,7 @@ const TabsLayout = () => {
               },
               lazyPreloadDistance: 1,
             }}
-            tabBar={(props) => (
+            tabBar={(props) =>
               isVideosScreen ? null : (
                 <Animated.View style={animatedTabBarStyle}>
                   <View
@@ -212,7 +218,9 @@ const TabsLayout = () => {
 
                       <TouchableOpacity
                         className="flex-1 items-center justify-center h-full"
-                        onPressIn={() => props.navigation.navigate("notifications")}
+                        onPressIn={() =>
+                          props.navigation.navigate("notifications")
+                        }
                         activeOpacity={0.7}
                         delayPressIn={0}
                       >
@@ -236,7 +244,9 @@ const TabsLayout = () => {
                       >
                         <Menu
                           size={26}
-                          color={pathname === "/profile" ? colors.blue : "white"}
+                          color={
+                            pathname === "/profile" ? colors.blue : "white"
+                          }
                         />
                       </TouchableOpacity>
                     </View>
@@ -261,7 +271,7 @@ const TabsLayout = () => {
                   </View>
                 </Animated.View>
               )
-            )}
+            }
           >
             <MaterialTopTabs.Screen name="index" />
             <MaterialTopTabs.Screen name="search" />

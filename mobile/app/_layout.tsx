@@ -26,10 +26,8 @@ import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { LogBox } from "react-native";
 import {
   useFonts,
-  Poppins_400Regular,
-  Poppins_600SemiBold,
-  Poppins_700Bold,
-} from "@expo-google-fonts/poppins";
+  Lato_900Black, // Import Lato_900Black
+} from "@expo-google-fonts/lato"; // Import from lato
 // ADD THESE IMPORTS FOR PUSH NOTIFICATIONS
 import * as Notifications from "expo-notifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -43,9 +41,7 @@ const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const { client } = useStreamChat();
   const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
+    Lato_900Black, // Use Lato_900Black
   });
   const { colors, isDarkMode } = useTheme();
   
@@ -57,16 +53,16 @@ const InitialLayout = () => {
     Text.defaultProps = {} as any;
   }
   if (!Text.defaultProps.style) {
-    Text.defaultProps.style = { fontFamily: "Poppins_400Regular" };
+    Text.defaultProps.style = { fontFamily: "Lato_900Black" }; // Use Lato_900Black
   } else {
     const prev = Text.defaultProps.style as any;
     const alreadyApplied = Array.isArray(prev)
-      ? prev.some((s) => (s as any)?.fontFamily === "Poppins_400Regular")
-      : (prev as any)?.fontFamily === "Poppins_400Regular";
+      ? prev.some((s) => (s as any)?.fontFamily === "Lato_900Black")
+      : (prev as any)?.fontFamily === "Lato_900Black";
     if (!alreadyApplied) {
       Text.defaultProps.style = Array.isArray(prev)
-        ? [...prev, { fontFamily: "Poppins_400Regular" }]
-        : [prev, { fontFamily: "Poppins_400Regular" }];
+        ? [...prev, { fontFamily: "Lato_900Black" }]
+        : [prev, { fontFamily: "Lato_900Black" }];
     }
   }
 

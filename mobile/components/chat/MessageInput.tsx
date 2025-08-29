@@ -24,8 +24,8 @@ export default function MessageInput({ colors, keyboardHeight, systemUIHeight, q
       className="flex-row items-center border-t px-4"
       style={{
         paddingTop: 8,
-        paddingBottom: keyboardHeight > 0 ? 8 : 8 + systemUIHeight,
-        marginBottom: Platform.OS === "android" ? keyboardHeight : 0,
+        paddingBottom: 8, // Always 8, as marginBottom will handle systemUIHeight
+        marginBottom: keyboardHeight > 0 ? keyboardHeight : systemUIHeight, // Adjust marginBottom based on keyboard and systemUI
         borderTopColor: colors.border,
         backgroundColor: colors.background,
       }}
