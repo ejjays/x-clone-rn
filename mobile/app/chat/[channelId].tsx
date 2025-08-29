@@ -348,10 +348,10 @@ export default function ChatScreen() {
                     <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
                   </KeyboardAvoiderView>
                 ) : (
-                  <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={0} style={{ flex: 1 }}>
+                  <View style={{ flex: 1 }}>
                     <MessageList />
                     <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
-                  </KeyboardAvoidingView>
+                  </View>
                 )}
               </Channel>
             </Chat>
