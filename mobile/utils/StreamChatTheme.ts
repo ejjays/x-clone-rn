@@ -39,8 +39,8 @@ export const createStreamChatTheme = (
         borderTopColor: base.border,
         paddingHorizontal: 16,
         paddingTop: 12,
-        paddingBottom: Platform.OS === 'ios' ? 12 : 16,
-        minHeight: Platform.OS === 'ios' ? 60 : 70,
+        paddingBottom: Platform.OS === 'ios' ? 12 : 20,
+        minHeight: Platform.OS === 'ios' ? 60 : 72,
       },
       inputBox: {
         backgroundColor: base.surface,
