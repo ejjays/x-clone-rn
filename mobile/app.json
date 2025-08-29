@@ -46,9 +46,13 @@
         {
           "icon": "./assets/images/notification-icon.png",
           "color": "#ffffff",
-          "sounds": ["./assets/sounds/notification.mp3"]
+          "sounds": [
+            "./assets/sounds/notification.mp3"
+          ]
         }
-      ]
+      ],
+      "expo-video",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true
