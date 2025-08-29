@@ -2,12 +2,14 @@ import React, { PropsWithChildren, useEffect, useRef } from 'react';
 import { Animated, Dimensions, EmitterSubscription, Keyboard, KeyboardEvent, Platform, TextInput, View } from 'react-native';
 
 interface KeyboardAvoiderViewProps {
-  extraSpace?: number;
+  extraSpace?: number; // additional pixels to keep between input and keyboard
+  baseGap?: number; // persistent bottom gap even when keyboard is closed
   style?: any;
 }
 
-export default function KeyboardAvoiderView({ children, extraSpace = 6, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
-  const translateY = useRef(new Animated.Value(0)).current;
+export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap = 8, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
+  const translateY = useRef(new Animated.Value(0)).current; // used primarily for iOS
+  const paddingBottom = useRef(new Animated.Value(baseGap)).current; // used for Android to preserve own background
   const subs = useRef<EmitterSubscription[]>([]);
 
   useEffect(() => {
@@ -16,14 +18,23 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, style }:
       if (!input) return;
       input.measure?.((x: number, y: number, w: number, h: number, pageX: number, pageY: number) => {
         const inputBottom = pageY + h;
-        let shift = inputBottom + extraSpace - keyboardTop;
-        if (Platform.OS === 'android') shift = Math.max(shift, 0);
-        if (shift < 0) shift = 0;
-        Animated.timing(translateY, {
-          toValue: -shift,
-          duration: duration ? Math.max(duration, 120) : 180,
-          useNativeDriver: true,
-        }).start();
+        const required = inputBottom + extraSpace - keyboardTop;
+        if (Platform.OS === 'ios') {
+          const shift = Math.max(required, 0);
+          Animated.timing(translateY, {
+            toValue: -shift,
+            duration: duration ? Math.max(duration, 120) : 180,
+            useNativeDriver: true,
+          }).start();
+        } else {
+          // Android: adjust bottom padding instead of translating the whole view, preserving own background space
+          const pad = Math.max(baseGap, required);
+          Animated.timing(paddingBottom, {
+            toValue: pad > 0 ? pad : baseGap,
+            duration: duration ? Math.max(duration, 120) : 160,
+            useNativeDriver: false,
+          }).start();
+        }
       });
     };
 
@@ -36,11 +47,19 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, style }:
     };
 
     const onHide = () => {
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
+      if (Platform.OS === 'ios') {
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }).start();
+      } else {
+        Animated.timing(paddingBottom, {
+          toValue: baseGap,
+          duration: 140,
+          useNativeDriver: false,
+        }).start();
+      }
     };
 
     if (Platform.OS === 'ios') {
@@ -69,7 +88,12 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, style }:
   }, [extraSpace, translateY]);
 
   return (
-    <Animated.View style={[{ flex: 1, transform: [{ translateY }] }, style]}>
+    <Animated.View
+      style={[
+        { flex: 1, transform: [{ translateY }], paddingBottom },
+        style,
+      ]}
+    >
       {children}
     </Animated.View>
   );
