@@ -7,7 +7,7 @@ interface KeyboardAvoiderViewProps {
   style?: any;
 }
 
-export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap = 8, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
+export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap = 0, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
   const translateY = useRef(new Animated.Value(0)).current; // used primarily for iOS
   const paddingBottom = useRef(new Animated.Value(baseGap)).current; // used for Android to preserve own background
   const subs = useRef<EmitterSubscription[]>([]);

@@ -343,8 +343,8 @@ export default function ChatScreen() {
             <Chat client={client}>
               <Channel channel={channel}>
                 <KeyboardAvoiderView 
-                  baseGap={Platform.OS === 'ios' ? 8 : 12}
-                  extraSpace={Platform.OS === 'ios' ? 12 : 20}
+                  baseGap={0}
+                  extraSpace={Platform.OS === 'ios' ? 10 : 12}
                 >
                   <MessageList />
                   <MessageInput 
