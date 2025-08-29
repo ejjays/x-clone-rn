@@ -1,5 +1,6 @@
 import type { DeepPartial, Theme } from "stream-chat-react-native";
 import { DarkThemeColors, LightThemeColors } from "@/constants/Colors";
+import { Platform } from "react-native";
 
 export const createStreamChatTheme = (
   isDarkMode: boolean,
@@ -38,6 +39,8 @@ export const createStreamChatTheme = (
         borderTopColor: base.border,
         paddingHorizontal: 16,
         paddingTop: 12,
+        paddingBottom: Platform.OS === 'ios' ? 12 : 16,
+        minHeight: Platform.OS === 'ios' ? 60 : 70,
       },
       inputBox: {
         backgroundColor: base.surface,
@@ -45,10 +48,12 @@ export const createStreamChatTheme = (
         borderWidth: 1,
         borderColor: base.border,
         paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingVertical: Platform.OS === 'ios' ? 10 : 12,
         fontSize: 16,
-        maxHeight: 100,
+        maxHeight: 120,
+        minHeight: Platform.OS === 'ios' ? 36 : 40,
         color: base.text,
+        textAlignVertical: 'center',
       },
       sendButton: {
         backgroundColor: base.blue,
@@ -58,12 +63,35 @@ export const createStreamChatTheme = (
         justifyContent: "center",
         alignItems: "center",
         marginLeft: 8,
+        alignSelf: 'flex-end',
+        marginBottom: 2,
+      },
+      attachButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: base.surface,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+        alignSelf: 'flex-end',
+        marginBottom: 2,
+      },
+      inputBoxContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        paddingBottom: 0,
       },
     },
     messageList: {
       container: {
         backgroundColor: base.background,
         flex: 1,
+      },
+    },
+    overlay: {
+      container: {
+        backgroundColor: base.background,
       },
     },
   };

@@ -342,9 +342,22 @@ export default function ChatScreen() {
           <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
             <Chat client={client}>
               <Channel channel={channel}>
-                <KeyboardAvoiderView baseGap={8}>
+                <KeyboardAvoiderView 
+                  baseGap={Platform.OS === 'ios' ? 8 : 12}
+                  extraSpace={Platform.OS === 'ios' ? 12 : 20}
+                >
                   <MessageList />
-                  <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
+                  <MessageInput 
+                    hasImagePicker 
+                    hasFilePicker={false} 
+                    compressImageQuality={0.8}
+                    additionalTextInputProps={{
+                      style: {
+                        paddingTop: Platform.OS === 'android' ? 12 : 10,
+                        paddingBottom: Platform.OS === 'android' ? 12 : 10,
+                      }
+                    }}
+                  />
                 </KeyboardAvoiderView>
               </Channel>
             </Chat>
