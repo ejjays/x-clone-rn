@@ -341,7 +341,12 @@ export default function ChatScreen() {
         {client && channel && (
           <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
             <Chat client={client}>
-              <Channel channel={channel}>
+              <Channel 
+                channel={channel}
+                keyboardBehavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={0}
+                additionalKeyboardAvoidingViewProps={{ style: { flex: 1 } }}
+              >
                 <KeyboardAvoiderView 
                   baseGap={0}
                   extraSpace={Platform.OS === 'ios' ? 10 : 12}

@@ -8,10 +8,7 @@ interface KeyboardAvoiderViewProps {
 }
 
 export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap = 0, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
-  if (Platform.OS === 'android') {
-    // On Android, rely on window resize for perfectly smooth animation
-    return <View style={[{ flex: 1 }, style]}>{children}</View>;
-  }
+  // Keep the wrapper active across platforms so we can still correct small gaps
   const translateY = useRef(new Animated.Value(0)).current; // used primarily for iOS
   const paddingBottom = useRef(new Animated.Value(baseGap)).current; // used for Android to preserve own background
   const subs = useRef<EmitterSubscription[]>([]);
@@ -76,6 +73,7 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap 
       subs.current = [
         Keyboard.addListener('keyboardDidShow', onShow),
         Keyboard.addListener('keyboardDidHide', onHide),
+        Keyboard.addListener('keyboardDidChangeFrame', onShow),
       ];
       // Some Android keyboards change height without firing another show/hide event
       const dimSub = Dimensions.addEventListener('change', () => {
