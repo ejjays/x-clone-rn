@@ -35,6 +35,7 @@ import MessageBubble from "@/components/chat/MessageBubble";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
 import { Chat, Channel, MessageList, MessageInput, OverlayProvider } from "stream-chat-expo"; // Use built-in MessageInput
 import KeyboardAvoiderView from "@/components/KeyboardAvoiderView";
+import AndroidKeyboardAvoider from "@/components/AndroidKeyboardAvoider";
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { uploadMediaToCloudinary } from "@/utils/cloudinary";
 
@@ -347,23 +348,17 @@ export default function ChatScreen() {
                 keyboardVerticalOffset={0}
                 additionalKeyboardAvoidingViewProps={{ style: { flex: 1 } }}
               >
-                <KeyboardAvoiderView 
-                  baseGap={0}
-                  extraSpace={Platform.OS === 'ios' ? 10 : 12}
-                >
-                  <MessageList />
-                  <MessageInput 
-                    hasImagePicker 
-                    hasFilePicker={false} 
-                    compressImageQuality={0.8}
-                    additionalTextInputProps={{
-                      style: {
-                        paddingTop: Platform.OS === 'android' ? 12 : 10,
-                        paddingBottom: Platform.OS === 'android' ? 12 : 10,
-                      }
-                    }}
-                  />
-                </KeyboardAvoiderView>
+                {Platform.OS === 'ios' ? (
+                  <KeyboardAvoiderView baseGap={0} extraSpace={10}>
+                    <MessageList />
+                    <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
+                  </KeyboardAvoiderView>
+                ) : (
+                  <AndroidKeyboardAvoider extraSpace={12}>
+                    <MessageList />
+                    <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
+                  </AndroidKeyboardAvoider>
+                )}
               </Channel>
             </Chat>
           </OverlayProvider>
