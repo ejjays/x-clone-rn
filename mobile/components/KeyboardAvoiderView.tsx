@@ -8,7 +8,10 @@ interface KeyboardAvoiderViewProps {
 }
 
 export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap = 0, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
-  // Keep the wrapper active across platforms so we can still correct small gaps
+  if (Platform.OS === 'android') {
+    // Prevent double-handling: Stream Channel (keyboardBehavior="height") handles lift smoothly
+    return <View style={[{ flex: 1 }, style]}>{children}</View>;
+  }
   const translateY = useRef(new Animated.Value(0)).current; // used primarily for iOS
   const paddingBottom = useRef(new Animated.Value(baseGap)).current; // used for Android to preserve own background
   const subs = useRef<EmitterSubscription[]>([]);
@@ -70,18 +73,7 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap 
         Keyboard.addListener('keyboardWillChangeFrame', onShow),
       ];
     } else {
-      subs.current = [
-        Keyboard.addListener('keyboardDidShow', onShow),
-        Keyboard.addListener('keyboardDidHide', onHide),
-        Keyboard.addListener('keyboardDidChangeFrame', onShow),
-      ];
-      // Some Android keyboards change height without firing another show/hide event
-      const dimSub = Dimensions.addEventListener('change', () => {
-        const winH = Dimensions.get('window').height;
-        computeAndAnimate(winH, 140);
-      });
-      // @ts-ignore - RN new API returns object with remove, old returns function
-      subs.current.push({ remove: () => dimSub?.remove?.() });
+      subs.current = [];
     }
 
     return () => {
