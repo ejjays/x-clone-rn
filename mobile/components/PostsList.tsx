@@ -24,6 +24,10 @@ const PostsList = ({
   onOpenPostMenu,
   onReactionPickerVisibilityChange,
   edgeToEdgeMedia,
+  ListHeaderComponent,
+  contentBottomPadding,
+  refreshing,
+  onRefresh,
 }: PostsListProps) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
