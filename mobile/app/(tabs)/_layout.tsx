@@ -3,13 +3,7 @@ import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Redirect, usePathname, withLayoutContext, router } from "expo-router";
 import { useEffect } from "react";
-import {
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-  Platform,
-} from "react-native";
+import { Text, TouchableOpacity, View, Platform } from "react-native";
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
 import Animated, {
   useAnimatedStyle,
@@ -29,13 +23,10 @@ export const BottomTabs = withLayoutContext(Navigator);
 
 const HEADER_HEIGHT = 40;
 const TAB_BAR_HEIGHT = 50;
-const TAB_ROUTES = ["/", "/search", "/videos", "/notifications", "/profile"];
-const NUM_TABS = TAB_ROUTES.length;
 
 const TabsLayout = () => {
   const { isSignedIn } = useAuth();
   const pathname = usePathname();
-  const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { isDarkMode, colors } = useTheme();
 
@@ -65,21 +56,9 @@ const TabsLayout = () => {
     }
   }, [isVideosScreen]); // Re-run when isVideosScreen changes
 
-  // ✅ INSTANT INDICULATION CALCULATION (No animation delays)
-  const getIndicatorPosition = () => {
-    const activeIndex = TAB_ROUTES.indexOf(pathname);
-    return activeIndex !== -1 ? activeIndex * (screenWidth / NUM_TABS) : 0;
-  };
-
   const animatedHeaderStyle = useAnimatedStyle(() => ({
     height: headerHeight.value,
     opacity: headerHeight.value / HEADER_HEIGHT,
-    overflow: "hidden",
-  }));
-
-  const animatedTabBarStyle = useAnimatedStyle(() => ({
-    height: tabBarHeight.value,
-    opacity: tabBarHeight.value / TAB_BAR_HEIGHT,
     overflow: "hidden",
   }));
 
@@ -141,130 +120,42 @@ const TabsLayout = () => {
           </View>
         </Animated.View>
 
-        {/* Keep the TOP tab icon bar visually identical */}
-        {!isVideosScreen && (
-          <Animated.View style={animatedTabBarStyle}>
-            <View
-              className="border-b"
-              style={{
-                backgroundColor: colors.background,
-                borderColor: colors.border,
-              }}
-            >
-              <View className="flex-row justify-around items-center h-full">
-                <TouchableOpacity
-                  className="flex-1 items-center justify-center h-full"
-                  onPressIn={() => router.push("/")}
-                  activeOpacity={0.7}
-                  delayPressIn={0}
-                >
-                  <Home
-                    size={26}
-                    color={
-                      isVideosScreen
-                        ? "white"
-                        : pathname === "/"
-                          ? colors.blue
-                          : "white"
-                    }
-                  />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="flex-1 items-center justify-center h-full"
-                  onPressIn={() => router.push("/search")}
-                  activeOpacity={0.7}
-                  delayPressIn={0}
-                >
-                  <PeopleIcon
-                    size={27}
-                    color={
-                      isVideosScreen
-                        ? "white"
-                        : pathname === "/search"
-                          ? colors.blue
-                          : "white"
-                    }
-                  />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="flex-1 items-center justify-center h-full"
-                  onPressIn={() => router.push("/videos")}
-                  activeOpacity={0.7}
-                  delayPressIn={0}
-                >
-                  <TvMinimalPlay
-                    size={26}
-                    color={isVideosScreen ? colors.blue : "white"}
-                  />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="flex-1 items-center justify-center h-full"
-                  onPressIn={() => router.push("/notifications")}
-                  activeOpacity={0.7}
-                  delayPressIn={0}
-                >
-                  <Bell
-                    size={26}
-                    color={
-                      isVideosScreen
-                        ? "white"
-                        : pathname === "/notifications"
-                          ? colors.blue
-                          : "white"
-                    }
-                  />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="flex-1 items-center justify-center h-full"
-                  onPressIn={() => router.push("/profile")}
-                  activeOpacity={0.7}
-                  delayPressIn={0}
-                >
-                  <Menu
-                    size={26}
-                    color={pathname === "/profile" ? colors.blue : "white"}
-                  />
-                </TouchableOpacity>
-              </View>
-
-              {/* ✅ INSTANT INDICATOR - NO ANIMATION DELAYS */}
-              <View
-                className="absolute bottom-0 left-0 right-0 h-0.5"
-                style={{ backgroundColor: colors.border }}
-              >
-                <View
-                  className="h-full bg-blue-500"
-                  style={{
-                    width: `${100 / NUM_TABS}%`,
-                    transform: [
-                      {
-                        translateX: getIndicatorPosition(),
-                      },
-                    ],
-                  }}
-                />
-              </View>
-            </View>
-          </Animated.View>
-        )}
-
         <View className="flex-1">
           <BottomTabs
-            screenOptions={{
+            screenOptions={({ route }) => ({
+              headerShown: false,
               tabBarShowLabel: false,
-              lazy: true,
+              tabBarHideOnKeyboard: true,
+              tabBarActiveTintColor: colors.blue,
+              tabBarInactiveTintColor: "white",
+              tabBarStyle: {
+                backgroundColor: colors.background,
+                borderTopColor: colors.border,
+                height: TAB_BAR_HEIGHT,
+              },
               sceneContainerStyle: {
                 display: "flex",
                 height: "100%",
                 width: "100%",
                 overflow: "hidden",
               },
-            }}
-            tabBar={() => null}
+              tabBarIcon: ({ color }) => {
+                switch (route.name) {
+                  case "index":
+                    return <Home size={26} color={color as string} />;
+                  case "search":
+                    return <PeopleIcon size={27} color={color as string} />;
+                  case "videos":
+                    return <TvMinimalPlay size={26} color={color as string} />;
+                  case "notifications":
+                    return <Bell size={26} color={color as string} />;
+                  case "profile":
+                    return <Menu size={26} color={color as string} />;
+                  default:
+                    return <Home size={26} color={color as string} />;
+                }
+              },
+            })}
           >
             <BottomTabs.Screen name="index" />
             <BottomTabs.Screen name="search" />
