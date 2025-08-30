@@ -69,7 +69,7 @@ const TabsInner = () => {
       <View
         style={{
           flex: 1,
-          paddingTop: pathname === "/" ? insets.top : 0,
+          paddingTop: insets.top, // Always respect safe area to avoid status bar overlap
           backgroundColor: colors.background,
         }}
       >

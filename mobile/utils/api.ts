@@ -41,7 +41,7 @@ export const createApiClient = (getToken: () => Promise<string | null>): AxiosIn
       const message = error.response?.data?.error || error.message
       // Downgrade noisy 503 logs to warn; they'll retrigger later via react-query
       if (status === 503) {
-        console.warn("⚠️ API 503:", { status, url })
+        // Swallow 503 logging entirely to reduce console noise during backend downtime
       } else {
         console.error("❌ API Error:", { status, url, message })
       }
