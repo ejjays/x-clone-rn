@@ -36,11 +36,15 @@ export const createApiClient = (getToken: () => Promise<string | null>): AxiosIn
   api.interceptors.response.use(
     (response) => response,
     async (error) => {
-      console.error("❌ API Error:", {
-        status: error.response?.status,
-        url: error.config?.url,
-        message: error.response?.data?.error || error.message,
-      })
+      const status = error.response?.status
+      const url = error.config?.url
+      const message = error.response?.data?.error || error.message
+      // Downgrade noisy 503 logs to warn; they'll retrigger later via react-query
+      if (status === 503) {
+        console.warn("⚠️ API 503:", { status, url })
+      } else {
+        console.error("❌ API Error:", { status, url, message })
+      }
       // For common mutation endpoints, enqueue when offline
       if (!error.response) {
         const cfg = error.config || {}

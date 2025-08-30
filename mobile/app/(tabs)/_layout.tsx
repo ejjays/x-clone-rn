@@ -38,11 +38,11 @@ const TabsInner = () => {
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
 
-  // Keep header and tab bar heights constant to avoid layout thrash on tab switch
+  // Show header only on home; keep tab bar height constant
   useEffect(() => {
-    headerHeight.value = HEADER_HEIGHT;
+    headerHeight.value = pathname === "/" ? HEADER_HEIGHT : 0;
     tabBarHeight.value = TAB_BAR_HEIGHT;
-  }, []);
+  }, [pathname]);
 
   // Removed Android navigation bar toggling; keeping system UI stable avoids delays
 
@@ -69,7 +69,7 @@ const TabsInner = () => {
       <View
         style={{
           flex: 1,
-          paddingTop: isProfileScreen || isVideosScreen ? 0 : insets.top,
+          paddingTop: pathname === "/" ? insets.top : 0,
           backgroundColor: colors.background,
         }}
       >
