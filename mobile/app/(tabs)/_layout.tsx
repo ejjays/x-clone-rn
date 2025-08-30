@@ -1,8 +1,8 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
-import { Redirect, router, withLayoutContext } from "expo-router";
+import { Redirect, router, withLayoutContext, usePathname } from "expo-router";
 import { useEffect } from "react";
-import { Text, TouchableOpacity, View, Platform } from "react-native";
+import { Text, TouchableOpacity, View, Platform, useWindowDimensions } from "react-native";
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
 import Animated, {
   useAnimatedStyle,
@@ -11,42 +11,37 @@ import Animated, {
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { TabsProvider, useTabs } from "@/context/TabsContext";
+import { TabsProvider } from "@/context/TabsContext";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
-import IndexScreen from "./index";
-import SearchScreen from "./search";
-import VideosScreen from "./videos";
-import NotificationsScreen from "./notifications";
-import ProfileScreens from "./profile";
 // Removed Android navigation bar toggling to avoid jank on tab switches
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 
 const HEADER_HEIGHT = 40;
 const TAB_BAR_HEIGHT = 50;
 
-const { Navigator } = createBottomTabNavigator();
-export const BottomTabs = withLayoutContext(Navigator);
+const { Navigator } = createMaterialTopTabNavigator();
+export const MaterialTopTabs = withLayoutContext(Navigator);
 
 const TabsInner = () => {
   const { isSignedIn } = useAuth();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const { width: screenWidth } = useWindowDimensions();
   const { isDarkMode, colors } = useTheme();
-  const { activeTab, setActiveTab } = useTabs();
 
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
 
-  const isHomeScreen = activeTab === "index";
-  const isVideosScreen = activeTab === "videos";
-  const isProfileScreen = activeTab === "profile";
+  const isHomeScreen = pathname === "/";
+  const isVideosScreen = pathname === "/videos";
+  const isProfileScreen = pathname === "/profile";
 
   useEffect(() => {
     headerHeight.value = isHomeScreen ? HEADER_HEIGHT : 0;
-    // Keep bottom bar consistently visible to avoid layout thrashing
-    tabBarHeight.value = TAB_BAR_HEIGHT;
-  }, [isHomeScreen]);
+    tabBarHeight.value = isProfileScreen || isVideosScreen ? 0 : TAB_BAR_HEIGHT;
+  }, [isHomeScreen, isProfileScreen, isVideosScreen]);
 
   // Removed Android navigation bar toggling; keeping system UI stable avoids delays
 
@@ -112,53 +107,124 @@ const TabsInner = () => {
         </Animated.View>
 
         <View className="flex-1">
-          <BottomTabs
-            detachInactiveScreens={false}
-            screenOptions={({ route }) => ({
-              headerShown: false,
+          <MaterialTopTabs
+            screenOptions={{
               tabBarShowLabel: false,
-              lazy: false,
-              unmountOnBlur: false,
-              freezeOnBlur: true,
-              tabBarHideOnKeyboard: true,
-              tabBarActiveTintColor: colors.blue,
-              tabBarInactiveTintColor: "white",
-              tabBarStyle: {
-                backgroundColor: colors.background,
-                borderTopColor: colors.border,
-                height: TAB_BAR_HEIGHT,
-              },
+              lazy: true,
+              animationEnabled: false,
+              swipeEnabled: false,
+              tabBarStyle: { elevation: 0 },
               sceneContainerStyle: {
                 display: "flex",
                 height: "100%",
                 width: "100%",
                 overflow: "hidden",
               },
-              tabBarIcon: ({ color, focused }) => {
-                const c = focused ? colors.blue : (color as string);
-                switch (route.name) {
-                  case "index":
-                    return <Home size={28} color={c} />;
-                  case "search":
-                    return <PeopleIcon size={28} color={c as any} />;
-                  case "videos":
-                    return <TvMinimalPlay size={28} color={c} />;
-                  case "notifications":
-                    return <Bell size={28} color={c} />;
-                  case "profile":
-                    return <Menu size={28} color={c} />;
-                  default:
-                    return <Home size={28} color={c} />;
-                }
-              },
-            })}
+              lazyPreloadDistance: 1,
+            }}
+            tabBar={(props) => (
+              <Animated.View
+                style={{
+                  height: tabBarHeight.value,
+                  opacity: tabBarHeight.value / TAB_BAR_HEIGHT,
+                  overflow: "hidden",
+                }}
+              >
+                <View
+                  className="border-b"
+                  style={{
+                    backgroundColor: colors.background,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <View className="flex-row justify-around items-center h-full">
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => props.navigation.navigate("index")}
+                      activeOpacity={0.7}
+                      delayPressIn={0}
+                    >
+                      <Home
+                        size={26}
+                        color={pathname === "/" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => props.navigation.navigate("search")}
+                      activeOpacity={0.7}
+                      delayPressIn={0}
+                    >
+                      <PeopleIcon
+                        size={27}
+                        color={pathname === "/search" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => props.navigation.navigate("videos")}
+                      activeOpacity={0.7}
+                      delayPressIn={0}
+                    >
+                      <TvMinimalPlay
+                        size={26}
+                        color={pathname === "/videos" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => props.navigation.navigate("notifications")}
+                      activeOpacity={0.7}
+                      delayPressIn={0}
+                    >
+                      <Bell
+                        size={26}
+                        color={pathname === "/notifications" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 items-center justify-center h-full"
+                      onPressIn={() => props.navigation.navigate("profile")}
+                      activeOpacity={0.7}
+                      delayPressIn={0}
+                    >
+                      <Menu
+                        size={26}
+                        color={pathname === "/profile" ? colors.blue : "white"}
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View
+                    className="absolute bottom-0 left-0 right-0 h-0.5"
+                    style={{ backgroundColor: colors.border }}
+                  >
+                    <View
+                      className="h-full bg-blue-500"
+                      style={{
+                        width: `${100 / 5}%`,
+                        transform: [
+                          {
+                            translateX: ["/", "/search", "/videos", "/notifications", "/profile"].indexOf(pathname) * (screenWidth / 5),
+                          },
+                        ],
+                      }}
+                    />
+                  </View>
+                </View>
+              </Animated.View>
+            )}
           >
-            <BottomTabs.Screen name="index" />
-            <BottomTabs.Screen name="search" />
-            <BottomTabs.Screen name="videos" />
-            <BottomTabs.Screen name="notifications" />
-            <BottomTabs.Screen name="profile" />
-          </BottomTabs>
+            <MaterialTopTabs.Screen name="index" />
+            <MaterialTopTabs.Screen name="search" />
+            <MaterialTopTabs.Screen name="videos" />
+            <MaterialTopTabs.Screen name="notifications" />
+            <MaterialTopTabs.Screen name="profile" />
+          </MaterialTopTabs>
         </View>
       </View>
     </ScrollProvider>
