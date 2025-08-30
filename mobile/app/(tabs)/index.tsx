@@ -8,7 +8,7 @@ import { usePosts } from "@/hooks/usePosts";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUserSync } from "@/hooks/useUserSync";
 import { router } from "expo-router";
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { RefreshControl, ScrollView, View, Alert } from "react-native";
 import PostActionBottomSheet, {
   type PostActionBottomSheetRef,
