@@ -28,7 +28,6 @@ import { offlineQueue } from "@/utils/offline/OfflineQueue";
 import { useTheme } from "@/context/ThemeContext";
 import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
 import * as SystemUI from "expo-system-ui";
-import * as NavigationBar from "expo-navigation-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageBubble from "@/components/chat/MessageBubble";
@@ -200,38 +199,7 @@ export default function ChatScreen() {
 
   // Remove manual keyboard tracking; rely on OS resize + KeyboardAvoidingView
 
-  useFocusEffect(
-    useCallback(() => {
-      if (Platform.OS === "android") {
-        try {
-          NavigationBar.setVisibilityAsync("visible");
-          NavigationBar.setPositionAsync("absolute");
-          NavigationBar.setBehaviorAsync("inset-swipe");
-          NavigationBar.setBackgroundColorAsync(
-            isDarkMode
-              ? DarkThemeColors.background
-              : LightThemeColors.background
-          );
-          NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
-        } catch {}
-      }
-      return () => {
-        if (Platform.OS === "android") {
-          try {
-            NavigationBar.setVisibilityAsync("visible");
-            NavigationBar.setPositionAsync("absolute");
-            NavigationBar.setBehaviorAsync("inset-swipe");
-            NavigationBar.setBackgroundColorAsync(
-              isDarkMode
-                ? DarkThemeColors.background
-                : LightThemeColors.background
-            );
-            NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
-          } catch {}
-        }
-      };
-    }, [isDarkMode])
-  );
+  // Removed NavigationBar toggling; keep system UI stable on focus transitions
 
   // Let built-in MessageInput handle sending. Only provide upload override through Channel props below.
 
