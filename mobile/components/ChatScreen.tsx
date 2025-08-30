@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useStreamChat } from "../hooks/useStreamChat";
+import { useStreamChat } from "../context/StreamChatContext";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { formatDistanceToNow } from "date-fns";
 

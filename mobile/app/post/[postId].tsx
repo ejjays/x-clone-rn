@@ -72,16 +72,6 @@ const CommentSkeleton = () => {
 
 const PostDetailsScreen = () => {
   const { postId } = useLocalSearchParams<{ postId: string }>();
-  if (!postId) {
-    return (
-      <View
-        style={[styles.containerCenter, { backgroundColor: colors.background }]}
-      >
-        <Text style={{ color: colors.text }}>Post not found.</Text>
-      </View>
-    );
-  }
-
   const insets = useSafeAreaInsets();
   const { colors, isDarkMode } = useTheme();
   const {
@@ -93,7 +83,7 @@ const PostDetailsScreen = () => {
     isCreatingComment,
     reactToPost,
     reactToComment,
-  } = usePost(postId);
+  } = usePost(postId as string);
   const { currentUser } = useCurrentUser();
   const [commentText, setCommentText] = useState("");
 
@@ -118,7 +108,17 @@ const PostDetailsScreen = () => {
 
   const HEADER_HEIGHT = 60;
 
-  // Show error state
+  // Show missing or error state
+  if (!postId) {
+    return (
+      <View
+        style={[styles.containerCenter, { backgroundColor: colors.background }]}
+      >
+        <Text style={{ color: colors.text }}>Post not found.</Text>
+      </View>
+    );
+  }
+
   if (error && !post) {
     return (
       <View

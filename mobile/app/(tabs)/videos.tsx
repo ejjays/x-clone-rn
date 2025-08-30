@@ -22,6 +22,7 @@ import {
   Platform,
   useWindowDimensions,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import {
   useSafeAreaInsets,
   type EdgeInsets,

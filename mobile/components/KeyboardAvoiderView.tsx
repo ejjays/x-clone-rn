@@ -8,10 +8,7 @@ interface KeyboardAvoiderViewProps {
 }
 
 export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap = 0, style }: PropsWithChildren<KeyboardAvoiderViewProps>) {
-  if (Platform.OS === 'android') {
-    // Prevent double-handling: Stream Channel (keyboardBehavior="height") handles lift smoothly
-    return <View style={[{ flex: 1 }, style]}>{children}</View>;
-  }
+  // Keep hooks at the top level to satisfy rules-of-hooks
   const translateY = useRef(new Animated.Value(0)).current; // used primarily for iOS
   const paddingBottom = useRef(new Animated.Value(baseGap)).current; // used for Android to preserve own background
   const subs = useRef<EmitterSubscription[]>([]);
@@ -82,6 +79,16 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap 
     };
   }, [extraSpace, translateY]);
 
+  // If Android, avoid double handling and just render children with paddingBottom animation applied
+  if (Platform.OS === 'android') {
+    return (
+      <Animated.View style={[{ flex: 1, paddingBottom }, style]}>
+        {children}
+      </Animated.View>
+    );
+  }
+
+  // iOS uses translateY shifting
   return (
     <Animated.View
       style={[
