@@ -109,6 +109,7 @@ const TabsInner = () => {
         <View className="flex-1">
           <MaterialTopTabs
             screenOptions={{
+              tabBarPosition: "top",
               tabBarShowLabel: false,
               lazy: true,
               animationEnabled: false,
