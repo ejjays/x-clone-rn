@@ -12,6 +12,7 @@ import Animated, {
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { TabsProvider, useTabs } from "@/context/TabsContext";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
@@ -23,7 +24,7 @@ export const BottomTabs = withLayoutContext(Navigator);
 const HEADER_HEIGHT = 40;
 const TAB_BAR_HEIGHT = 50;
 
-const TabsLayout = () => {
+const TabsInner = () => {
   const { isSignedIn } = useAuth();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
@@ -128,22 +129,22 @@ const TabsLayout = () => {
                 overflow: "hidden",
               },
               tabBarButton: (props: any) => (
-                <TouchableOpacity {...props} activeOpacity={0.7} delayPressIn={0} />
+                <TouchableOpacity {...props} activeOpacity={1} delayPressIn={0} />
               ),
               tabBarIcon: ({ color }) => {
                 switch (route.name) {
                   case "index":
-                    return <Home size={26} color={color as string} />;
+                    return <Home size={28} color={pathname === "/" ? colors.blue : (color as string)} />;
                   case "search":
-                    return <PeopleIcon size={27} color={color as string} />;
+                    return <PeopleIcon size={28} color={pathname === "/search" ? colors.blue : (color as string)} />;
                   case "videos":
-                    return <TvMinimalPlay size={26} color={color as string} />;
+                    return <TvMinimalPlay size={28} color={pathname === "/videos" ? colors.blue : (color as string)} />;
                   case "notifications":
-                    return <Bell size={26} color={color as string} />;
+                    return <Bell size={28} color={pathname === "/notifications" ? colors.blue : (color as string)} />;
                   case "profile":
-                    return <Menu size={26} color={color as string} />;
+                    return <Menu size={28} color={pathname === "/profile" ? colors.blue : (color as string)} />;
                   default:
-                    return <Home size={26} color={color as string} />;
+                    return <Home size={28} color={color as string} />;
                 }
               },
             })}
@@ -160,4 +161,10 @@ const TabsLayout = () => {
   );
 };
 
-export default TabsLayout;
+export default function TabsLayout() {
+  return (
+    <TabsProvider>
+      <TabsInner />
+    </TabsProvider>
+  );
+}

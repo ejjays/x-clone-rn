@@ -612,6 +612,8 @@ export default function VideosScreen() {
         <TouchableOpacity
           onPress={() => navigation.navigate("index")}
           style={{ marginRight: 0 }}
+          delayPressIn={0}
+          activeOpacity={1}
         >
           <Ionicons
             name="chevron-back"
