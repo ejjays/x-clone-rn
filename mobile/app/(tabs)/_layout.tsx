@@ -15,8 +15,7 @@ import { StatusBar } from "expo-status-bar";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
-import * as NavigationBar from "expo-navigation-bar";
-import { DarkThemeColors } from "@/constants/Colors"; // Import DarkThemeColors
+// Removed Android navigation bar toggling to avoid jank on tab switches
 
 const { Navigator } = createBottomTabNavigator();
 export const BottomTabs = withLayoutContext(Navigator);
@@ -39,22 +38,11 @@ const TabsLayout = () => {
 
   useEffect(() => {
     headerHeight.value = isHomeScreen ? HEADER_HEIGHT : 0;
-    tabBarHeight.value = isProfileScreen || isVideosScreen ? 0 : TAB_BAR_HEIGHT;
-  }, [isHomeScreen, isProfileScreen, isVideosScreen]);
+    // Keep bottom bar consistently visible to avoid layout thrashing
+    tabBarHeight.value = TAB_BAR_HEIGHT;
+  }, [isHomeScreen]);
 
-  useEffect(() => {
-    if (Platform.OS === "android") {
-      if (isVideosScreen) {
-        // Hide bottom navigation bar on video screen
-        NavigationBar.setVisibilityAsync("hidden");
-      } else {
-        // Show bottom navigation bar on other screens and set to dark theme
-        NavigationBar.setVisibilityAsync("visible");
-        NavigationBar.setBackgroundColorAsync(DarkThemeColors.background);
-        NavigationBar.setButtonStyleAsync("light");
-      }
-    }
-  }, [isVideosScreen]); // Re-run when isVideosScreen changes
+  // Removed Android navigation bar toggling; keeping system UI stable avoids delays
 
   const animatedHeaderStyle = useAnimatedStyle(() => ({
     height: headerHeight.value,
@@ -83,10 +71,7 @@ const TabsLayout = () => {
           backgroundColor: colors.background,
         }}
       >
-        <StatusBar
-          style={isVideosScreen ? "light" : "light"} // Status bar always visible
-          hidden={false}
-        />
+        <StatusBar style="light" hidden={false} />
 
         <Animated.View style={animatedHeaderStyle}>
           <View
@@ -122,9 +107,12 @@ const TabsLayout = () => {
 
         <View className="flex-1">
           <BottomTabs
+            detachInactiveScreens={false}
             screenOptions={({ route }) => ({
               headerShown: false,
               tabBarShowLabel: false,
+              lazy: false,
+              unmountOnBlur: false,
               tabBarHideOnKeyboard: true,
               tabBarActiveTintColor: colors.blue,
               tabBarInactiveTintColor: "white",
@@ -139,6 +127,9 @@ const TabsLayout = () => {
                 width: "100%",
                 overflow: "hidden",
               },
+              tabBarButton: (props: any) => (
+                <TouchableOpacity {...props} activeOpacity={0.7} delayPressIn={0} />
+              ),
               tabBarIcon: ({ color }) => {
                 switch (route.name) {
                   case "index":

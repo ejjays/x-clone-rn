@@ -59,7 +59,8 @@ function useOptionalTabBarHeight() {
   try {
     return useBottomTabBarHeight();
   } catch {
-    return 0;
+    // Fallback to a sensible height to avoid layout recalculations
+    return 50;
   }
 }
 
