@@ -107,21 +107,36 @@ const TabsInner = () => {
           </View>
         </Animated.View>
 
-        {/* Render all tab panes; toggle visibility via local state (instant) */}
+        {/* Render all panes as absolute overlays; toggle opacity/pointerEvents to avoid layout */}
         <View style={{ flex: 1 }}>
-          <View style={{ flex: 1, display: activeTab === "index" ? "flex" : "none" }}>
+          <View
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, opacity: activeTab === "index" ? 1 : 0 }}
+            pointerEvents={activeTab === "index" ? "auto" : "none"}
+          >
             <IndexScreen />
           </View>
-          <View style={{ flex: 1, display: activeTab === "search" ? "flex" : "none" }}>
+          <View
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, opacity: activeTab === "search" ? 1 : 0 }}
+            pointerEvents={activeTab === "search" ? "auto" : "none"}
+          >
             <SearchScreen />
           </View>
-          <View style={{ flex: 1, display: activeTab === "videos" ? "flex" : "none" }}>
+          <View
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, opacity: activeTab === "videos" ? 1 : 0 }}
+            pointerEvents={activeTab === "videos" ? "auto" : "none"}
+          >
             <VideosScreen />
           </View>
-          <View style={{ flex: 1, display: activeTab === "notifications" ? "flex" : "none" }}>
+          <View
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, opacity: activeTab === "notifications" ? 1 : 0 }}
+            pointerEvents={activeTab === "notifications" ? "auto" : "none"}
+          >
             <NotificationsScreen />
           </View>
-          <View style={{ flex: 1, display: activeTab === "profile" ? "flex" : "none" }}>
+          <View
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, opacity: activeTab === "profile" ? 1 : 0 }}
+            pointerEvents={activeTab === "profile" ? "auto" : "none"}
+          >
             <ProfileScreens />
           </View>
         </View>

@@ -570,7 +570,7 @@ export default function VideosScreen() {
 
   if (videoPosts.length === 0) {
     return (
-      <SafeAreaView style={styles.centered}>
+      <View style={styles.centered}>
         <View
           style={[
             styles.header,
@@ -592,15 +592,12 @@ export default function VideosScreen() {
         </View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
         <Text style={styles.infoText}>No videos have been posted yet.</Text>
-      </SafeAreaView>
+      </View>
     );
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["bottom"]}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style="light" />
 
       <View
@@ -695,7 +692,7 @@ export default function VideosScreen() {
         onClose={handleCloseComments}
         bottomOffset={tabBarHeight} // Pass only tabBarHeight
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
