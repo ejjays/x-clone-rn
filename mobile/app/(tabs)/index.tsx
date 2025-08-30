@@ -70,35 +70,22 @@ const HomeScreen = () => {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={1}
-        scrollEnabled={!isReactionPickerVisible}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={handlePullToRefresh}
-            colors={[colors.refreshControlColor]}
-            tintColor={colors.refreshControlColor}
-            progressBackgroundColor={colors.refreshControlBackgroundColor}
-          />
+      <PostsList
+        ListHeaderComponent={
+          <View style={{ backgroundColor: colors.background }}>
+            <PostComposer animatedPlaceholder={false} />
+            <Stories />
+            <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
+          </View>
         }
-        contentContainerStyle={{ paddingBottom: insets.bottom }} // Add padding to the bottom
-      >
-        <View style={{ backgroundColor: colors.background }}>
-          <PostComposer animatedPlaceholder={false} />
-          <Stories />
-        </View>
-        <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
-        <PostsList
-          onOpenComments={handleOpenComments}
-          onOpenPostMenu={handleOpenPostMenu}
-          onReactionPickerVisibilityChange={handleReactionPickerVisibilityChange}
-          edgeToEdgeMedia
-        />
-      </ScrollView>
+        contentBottomPadding={insets.bottom}
+        onOpenComments={handleOpenComments}
+        onOpenPostMenu={handleOpenPostMenu}
+        onReactionPickerVisibilityChange={handleReactionPickerVisibilityChange}
+        edgeToEdgeMedia
+        refreshing={isRefetching}
+        onRefresh={handlePullToRefresh}
+      />
       <PostActionBottomSheet
   ref={postActionBottomSheetRef}
   onClose={handleCloseBottomSheet}

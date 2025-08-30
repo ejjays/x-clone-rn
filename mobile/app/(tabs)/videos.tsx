@@ -622,10 +622,10 @@ export default function VideosScreen() {
           offset: itemHeight * i,
           index: i,
         })}
-        decelerationRate={0.99}
+        decelerationRate={0.985}
         initialNumToRender={3}
         maxToRenderPerBatch={5}
-        windowSize={9}
+        windowSize={11}
         contentContainerStyle={{ paddingTop: 0, paddingBottom: 0 }}
         snapToInterval={itemHeight}
         snapToAlignment="start"

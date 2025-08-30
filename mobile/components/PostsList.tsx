@@ -1,7 +1,7 @@
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, FlatList, ListRenderItem } from "react-native";
 import PostCard from "./PostCard";
 import PostCardSkeleton from "./PostCardSkeleton";
 import { useTheme } from "@/context/ThemeContext";
@@ -12,6 +12,10 @@ interface PostsListProps {
   onOpenPostMenu: (post: Post) => void;
   onReactionPickerVisibilityChange?: (isVisible: boolean) => void;
   edgeToEdgeMedia?: boolean;
+  ListHeaderComponent?: React.ReactElement | null;
+  contentBottomPadding?: number;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 const PostsList = ({
@@ -80,32 +84,41 @@ const PostsList = ({
 
   const filteredPosts = posts.filter((post: Post) => !post.video);
 
-  return (
-    <View style={{ backgroundColor: colors.background }}>
-      {filteredPosts.map((post: Post, index: number) => (
-        <View key={post._id}>
-          <PostCard
-            post={post}
-            reactToPost={reactToPost}
-            onDelete={deletePost}
-            onComment={onOpenComments || (() => {})}
-            currentUser={currentUser}
-            currentUserReaction={getCurrentUserReaction(
-              post.reactions,
-              currentUser
-            )}
-            onOpenPostMenu={onOpenPostMenu}
-            onReactionPickerVisibilityChange={
-              onReactionPickerVisibilityChange
-            }
-            edgeToEdgeMedia={edgeToEdgeMedia}
-          />
-          {index < filteredPosts.length - 1 && (
-            <View className="h-1" style={{ backgroundColor: "#141414" }} />
-          )}
-        </View>
-      ))}
+  const renderItem: ListRenderItem<Post> = ({ item, index }) => (
+    <View>
+      <PostCard
+        post={item}
+        reactToPost={reactToPost}
+        onDelete={deletePost}
+        onComment={onOpenComments || (() => {})}
+        currentUser={currentUser}
+        currentUserReaction={getCurrentUserReaction(item.reactions, currentUser)}
+        onOpenPostMenu={onOpenPostMenu}
+        onReactionPickerVisibilityChange={onReactionPickerVisibilityChange}
+        edgeToEdgeMedia={edgeToEdgeMedia}
+      />
+      {index < filteredPosts.length - 1 && (
+        <View className="h-1" style={{ backgroundColor: "#141414" }} />
+      )}
     </View>
+  );
+
+  return (
+    <FlatList
+      data={filteredPosts}
+      keyExtractor={(item) => item._id}
+      renderItem={renderItem}
+      ListHeaderComponent={ListHeaderComponent}
+      contentContainerStyle={{ backgroundColor: colors.background, paddingBottom: contentBottomPadding ?? 0 }}
+      removeClippedSubviews
+      initialNumToRender={5}
+      maxToRenderPerBatch={6}
+      windowSize={9}
+      updateCellsBatchingPeriod={40}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      showsVerticalScrollIndicator={false}
+    />
   );
 };
 
