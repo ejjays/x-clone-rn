@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import CommentIcon from "../assets/icons/Comment";
 import ShareIcon from "../assets/icons/ShareIcon";
-import { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback, memo } from "react";
 import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
@@ -736,4 +736,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PostCard;
+export default memo(PostCard);

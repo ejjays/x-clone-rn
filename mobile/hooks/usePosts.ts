@@ -14,17 +14,16 @@ export const usePosts = (username?: string) => {
   const { currentUser } = useCurrentUser();
   const queryKey = username ? ["posts", username] : ["posts"];
 
-  const {
-    data: posts,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery<Post[]>({
+  const { data: posts, isLoading, error, refetch } = useQuery<Post[]>({
     queryKey,
     queryFn: async () => {
       const response = username ? await postApi.getUserPosts(api, username) : await postApi.getPosts(api);
       return response.data.posts;
     },
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     // Hydrate quickly from storage to display offline content, then network update
     select: (data) => data,
     onSuccess: async (data) => {

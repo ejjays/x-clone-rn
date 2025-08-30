@@ -114,5 +114,3 @@ const HomeScreen = () => {
 };
 
 export default memo(HomeScreen);
-
-export default HomeScreen;
