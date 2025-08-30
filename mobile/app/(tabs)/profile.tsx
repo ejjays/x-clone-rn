@@ -301,4 +301,5 @@ const ProfileScreens = () => {
   );
 };
 
-export default ProfileScreens
+import React, { memo } from "react"
+export default memo(ProfileScreens)

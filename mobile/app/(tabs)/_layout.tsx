@@ -119,6 +119,7 @@ const TabsInner = () => {
               tabBarShowLabel: false,
               lazy: false,
               unmountOnBlur: false,
+              freezeOnBlur: true,
               tabBarHideOnKeyboard: true,
               tabBarActiveTintColor: colors.blue,
               tabBarInactiveTintColor: "white",
@@ -133,9 +134,6 @@ const TabsInner = () => {
                 width: "100%",
                 overflow: "hidden",
               },
-              tabBarButton: (props: any) => (
-                <TouchableOpacity {...props} activeOpacity={1} delayPressIn={0} />
-              ),
               tabBarIcon: ({ color, focused }) => {
                 const c = focused ? colors.blue : (color as string);
                 switch (route.name) {

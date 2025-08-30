@@ -6,22 +6,7 @@ import React, {
   useEffect,
 } from "react";
 import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-  Animated,
-  RefreshControl,
-  Alert,
-  ToastAndroid,
-  Platform,
-  useWindowDimensions,
-} from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Pressable, ActivityIndicator, Animated, RefreshControl, Alert, ToastAndroid, Platform, useWindowDimensions } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import {
   useSafeAreaInsets,
@@ -533,7 +518,7 @@ export default function VideosScreen() {
   // Effect to hide/show the system navigation bar on Android
   // Removed focus effect that toggles system nav bar; this was introducing delays
 
-  const renderItem = ({ item }: { item: Post }) => (
+  const renderItem = useCallback(({ item }: { item: Post }) => (
     <VideoItem
       item={item}
       isVisible={viewableItems.includes(item._id)}
@@ -545,7 +530,7 @@ export default function VideosScreen() {
       width={width}
       height={height}
     />
-  );
+  ), [viewableItems, isFocused, insets, bottomSafeOffset, commentBarHeight, width, height]);
 
 
   if (isLoading) {

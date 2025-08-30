@@ -1,5 +1,6 @@
 import PostsList from "@/components/PostsList";
 import PostComposer from "@/components/PostComposer";
+import React, { memo } from "react";
 import Stories from "@/components/Stories";
 import { usePosts } from "@/hooks/usePosts";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -111,5 +112,7 @@ const HomeScreen = () => {
     </View>
   );
 };
+
+export default memo(HomeScreen);
 
 export default HomeScreen;

@@ -3,7 +3,7 @@ import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { User } from "@/types";
 import { Search, Users, X } from "lucide-react-native";
-import { useState } from "react";
+import React, { useState, memo } from "react";
 import {
   View,
   TextInput,
@@ -266,4 +266,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SearchScreen;
+export default memo(SearchScreen);

@@ -1,3 +1,4 @@
+import React, { memo } from "react"
 import NoNotificationsFound from "@/components/NoNotificationsFound"
 import NotificationCard from "@/components/NotificationCard"
 import { useNotifications } from "@/hooks/useNotifications"
@@ -164,4 +165,4 @@ const NotificationsScreen = () => {
   )
 }
 
-export default NotificationsScreen
+export default memo(NotificationsScreen)
