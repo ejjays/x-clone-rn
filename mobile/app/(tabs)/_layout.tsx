@@ -38,10 +38,11 @@ const TabsInner = () => {
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
 
+  // Keep header and tab bar heights constant to avoid layout thrash on tab switch
   useEffect(() => {
-    headerHeight.value = isHomeScreen ? HEADER_HEIGHT : 0;
-    tabBarHeight.value = isProfileScreen || isVideosScreen ? 0 : TAB_BAR_HEIGHT;
-  }, [isHomeScreen, isProfileScreen, isVideosScreen]);
+    headerHeight.value = HEADER_HEIGHT;
+    tabBarHeight.value = TAB_BAR_HEIGHT;
+  }, []);
 
   // Removed Android navigation bar toggling; keeping system UI stable avoids delays
 
@@ -111,7 +112,7 @@ const TabsInner = () => {
             screenOptions={{
               tabBarPosition: "top",
               tabBarShowLabel: false,
-              lazy: true,
+              lazy: false,
               animationEnabled: false,
               swipeEnabled: false,
               tabBarStyle: { elevation: 0 },
@@ -121,16 +122,9 @@ const TabsInner = () => {
                 width: "100%",
                 overflow: "hidden",
               },
-              lazyPreloadDistance: 1,
             }}
             tabBar={(props) => (
-              <Animated.View
-                style={{
-                  height: tabBarHeight.value,
-                  opacity: tabBarHeight.value / TAB_BAR_HEIGHT,
-                  overflow: "hidden",
-                }}
-              >
+              <View>
                 <View
                   className="border-b"
                   style={{
@@ -138,17 +132,14 @@ const TabsInner = () => {
                     borderColor: colors.border,
                   }}
                 >
-                  <View className="flex-row justify-around items-center h-full">
+                  <View className="flex-row justify-around items-center" style={{ height: TAB_BAR_HEIGHT }}>
                     <TouchableOpacity
                       className="flex-1 items-center justify-center h-full"
                       onPressIn={() => props.navigation.navigate("index")}
                       activeOpacity={0.7}
                       delayPressIn={0}
                     >
-                      <Home
-                        size={26}
-                        color={pathname === "/" ? colors.blue : "white"}
-                      />
+                      <Home size={26} color={pathname === "/" ? colors.blue : "white"} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -157,10 +148,7 @@ const TabsInner = () => {
                       activeOpacity={0.7}
                       delayPressIn={0}
                     >
-                      <PeopleIcon
-                        size={27}
-                        color={pathname === "/search" ? colors.blue : "white"}
-                      />
+                      <PeopleIcon size={27} color={pathname === "/search" ? colors.blue : "white"} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -169,10 +157,7 @@ const TabsInner = () => {
                       activeOpacity={0.7}
                       delayPressIn={0}
                     >
-                      <TvMinimalPlay
-                        size={26}
-                        color={pathname === "/videos" ? colors.blue : "white"}
-                      />
+                      <TvMinimalPlay size={26} color={pathname === "/videos" ? colors.blue : "white"} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -181,10 +166,7 @@ const TabsInner = () => {
                       activeOpacity={0.7}
                       delayPressIn={0}
                     >
-                      <Bell
-                        size={26}
-                        color={pathname === "/notifications" ? colors.blue : "white"}
-                      />
+                      <Bell size={26} color={pathname === "/notifications" ? colors.blue : "white"} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -193,17 +175,11 @@ const TabsInner = () => {
                       activeOpacity={0.7}
                       delayPressIn={0}
                     >
-                      <Menu
-                        size={26}
-                        color={pathname === "/profile" ? colors.blue : "white"}
-                      />
+                      <Menu size={26} color={pathname === "/profile" ? colors.blue : "white"} />
                     </TouchableOpacity>
                   </View>
 
-                  <View
-                    className="absolute bottom-0 left-0 right-0 h-0.5"
-                    style={{ backgroundColor: colors.border }}
-                  >
+                  <View className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: colors.border }}>
                     <View
                       className="h-full bg-blue-500"
                       style={{
@@ -217,7 +193,7 @@ const TabsInner = () => {
                     />
                   </View>
                 </View>
-              </Animated.View>
+              </View>
             )}
           >
             <MaterialTopTabs.Screen name="index" />
