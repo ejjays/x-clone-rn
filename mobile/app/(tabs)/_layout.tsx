@@ -1,7 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Redirect, usePathname, withLayoutContext, router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useEffect } from "react";
 import { Text, TouchableOpacity, View, Platform } from "react-native";
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
@@ -16,26 +15,28 @@ import { TabsProvider, useTabs } from "@/context/TabsContext";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
+import IndexScreen from "./index";
+import SearchScreen from "./search";
+import VideosScreen from "./videos";
+import NotificationsScreen from "./notifications";
+import ProfileScreens from "./profile";
 // Removed Android navigation bar toggling to avoid jank on tab switches
-
-const { Navigator } = createBottomTabNavigator();
-export const BottomTabs = withLayoutContext(Navigator);
 
 const HEADER_HEIGHT = 40;
 const TAB_BAR_HEIGHT = 50;
 
 const TabsInner = () => {
   const { isSignedIn } = useAuth();
-  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { isDarkMode, colors } = useTheme();
+  const { activeTab, setActiveTab } = useTabs();
 
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
 
-  const isHomeScreen = pathname === "/";
-  const isVideosScreen = pathname === "/videos";
-  const isProfileScreen = pathname === "/profile";
+  const isHomeScreen = activeTab === "index";
+  const isVideosScreen = activeTab === "videos";
+  const isProfileScreen = activeTab === "profile";
 
   useEffect(() => {
     headerHeight.value = isHomeScreen ? HEADER_HEIGHT : 0;
@@ -106,55 +107,51 @@ const TabsInner = () => {
           </View>
         </Animated.View>
 
-        <View className="flex-1">
-          <BottomTabs
-            detachInactiveScreens={false}
-            screenOptions={({ route }) => ({
-              headerShown: false,
-              tabBarShowLabel: false,
-              lazy: false,
-              unmountOnBlur: false,
-              tabBarHideOnKeyboard: true,
-              tabBarActiveTintColor: colors.blue,
-              tabBarInactiveTintColor: "white",
-              tabBarStyle: {
-                backgroundColor: colors.background,
-                borderTopColor: colors.border,
-                height: TAB_BAR_HEIGHT,
-              },
-              sceneContainerStyle: {
-                display: "flex",
-                height: "100%",
-                width: "100%",
-                overflow: "hidden",
-              },
-              tabBarButton: (props: any) => (
-                <TouchableOpacity {...props} activeOpacity={1} delayPressIn={0} />
-              ),
-              tabBarIcon: ({ color }) => {
-                switch (route.name) {
-                  case "index":
-                    return <Home size={28} color={pathname === "/" ? colors.blue : (color as string)} />;
-                  case "search":
-                    return <PeopleIcon size={28} color={pathname === "/search" ? colors.blue : (color as string)} />;
-                  case "videos":
-                    return <TvMinimalPlay size={28} color={pathname === "/videos" ? colors.blue : (color as string)} />;
-                  case "notifications":
-                    return <Bell size={28} color={pathname === "/notifications" ? colors.blue : (color as string)} />;
-                  case "profile":
-                    return <Menu size={28} color={pathname === "/profile" ? colors.blue : (color as string)} />;
-                  default:
-                    return <Home size={28} color={color as string} />;
-                }
-              },
-            })}
-          >
-            <BottomTabs.Screen name="index" />
-            <BottomTabs.Screen name="search" />
-            <BottomTabs.Screen name="videos" />
-            <BottomTabs.Screen name="notifications" />
-            <BottomTabs.Screen name="profile" />
-          </BottomTabs>
+        {/* Render all tab panes; toggle visibility via local state (instant) */}
+        <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, display: activeTab === "index" ? "flex" : "none" }}>
+            <IndexScreen />
+          </View>
+          <View style={{ flex: 1, display: activeTab === "search" ? "flex" : "none" }}>
+            <SearchScreen />
+          </View>
+          <View style={{ flex: 1, display: activeTab === "videos" ? "flex" : "none" }}>
+            <VideosScreen />
+          </View>
+          <View style={{ flex: 1, display: activeTab === "notifications" ? "flex" : "none" }}>
+            <NotificationsScreen />
+          </View>
+          <View style={{ flex: 1, display: activeTab === "profile" ? "flex" : "none" }}>
+            <ProfileScreens />
+          </View>
+        </View>
+
+        {/* Bottom tab bar: instant toggle, no navigation */}
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            backgroundColor: colors.background,
+            paddingBottom: insets.bottom,
+          }}
+        >
+          <View className="flex-row justify-around items-center" style={{ height: TAB_BAR_HEIGHT }}>
+            <TouchableOpacity activeOpacity={1} delayPressIn={0} className="flex-1 items-center justify-center h-full" onPressIn={() => setActiveTab("index")}>
+              <Home size={28} color={activeTab === "index" ? colors.blue : "white"} />
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={1} delayPressIn={0} className="flex-1 items-center justify-center h-full" onPressIn={() => setActiveTab("search")}>
+              <PeopleIcon size={28} color={activeTab === "search" ? colors.blue : "white"} />
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={1} delayPressIn={0} className="flex-1 items-center justify-center h-full" onPressIn={() => setActiveTab("videos")}>
+              <TvMinimalPlay size={28} color={activeTab === "videos" ? colors.blue : "white"} />
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={1} delayPressIn={0} className="flex-1 items-center justify-center h-full" onPressIn={() => setActiveTab("notifications")}>
+              <Bell size={28} color={activeTab === "notifications" ? colors.blue : "white"} />
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={1} delayPressIn={0} className="flex-1 items-center justify-center h-full" onPressIn={() => setActiveTab("profile")}>
+              <Menu size={28} color={activeTab === "profile" ? colors.blue : "white"} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ScrollProvider>
