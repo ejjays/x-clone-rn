@@ -28,6 +28,7 @@ import type { Post } from "@/types";
 import { formatNumber } from "@/utils/formatters";
 import { StatusBar } from "expo-status-bar";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import * as NavigationBar from "expo-navigation-bar";
 import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 
 
@@ -516,9 +517,26 @@ export default function VideosScreen() {
   const [ready, setReady] = useState(false);
   useFocusEffect(
     useCallback(() => {
-      const task = InteractionManager.runAfterInteractions(() => setReady(true));
+      const task = InteractionManager.runAfterInteractions(async () => {
+        setReady(true);
+        // Hide Android system nav bar for reels only
+        if (Platform.OS === "android") {
+          try {
+            await NavigationBar.setVisibilityAsync("hidden");
+            await NavigationBar.setBehaviorAsync("overlay-swipe");
+            await NavigationBar.setBackgroundColorAsync("transparent");
+          } catch {}
+        }
+      });
       return () => {
         setReady(false);
+        // Restore nav bar on leaving reels
+        if (Platform.OS === "android") {
+          try {
+            NavigationBar.setVisibilityAsync("visible");
+            NavigationBar.setBehaviorAsync("inset-swipe");
+          } catch {}
+        }
         task.cancel();
       };
     }, [])

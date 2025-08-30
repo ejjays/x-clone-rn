@@ -95,21 +95,6 @@ const ProfileScreens = () => {
 
   return (
     <View className="flex-1" style={{ paddingTop: insets.top, backgroundColor: colors.background }}>
-      <View className="flex-row justify-between items-center px-4 py-3 border-b" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
-        <TouchableOpacity
-          className="w-10 h-10 items-center justify-center"
-          onPress={handleBackPress}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.icon} />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold" style={{ color: colors.text }}>Profile</Text>
-        <TouchableOpacity
-          className="w-10 h-10 items-center justify-center"
-          onPress={handleSignOut}
-        >
-          <LogOut size={22} color="#EF4444" />
-        </TouchableOpacity>
-      </View>
 
       <ScrollView
         className="flex-1"

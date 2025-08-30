@@ -72,21 +72,7 @@ const NotificationsScreen = () => {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      {/* Facebook-style Header - No back arrow, bigger title, good spacing */}
-      <View className="flex-row items-center justify-between px-4 py-4" style={{ backgroundColor: colors.background }}>
-        <Text className="text-3xl font-bold" style={{ color: colors.text }}>Notifications</Text>
-
-        <View className="flex-row space-x-2">
-          <TouchableOpacity className="w-9 h-9 rounded-full items-center justify-center" style={{ backgroundColor: colors.surface }}>
-            <Check size={18} color={colors.icon} />
-          </TouchableOpacity>
-          <TouchableOpacity className="w-9 h-9 rounded-full items-center justify-center" style={{ backgroundColor: colors.surface }}>
-            <Search size={18} color={colors.icon} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Content */}
+      {/* Content (header removed per requirement) */}
       <ScrollView
         className="flex-1" style={{ backgroundColor: colors.background }}
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
