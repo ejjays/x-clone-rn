@@ -40,8 +40,8 @@ function useOptionalTabBarHeight() {
   try {
     return useBottomTabBarHeight();
   } catch {
-    // Fallback to a sensible height to avoid layout recalculations
-    return 50;
+    // No bottom tab bar in top-tabs setup; fallback to 0
+    return 0;
   }
 }
 

@@ -124,7 +124,11 @@ const TabsInner = () => {
                 overflow: "hidden",
               },
             }}
-            tabBar={(props) => <TopIconBar navigation={props.navigation} pathname={pathname} colors={colors} screenWidth={screenWidth} />}
+            tabBar={(props) => (
+              pathname === "/videos" ? null : (
+                <TopIconBar navigation={props.navigation} pathname={pathname} colors={colors} screenWidth={screenWidth} />
+              )
+            )}
           >
             <MaterialTopTabs.Screen name="index" />
             <MaterialTopTabs.Screen name="search" />
