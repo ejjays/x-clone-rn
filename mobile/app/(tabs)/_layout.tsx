@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
 import { Redirect, router, withLayoutContext, usePathname } from "expo-router";
-import { useEffect } from "react";
+import React, { useEffect, memo, useMemo } from "react";
 import { Text, TouchableOpacity, View, Platform, useWindowDimensions } from "react-native";
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
 import Animated, {
@@ -109,6 +109,7 @@ const TabsInner = () => {
 
         <View className="flex-1">
           <MaterialTopTabs
+            initialLayout={{ width: screenWidth }}
             screenOptions={{
               tabBarPosition: "top",
               tabBarShowLabel: false,
@@ -123,78 +124,7 @@ const TabsInner = () => {
                 overflow: "hidden",
               },
             }}
-            tabBar={(props) => (
-              <View>
-                <View
-                  className="border-b"
-                  style={{
-                    backgroundColor: colors.background,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <View className="flex-row justify-around items-center" style={{ height: TAB_BAR_HEIGHT }}>
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPressIn={() => props.navigation.navigate("index")}
-                      activeOpacity={0.7}
-                      delayPressIn={0}
-                    >
-                      <Home size={26} color={pathname === "/" ? colors.blue : "white"} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPressIn={() => props.navigation.navigate("search")}
-                      activeOpacity={0.7}
-                      delayPressIn={0}
-                    >
-                      <PeopleIcon size={27} color={pathname === "/search" ? colors.blue : "white"} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPressIn={() => props.navigation.navigate("videos")}
-                      activeOpacity={0.7}
-                      delayPressIn={0}
-                    >
-                      <TvMinimalPlay size={26} color={pathname === "/videos" ? colors.blue : "white"} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPressIn={() => props.navigation.navigate("notifications")}
-                      activeOpacity={0.7}
-                      delayPressIn={0}
-                    >
-                      <Bell size={26} color={pathname === "/notifications" ? colors.blue : "white"} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center h-full"
-                      onPressIn={() => props.navigation.navigate("profile")}
-                      activeOpacity={0.7}
-                      delayPressIn={0}
-                    >
-                      <Menu size={26} color={pathname === "/profile" ? colors.blue : "white"} />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: colors.border }}>
-                    <View
-                      className="h-full bg-blue-500"
-                      style={{
-                        width: `${100 / 5}%`,
-                        transform: [
-                          {
-                            translateX: ["/", "/search", "/videos", "/notifications", "/profile"].indexOf(pathname) * (screenWidth / 5),
-                          },
-                        ],
-                      }}
-                    />
-                  </View>
-                </View>
-              </View>
-            )}
+            tabBar={(props) => <TopIconBar navigation={props.navigation} pathname={pathname} colors={colors} screenWidth={screenWidth} />}
           >
             <MaterialTopTabs.Screen name="index" />
             <MaterialTopTabs.Screen name="search" />
@@ -215,3 +145,47 @@ export default function TabsLayout() {
     </TabsProvider>
   );
 }
+
+const TopIconBar = memo(function TopIconBar({ navigation, pathname, colors, screenWidth }: any) {
+  const routes = ["/", "/search", "/videos", "/notifications", "/profile"];
+  const activeIndex = routes.indexOf(pathname);
+  return (
+    <View>
+      <View
+        className="border-b"
+        style={{ backgroundColor: colors.background, borderColor: colors.border }}
+      >
+        <View className="flex-row justify-around items-center" style={{ height: TAB_BAR_HEIGHT }}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("index")} activeOpacity={0.7} delayPressIn={0}>
+            <Home size={26} color={pathname === "/" ? colors.blue : "white"} />
+          </TouchableOpacity>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("search")} activeOpacity={0.7} delayPressIn={0}>
+            <PeopleIcon size={27} color={pathname === "/search" ? colors.blue : "white"} />
+          </TouchableOpacity>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("videos")} activeOpacity={0.7} delayPressIn={0}>
+            <TvMinimalPlay size={26} color={pathname === "/videos" ? colors.blue : "white"} />
+          </TouchableOpacity>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("notifications")} activeOpacity={0.7} delayPressIn={0}>
+            <Bell size={26} color={pathname === "/notifications" ? colors.blue : "white"} />
+          </TouchableOpacity>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("profile")} activeOpacity={0.7} delayPressIn={0}>
+            <Menu size={26} color={pathname === "/profile" ? colors.blue : "white"} />
+          </TouchableOpacity>
+        </View>
+        <View className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: colors.border }}>
+          <View
+            className="h-full bg-blue-500"
+            style={{
+              width: `${100 / routes.length}%`,
+              transform: [
+                {
+                  translateX: (activeIndex > -1 ? activeIndex : 0) * (screenWidth / routes.length),
+                },
+              ],
+            }}
+          />
+        </View>
+      </View>
+    </View>
+  );
+});
