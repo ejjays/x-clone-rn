@@ -32,7 +32,7 @@ import { Ionicons, Entypo } from "@expo/vector-icons";
 import { Video, ResizeMode } from "expo-av";
 import BottomSheet from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
-import * as NavigationBar from "expo-navigation-bar";
+// Removed NavigationBar toggling to avoid jank on tab transitions
 
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
 import PostReactionsPicker, {
@@ -531,56 +531,20 @@ export default function VideosScreen() {
   }, [isFocused]);
 
   // Effect to hide/show the system navigation bar on Android
-  useFocusEffect(
-    useCallback(() => {
-      if (Platform.OS === "android") {
-        try {
-          NavigationBar.setVisibilityAsync("hidden");
-          NavigationBar.setBehaviorAsync("overlay-swipe");
-          NavigationBar.setBackgroundColorAsync("transparent");
-        } catch (e) {
-          console.error("Error hiding navigation bar:", e);
-        }
-      }
-      return () => {
-        if (Platform.OS === "android") {
-          try {
-            // Restore default navigation bar settings
-            NavigationBar.setVisibilityAsync("visible");
-            NavigationBar.setBehaviorAsync("inset-swipe"); // Or 'height'
-            NavigationBar.setBackgroundColorAsync(isDarkMode ? "#000000" : "#ffffff"); // Restore based on theme
-            NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
-          } catch (e) {
-            console.error("Error restoring navigation bar:", e);
-          }
-        }
-      };
-    }, [isDarkMode])
-  );
+  // Removed focus effect that toggles system nav bar; this was introducing delays
 
-  const renderItem = useCallback(
-    ({ item }: { item: Post }) => (
-      <VideoItem
-        item={item}
-        isVisible={viewableItems.includes(item._id)}
-        isScreenFocused={isFocused}
-        onCommentPress={handleOpenComments}
-        insets={insets}
-        bottomSafeOffset={bottomSafeOffset}
-        commentBarHeight={commentBarHeight}
-        width={width}
-        height={height}
-      />
-    ),
-    [
-      viewableItems,
-      isFocused,
-      insets,
-      bottomSafeOffset,
-      commentBarHeight,
-      width,
-      height,
-    ]
+  const renderItem = ({ item }: { item: Post }) => (
+    <VideoItem
+      item={item}
+      isVisible={viewableItems.includes(item._id)}
+      isScreenFocused={isFocused}
+      onCommentPress={handleOpenComments}
+      insets={insets}
+      bottomSafeOffset={bottomSafeOffset}
+      commentBarHeight={commentBarHeight}
+      width={width}
+      height={height}
+    />
   );
 
 
@@ -675,9 +639,9 @@ export default function VideosScreen() {
           index: i,
         })}
         decelerationRate={0.99}
-        initialNumToRender={2}
-        maxToRenderPerBatch={3}
-        windowSize={5}
+        initialNumToRender={3}
+        maxToRenderPerBatch={5}
+        windowSize={9}
         contentContainerStyle={{ paddingTop: 0, paddingBottom: 0 }}
         snapToInterval={itemHeight}
         snapToAlignment="start"
