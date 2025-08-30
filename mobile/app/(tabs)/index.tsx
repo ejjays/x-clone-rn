@@ -1,6 +1,8 @@
 import PostsList from "@/components/PostsList";
 import PostComposer from "@/components/PostComposer";
-import React, { memo } from "react";
+import React, { memo, useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { InteractionManager } from "react-native";
 import Stories from "@/components/Stories";
 import { usePosts } from "@/hooks/usePosts";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -28,6 +30,17 @@ const HomeScreen = () => {
   const { isDarkMode, colors } = useTheme();
   const [isReactionPickerVisible, setIsReactionPickerVisible] = useState(false);
   const insets = useSafeAreaInsets(); // Get safe area insets
+  const [ready, setReady] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const task = InteractionManager.runAfterInteractions(() => setReady(true));
+      return () => {
+        setReady(false);
+        task.cancel();
+      };
+    }, [])
+  );
 
   const handleOpenComments = (postId: string) => {
     router.push(`/post/${postId}`);
@@ -70,22 +83,26 @@ const HomeScreen = () => {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      <PostsList
-        ListHeaderComponent={
-          <View style={{ backgroundColor: colors.background }}>
-            <PostComposer animatedPlaceholder={false} />
-            <Stories />
-            <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
-          </View>
-        }
-        contentBottomPadding={insets.bottom}
-        onOpenComments={handleOpenComments}
-        onOpenPostMenu={handleOpenPostMenu}
-        onReactionPickerVisibilityChange={handleReactionPickerVisibilityChange}
-        edgeToEdgeMedia
-        refreshing={isRefetching}
-        onRefresh={handlePullToRefresh}
-      />
+      {ready ? (
+        <PostsList
+          ListHeaderComponent={
+            <View style={{ backgroundColor: colors.background }}>
+              <PostComposer animatedPlaceholder={false} />
+              <Stories />
+              <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
+            </View>
+          }
+          contentBottomPadding={insets.bottom}
+          onOpenComments={handleOpenComments}
+          onOpenPostMenu={handleOpenPostMenu}
+          onReactionPickerVisibilityChange={handleReactionPickerVisibilityChange}
+          edgeToEdgeMedia
+          refreshing={isRefetching}
+          onRefresh={handlePullToRefresh}
+        />
+      ) : (
+        <View style={{ flex: 1, backgroundColor: colors.background }} />
+      )}
       <PostActionBottomSheet
   ref={postActionBottomSheetRef}
   onClose={handleCloseBottomSheet}

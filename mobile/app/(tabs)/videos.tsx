@@ -1,10 +1,5 @@
-import React, {
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-} from "react";
+import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
+import { InteractionManager } from "react-native";
 import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Pressable, ActivityIndicator, Animated, RefreshControl, Alert, ToastAndroid, Platform, useWindowDimensions } from "react-native";
 import * as Clipboard from "expo-clipboard";
@@ -518,6 +513,17 @@ export default function VideosScreen() {
   // Effect to hide/show the system navigation bar on Android
   // Removed focus effect that toggles system nav bar; this was introducing delays
 
+  const [ready, setReady] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      const task = InteractionManager.runAfterInteractions(() => setReady(true));
+      return () => {
+        setReady(false);
+        task.cancel();
+      };
+    }, [])
+  );
+
   const renderItem = useCallback(({ item }: { item: Post }) => (
     <VideoItem
       item={item}
@@ -608,6 +614,7 @@ export default function VideosScreen() {
         <Text style={styles.headerTitle}>Reels</Text>
       </View>
 
+      {ready && (
       <FlatList
         key={`${commentBarHeight}-${width}`}
         data={videoPosts}
@@ -641,7 +648,7 @@ export default function VideosScreen() {
             progressBackgroundColor={colors.refreshControlBackgroundColor}
           />
         }
-      />
+      />)}
 
       {/* Comment input placeholder */}
       <View
