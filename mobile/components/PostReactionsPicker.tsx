@@ -38,7 +38,7 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
 }) => {
   const handleReactionPress = (reactionType: ReactionName) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onSelect(reactionType);
+    requestAnimationFrame(() => onSelect(reactionType));
   };
 
   const { colors } = useTheme();

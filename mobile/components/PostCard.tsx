@@ -259,9 +259,13 @@ const PostCard = ({
   };
 
   const handleLongPress = () => {
-    likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
-      setAnchorMeasurements({ pageX, pageY });
-      setPickerVisible(true);
+    // Use window-relative measurement for reliability across platforms
+    likeButtonRef.current?.measureInWindow((x, y, width, _height) => {
+      const hasValidCoords = typeof x === "number" && typeof y === "number";
+      const anchorX = hasValidCoords ? x + (width || 0) / 2 : screenWidth / 2;
+      const anchorY = hasValidCoords ? y : screenHeight / 2;
+      setAnchorMeasurements({ pageX: anchorX, pageY: anchorY });
+      requestAnimationFrame(() => setPickerVisible(true));
     });
   };
 
@@ -490,14 +494,16 @@ const PostCard = ({
           className="flex-row justify-around py-1 border-t"
           style={{ borderColor: colors.border, marginTop: 8 }}
         >
-          <Pressable
-            ref={likeButtonRef}
-            onPress={handleQuickPress}
-            onLongPress={handleLongPress}
-            className="flex-1 items-center py-2.5"
-          >
-            <ReactionButton />
-          </Pressable>
+          <View ref={likeButtonRef} collapsable={false} style={{ flex: 1 }}>
+            <Pressable
+              onPress={handleQuickPress}
+              onLongPress={handleLongPress}
+              delayLongPress={150}
+              className="items-center py-2.5"
+            >
+              <ReactionButton />
+            </Pressable>
+          </View>
 
           <TouchableOpacity
             className="flex-1 flex-row items-center justify-center py-2.5"
@@ -668,14 +674,16 @@ const PostCard = ({
                   borderTopWidth: 1,
                 }}
               >
-                <Pressable
-                  ref={likeButtonRef}
-                  onPress={handleQuickPress}
-                  onLongPress={handleLongPress}
-                  className="flex-1 items-center py-2.5"
-                >
-                  <ReactionButton />
-                </Pressable>
+                <View ref={likeButtonRef} collapsable={false} style={{ flex: 1 }}>
+                  <Pressable
+                    onPress={handleQuickPress}
+                    onLongPress={handleLongPress}
+                    delayLongPress={150}
+                    className="items-center py-2.5"
+                  >
+                    <ReactionButton />
+                  </Pressable>
+                </View>
 
                 <TouchableOpacity
                   className="flex-1 flex-row items-center justify-center py-2.5"
@@ -704,12 +712,6 @@ const PostCard = ({
           </Pressable>
         </Animated.View>
       </Modal>
-      <PostReactionsPicker
-        isVisible={pickerVisible}
-        onClose={() => setPickerVisible(false)}
-        onSelect={handleReactionSelect}
-        anchorMeasurements={anchorMeasurements}
-      />
     </>
   );
 };
