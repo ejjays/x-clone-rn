@@ -4,17 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { User } from "@/types";
 import { Search, Users, X } from "lucide-react-native";
 import React, { useState, memo } from "react";
-import {
-  View,
-  TextInput,
-  ScrollView,
-  Text,
-  ActivityIndicator,
-  RefreshControl,
-  TouchableOpacity,
-  Platform,
-  StyleSheet,
-} from "react-native";
+import { View, TextInput, FlatList, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -177,72 +167,65 @@ const SearchScreen = () => {
       </View>
 
       {/* USERS LIST */}
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={refetch}
-            tintColor={colors.refreshControlColor}
-            colors={[colors.refreshControlColor]}
-            progressBackgroundColor={colors.refreshControlBackgroundColor}
-          />
-        }
-      >
-        {isLoading ? (
-          <View
-            className="flex-1 items-center justify-center p-8"
-            style={{ backgroundColor: colors.background }}
-          >
-            <ActivityIndicator size="large" color={colors.blue} />
-            <Text className="mt-4" style={{ color: colors.textMuted }}>
-              Loading people...
-            </Text>
-          </View>
-        ) : displayedUsers.length === 0 ? (
-          <View
-            className="flex-1 items-center justify-center p-8"
-            style={{ backgroundColor: colors.background }}
-          >
-            <View className="items-center">
-              <View
-                className="w-20 h-20 rounded-full items-center justify-center mb-6"
-                style={{ backgroundColor: colors.surface }}
-              >
-                <Users size={32} color={colors.textMuted} />
+      {isLoading ? (
+        <View
+          className="flex-1 items-center justify-center p-8"
+          style={{ backgroundColor: colors.background }}
+        >
+          <ActivityIndicator size="large" color={colors.blue} />
+          <Text className="mt-4" style={{ color: colors.textMuted }}>
+            Loading people...
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={displayedUsers}
+          keyExtractor={(u) => u._id}
+          renderItem={({ item }) => (
+            <UserCard user={item} onMessage={handleMessage} />
+          )}
+          contentContainerStyle={{ paddingBottom: 100 + insets.bottom, backgroundColor: colors.background }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refetch}
+              tintColor={colors.refreshControlColor}
+              colors={[colors.refreshControlColor]}
+              progressBackgroundColor={colors.refreshControlBackgroundColor}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View
+              className="flex-1 items-center justify-center p-8"
+              style={{ backgroundColor: colors.background }}
+            >
+              <View className="items-center">
+                <View
+                  className="w-20 h-20 rounded-full items-center justify-center mb-6"
+                  style={{ backgroundColor: colors.surface }}
+                >
+                  <Users size={32} color={colors.textMuted} />
+                </View>
+                <Text className="text-xl font-semibold mb-3" style={{ color: colors.text }}>
+                  {searchText
+                    ? "No people found"
+                    : activeTab === "suggestions"
+                    ? "No suggestions yet"
+                    : "You are not following anyone yet"}
+                </Text>
+                <Text className="text-center text-base leading-6 max-w-xs" style={{ color: colors.textMuted }}>
+                  {searchText
+                    ? `No results found for \"${searchText}\"`
+                    : activeTab === "suggestions"
+                    ? "Suggestions will appear here."
+                    : "People you follow will appear here."}
+                </Text>
               </View>
-              <Text
-                className="text-xl font-semibold mb-3"
-                style={{ color: colors.text }}
-              >
-                {searchText
-                  ? "No people found"
-                  : activeTab === "suggestions"
-                  ? "No suggestions yet"
-                  : "You are not following anyone yet"}
-              </Text>
-              <Text
-                className="text-center text-base leading-6 max-w-xs"
-                style={{ color: colors.textMuted }}
-              >
-                {searchText
-                  ? `No results found for \"${searchText}\"`
-                  : activeTab === "suggestions"
-                  ? "Suggestions will appear here."
-                  : "People you follow will appear here."}
-              </Text>
             </View>
-          </View>
-        ) : (
-          <View style={{ backgroundColor: colors.background }}>
-            {displayedUsers.map((user: User) => (
-              <UserCard key={user._id} user={user} onMessage={handleMessage} />
-            ))}
-          </View>
-        )}
-      </ScrollView>
+          }
+        />
+      )}
     </View>
   );
 };

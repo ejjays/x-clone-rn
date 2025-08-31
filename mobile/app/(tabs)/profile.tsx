@@ -10,16 +10,7 @@ import {
   UserX,
 } from "lucide-react-native";
 import { format } from "date-fns";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  RefreshControl,
-  Alert,
-} from "react-native";
+import { View, Text, ActivityIndicator, Image, TouchableOpacity, RefreshControl, Alert, FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
@@ -93,26 +84,8 @@ const ProfileScreens = () => {
     );
   }
 
-  return (
-    <View className="flex-1" style={{ paddingTop: insets.top, backgroundColor: colors.background }}>
-
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => {
-              refetchProfile();
-              refetchPosts();
-            }}
-            colors={[colors.refreshControlColor]}
-            tintColor={colors.refreshControlColor}
-            progressBackgroundColor={colors.refreshControlBackgroundColor}
-          />
-        }
-      >
+  const header = (
+    <View>
         <View className="relative">
           <Image
             source={{
@@ -260,8 +233,23 @@ const ProfileScreens = () => {
           </Text>
         </View>
 
-        <PostsList username={currentUser?.username} />
-      </ScrollView>
+    </View>
+  );
+
+  return (
+    <View className="flex-1" style={{ paddingTop: insets.top, backgroundColor: colors.background }}>
+      <FlatList
+        data={[{ key: "posts" }]}
+        keyExtractor={(i) => i.key}
+        renderItem={() => (
+          <PostsList username={currentUser?.username} onOpenPostMenu={() => {}} />
+        )}
+        ListHeaderComponent={header}
+        refreshing={isRefetching}
+        onRefresh={() => { refetchProfile(); refetchPosts(); }}
+        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+        showsVerticalScrollIndicator={false}
+      />
 
       <EditProfileModal
         isVisible={isEditModalVisible}
