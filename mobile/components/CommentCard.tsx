@@ -75,9 +75,12 @@ const CommentCard = ({
 
   const handleLongPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    likeButtonRef.current?.measure((_x, _y, _width, _height, pageX, pageY) => {
-      setAnchorMeasurements({ pageX, pageY });
-      setPickerVisible(true);
+    likeButtonRef.current?.measureInWindow((x, y, width, _height) => {
+      const hasValid = typeof x === "number" && typeof y === "number";
+      const anchorX = hasValid ? x + (width || 0) / 2 : screenWidth / 2;
+      const anchorY = hasValid ? y : 120;
+      setAnchorMeasurements({ pageX: anchorX, pageY: anchorY });
+      requestAnimationFrame(() => setPickerVisible(true));
     });
   };
 
@@ -271,15 +274,17 @@ const CommentCard = ({
             </Text>
 
             {/* Like/Reaction button with same functionality as PostCard */}
-            <Pressable
-              ref={likeButtonRef}
-              onPress={handleQuickPress}
-              onLongPress={handleLongPress}
-              className="ml-4 flex-row items-center py-1"
-              style={{ minWidth: 40 }}
-            >
-              <ReactionButton />
-            </Pressable>
+            <View ref={likeButtonRef} collapsable={false} style={{ minWidth: 40 }}>
+              <Pressable
+                onPress={handleQuickPress}
+                onLongPress={handleLongPress}
+                delayLongPress={150}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                className="ml-4 flex-row items-center py-1"
+              >
+                <ReactionButton />
+              </Pressable>
+            </View>
 
             {/* Reply button */}
             <TouchableOpacity

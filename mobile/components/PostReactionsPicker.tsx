@@ -43,7 +43,7 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
 
   const { colors } = useTheme();
 
-  if (!isVisible || !anchorMeasurements) {
+  if (!isVisible) {
     return null;
   }
 
@@ -69,8 +69,10 @@ const PostReactionsPicker: React.FC<PostReactionsPickerProps> = ({
 
   // Calculate position to center the picker above the button
   // Changed offset from -10 to -85 to ensure it clears the action bar
-  let left = anchorMeasurements.pageX - pickerWidth / 2;
-  let top = anchorMeasurements.pageY - pickerHeight - 35; 
+  const anchorX = anchorMeasurements?.pageX ?? screenWidth / 2;
+  const anchorY = anchorMeasurements?.pageY ?? (screenHeight - 120);
+  let left = anchorX - pickerWidth / 2;
+  let top = anchorY - pickerHeight - 35; 
 
   // Ensure picker stays within screen bounds horizontally
   if (left < 10) left = 10;
