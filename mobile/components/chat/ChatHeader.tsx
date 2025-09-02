@@ -5,7 +5,7 @@ import { router } from "expo-router";
 
 interface ChatHeaderProps {
   colors: any;
-  otherUser: { name?: string; image?: string; online?: boolean } | null;
+  otherUser: { name?: string; image?: string; online?: boolean; id?: string } | null;
   channelId?: string;
 }
 
@@ -33,10 +33,10 @@ export default function ChatHeader({ colors, otherUser, channelId }: ChatHeaderP
           </Text>
         )}
       </View>
-      <TouchableOpacity className="p-2" onPress={() => channelId && router.push(`/call/${channelId}`)}>
+      <TouchableOpacity className="p-2" onPress={() => channelId && router.push({ pathname: `/call/${channelId}`, params: otherUser?.id ? { other: otherUser.id } : {} })}>
         <Ionicons name="call-outline" size={24} color={colors.grayText} />
       </TouchableOpacity>
-      <TouchableOpacity className="p-2 ml-2" onPress={() => channelId && router.push(`/call/${channelId}`)}>
+      <TouchableOpacity className="p-2 ml-2" onPress={() => channelId && router.push({ pathname: `/call/${channelId}`, params: otherUser?.id ? { other: otherUser.id } : {} })}>
         <Ionicons name="videocam-outline" size={24} color={colors.grayText} />
       </TouchableOpacity>
     </View>

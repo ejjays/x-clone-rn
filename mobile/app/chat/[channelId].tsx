@@ -125,6 +125,7 @@ export default function ChatScreen() {
               otherMember.user.image ||
               `https://getstream.io/random_png/?name=${otherMember.user.name}`,
             online: otherMember.user.online || false,
+            id: otherMember.user.id,
           });
         }
 

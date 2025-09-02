@@ -5,6 +5,8 @@ import { Platform, View, Pressable, StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import { useStreamVideo } from "@/context/StreamVideoContext";
+import { useStreamChat } from "@/context/StreamChatContext";
+import { useUser } from "@clerk/clerk-expo";
 import {
   StreamCall,
   CallContent,
@@ -19,9 +21,13 @@ import { useTheme } from "@/context/ThemeContext";
 export default function CallScreen() {
   const params = useLocalSearchParams();
   const channelId = typeof params?.channelId === "string" ? params.channelId : undefined;
+  const otherFromParams = typeof (params as any)?.other === "string" ? (params as any).other : undefined;
   const { client } = useStreamVideo();
+  const { client: chatClient } = useStreamChat();
+  const { user: clerkUser } = useUser();
   const { isDarkMode } = useTheme();
   const [joined, setJoined] = useState(false);
+  const [otherUserId, setOtherUserId] = useState<string | undefined>(otherFromParams);
 
   const call = useMemo(() => {
     if (!client || !channelId) return null;
@@ -29,13 +35,34 @@ export default function CallScreen() {
     return client.call("default", channelId);
   }, [client, channelId]);
 
+  // Resolve otherUserId if not provided via params
+  useEffect(() => {
+    (async () => {
+      if (otherUserId || !chatClient || !channelId) return;
+      try {
+        const ch = chatClient.channel("messaging", channelId);
+        await ch.watch();
+        const membersArray = Array.isArray(ch.state.members)
+          ? ch.state.members
+          : Object.values(ch.state.members || {});
+        const other = membersArray.find((m: any) => m?.user?.id && m.user.id !== clerkUser?.id);
+        if (other?.user?.id) setOtherUserId(other.user.id);
+      } catch {}
+    })();
+  }, [chatClient, channelId, otherUserId, clerkUser?.id]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         if (!call) return;
-        // Create call if missing, then join with mic/camera enabled
-        await call.getOrCreate({ ring: true });
+        // Ensure both participants are members; ring only from a single, deterministic initiator
+        const selfId = clerkUser?.id;
+        const peerId = otherUserId;
+        const haveBoth = Boolean(selfId && peerId);
+        const isInitiator = haveBoth ? String(selfId) < String(peerId) : false;
+        const members = haveBoth ? [{ user_id: String(selfId) }, { user_id: String(peerId) }] : undefined;
+        await call.getOrCreate({ ring: isInitiator, data: members ? { members } : undefined } as any);
         await call.join({ create: false, video: true, audio: true });
         if (!cancelled) setJoined(true);
       } catch (e) {
@@ -47,7 +74,7 @@ export default function CallScreen() {
       cancelled = true;
       call?.leave().catch(() => {});
     };
-  }, [call]);
+  }, [call, clerkUser?.id, otherUserId]);
 
   // Enter Android PiP when user backgrounds
   useEffect(() => {
