@@ -6,10 +6,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useStreamVideo } from "@/context/StreamVideoContext";
 import {
-  Call,
+  StreamCall,
   CallContent,
   RTCViewPipIOS,
-  useCallStateHooks,
   enterPiPAndroid,
 } from "@stream-io/video-react-native-sdk";
 import { useTheme } from "@/context/ThemeContext";
@@ -66,9 +65,9 @@ export default function CallScreen() {
     <SafeAreaView style={{ flex: 1 }}>
       <StatusBar style={isDarkMode ? "light" : "dark"} />
       {Platform.OS === "ios" && <RTCViewPipIOS />}
-      <Call call={call}>
+      <StreamCall call={call}>
         <CallContent />
-      </Call>
+      </StreamCall>
     </SafeAreaView>
   );
 }
