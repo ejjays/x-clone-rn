@@ -2,8 +2,8 @@
 import { useLocalSearchParams, router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Platform, View, Pressable, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import * as NavigationBar from "expo-navigation-bar";
 import { useStreamVideo } from "@/context/StreamVideoContext";
 import {
   StreamCall,
@@ -62,16 +62,39 @@ export default function CallScreen() {
     };
   }, [joined]);
 
+  // Hide Android navigation bar while this screen is focused
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (Platform.OS === "android") {
+        try {
+          await NavigationBar.setVisibilityAsync("hidden");
+          await NavigationBar.setBehaviorAsync("overlay-swipe");
+          await NavigationBar.setBackgroundColorAsync("transparent");
+        } catch {}
+      }
+    })();
+    return () => {
+      active = false;
+      if (Platform.OS === "android") {
+        try {
+          NavigationBar.setVisibilityAsync("visible");
+          NavigationBar.setBehaviorAsync("inset-swipe");
+        } catch {}
+      }
+    };
+  }, []);
+
   if (!call) return null;
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
+    <View style={{ flex: 1 }}>
+      <StatusBar hidden />
       {Platform.OS === "ios" && <RTCViewPipIOS />}
       <StreamCall call={call}>
         <CallContent CallControls={FloatingControls} />
       </StreamCall>
-    </SafeAreaView>
+    </View>
   );
 }
 

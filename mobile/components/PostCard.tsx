@@ -188,19 +188,10 @@ const PostCard = ({
   useEffect(() => {
     if (post.image) {
       setIsMediaLoading(true);
-      Image.getSize(
-        post.image,
-        (width, height) => {
-          const calculatedHeight = Math.round((screenWidth / width) * height);
-          setImageHeight(calculatedHeight);
-          setIsMediaLoading(false);
-        },
-        (error) => {
-          console.error(`Couldn\'t get image size for ${post.image}:`, error);
-          setImageHeight(200);
-          setIsMediaLoading(false);
-        }
-      );
+      // Avoid Image.getSize() which issues a HEAD request Cloudinary may reject on free tier.
+      // Use a safe default 16:9 height; the <Image> will render full width.
+      setImageHeight(Math.round((screenWidth * 9) / 16));
+      setIsMediaLoading(false);
     } else if (post.video) {
       setIsMediaLoading(true);
       setVideoHeight(Math.round((screenWidth * 9) / 16));
@@ -421,7 +412,11 @@ const PostCard = ({
           <Image
             source={{ uri: post.image }}
             style={{ width: screenWidth, height: imageHeight }}
-            resizeMode="contain"
+            resizeMode="cover"
+            onError={() => {
+              // Fallback if Cloudinary returns 401 to size or load – show a minimal placeholder height
+              setImageHeight(200);
+            }}
           />
         </TouchableOpacity>
       )}
