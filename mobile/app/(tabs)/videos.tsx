@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 import { Ionicons, Entypo } from "@expo/vector-icons";
-import { Video } from "expo-video";
+import { VideoView, useVideoPlayer } from "expo-video";
 import BottomSheet from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 // Removed NavigationBar toggling to avoid jank on tab transitions
@@ -66,7 +66,7 @@ const VideoItem = ({
   width: number;
   height: number;
 }) => {
-  const videoRef = useRef<Video>(null);
+  const player = useVideoPlayer(item.video ? { uri: item.video } : undefined);
   const likeButtonRef = useRef<TouchableOpacity>(null);
   const postActionBottomSheetRef = useRef<PostActionBottomSheetRef>(null);
   const { currentUser } = useCurrentUser();
@@ -100,29 +100,23 @@ const VideoItem = ({
 
   // Autoplay / pause
   useEffect(() => {
-    if (!videoRef.current) return;
-    async function sync() {
-      if (isVisible && isScreenFocused) {
-        await videoRef.current.setStatusAsync({ isMuted, shouldPlay: true });
-        setIsPlaying(true);
-      } else {
-        await videoRef.current.setStatusAsync({
-          shouldPlay: false,
-          isMuted: true,
-        });
-        if (!isVisible) {
-          await videoRef.current.setStatusAsync({ positionMillis: 0 });
-        }
-        setIsPlaying(false);
-      }
+    if (!player) return;
+    if (isVisible && isScreenFocused) {
+      (player as any).play?.();
+      (player as any).setIsMuted?.(isMuted);
+      setIsPlaying(true);
+    } else {
+      (player as any).pause?.();
+      (player as any).setIsMuted?.(true);
+      if (!isVisible) (player as any).seekTo?.(0);
+      setIsPlaying(false);
     }
-    sync();
   }, [isVisible, isScreenFocused, isMuted]);
 
   const onPlayPausePress = async () => {
-    if (!videoRef.current) return;
-    if (isPlaying) await videoRef.current.pauseAsync();
-    else await videoRef.current.playAsync();
+    if (!player) return;
+    if (isPlaying) (player as any).pause?.();
+    else (player as any).play?.();
     setIsPlaying((p) => !p);
   };
 
@@ -158,7 +152,8 @@ const VideoItem = ({
   const toggleMute = async () => {
     const next = !isMuted;
     setIsMuted(next);
-    await videoRef.current?.setStatusAsync({ isMuted: next });
+    if (!player) return;
+    (player as any).setIsMuted?.(next);
   };
 
 
@@ -184,6 +179,15 @@ const VideoItem = ({
     const hOverW = naturalHeight / naturalWidth;
     return hOverW >= 1.6 ? "cover" : "contain";
   }, [item.videoFit, naturalWidth, naturalHeight, videoOrientation]);
+
+  // Track progress using the player's timeUpdate when available
+  useEffect(() => {
+    if (!player) return;
+    const sub = (player as any).addListener?.("timeUpdate", ({ currentTime, duration }) => {
+      if (duration) setProgress(currentTime / duration);
+    });
+    return () => sub?.remove?.();
+  }, [player]);
 
   // Reaction picker
   const handleLongPress = () => {
@@ -250,32 +254,10 @@ const VideoItem = ({
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
         {item.video && (
-          <Video
-            ref={videoRef}
+          <VideoView
             style={{ width: "100%", height: "100%", backgroundColor: "black" }}
-            source={{ uri: item.video }}
-            resizeMode={dynamicResizeMode}
-            isLooping
-            shouldPlay={false}
-            onLoad={(status) => {
-              if (status.naturalSize) {
-                const {
-                  width: w,
-                  height: h,
-                  orientation: ori,
-                } = status.naturalSize;
-                setNaturalWidth(w);
-                setNaturalHeight(h);
-                if (ori === "portrait" || ori === "landscape") {
-                  setVideoOrientation(ori);
-                }
-              }
-            }}
-            onPlaybackStatusUpdate={(status) => {
-              if (status.isLoaded && status.durationMillis) {
-                setProgress(status.positionMillis / status.durationMillis);
-              }
-            }}
+            player={player}
+            contentFit={dynamicResizeMode}
           />
         )}
 
