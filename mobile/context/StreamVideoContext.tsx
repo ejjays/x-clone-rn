@@ -51,14 +51,14 @@ export const StreamVideoProvider = ({ children }: { children: React.ReactNode })
 
   const value = { client };
 
-  if (!client) return null;
-
   return (
-    <StreamVideo client={client}>
-      <StreamVideoContext.Provider value={value}> 
-        {children}
-      </StreamVideoContext.Provider>
-    </StreamVideo>
+    <StreamVideoContext.Provider value={value}>
+      {client ? (
+        <StreamVideo client={client}>{children}</StreamVideo>
+      ) : (
+        children
+      )}
+    </StreamVideoContext.Provider>
   );
 };
 
