@@ -19,7 +19,7 @@ import React, { useRef, useState, useEffect, useCallback, memo } from "react";
 import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
-import { Video, ResizeMode } from "expo-video";
+import { Video } from "expo-video";
 import {
   reactionComponents,
   reactionTextColor,
@@ -434,7 +434,7 @@ const PostCard = ({
               : { width: screenWidth, height: videoHeight as number }
           }
           useNativeControls
-          resizeMode={ResizeMode.CONTAIN}
+          resizeMode={"contain"}
           isLooping
           shouldPlay={false}
           onLoad={handleVideoLoad}

@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 import { Ionicons, Entypo } from "@expo/vector-icons";
-import { Video, ResizeMode } from "expo-video";
+import { Video } from "expo-video";
 import BottomSheet from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 // Removed NavigationBar toggling to avoid jank on tab transitions
@@ -170,19 +170,19 @@ const VideoItem = ({
 
 
   const dynamicResizeMode = useMemo(() => {
-    if (item.videoFit === "full") return ResizeMode.COVER;
-    if (item.videoFit === "original") return ResizeMode.CONTAIN;
-    if (!naturalWidth || !naturalHeight) return ResizeMode.CONTAIN;
+    if (item.videoFit === "full") return "cover" as const;
+    if (item.videoFit === "original") return "contain" as const;
+    if (!naturalWidth || !naturalHeight) return "contain" as const;
 
     const dimsSayLandscape = naturalWidth > naturalHeight;
     const isLandscape = videoOrientation
       ? videoOrientation === "landscape"
       : dimsSayLandscape;
 
-    if (isLandscape) return ResizeMode.CONTAIN;
+    if (isLandscape) return "contain" as const;
 
     const hOverW = naturalHeight / naturalWidth;
-    return hOverW >= 1.6 ? ResizeMode.COVER : ResizeMode.CONTAIN;
+    return hOverW >= 1.6 ? "cover" : "contain";
   }, [item.videoFit, naturalWidth, naturalHeight, videoOrientation]);
 
   // Reaction picker
