@@ -14,6 +14,7 @@ import { OverlayProvider, Chat } from "stream-chat-react-native";
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
+import { StreamVideoProvider } from "@/context/StreamVideoContext";
 import { useEffect } from "react";
 import { persistAuthState } from "@/utils/offline/network";
 import { StatusBar } from "expo-status-bar";
@@ -238,9 +239,11 @@ export default function RootLayout() {
             tokenCache={tokenCache}
           >
             <StreamChatProvider>
-              <ThemeProvider>
-                <InitialLayout />
-              </ThemeProvider>
+              <StreamVideoProvider>
+                <ThemeProvider>
+                  <InitialLayout />
+                </ThemeProvider>
+              </StreamVideoProvider>
             </StreamChatProvider>
           </ClerkProvider>
         </QueryClientProvider>

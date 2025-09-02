@@ -303,7 +303,7 @@ export default function ChatScreen() {
     >
       <StatusBar style={isDarkMode ? "light" : "dark"} />
 
-      <ChatHeader colors={colors} otherUser={otherUser} />
+      <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
 
       <View className="flex-1">
         {client && channel && (
