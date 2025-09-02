@@ -86,8 +86,10 @@ export const usePushNotifications = () => {
       // Navigation is handled at app root
     });
     return () => {
-      receivedListener.current && Notifications.removeNotificationSubscription(receivedListener.current);
-      responseListener.current && Notifications.removeNotificationSubscription(responseListener.current);
+      if (receivedListener.current?.remove) receivedListener.current.remove();
+      if (responseListener.current?.remove) responseListener.current.remove();
+      receivedListener.current = null;
+      responseListener.current = null;
     };
   }, []);
 

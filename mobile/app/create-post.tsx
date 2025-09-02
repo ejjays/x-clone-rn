@@ -16,7 +16,7 @@ import {
   Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Video, ResizeMode } from "expo-av";
+import { Video, ResizeMode } from "expo-video";
 import { useEffect, useState, useRef } from "react";
 import { useTheme } from "@/context/ThemeContext";
 

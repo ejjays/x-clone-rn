@@ -19,6 +19,7 @@ import { useStreamChat } from "@/context/StreamChatContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { User } from "@/types";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@clerk/clerk-expo";
 
 export default function NewMessageScreen() {
   const [users, setUsers] = useState<User[]>([]);
@@ -30,10 +31,11 @@ export default function NewMessageScreen() {
   const { client, isConnected, createChannel } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const { colors } = useTheme();
+  const { isSignedIn } = useAuth();
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (isSignedIn) fetchUsers();
+  }, [isSignedIn]);
 
   const fetchUsers = async () => {
     try {

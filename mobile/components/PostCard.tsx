@@ -19,7 +19,7 @@ import React, { useRef, useState, useEffect, useCallback, memo } from "react";
 import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
-import { Video, ResizeMode } from "expo-av";
+import { Video, ResizeMode } from "expo-video";
 import {
   reactionComponents,
   reactionTextColor,

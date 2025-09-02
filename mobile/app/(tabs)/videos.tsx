@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 import { Ionicons, Entypo } from "@expo/vector-icons";
-import { Video, ResizeMode } from "expo-av";
+import { Video, ResizeMode } from "expo-video";
 import BottomSheet from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 // Removed NavigationBar toggling to avoid jank on tab transitions
