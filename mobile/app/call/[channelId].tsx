@@ -11,8 +11,7 @@ import {
   RTCViewPipIOS,
   enterPiPAndroid,
   useCall,
-  useCameraState,
-  useMicrophoneState,
+  useCallStateHooks,
 } from "@stream-io/video-react-native-sdk";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
@@ -78,6 +77,7 @@ export default function CallScreen() {
 
 const FloatingControls = () => {
   const call = useCall();
+  const { useCameraState, useMicrophoneState } = useCallStateHooks();
   const { camera, isEnabled: isCamOn } = useCameraState();
   const { microphone, isEnabled: isMicOn } = useMicrophoneState();
 
