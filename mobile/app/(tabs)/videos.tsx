@@ -247,17 +247,18 @@ const VideoItem = ({
 
   const itemOuterHeight = height;
   const statusBarOverlayHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
+  const bottomOverlay = commentBarHeight + bottomSafeOffset;
 
   return (
-    <View style={[styles.videoContainer, { width, height: itemOuterHeight + statusBarOverlayHeight }]}>
+    <View style={[styles.videoContainer, { width, height: itemOuterHeight + statusBarOverlayHeight, backgroundColor: 'black' }]}>
       <Pressable
-        style={[styles.videoPressable, { height: height + statusBarOverlayHeight }]}
+        style={[styles.videoPressable, { height: height + statusBarOverlayHeight - bottomOverlay }]}
         onPress={onContainerPress}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
         {item.video && (
           <VideoView
-            style={[StyleSheet.absoluteFillObject, { top: -statusBarOverlayHeight, left: 0, right: 0, bottom: 0, backgroundColor: 'black' }]}
+            style={[StyleSheet.absoluteFillObject, { top: -statusBarOverlayHeight, left: 0, right: 0, bottom: bottomOverlay, backgroundColor: 'black' }]}
             player={player}
             contentFit={dynamicResizeMode}
           />
