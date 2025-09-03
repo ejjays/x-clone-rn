@@ -249,13 +249,13 @@ const VideoItem = ({
   return (
     <View style={[styles.videoContainer, { width, height: itemOuterHeight + insets.top }]}>
       <Pressable
-        style={[styles.videoPressable, { height: containerHeight }]}
+        style={[styles.videoPressable, { height: height + insets.top }]}
         onPress={onContainerPress}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
         {item.video && (
           <VideoView
-            style={[StyleSheet.absoluteFillObject, { top: -insets.top, backgroundColor: 'black' }]}
+            style={[StyleSheet.absoluteFillObject, { top: -insets.top, left: 0, right: 0, bottom: 0, backgroundColor: 'black' }]}
             player={player}
             contentFit={dynamicResizeMode}
           />
