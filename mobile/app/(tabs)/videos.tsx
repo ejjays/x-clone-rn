@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
 import { InteractionManager, StatusBar as RNStatusBar, Platform } from "react-native";
 import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, Alert, ToastAndroid, useWindowDimensions } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, Alert, ToastAndroid, useWindowDimensions, Animated } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import {
   useSafeAreaInsets,
