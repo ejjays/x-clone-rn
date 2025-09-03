@@ -70,14 +70,17 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap 
         Keyboard.addListener('keyboardWillChangeFrame', onShow),
       ];
     } else {
-      subs.current = [];
+      subs.current = [
+        Keyboard.addListener('keyboardDidShow', onShow),
+        Keyboard.addListener('keyboardDidHide', onHide),
+      ];
     }
 
     return () => {
       subs.current.forEach(s => s.remove());
       subs.current = [];
     };
-  }, [extraSpace, translateY]);
+  }, [extraSpace, baseGap, translateY, paddingBottom]);
 
   // If Android, avoid double handling and just render children with paddingBottom animation applied
   if (Platform.OS === 'android') {
