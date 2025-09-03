@@ -79,12 +79,12 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap 
     };
   }, [extraSpace, translateY]);
 
-  // If Android, avoid double handling and just render children with paddingBottom animation applied
+  // On Android we rely on window resize (app.json softwareKeyboardLayoutMode=resize)
   if (Platform.OS === 'android') {
     return (
-      <Animated.View style={[{ flex: 1, paddingBottom }, style]}>
+      <View style={[{ flex: 1, paddingBottom: baseGap }, style]}>
         {children}
-      </Animated.View>
+      </View>
     );
   }
 
