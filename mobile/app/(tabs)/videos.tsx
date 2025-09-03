@@ -245,17 +245,18 @@ const VideoItem = ({
   };
 
   const itemOuterHeight = height;
+  const statusBarOverlayHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
 
   return (
-    <View style={[styles.videoContainer, { width, height: itemOuterHeight + insets.top }]}>
+    <View style={[styles.videoContainer, { width, height: itemOuterHeight + statusBarOverlayHeight }]}>
       <Pressable
-        style={[styles.videoPressable, { height: height + insets.top }]}
+        style={[styles.videoPressable, { height: height + statusBarOverlayHeight }]}
         onPress={onContainerPress}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
         {item.video && (
           <VideoView
-            style={[StyleSheet.absoluteFillObject, { top: -insets.top, left: 0, right: 0, bottom: 0, backgroundColor: 'black' }]}
+            style={[StyleSheet.absoluteFillObject, { top: -statusBarOverlayHeight, left: 0, right: 0, bottom: 0, backgroundColor: 'black' }]}
             player={player}
             contentFit={dynamicResizeMode}
           />
@@ -277,7 +278,7 @@ const VideoItem = ({
       {/* Black cover over status bar area to eliminate gray during hide animation */}
       <View
         pointerEvents="none"
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top, backgroundColor: 'black', zIndex: 4 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: statusBarOverlayHeight, backgroundColor: 'black', zIndex: 4 }}
       />
 
       <View
@@ -285,7 +286,7 @@ const VideoItem = ({
         style={[
           styles.overlay,
           {
-            paddingTop: insets.top + 8,
+            paddingTop: 8,
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
             paddingBottom: commentBarHeight,
