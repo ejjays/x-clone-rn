@@ -85,9 +85,9 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap 
   // Android uses animated bottom padding to maintain input background space
   if (Platform.OS === 'android') {
     return (
-      <Animated.View style={[{ flex: 1, paddingBottom }, style]}>
+      <View style={[{ flex: 1 }, style]}>
         {children}
-      </Animated.View>
+      </View>
     );
   }
 
