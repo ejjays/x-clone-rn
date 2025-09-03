@@ -6,10 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import axios from 'axios';
 import { useApiClient } from "../utils/api";
 
-// --- IMPORTANT: MAKE SURE THESE VALUES ARE CORRECT ---
-const CLOUDINARY_CLOUD_NAME = "dagzpmz00";
-const CLOUDINARY_UPLOAD_PRESET = "ejpogi";
-// ----------------------------------------------------
+// Signed uploads via backend; no unsigned presets in client
 
 export const useCreatePost = () => {
   const [content, setContent] = useState("");
@@ -39,36 +36,27 @@ export const useCreatePost = () => {
   });
   
   const uploadMediaToCloudinary = async (media: { uri: string; type: 'image' | 'video' }): Promise<string | null> => {
+    try {
+      const sigRes = await api.post('/upload/signature', { folder: 'app_uploads' });
+      const { timestamp, signature, apiKey, cloudName } = sigRes.data;
       const formData = new FormData();
       formData.append('file', {
         uri: media.uri,
         type: media.type === 'image' ? 'image/jpeg' : 'video/mp4',
         name: `upload.${media.type === 'image' ? 'jpg' : 'mp4'}`,
       } as any);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
-      
-      try {
-        console.log(`Uploading ${media.type} to Cloudinary...`);
-        const response = await axios.post(uploadUrl, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        
-        const secureUrl = response.data.secure_url;
-
-        // REMOVED EXPENSIVE VIDEO TRANSFORMATIONS TO SAVE CREDITS
-        // The previous transformation was consuming 10-20+ credits per video upload
-        // Now videos will be uploaded in their original format, using minimal credits
-        
-        console.log('Cloudinary upload successful. Final URL:', secureUrl);
-        return secureUrl;
-
-      } catch (e: any) {
-        console.error("Cloudinary upload failed:", e.response?.data || e.message);
-        Alert.alert("Upload Failed", "Could not upload your media. Please check your internet connection and try again.");
-        return null;
-      }
+      formData.append('timestamp', String(timestamp));
+      formData.append('api_key', apiKey);
+      formData.append('signature', signature);
+      formData.append('folder', 'app_uploads');
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+      const response = await axios.post(uploadUrl, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return response?.data?.secure_url ?? null;
+    } catch (e: any) {
+      console.error('Cloudinary upload failed:', e.response?.data || e.message);
+      Alert.alert('Upload Failed', 'Could not upload your media. Please try again.');
+      return null;
+    }
   };
 
   const handleMediaPicker = async () => {

@@ -12,6 +12,7 @@ import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import streamRoutes from "./routes/stream.route.js";
+import uploadRoutes from "./routes/upload.route.js";
 import pushRoutes from "./routes/push.route.js";
 import mongoose from "mongoose";
 
@@ -133,6 +134,7 @@ const setupRoutes = () => {
     app.use("/api/comments", commentRoutes);
     app.use("/api/notifications", notificationRoutes);
     app.use("/api/stream", streamRoutes);
+    app.use("/api/upload", uploadRoutes);
     app.use("/api/push", pushRoutes);
 
     console.log("✅ All routes registered successfully");
