@@ -521,6 +521,10 @@ export default function VideosScreen() {
     useCallback(() => {
       const task = InteractionManager.runAfterInteractions(async () => {
         setReady(true);
+        // Hide status bar for immersive experience
+        try {
+          RNStatusBar.setHidden(true);
+        } catch {}
         // Hide Android system nav bar for reels only
         if (Platform.OS === "android") {
           try {
@@ -532,6 +536,9 @@ export default function VideosScreen() {
       });
       return () => {
         setReady(false);
+        try {
+          RNStatusBar.setHidden(false);
+        } catch {}
         // Restore nav bar on leaving reels
         if (Platform.OS === "android") {
           try {
