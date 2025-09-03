@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
 import { InteractionManager, StatusBar as RNStatusBar, Platform } from "react-native";
 import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Pressable, ActivityIndicator, Animated, RefreshControl, Alert, ToastAndroid, useWindowDimensions } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, Alert, ToastAndroid, useWindowDimensions } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import {
   useSafeAreaInsets,
@@ -83,16 +83,14 @@ const VideoItem = ({
     return reaction;
   }, [item.reactions, currentUser, item._id]);
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  // Native controls handle play/pause
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<any>(null);
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);  
   const [containerWidth, setContainerWidth] = useState<number>(width);
   const [isMuted, setIsMuted] = useState(false);
-  const [progress, setProgress] = useState(0);
   const lastTapRef = useRef<number>(0);
-  const heartOpacity = useRef(new Animated.Value(0)).current;
   const [videoOrientation, setVideoOrientation] = useState<
     "portrait" | "landscape" | null
   >(null);
@@ -106,50 +104,14 @@ const VideoItem = ({
     if (isVisible && isScreenFocused) {
       (player as any).play?.();
       (player as any).setIsMuted?.(isMuted);
-      setIsPlaying(true);
     } else {
       (player as any).pause?.();
       (player as any).setIsMuted?.(true);
       if (!isVisible) (player as any).seekTo?.(0);
-      setIsPlaying(false);
     }
   }, [isVisible, isScreenFocused, isMuted]);
 
-  const onPlayPausePress = async () => {
-    if (!player) return;
-    if (isPlaying) (player as any).pause?.();
-    else (player as any).play?.();
-    setIsPlaying((p) => !p);
-  };
-
-  const onContainerPress = async () => {
-    const now = Date.now();
-    if (now - lastTapRef.current < 300) {
-      // double-tap => like animation
-      if (process.env.EXPO_PUBLIC_DEBUG_LOGS === "1") {
-        console.log(
-          `[VideoItem - ${item._id}] Double tap. Item reactions before reactToPost:`,
-          item.reactions
-        );
-      }
-      reactToPost({ postId: item._id, reactionType: "like" });
-      Animated.sequence([
-        Animated.timing(heartOpacity, {
-          toValue: 1,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heartOpacity, {
-          toValue: 0,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      await onPlayPausePress();
-    }
-    lastTapRef.current = now;
-  };
+  // Native controls replace custom tap play/pause; keep double-tap like if needed in future
 
   const toggleMute = async () => {
     const next = !isMuted;
@@ -182,14 +144,7 @@ const VideoItem = ({
     return hOverW >= 1.6 ? "cover" : "contain";
   }, [item.videoFit, naturalWidth, naturalHeight, videoOrientation]);
 
-  // Track progress using the player's timeUpdate when available
-  useEffect(() => {
-    if (!player) return;
-    const sub = (player as any).addListener?.("timeUpdate", ({ currentTime, duration }) => {
-      if (duration) setProgress(currentTime / duration);
-    });
-    return () => sub?.remove?.();
-  }, [player]);
+  // No custom progress tracking when using native controls
 
   // Reaction picker
   const handleLongPress = () => {
@@ -253,46 +208,30 @@ const VideoItem = ({
 
   return (
     <View style={[styles.videoContainer, { width, height: itemOuterHeight, backgroundColor: 'black' }]}>
-      <Pressable
-        style={[styles.videoPressable, { height: availableVideoHeight }]}
-        onPress={onContainerPress}
-        onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
-      >
-        {item.video && (
-          <VideoView
-            style={[StyleSheet.absoluteFillObject, { backgroundColor: 'black' }]}
-            player={player}
-            contentFit={dynamicResizeMode}
-          />
-        )}
-
-        <Animated.View
-          style={[styles.playIconContainer, { opacity: heartOpacity }]}
-          pointerEvents="none"
+      <View style={[styles.videoWrapper, { height: availableVideoHeight }]}>
+        <View style={StyleSheet.absoluteFillObject} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
+          {item.video && (
+            <VideoView
+              style={StyleSheet.absoluteFillObject}
+              player={player}
+              contentFit={dynamicResizeMode}
+              nativeControls
+            />
+          )}
+        </View>
+ 
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.overlay,
+            {
+              paddingTop: statusBarHeight + 10,
+              paddingLeft: insets.left + 15,
+              paddingRight: insets.right + 15,
+              paddingBottom: totalCommentBarHeight,
+            },
+          ]}
         >
-          <Ionicons name="heart" size={96} color="rgba(255,255,255,0.85)" />
-        </Animated.View>
-        {!isPlaying && isVisible && (
-          <View style={styles.playIconContainer}>
-            <Ionicons name="play" size={80} color="rgba(255,255,255,0.7)" />
-          </View>
-        )}
-      </Pressable>
-
-      {/* Remove previous black cover; rely on SystemUI transparent background and video fill */}
-
-      <View
-        pointerEvents="box-none"
-        style={[
-          styles.overlay,
-          {
-            paddingTop: 8,
-            paddingLeft: insets.left + 15,
-            paddingRight: insets.right + 15,
-            paddingBottom: totalCommentBarHeight,
-          },
-        ]}
-      >
         {/* Left side: user info + caption */}
         <View style={styles.leftContainer}>
           <View style={styles.userInfo}>
@@ -720,11 +659,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
   },
-  playIconContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  // Removed custom play overlay
   overlay: {
     ...StyleSheet.absoluteFillObject,
     flexDirection: "row",
@@ -769,22 +704,5 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 7,
   },
-  progressBarContainer: {
-    position: 'absolute',
-    bottom: 15,
-    left: 15,
-    right: 15,
-    height: 3,
-    zIndex: 100,
-  },
-  progressBar: {
-    height: 3,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 1.5,
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 2,
-  },
+  // Removed custom progress bar styles
 });
