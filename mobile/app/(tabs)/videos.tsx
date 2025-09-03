@@ -274,6 +274,12 @@ const VideoItem = ({
         )}
       </Pressable>
 
+      {/* Black cover over status bar area to eliminate gray during hide animation */}
+      <View
+        pointerEvents="none"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top, backgroundColor: 'black', zIndex: 4 }}
+      />
+
       <View
         pointerEvents="box-none"
         style={[
