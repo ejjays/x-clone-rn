@@ -591,9 +591,6 @@ export default function VideosScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: 'black' }}>
       <StatusBar style="light" translucent backgroundColor="transparent" />
-      {Platform.OS === 'android' && (
-        <RNStatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      )}
 
       <View
         style={[

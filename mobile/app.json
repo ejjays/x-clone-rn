@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#242526"
       },
-      "edgeToEdgeEnabled": false,
+      "edgeToEdgeEnabled": true,
       "package": "com.ejjays.mobile",
       "permissions": [
         "android.permission.CAMERA",
@@ -30,6 +30,12 @@
       ],
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan"
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#00000000",
+      "barStyle": "light-content",
+      "hidden": false,
+      "translucent": true
     },
     "androidNavigationBar": {
       "backgroundColor": "#242526",
