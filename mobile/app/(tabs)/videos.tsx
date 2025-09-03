@@ -9,6 +9,7 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 import { Ionicons, Entypo } from "@expo/vector-icons";
+import * as SystemUI from "expo-system-ui";
 import { VideoView, useVideoPlayer } from "expo-video";
 import BottomSheet from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
@@ -275,11 +276,7 @@ const VideoItem = ({
         )}
       </Pressable>
 
-      {/* Black cover over status bar area to eliminate gray during hide animation */}
-      <View
-        pointerEvents="none"
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: statusBarOverlayHeight, backgroundColor: 'black', zIndex: 4 }}
-      />
+      {/* Remove previous black cover; rely on SystemUI transparent background and video fill */}
 
       <View
         pointerEvents="box-none"
@@ -531,6 +528,9 @@ export default function VideosScreen() {
         // Hide status bar for immersive experience
         try {
           RNStatusBar.setHidden(true);
+          if (Platform.OS === 'android') {
+            await SystemUI.setBackgroundColorAsync('transparent');
+          }
         } catch {}
         // Hide Android system nav bar for reels only
         if (Platform.OS === "android") {
@@ -545,6 +545,9 @@ export default function VideosScreen() {
         setReady(false);
         try {
           RNStatusBar.setHidden(false);
+          if (Platform.OS === 'android') {
+            await SystemUI.setBackgroundColorAsync('#000000');
+          }
         } catch {}
         // Restore nav bar on leaving reels
         if (Platform.OS === "android") {
