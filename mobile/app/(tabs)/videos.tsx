@@ -248,18 +248,19 @@ const VideoItem = ({
 
   const itemOuterHeight = height;
   const statusBarHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
-  const bottomOverlay = Math.max(0, commentBarHeight) + Math.max(0, bottomSafeOffset);
+  const totalCommentBarHeight = Math.max(0, commentBarHeight) + Math.max(0, insets.bottom);
+  const availableVideoHeight = Math.max(0, height - totalCommentBarHeight);
 
   return (
-    <View style={[styles.videoContainer, { width, height: itemOuterHeight + statusBarOverlayHeight, backgroundColor: 'black' }]}>
+    <View style={[styles.videoContainer, { width, height: itemOuterHeight, backgroundColor: 'black' }]}>
       <Pressable
-        style={[styles.videoPressable, { height: height + statusBarOverlayHeight - bottomOverlay }]}
+        style={[styles.videoPressable, { height: availableVideoHeight }]}
         onPress={onContainerPress}
         onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
       >
         {item.video && (
           <VideoView
-            style={[StyleSheet.absoluteFillObject, { top: -statusBarOverlayHeight, left: 0, right: 0, bottom: bottomOverlay, backgroundColor: 'black' }]}
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: 'black' }]}
             player={player}
             contentFit={dynamicResizeMode}
           />
@@ -288,7 +289,7 @@ const VideoItem = ({
             paddingTop: 8,
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingBottom: commentBarHeight,
+            paddingBottom: 20,
           },
         ]}
       >
@@ -410,22 +411,6 @@ const VideoItem = ({
         </View>
       </View>
 
-      {/* Progress Bar */}
-      <View
-        pointerEvents="none"
-        style={[
-          styles.progressBackground,
-          { bottom: commentBarHeight },
-        ]}
-      >
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${Math.round(progress * 100)}%` },
-          ]}
-        />
-      </View>
-
       {/* Reaction Picker */}
       <PostReactionsPicker
         isVisible={pickerVisible}
@@ -483,7 +468,6 @@ export default function VideosScreen() {
   // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
   // For the CommentsBottomSheet, we will only pass the tabBarHeight to avoid double counting insets.bottom.
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
-  const bottomOverlay = COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom) + Math.max(0, tabBarHeight);
 
   const [commentBarHeight, setCommentBarHeight] = useState<number>(64);
 
@@ -726,6 +710,11 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
   },
+  videoWrapper: {
+    width: '100%',
+    backgroundColor: 'black',
+    position: 'relative',
+  },
   videoPressable: {
     justifyContent: "center",
     alignItems: "center",
@@ -780,13 +769,18 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 7,
   },
-  progressBackground: {
-    position: "absolute",
-    left: 10,
-    right: 10,
+  progressBarContainer: {
+    position: 'absolute',
+    bottom: 15,
+    left: 15,
+    right: 15,
     height: 3,
-    backgroundColor: "rgba(255,255,255,0.25)",
-    borderRadius: 2,
+    zIndex: 100,
+  },
+  progressBar: {
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 1.5,
   },
   progressFill: {
     height: "100%",
