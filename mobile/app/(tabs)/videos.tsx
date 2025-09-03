@@ -16,6 +16,7 @@ import * as Haptics from "expo-haptics";
 // Removed NavigationBar toggling to avoid jank on tab transitions
 
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
+import { VideoCommentBar, COMMENT_BAR_HEIGHT } from "@/components/VideoCommentBar";
 import PostReactionsPicker, {
   postReactions,
 } from "@/components/PostReactionsPicker";
@@ -482,6 +483,7 @@ export default function VideosScreen() {
   // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
   // For the CommentsBottomSheet, we will only pass the tabBarHeight to avoid double counting insets.bottom.
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
+  const bottomOverlay = COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom) + Math.max(0, tabBarHeight);
 
   const [commentBarHeight, setCommentBarHeight] = useState<number>(64);
 
@@ -688,39 +690,12 @@ export default function VideosScreen() {
         }
       />)}
 
-      {/* Comment input placeholder */}
-      <View
-        onLayout={(e) => setCommentBarHeight(e.nativeEvent.layout.height)}
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: bottomSafeOffset,
-          backgroundColor: colors.background,
-          zIndex: 20,
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={handleOpenComments}
-          style={{
-            margin: 12,
-            backgroundColor: colors.surface,
-            borderRadius: 24,
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-          }}
-        >
-          <Text style={{ color: colors.textMuted, fontSize: 14 }}>
-            Add a comment...
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <VideoCommentBar onCommentPress={handleOpenComments} />
 
       <CommentsBottomSheet
         bottomSheetRef={bottomSheetRef}
         onClose={handleCloseComments}
-        bottomOffset={tabBarHeight} // Pass only tabBarHeight
+        bottomOffset={COMMENT_BAR_HEIGHT + tabBarHeight}
       />
     </View>
   );
