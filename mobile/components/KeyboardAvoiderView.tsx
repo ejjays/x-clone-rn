@@ -70,21 +70,24 @@ export default function KeyboardAvoiderView({ children, extraSpace = 6, baseGap 
         Keyboard.addListener('keyboardWillChangeFrame', onShow),
       ];
     } else {
-      subs.current = [];
+      subs.current = [
+        Keyboard.addListener('keyboardDidShow', onShow),
+        Keyboard.addListener('keyboardDidHide', onHide),
+      ];
     }
 
     return () => {
       subs.current.forEach(s => s.remove());
       subs.current = [];
     };
-  }, [extraSpace, translateY]);
+  }, [extraSpace, baseGap, translateY, paddingBottom]);
 
-  // On Android we rely on window resize (app.json softwareKeyboardLayoutMode=resize)
+  // Android uses animated bottom padding to maintain input background space
   if (Platform.OS === 'android') {
     return (
-      <View style={[{ flex: 1, paddingBottom: baseGap }, style]}>
+      <Animated.View style={[{ flex: 1, paddingBottom }, style]}>
         {children}
-      </View>
+      </Animated.View>
     );
   }
 

@@ -29,7 +29,7 @@
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "googleServicesFile": "./google-services.json",
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "pan"
     },
     "androidNavigationBar": {
       "backgroundColor": "#242526",
