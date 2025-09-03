@@ -248,7 +248,7 @@ const VideoItem = ({
 
   const itemOuterHeight = height;
   const statusBarHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
-  const totalCommentBarHeight = Math.max(0, commentBarHeight) + Math.max(0, insets.bottom);
+  const totalCommentBarHeight = COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom);
   const availableVideoHeight = Math.max(0, height - totalCommentBarHeight);
 
   return (
@@ -289,7 +289,7 @@ const VideoItem = ({
             paddingTop: 8,
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
-            paddingBottom: 20,
+            paddingBottom: totalCommentBarHeight,
           },
         ]}
       >
@@ -469,7 +469,7 @@ export default function VideosScreen() {
   // For the CommentsBottomSheet, we will only pass the tabBarHeight to avoid double counting insets.bottom.
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
 
-  const [commentBarHeight, setCommentBarHeight] = useState<number>(64);
+  // Using fixed COMMENT_BAR_HEIGHT for consistent sizing
 
   const videoPosts = useMemo(
     () => posts.filter((p) => p.video?.trim()),
@@ -556,11 +556,11 @@ export default function VideosScreen() {
       onCommentPress={handleOpenComments}
       insets={insets}
       bottomSafeOffset={bottomSafeOffset}
-      commentBarHeight={commentBarHeight}
+      commentBarHeight={COMMENT_BAR_HEIGHT}
       width={width}
       height={height}
     />
-  ), [viewableItems, isFocused, insets, bottomSafeOffset, commentBarHeight, width, height]);
+  ), [viewableItems, isFocused, insets, bottomSafeOffset, width, height]);
 
 
   if (isLoading) {
@@ -640,7 +640,7 @@ export default function VideosScreen() {
 
       {ready && (
       <FlatList
-        key={`${commentBarHeight}-${width}`}
+        key={`${COMMENT_BAR_HEIGHT}-${width}`}
         data={videoPosts}
         renderItem={renderItem}
         keyExtractor={(item) => item._id}
