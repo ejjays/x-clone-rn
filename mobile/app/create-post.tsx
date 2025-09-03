@@ -180,7 +180,7 @@ const CreatePostScreen = () => {
                     source={{ uri: selectedMedia.uri }}
                     style={{ width: "100%", aspectRatio: 16/9 }}
                     useNativeControls
-                    resizeMode={videoFit === 'full' ? ResizeMode.COVER : ResizeMode.CONTAIN}
+                    resizeMode={videoFit === 'full' ? "cover" : "contain"}
                     isLooping
                   />
                 )}
