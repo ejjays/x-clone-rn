@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
-import { InteractionManager } from "react-native";
+import { InteractionManager, StatusBar as RNStatusBar, Platform } from "react-native";
 import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Pressable, ActivityIndicator, Animated, RefreshControl, Alert, ToastAndroid, Platform, useWindowDimensions } from "react-native";
 import * as Clipboard from "expo-clipboard";
@@ -247,7 +247,7 @@ const VideoItem = ({
   const itemOuterHeight = height;
 
   return (
-    <View style={[styles.videoContainer, { width, height: itemOuterHeight }]}>
+    <View style={[styles.videoContainer, { width, height: itemOuterHeight + insets.top }]}>
       <Pressable
         style={[styles.videoPressable, { height: containerHeight }]}
         onPress={onContainerPress}
@@ -255,7 +255,7 @@ const VideoItem = ({
       >
         {item.video && (
           <VideoView
-            style={{ width: "100%", height: "100%", backgroundColor: "black" }}
+            style={{ width: "100%", height: containerHeight + insets.top, marginTop: -insets.top, backgroundColor: "black" }}
             player={player}
             contentFit={dynamicResizeMode}
           />
@@ -279,6 +279,7 @@ const VideoItem = ({
         style={[
           styles.overlay,
           {
+            paddingTop: insets.top + 8,
             paddingLeft: insets.left + 15,
             paddingRight: insets.right + 15,
             paddingBottom: commentBarHeight,
