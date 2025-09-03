@@ -247,7 +247,7 @@ const VideoItem = ({
 
   const itemOuterHeight = height;
   const statusBarOverlayHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
-  const bottomOverlay = commentBarHeight + bottomSafeOffset;
+  const bottomOverlay = Math.max(0, commentBarHeight) + Math.max(0, bottomSafeOffset);
 
   return (
     <View style={[styles.videoContainer, { width, height: itemOuterHeight + statusBarOverlayHeight, backgroundColor: 'black' }]}>
@@ -526,9 +526,9 @@ export default function VideosScreen() {
     useCallback(() => {
       const task = InteractionManager.runAfterInteractions(async () => {
         setReady(true);
-        // Hide status bar for immersive experience
+        // Show transparent status bar
         try {
-          RNStatusBar.setHidden(true);
+          RNStatusBar.setHidden(false);
           if (Platform.OS === 'android') {
             SystemUI.setBackgroundColorAsync('transparent');
           }
