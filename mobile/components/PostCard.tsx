@@ -188,10 +188,7 @@ const PostCard = ({
   useEffect(() => {
     if (post.image) {
       setIsMediaLoading(true);
-      // Avoid Image.getSize() which issues a HEAD request Cloudinary may reject on free tier.
-      // Use a safe default 16:9 height; the <Image> will render full width.
-      setImageHeight(Math.round((screenWidth * 9) / 16));
-      setIsMediaLoading(false);
+      setImageHeight(null);
     } else if (post.video) {
       setIsMediaLoading(true);
       setVideoHeight(Math.round((screenWidth * 9) / 16));
@@ -407,15 +404,31 @@ const PostCard = ({
         </View>
       )}
 
-      {post.image && imageHeight !== null && (
+      {post.image && (
         <TouchableOpacity onPress={openImageModal} activeOpacity={1}>
           <Image
             source={{ uri: post.image }}
-            style={{ width: screenWidth, height: imageHeight }}
-            resizeMode="cover"
+            style={{ width: screenWidth, height: imageHeight ?? Math.round((screenWidth * 3) / 4) }}
+            resizeMode="contain"
+            onLoad={(e: any) => {
+              try {
+                const w = e?.nativeEvent?.source?.width;
+                const h = e?.nativeEvent?.source?.height;
+                if (w && h) {
+                  const computed = Math.max(1, Math.round((screenWidth * h) / w));
+                  setImageHeight(computed);
+                } else if (!imageHeight) {
+                  setImageHeight(Math.round((screenWidth * 3) / 4));
+                }
+              } catch {
+                if (!imageHeight) setImageHeight(Math.round((screenWidth * 3) / 4));
+              } finally {
+                setIsMediaLoading(false);
+              }
+            }}
             onError={() => {
-              // Fallback if Cloudinary returns 401 to size or load – show a minimal placeholder height
-              setImageHeight(200);
+              setImageHeight(Math.round((screenWidth * 3) / 4));
+              setIsMediaLoading(false);
             }}
           />
         </TouchableOpacity>
