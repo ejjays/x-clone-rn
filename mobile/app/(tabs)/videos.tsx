@@ -529,7 +529,7 @@ export default function VideosScreen() {
         try {
           RNStatusBar.setHidden(true);
           if (Platform.OS === 'android') {
-            await SystemUI.setBackgroundColorAsync('transparent');
+            SystemUI.setBackgroundColorAsync('transparent');
           }
         } catch {}
         // Hide Android system nav bar for reels only
@@ -546,7 +546,7 @@ export default function VideosScreen() {
         try {
           RNStatusBar.setHidden(false);
           if (Platform.OS === 'android') {
-            await SystemUI.setBackgroundColorAsync('#000000');
+            SystemUI.setBackgroundColorAsync('#000000');
           }
         } catch {}
         // Restore nav bar on leaving reels
