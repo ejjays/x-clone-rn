@@ -69,7 +69,7 @@ export const useCreatePost = () => {
       }
       
       const pickerOptions: ImagePicker.ImagePickerOptions = {
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        mediaTypes: [ImagePicker.MediaType.images, ImagePicker.MediaType.videos] as any,
         allowsEditing: false,
         quality: 0.8, // Reduced from 1 to 0.8 to save on file size and credits
       };
