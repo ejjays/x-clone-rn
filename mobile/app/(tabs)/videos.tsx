@@ -255,7 +255,7 @@ const VideoItem = ({
       >
         {item.video && (
           <VideoView
-            style={{ width: "100%", height: containerHeight + insets.top, marginTop: -insets.top, backgroundColor: "black" }}
+            style={{ width: "100%", height: height + insets.top, marginTop: -insets.top, backgroundColor: "black" }}
             player={player}
             contentFit={dynamicResizeMode}
           />
@@ -589,8 +589,11 @@ export default function VideosScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: 'black' }}>
       <StatusBar style="light" translucent backgroundColor="transparent" />
+      {Platform.OS === 'android' && (
+        <RNStatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      )}
 
       <View
         style={[
