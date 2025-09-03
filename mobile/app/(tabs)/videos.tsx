@@ -255,7 +255,7 @@ const VideoItem = ({
       >
         {item.video && (
           <VideoView
-            style={{ width: "100%", height: height + insets.top, marginTop: -insets.top, backgroundColor: "black" }}
+            style={[StyleSheet.absoluteFillObject, { top: -insets.top, backgroundColor: 'black' }]}
             player={player}
             contentFit={dynamicResizeMode}
           />
@@ -453,6 +453,25 @@ export default function VideosScreen() {
   const navigation = useNavigation();
   const { width, height } = useWindowDimensions();
   const { colors, isDarkMode } = useTheme(); // Use useTheme hook
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === 'android') {
+        try {
+          RNStatusBar.setTranslucent(true);
+          RNStatusBar.setBackgroundColor('transparent');
+        } catch {}
+      }
+      return () => {
+        if (Platform.OS === 'android') {
+          try {
+            RNStatusBar.setTranslucent(false);
+            RNStatusBar.setBackgroundColor('#000000');
+          } catch {}
+        }
+      };
+    }, [])
+  );
 
   const tabBarHeight = useOptionalTabBarHeight();
   // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
