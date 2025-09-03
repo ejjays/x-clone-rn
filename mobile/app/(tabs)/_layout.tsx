@@ -38,13 +38,10 @@ const TabsInner = () => {
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/profile";
 
-  // Show header only on home; keep tab bar height constant
   useEffect(() => {
     headerHeight.value = pathname === "/" ? HEADER_HEIGHT : 0;
     tabBarHeight.value = TAB_BAR_HEIGHT;
   }, [pathname]);
-
-  // Removed Android navigation bar toggling; keeping system UI stable avoids delays
 
   const animatedHeaderStyle = useAnimatedStyle(() => ({
     height: headerHeight.value,
@@ -69,11 +66,16 @@ const TabsInner = () => {
       <View
         style={{
           flex: 1,
-          paddingTop: insets.top, // Always respect safe area to avoid status bar overlap
-          backgroundColor: colors.background,
+          paddingTop: isVideosScreen ? 0 : insets.top,
+          backgroundColor: isVideosScreen ? "black" : colors.background,
         }}
       >
-        <StatusBar style="light" hidden={false} />
+        <StatusBar
+          style={isDarkMode ? "light" : "dark"}
+          hidden={false}
+          backgroundColor={isVideosScreen ? "transparent" : colors.background}
+          translucent={isVideosScreen}
+        />
 
         <Animated.View style={animatedHeaderStyle}>
           <View
