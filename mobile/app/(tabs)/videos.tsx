@@ -247,7 +247,7 @@ const VideoItem = ({
   };
 
   const itemOuterHeight = height;
-  const statusBarOverlayHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
+  const statusBarHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
   const bottomOverlay = Math.max(0, commentBarHeight) + Math.max(0, bottomSafeOffset);
 
   return (
