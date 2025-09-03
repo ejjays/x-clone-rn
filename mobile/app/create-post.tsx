@@ -16,12 +16,13 @@ import {
   Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Video } from "expo-video";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { useEffect, useState, useRef } from "react";
 import { useTheme } from "@/context/ThemeContext";
 
 const CreatePostScreen = () => { 
   const { currentUser } = useCurrentUser();
+  const player = useVideoPlayer(undefined);
   const {
     content,
     setContent,
@@ -176,13 +177,23 @@ const CreatePostScreen = () => {
                     resizeMode="contain"
                   />
                 ) : (
-                  <Video
-                    source={{ uri: selectedMedia.uri }}
-                    style={{ width: "100%", aspectRatio: 16/9 }}
-                    useNativeControls
-                    resizeMode={videoFit === 'full' ? "cover" : "contain"}
-                    isLooping
-                  />
+                  <>
+                    {(() => {
+                      // Configure or update player source when a video is selected
+                      try {
+                        if (selectedMedia?.uri) {
+                          (player as any)?.replace?.({ uri: selectedMedia.uri });
+                          (player as any)?.setIsLooping?.(true);
+                        }
+                      } catch {}
+                      return null;
+                    })()}
+                    <VideoView
+                      style={{ width: "100%", aspectRatio: 16/9 }}
+                      player={player}
+                      contentFit={videoFit === 'full' ? "cover" : "contain"}
+                    />
+                  </>
                 )}
                 <TouchableOpacity
                   className="absolute top-2 right-2 bg-black/60 p-1 rounded-full"
