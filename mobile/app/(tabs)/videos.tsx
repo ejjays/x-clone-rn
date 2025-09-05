@@ -18,7 +18,6 @@ import * as Haptics from "expo-haptics";
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
 import { VideoCommentBar, COMMENT_BAR_HEIGHT } from "@/components/VideoCommentBar";
 import PostReactionsPicker, {
-  postReactions,
 } from "@/components/PostReactionsPicker";
 import PostActionBottomSheet, {
   PostActionBottomSheetRef,
@@ -32,6 +31,7 @@ import { StatusBar } from "expo-status-bar";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import * as NavigationBar from "expo-navigation-bar";
 import { useTheme } from "@/context/ThemeContext"; // Import useTheme
+import VideoControlsOverlay from "@/components/VideoControlsOverlay";
 
 
 /**
@@ -109,7 +109,7 @@ const VideoItem = ({
       (player as any).setIsMuted?.(true);
       if (!isVisible) (player as any).seekTo?.(0);
     }
-  }, [isVisible, isScreenFocused, isMuted]);
+  }, [isVisible, isScreenFocused, isMuted, player]);
 
   // Native controls replace custom tap play/pause; keep double-tap like if needed in future
 
@@ -353,6 +353,9 @@ const VideoItem = ({
       </View>
       </View>
 
+      {/* Custom video controls anchored above the comment bar */}
+      <VideoControlsOverlay player={player} />
+
       {/* Reaction Picker */}
       <PostReactionsPicker
         isVisible={pickerVisible}
@@ -425,7 +428,8 @@ export default function VideosScreen() {
   const itemHeight = height;
 
   useEffect(() => {
-    if (isFocused) {
+    // Ensure the sheet is closed whenever this screen mounts or loses focus
+    if (!isFocused) {
       handleCloseComments();
     }
   }, [isFocused]);
