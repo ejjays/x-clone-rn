@@ -86,7 +86,7 @@ const CommentsBottomSheet = ({
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={0}
+      index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose
       onClose={onClose}

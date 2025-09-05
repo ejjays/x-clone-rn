@@ -216,6 +216,7 @@ const VideoItem = ({
               player={player}
               contentFit={dynamicResizeMode}
               // Use custom overlays instead of native controls to avoid layout shifts
+              nativeControls={false}
             />
           )}
         </View>
