@@ -204,11 +204,10 @@ const VideoItem = ({
   const itemOuterHeight = height;
   const statusBarHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
   const totalCommentBarHeight = COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom);
-  const availableVideoHeight = Math.max(0, height - totalCommentBarHeight);
 
   return (
     <View style={[styles.videoContainer, { width, height: itemOuterHeight, backgroundColor: 'black' }]}>
-      <View style={[styles.videoWrapper, { height: availableVideoHeight }]}>
+      <View style={[styles.videoWrapper, { height: itemOuterHeight }]}>
         <View style={StyleSheet.absoluteFillObject} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
           {item.video && (
             <VideoView
@@ -229,8 +228,8 @@ const VideoItem = ({
               paddingTop: statusBarHeight + 10,
               paddingLeft: insets.left + 15,
               paddingRight: insets.right + 15,
-              // Keep a stable gap above the comment bar; do not follow native controls
-              paddingBottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom),
+              // Keep overlays just above the comment bar
+              paddingBottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom) + 6,
             },
           ]}
         >

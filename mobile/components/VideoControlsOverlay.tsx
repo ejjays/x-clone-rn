@@ -19,6 +19,7 @@ const VideoControlsOverlay: React.FC<VideoControlsOverlayProps> = ({ player }) =
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [barWidth, setBarWidth] = useState(1);
+  const [showCenterControl, setShowCenterControl] = useState(true);
 
   // Poll for time updates defensively (APIs may vary across platforms)
   useEffect(() => {
@@ -49,6 +50,8 @@ const VideoControlsOverlay: React.FC<VideoControlsOverlayProps> = ({ player }) =
         (player as any)?.play?.();
         setIsPlaying(true);
       }
+      setShowCenterControl(true);
+      setTimeout(() => setShowCenterControl(false), 900);
     } catch {}
   }, [isPlaying, player]);
 
@@ -67,25 +70,31 @@ const VideoControlsOverlay: React.FC<VideoControlsOverlayProps> = ({ player }) =
   };
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={[
-        styles.container,
-        { bottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom) },
-      ]}
-    >
-      <View style={styles.controlsRow}>
-        <TouchableOpacity onPress={togglePlay} activeOpacity={0.8} style={styles.playButton}>
-          <Ionicons name={isPlaying ? "pause" : "play"} size={18} color="#fff" />
-        </TouchableOpacity>
+    <>
+      {showCenterControl && (
+        <View pointerEvents="box-none" style={styles.centerContainer}>
+          <TouchableOpacity onPress={togglePlay} activeOpacity={0.8} style={styles.centerPlayButton}>
+            <Ionicons name={isPlaying ? "pause" : "play"} size={42} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
 
-        <Pressable style={[styles.seekBarContainer]} onPress={handleSeek} onStartShouldSetResponder={() => true}>
-          <View onLayout={onSeekBarLayout} style={[styles.seekTrack, { backgroundColor: "rgba(255,255,255,0.25)" }]}>
-            <View style={[styles.seekProgress, { width: `${progress * 100}%`, backgroundColor: "#fff" }]} />
-          </View>
-        </Pressable>
+      <View
+        pointerEvents="box-none"
+        style={[
+          styles.container,
+          { bottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom) + 8 },
+        ]}
+      >
+        <View style={styles.controlsRow}>
+          <Pressable style={[styles.seekBarContainer]} onPress={handleSeek} onStartShouldSetResponder={() => true}>
+            <View onLayout={onSeekBarLayout} style={[styles.seekTrack, { backgroundColor: "rgba(255,255,255,0.3)" }]}>
+              <View style={[styles.seekProgress, { width: `${progress * 100}%`, backgroundColor: "#fff" }]} />
+            </View>
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </>
   );
 };
 
@@ -97,19 +106,28 @@ const styles = StyleSheet.create({
     height: VIDEO_CONTROLS_HEIGHT,
     zIndex: 20,
   },
+  centerContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 19,
+  },
+  centerPlayButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   controlsRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-  },
-  playButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
   },
   seekBarContainer: {
     flex: 1,
