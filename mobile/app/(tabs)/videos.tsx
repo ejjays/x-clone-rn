@@ -31,7 +31,7 @@ import { StatusBar } from "expo-status-bar";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import * as NavigationBar from "expo-navigation-bar";
 import { useTheme } from "@/context/ThemeContext"; // Import useTheme
-import VideoControlsOverlay from "@/components/VideoControlsOverlay";
+// Removed custom controls overlay
 
 
 /**
@@ -228,8 +228,8 @@ const VideoItem = ({
               paddingTop: statusBarHeight + 10,
               paddingLeft: insets.left + 15,
               paddingRight: insets.right + 15,
-              // Keep overlays just above the comment bar
-              paddingBottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom) + 6,
+              // Place overlays directly above the comment bar
+              paddingBottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom),
             },
           ]}
         >
@@ -352,8 +352,7 @@ const VideoItem = ({
       </View>
       </View>
 
-      {/* Custom video controls anchored above the comment bar */}
-      <VideoControlsOverlay player={player} />
+      {/* Custom controls removed per request */}
 
       {/* Reaction Picker */}
       <PostReactionsPicker
@@ -621,11 +620,13 @@ export default function VideosScreen() {
 
       <VideoCommentBar onCommentPress={handleOpenComments} />
 
-      <CommentsBottomSheet
-        bottomSheetRef={bottomSheetRef}
-        onClose={handleCloseComments}
-        bottomOffset={COMMENT_BAR_HEIGHT + tabBarHeight}
-      />
+      {ready && (
+        <CommentsBottomSheet
+          bottomSheetRef={bottomSheetRef}
+          onClose={handleCloseComments}
+          bottomOffset={COMMENT_BAR_HEIGHT + tabBarHeight}
+        />
+      )}
     </View>
   );
 }
