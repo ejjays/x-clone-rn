@@ -215,7 +215,7 @@ const VideoItem = ({
               style={StyleSheet.absoluteFillObject}
               player={player}
               contentFit={dynamicResizeMode}
-              nativeControls
+              // Use custom overlays instead of native controls to avoid layout shifts
             />
           )}
         </View>
@@ -228,7 +228,8 @@ const VideoItem = ({
               paddingTop: statusBarHeight + 10,
               paddingLeft: insets.left + 15,
               paddingRight: insets.right + 15,
-              paddingBottom: totalCommentBarHeight,
+              // Keep a stable gap above the comment bar; do not follow native controls
+              paddingBottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom),
             },
           ]}
         >
