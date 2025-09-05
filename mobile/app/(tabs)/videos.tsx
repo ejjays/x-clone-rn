@@ -349,6 +349,7 @@ const VideoItem = ({
           )}
         </View>
       </View>
+      </View>
 
       {/* Reaction Picker */}
       <PostReactionsPicker
