@@ -382,6 +382,8 @@ export default function VideosScreen() {
         try {
           RNStatusBar.setTranslucent(true);
           RNStatusBar.setBackgroundColor('transparent');
+          // Ensure the app background behind status bar is transparent too
+          SystemUI.setBackgroundColorAsync('transparent');
         } catch {}
       }
       return () => {
