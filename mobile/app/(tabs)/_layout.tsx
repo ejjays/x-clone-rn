@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
 import { Redirect, router, withLayoutContext, usePathname } from "expo-router";
-import React, { useEffect, memo, useMemo } from "react";
+import React, { useEffect, memo, useMemo, useCallback } from "react";
 import { Text, TouchableOpacity, View, Platform, useWindowDimensions } from "react-native";
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
@@ -113,17 +113,11 @@ const TabsInner = () => {
               tabBarPosition: "top",
               tabBarShowLabel: false,
               lazy: false,
-              // Preload adjacent tabs to keep switches instant without blocking
-              lazyPreloadDistance: 1,
+              // Preload all tabs for instant switching
+              lazyPreloadDistance: 4,
               animationEnabled: false,
               swipeEnabled: false,
               tabBarStyle: { elevation: 0 },
-              sceneContainerStyle: {
-                display: "flex",
-                height: "100%",
-                width: "100%",
-                overflow: "hidden",
-              },
             }}
             tabBar={(props) => (
               pathname === "/videos" ? null : (
@@ -152,28 +146,32 @@ export default function TabsLayout() {
 }
 
 const TopIconBar = memo(function TopIconBar({ navigation, pathname, colors, screenWidth }: any) {
-  const routes = ["/", "/search", "/videos", "/notifications", "/profile"];
+  const routes = useMemo(() => ["/", "/search", "/videos", "/notifications", "/profile"], []);
   const activeIndex = routes.indexOf(pathname);
+  const goIndex = useCallback(() => navigation.jumpTo("index"), [navigation]);
+  const goSearch = useCallback(() => navigation.jumpTo("search"), [navigation]);
+  const goVideos = useCallback(() => navigation.jumpTo("videos"), [navigation]);
+  const goNotifications = useCallback(() => navigation.jumpTo("notifications"), [navigation]);
+  const goProfile = useCallback(() => navigation.jumpTo("profile"), [navigation]);
   return (
-    <View>
       <View
         className="border-b"
         style={{ backgroundColor: colors.background, borderColor: colors.border }}
       >
         <View className="flex-row justify-around items-center" style={{ height: TAB_BAR_HEIGHT }}>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("index")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goIndex} activeOpacity={1} delayPressIn={0}>
             <Home size={26} color={pathname === "/" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("search")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goSearch} activeOpacity={1} delayPressIn={0}>
             <PeopleIcon size={27} color={pathname === "/search" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("videos")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goVideos} activeOpacity={1} delayPressIn={0}>
             <TvMinimalPlay size={26} color={pathname === "/videos" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("notifications")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goNotifications} activeOpacity={1} delayPressIn={0}>
             <Bell size={26} color={pathname === "/notifications" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("profile")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goProfile} activeOpacity={1} delayPressIn={0}>
             <Menu size={26} color={pathname === "/profile" ? colors.blue : "white"} />
           </TouchableOpacity>
         </View>
@@ -182,15 +180,10 @@ const TopIconBar = memo(function TopIconBar({ navigation, pathname, colors, scre
             className="h-full bg-blue-500"
             style={{
               width: `${100 / routes.length}%`,
-              transform: [
-                {
-                  translateX: (activeIndex > -1 ? activeIndex : 0) * (screenWidth / routes.length),
-                },
-              ],
+              left: `${(activeIndex > -1 ? activeIndex : 0) * (100 / routes.length)}%`,
             }}
           />
         </View>
       </View>
-    </View>
   );
 });
