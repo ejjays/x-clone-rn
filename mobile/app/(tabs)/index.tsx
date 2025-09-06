@@ -14,7 +14,7 @@ import PostActionBottomSheet, {
   type PostActionBottomSheetRef,
 } from "@/components/PostActionBottomSheet";
 import type { Post } from "@/types";
-import { useScroll } from "@/context/ScrollContext";
+// import { useScroll } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; // Import useSafeAreaInsets
 import { useEffect } from "react";
@@ -27,7 +27,7 @@ const HomeScreen = () => {
   const [selectedPostForMenu, setSelectedPostForMenu] = useState<Post | null>(
     null
   );
-  const { handleScroll } = useScroll();
+  // Removed ScrollContext dependency to avoid provider requirement
   const { isDarkMode, colors } = useTheme();
   const [isReactionPickerVisible, setIsReactionPickerVisible] = useState(false);
   const insets = useSafeAreaInsets(); // Get safe area insets
