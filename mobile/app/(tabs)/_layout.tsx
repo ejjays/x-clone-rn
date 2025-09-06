@@ -116,10 +116,10 @@ const TabsInner = () => {
               tabBarPosition: "top",
               tabBarShowLabel: false,
               lazy: false,
+              // Preload adjacent tabs to keep switches instant without blocking
+              lazyPreloadDistance: 1,
               animationEnabled: false,
               swipeEnabled: false,
-              // Freeze inactive scenes to avoid re-render thrash during tab switches
-              freezeOnBlur: true,
               tabBarStyle: { elevation: 0 },
               sceneContainerStyle: {
                 display: "flex",
