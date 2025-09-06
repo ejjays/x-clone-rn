@@ -31,24 +31,7 @@ const HomeScreen = () => {
   const { isDarkMode, colors } = useTheme();
   const [isReactionPickerVisible, setIsReactionPickerVisible] = useState(false);
   const insets = useSafeAreaInsets(); // Get safe area insets
-  const [ready, setReady] = useState(false);
-  const initializedRef = useRef(false);
-
-  // Only gate rendering on the very first mount to avoid navigation jank.
-  // Keep content rendered and skip gating on subsequent tab switches.
-  useEffect(() => {
-    if (initializedRef.current) {
-      setReady(true);
-      return;
-    }
-    const task = InteractionManager.runAfterInteractions(() => {
-      initializedRef.current = true;
-      setReady(true);
-    });
-    return () => {
-      task.cancel();
-    };
-  }, []);
+  const [ready, setReady] = useState(true);
 
   const handleOpenComments = (postId: string) => {
     router.push(`/post/${postId}`);
