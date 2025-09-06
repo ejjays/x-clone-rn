@@ -447,7 +447,7 @@ export default function VideosScreen() {
       // Make screen ready immediately; avoid awaited NavigationBar ops to keep tab nav instant
       setReady(true);
       try {
-        RNStatusBar.setHidden(false);
+        RNStatusBar.setHidden(true);
         if (Platform.OS === 'android') {
           SystemUI.setBackgroundColorAsync('transparent');
         }
@@ -534,7 +534,7 @@ export default function VideosScreen() {
       <View
         style={[
           styles.header,
-          { paddingTop: insets.top + 8, flexDirection: "row", paddingHorizontal: 16 },
+          { paddingTop: 8, flexDirection: "row", paddingHorizontal: 16 },
         ]}
       >
         <TouchableOpacity
