@@ -122,27 +122,15 @@ const VideoItem = ({
 
 
   const containerHeight = useMemo(() => {
-    // Make each reel occupy the full viewport height to prevent the next
-    // video from peeking at the bottom.
-    return height;
-  }, [height]);
+    // Occupy viewport minus the comment bar so video never overlaps it
+    return Math.max(0, height - (COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom)));
+  }, [height, insets.bottom]);
 
 
   const dynamicResizeMode = useMemo(() => {
-    if (item.videoFit === "full") return "cover" as const;
-    if (item.videoFit === "original") return "contain" as const;
-    if (!naturalWidth || !naturalHeight) return "contain" as const;
-
-    const dimsSayLandscape = naturalWidth > naturalHeight;
-    const isLandscape = videoOrientation
-      ? videoOrientation === "landscape"
-      : dimsSayLandscape;
-
-    if (isLandscape) return "contain" as const;
-
-    const hOverW = naturalHeight / naturalWidth;
-    return hOverW >= 1.6 ? "cover" : "contain";
-  }, [item.videoFit, naturalWidth, naturalHeight, videoOrientation]);
+    // Fill like TikTok/IG reels
+    return "cover" as const;
+  }, []);
 
   // No custom progress tracking when using native controls
 
@@ -207,7 +195,7 @@ const VideoItem = ({
 
   return (
     <View style={[styles.videoContainer, { width, height: itemOuterHeight, backgroundColor: 'black' }]}>
-      <View style={[styles.videoWrapper, { height: itemOuterHeight }]}>
+      <View style={[styles.videoWrapper, { height: containerHeight }]}>
         <View style={StyleSheet.absoluteFillObject} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
           {item.video && (
             <VideoView
@@ -228,8 +216,8 @@ const VideoItem = ({
               paddingTop: statusBarHeight + 10,
               paddingLeft: insets.left + 15,
               paddingRight: insets.right + 15,
-              // Place overlays directly above the comment bar
-              paddingBottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom),
+              // Place overlays at video bottom edge, not over comment bar
+              paddingBottom: 12,
             },
           ]}
         >
