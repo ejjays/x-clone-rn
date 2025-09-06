@@ -118,6 +118,8 @@ const TabsInner = () => {
               lazy: false,
               animationEnabled: false,
               swipeEnabled: false,
+              // Freeze inactive scenes to avoid re-render thrash during tab switches
+              freezeOnBlur: true,
               tabBarStyle: { elevation: 0 },
               sceneContainerStyle: {
                 display: "flex",
