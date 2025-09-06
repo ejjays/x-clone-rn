@@ -123,8 +123,10 @@ const VideoItem = ({
 
   const containerHeight = useMemo(() => {
     // Occupy viewport minus the comment bar so video never overlaps it
-    return Math.max(0, height - (COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom)));
-  }, [height, insets.bottom]);
+    // Also reserve header area so overlays aren't under the status bar
+    const headerReserve = insets.top + 8;
+    return Math.max(0, height - (COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom)) - headerReserve);
+  }, [height, insets.bottom, insets.top]);
 
 
   const dynamicResizeMode = useMemo(() => {
@@ -213,11 +215,11 @@ const VideoItem = ({
           style={[
             styles.overlay,
             {
-              paddingTop: statusBarHeight + 10,
+              paddingTop: 10,
               paddingLeft: insets.left + 15,
               paddingRight: insets.right + 15,
-              // Place overlays at video bottom edge, not over comment bar
-              paddingBottom: 12,
+              // Anchor overlays above the comment bar area
+              paddingBottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom) + 4,
             },
           ]}
         >
@@ -534,7 +536,7 @@ export default function VideosScreen() {
       <View
         style={[
           styles.header,
-          { paddingTop: 8, flexDirection: "row", paddingHorizontal: 16 },
+          { paddingTop: insets.top + 8, flexDirection: "row", paddingHorizontal: 16 },
         ]}
       >
         <TouchableOpacity
