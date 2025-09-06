@@ -164,19 +164,19 @@ const TopIconBar = memo(function TopIconBar({ navigation, pathname, colors, scre
         style={{ backgroundColor: colors.background, borderColor: colors.border }}
       >
         <View className="flex-row justify-around items-center" style={{ height: TAB_BAR_HEIGHT }}>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("index")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("index")} activeOpacity={0.7} delayPressIn={0}>
             <Home size={26} color={pathname === "/" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("search")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("search")} activeOpacity={0.7} delayPressIn={0}>
             <PeopleIcon size={27} color={pathname === "/search" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("videos")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("videos")} activeOpacity={0.7} delayPressIn={0}>
             <TvMinimalPlay size={26} color={pathname === "/videos" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("notifications")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("notifications")} activeOpacity={0.7} delayPressIn={0}>
             <Bell size={26} color={pathname === "/notifications" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.navigate("profile")} activeOpacity={0.7} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("profile")} activeOpacity={0.7} delayPressIn={0}>
             <Menu size={26} color={pathname === "/profile" ? colors.blue : "white"} />
           </TouchableOpacity>
         </View>
