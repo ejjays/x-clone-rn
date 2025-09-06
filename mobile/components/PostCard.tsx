@@ -77,6 +77,7 @@ const PostCard = ({
   } | null>(null);
 
   const [imageHeight, setImageHeight] = useState<number | null>(null);
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   const [videoHeight, setVideoHeight] = useState<number | null>(null);
   const [videoAspectRatio, setVideoAspectRatio] = useState<number | null>(null);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
@@ -189,6 +190,7 @@ const PostCard = ({
     if (post.image) {
       setIsMediaLoading(true);
       setImageHeight(null);
+      setImageAspectRatio(null);
     } else if (post.video) {
       setIsMediaLoading(true);
       setVideoHeight(Math.round((screenWidth * 9) / 16));
@@ -390,44 +392,25 @@ const PostCard = ({
       </View>
 
       {/* Media Display */}
-      {isMediaLoading && post.image && (
-        <View
-          style={{
-            width: screenWidth,
-            height: 200,
-            backgroundColor: colors.surface,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: colors.textMuted }}>Loading media...</Text>
-        </View>
-      )}
-
       {post.image && (
         <TouchableOpacity onPress={openImageModal} activeOpacity={1}>
           <Image
             source={{ uri: post.image }}
-            style={{ width: screenWidth, height: imageHeight ?? Math.round((screenWidth * 3) / 4) }}
-            resizeMode="contain"
+            style={{ width: screenWidth, height: undefined as unknown as number, aspectRatio: imageAspectRatio ?? 4/3 }}
+            resizeMode="cover"
             onLoad={(e: any) => {
               try {
                 const w = e?.nativeEvent?.source?.width;
                 const h = e?.nativeEvent?.source?.height;
                 if (w && h) {
-                  const computed = Math.max(1, Math.round((screenWidth * h) / w));
-                  setImageHeight(computed);
-                } else if (!imageHeight) {
-                  setImageHeight(Math.round((screenWidth * 3) / 4));
+                  setImageAspectRatio(w / h);
                 }
-              } catch {
-                if (!imageHeight) setImageHeight(Math.round((screenWidth * 3) / 4));
               } finally {
                 setIsMediaLoading(false);
               }
             }}
             onError={() => {
-              setImageHeight(Math.round((screenWidth * 3) / 4));
+              setImageAspectRatio(4 / 3);
               setIsMediaLoading(false);
             }}
           />
