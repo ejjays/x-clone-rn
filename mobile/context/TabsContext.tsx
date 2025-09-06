@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from "react";
+import React, { createContext, useContext, useState, useMemo, useCallback } from "react";
 
 export type TabKey = "index" | "search" | "videos" | "notifications" | "profile";
 
@@ -11,7 +11,10 @@ const TabsContext = createContext<TabsContextValue | undefined>(undefined);
 
 export const TabsProvider = ({ children, initialTab = "index" as TabKey }: { children: React.ReactNode; initialTab?: TabKey }) => {
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-  const value = useMemo(() => ({ activeTab, setActiveTab }), [activeTab]);
+  const setActiveTabOptimized = useCallback((tab: TabKey) => {
+    setActiveTab((current) => (current === tab ? current : tab));
+  }, []);
+  const value = useMemo(() => ({ activeTab, setActiveTab: setActiveTabOptimized }), [activeTab, setActiveTabOptimized]);
   return <TabsContext.Provider value={value}>{children}</TabsContext.Provider>;
 };
 

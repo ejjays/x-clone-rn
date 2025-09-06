@@ -4,10 +4,7 @@ import { Redirect, router, withLayoutContext, usePathname } from "expo-router";
 import React, { useEffect, memo, useMemo } from "react";
 import { Text, TouchableOpacity, View, Platform, useWindowDimensions } from "react-native";
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -43,11 +40,11 @@ const TabsInner = () => {
     tabBarHeight.value = TAB_BAR_HEIGHT;
   }, [pathname]);
 
-  const animatedHeaderStyle = useAnimatedStyle(() => ({
-    height: headerHeight.value,
-    opacity: headerHeight.value / HEADER_HEIGHT,
-    overflow: "hidden",
-  }));
+  const staticHeaderStyle = {
+    height: isHomeScreen ? HEADER_HEIGHT : 0,
+    opacity: isHomeScreen ? 1 : 0,
+    overflow: "hidden" as const,
+  };
 
   const handleMessagePress = () => {
     router.push("/messages");
@@ -77,7 +74,7 @@ const TabsInner = () => {
           translucent={isVideosScreen}
         />
 
-        <Animated.View style={animatedHeaderStyle}>
+        <View style={staticHeaderStyle}>
           <View
             className="flex-row justify-between items-center px-3 h-full"
             style={{ backgroundColor: colors.background }}
@@ -107,7 +104,7 @@ const TabsInner = () => {
               </TouchableOpacity>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         <View className="flex-1">
           <MaterialTopTabs
