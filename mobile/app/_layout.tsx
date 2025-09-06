@@ -158,7 +158,7 @@ const InitialLayout = () => {
             screenOptions={{
               headerShown: false,
               animation: "slide_from_right",
-              contentStyle: { backgroundColor: pathname === "/videos" ? "black" : colors.background },
+              contentStyle: { backgroundColor: pathname?.endsWith("/videos") ? "black" : colors.background },
             }}
           >
             <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
@@ -192,7 +192,7 @@ const InitialLayout = () => {
           screenOptions={{
             headerShown: false,
             animation: "slide_from_right",
-            contentStyle: { backgroundColor: pathname === "/videos" ? "black" : colors.background },
+            contentStyle: { backgroundColor: pathname?.endsWith("/videos") ? "black" : colors.background },
           }}
         >
           <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
