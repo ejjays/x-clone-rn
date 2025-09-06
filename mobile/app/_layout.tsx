@@ -5,7 +5,7 @@ import { enableScreens } from "react-native-screens";
 enableScreens(true);
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
-import { Stack, router } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import "../global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -45,6 +45,7 @@ const InitialLayout = () => {
     Lato_900Black, // Use Lato_900Black
   });
   const { colors, isDarkMode } = useTheme();
+  const pathname = usePathname();
   
   // ADD PUSH NOTIFICATIONS HOOK HERE
   const { expoPushToken } = usePushNotifications();
@@ -157,7 +158,7 @@ const InitialLayout = () => {
             screenOptions={{
               headerShown: false,
               animation: "slide_from_right",
-              contentStyle: { backgroundColor: colors.background },
+              contentStyle: { backgroundColor: pathname === "/videos" ? "black" : colors.background },
             }}
           >
             <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
@@ -191,7 +192,7 @@ const InitialLayout = () => {
           screenOptions={{
             headerShown: false,
             animation: "slide_from_right",
-            contentStyle: { backgroundColor: colors.background },
+            contentStyle: { backgroundColor: pathname === "/videos" ? "black" : colors.background },
           }}
         >
           <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
