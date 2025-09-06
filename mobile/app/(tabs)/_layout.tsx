@@ -65,7 +65,7 @@ const TabsInner = () => {
           style="light"
           hidden={false}
           translucent={isVideosScreen}
-          backgroundColor={isVideosScreen ? "transparent" : colors.background}
+          backgroundColor={isVideosScreen ? "#000000" : colors.background}
         />
 
         <View style={staticHeaderStyle}>

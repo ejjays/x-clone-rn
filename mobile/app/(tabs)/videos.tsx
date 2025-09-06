@@ -384,8 +384,8 @@ export default function VideosScreen() {
         try {
           RNStatusBar.setTranslucent(true);
           RNStatusBar.setBackgroundColor('transparent');
-          // Ensure the app background behind status bar is transparent too
-          SystemUI.setBackgroundColorAsync('transparent');
+          // Force solid black behind the status bar area
+          SystemUI.setBackgroundColorAsync('#000000');
         } catch {}
       }
       return () => {
@@ -393,6 +393,7 @@ export default function VideosScreen() {
           try {
             RNStatusBar.setTranslucent(false);
             RNStatusBar.setBackgroundColor('#000000');
+            SystemUI.setBackgroundColorAsync('#000000');
           } catch {}
         }
       };
@@ -531,7 +532,7 @@ export default function VideosScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'black' }}>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
+      <StatusBar style="light" translucent backgroundColor="#000000" />
 
       <View
         style={[
