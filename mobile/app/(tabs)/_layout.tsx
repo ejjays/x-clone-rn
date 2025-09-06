@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
 import { Redirect, router, withLayoutContext, usePathname } from "expo-router";
 import React, { useEffect, memo, useMemo, useCallback } from "react";
-import { Text, TouchableOpacity, View, Platform, useWindowDimensions } from "react-native";
+import { Text, TouchableOpacity, View, Platform, Dimensions } from "react-native";
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
@@ -25,8 +25,8 @@ const TabsInner = () => {
   const { isSignedIn } = useAuth();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
-  const { width: screenWidth } = useWindowDimensions();
-  const { isDarkMode, colors } = useTheme();
+  const screenWidth = Dimensions.get('window').width;
+  const { colors } = useTheme();
 
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
@@ -54,12 +54,6 @@ const TabsInner = () => {
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
   return (
-    <ScrollProvider
-      headerHeight={headerHeight}
-      tabBarHeight={tabBarHeight}
-      isHomeScreen={isHomeScreen}
-      isProfileScreen={isProfileScreen}
-    >
       <View
         style={{
           flex: 1,
@@ -67,12 +61,7 @@ const TabsInner = () => {
           backgroundColor: isVideosScreen ? "black" : colors.background,
         }}
       >
-        <StatusBar
-          style={isDarkMode ? "light" : "dark"}
-          hidden={false}
-          backgroundColor={isVideosScreen ? "transparent" : colors.background}
-          translucent={isVideosScreen}
-        />
+        <StatusBar style="light" hidden={false} />
 
         <View style={staticHeaderStyle}>
           <View
@@ -133,7 +122,6 @@ const TabsInner = () => {
           </MaterialTopTabs>
         </View>
       </View>
-    </ScrollProvider>
   );
 };
 
@@ -146,8 +134,9 @@ export default function TabsLayout() {
 }
 
 const TopIconBar = memo(function TopIconBar({ navigation, pathname, colors, screenWidth }: any) {
-  const routes = useMemo(() => ["/", "/search", "/videos", "/notifications", "/profile"], []);
-  const activeIndex = routes.indexOf(pathname);
+  const ROUTES = ["/", "/search", "/videos", "/notifications", "/profile"];
+  const TAB_KEYS = ["index", "search", "videos", "notifications", "profile"];
+  const activeIndex = ROUTES.indexOf(pathname);
   const goIndex = useCallback(() => navigation.jumpTo("index"), [navigation]);
   const goSearch = useCallback(() => navigation.jumpTo("search"), [navigation]);
   const goVideos = useCallback(() => navigation.jumpTo("videos"), [navigation]);
@@ -159,19 +148,19 @@ const TopIconBar = memo(function TopIconBar({ navigation, pathname, colors, scre
         style={{ backgroundColor: colors.background, borderColor: colors.border }}
       >
         <View className="flex-row justify-around items-center" style={{ height: TAB_BAR_HEIGHT }}>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goIndex} activeOpacity={1} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("index")} activeOpacity={1} delayPressIn={0}>
             <Home size={26} color={pathname === "/" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goSearch} activeOpacity={1} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("search")} activeOpacity={1} delayPressIn={0}>
             <PeopleIcon size={27} color={pathname === "/search" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goVideos} activeOpacity={1} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("videos")} activeOpacity={1} delayPressIn={0}>
             <TvMinimalPlay size={26} color={pathname === "/videos" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goNotifications} activeOpacity={1} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("notifications")} activeOpacity={1} delayPressIn={0}>
             <Bell size={26} color={pathname === "/notifications" ? colors.blue : "white"} />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={goProfile} activeOpacity={1} delayPressIn={0}>
+          <TouchableOpacity className="flex-1 items-center justify-center h-full" onPressIn={() => navigation.jumpTo("profile")} activeOpacity={1} delayPressIn={0}>
             <Menu size={26} color={pathname === "/profile" ? colors.blue : "white"} />
           </TouchableOpacity>
         </View>
@@ -179,8 +168,8 @@ const TopIconBar = memo(function TopIconBar({ navigation, pathname, colors, scre
           <View
             className="h-full bg-blue-500"
             style={{
-              width: `${100 / routes.length}%`,
-              left: `${(activeIndex > -1 ? activeIndex : 0) * (100 / routes.length)}%`,
+              width: `${100 / ROUTES.length}%`,
+              left: `${(activeIndex > -1 ? activeIndex : 0) * (100 / ROUTES.length)}%`,
             }}
           />
         </View>
