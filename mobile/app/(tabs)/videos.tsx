@@ -442,24 +442,14 @@ export default function VideosScreen() {
   const [ready, setReady] = useState(false);
   useFocusEffect(
     useCallback(() => {
-      const task = InteractionManager.runAfterInteractions(async () => {
-        setReady(true);
-        // Show transparent status bar
-        try {
-          RNStatusBar.setHidden(false);
-          if (Platform.OS === 'android') {
-            SystemUI.setBackgroundColorAsync('transparent');
-          }
-        } catch {}
-        // Hide Android system nav bar for reels only
-        if (Platform.OS === "android") {
-          try {
-            await NavigationBar.setVisibilityAsync("hidden");
-            await NavigationBar.setBehaviorAsync("overlay-swipe");
-            await NavigationBar.setBackgroundColorAsync("transparent");
-          } catch {}
+      // Make screen ready immediately; avoid awaited NavigationBar ops to keep tab nav instant
+      setReady(true);
+      try {
+        RNStatusBar.setHidden(false);
+        if (Platform.OS === 'android') {
+          SystemUI.setBackgroundColorAsync('transparent');
         }
-      });
+      } catch {}
       return () => {
         setReady(false);
         try {
@@ -468,14 +458,6 @@ export default function VideosScreen() {
             SystemUI.setBackgroundColorAsync('#000000');
           }
         } catch {}
-        // Restore nav bar on leaving reels
-        if (Platform.OS === "android") {
-          try {
-            NavigationBar.setVisibilityAsync("visible");
-            NavigationBar.setBehaviorAsync("inset-swipe");
-          } catch {}
-        }
-        task.cancel();
       };
     }, [])
   );
