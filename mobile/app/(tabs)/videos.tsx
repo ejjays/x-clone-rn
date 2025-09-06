@@ -447,7 +447,7 @@ export default function VideosScreen() {
       // Make screen ready immediately; avoid awaited NavigationBar ops to keep tab nav instant
       setReady(true);
       try {
-        RNStatusBar.setHidden(true);
+        RNStatusBar.setHidden(false);
         if (Platform.OS === 'android') {
           SystemUI.setBackgroundColorAsync('transparent');
         }
