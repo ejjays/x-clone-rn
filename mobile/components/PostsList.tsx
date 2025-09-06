@@ -114,10 +114,11 @@ const PostsList = ({
       renderItem={renderItem}
       ListHeaderComponent={ListHeaderComponent}
       contentContainerStyle={{ backgroundColor: colors.background, paddingBottom: contentBottomPadding ?? 0 }}
-      initialNumToRender={7}
-      maxToRenderPerBatch={8}
-      windowSize={11}
-      updateCellsBatchingPeriod={30}
+      removeClippedSubviews
+      initialNumToRender={5}
+      maxToRenderPerBatch={6}
+      windowSize={9}
+      updateCellsBatchingPeriod={40}
       refreshing={refreshing}
       onRefresh={onRefresh}
       showsVerticalScrollIndicator={false}
