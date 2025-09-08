@@ -147,8 +147,9 @@ const InitialLayout = () => {
     <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
       <StatusBar
         style={isDarkMode ? "light" : "dark"}
-        backgroundColor={pathname?.endsWith("/videos") ? "#000000" : "transparent"}
-        translucent={!pathname?.endsWith("/videos")}
+        backgroundColor="transparent"
+        translucent
+        hidden={pathname?.endsWith("/videos")}
       />
       <OfflineBanner queued={queued} />
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}

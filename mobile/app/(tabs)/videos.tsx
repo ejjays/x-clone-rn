@@ -380,22 +380,23 @@ export default function VideosScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (Platform.OS === 'android') {
+      try {
+        RNStatusBar.setHidden(true);
+        RNStatusBar.setTranslucent(true);
+        RNStatusBar.setBackgroundColor('transparent');
+        if (Platform.OS === 'android') {
+          SystemUI.setBackgroundColorAsync('transparent');
+        }
+      } catch {}
+      return () => {
         try {
+          RNStatusBar.setHidden(false);
           RNStatusBar.setTranslucent(true);
           RNStatusBar.setBackgroundColor('transparent');
-          // Force solid black behind the status bar area
-          SystemUI.setBackgroundColorAsync('#000000');
+          if (Platform.OS === 'android') {
+            SystemUI.setBackgroundColorAsync('transparent');
+          }
         } catch {}
-      }
-      return () => {
-        if (Platform.OS === 'android') {
-          try {
-            RNStatusBar.setTranslucent(false);
-            RNStatusBar.setBackgroundColor('#000000');
-            SystemUI.setBackgroundColorAsync('#000000');
-          } catch {}
-        }
       };
     }, [])
   );
@@ -532,7 +533,7 @@ export default function VideosScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'black' }}>
-      <StatusBar style="light" translucent backgroundColor="#000000" />
+      <StatusBar style="light" hidden translucent backgroundColor="transparent" />
 
       <View
         style={[

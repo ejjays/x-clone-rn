@@ -64,8 +64,8 @@ const TabsInner = () => {
         <StatusBar
           style="light"
           hidden={false}
-          translucent={isVideosScreen}
-          backgroundColor={isVideosScreen ? "#000000" : colors.background}
+          translucent
+          backgroundColor="transparent"
         />
 
         <View style={staticHeaderStyle}>
