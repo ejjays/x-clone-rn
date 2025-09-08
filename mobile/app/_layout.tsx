@@ -149,7 +149,6 @@ const InitialLayout = () => {
         style={isDarkMode ? "light" : "dark"}
         backgroundColor="transparent"
         translucent
-        hidden={pathname?.endsWith("/videos")}
       />
       <OfflineBanner queued={queued} />
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
