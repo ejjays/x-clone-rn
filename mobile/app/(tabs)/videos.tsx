@@ -1,37 +1,20 @@
 import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
-import { InteractionManager, StatusBar as RNStatusBar, Platform } from "react-native";
+import { StatusBar as RNStatusBar, Platform, View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, useWindowDimensions } from "react-native";
 import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, Alert, ToastAndroid, useWindowDimensions, Animated } from "react-native";
-import * as Clipboard from "expo-clipboard";
-import {
-  useSafeAreaInsets,
-  type EdgeInsets,
-  SafeAreaView,
-} from "react-native-safe-area-context";
-import { Ionicons, Entypo } from "@expo/vector-icons";
+import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI from "expo-system-ui";
-import { VideoView, useVideoPlayer } from "expo-video";
 import BottomSheet from "@gorhom/bottom-sheet";
-import * as Haptics from "expo-haptics";
-// Removed NavigationBar toggling to avoid jank on tab transitions
 
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
 import { VideoCommentBar, COMMENT_BAR_HEIGHT } from "@/components/VideoCommentBar";
-import PostReactionsPicker, {
-} from "@/components/PostReactionsPicker";
-import PostActionBottomSheet, {
-  PostActionBottomSheetRef,
-} from "@/components/PostActionBottomSheet";
-
-import { usePosts } from "@/hooks/usePosts";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { Post } from "@/types";
-import { formatNumber } from "@/utils/formatters";
 import { StatusBar } from "expo-status-bar";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import * as NavigationBar from "expo-navigation-bar";
-import { useTheme } from "@/context/ThemeContext"; // Import useTheme
-// Removed custom controls overlay
+import { useTheme } from "@/context/ThemeContext";
+import VideoItem from "@/features/videos/components/VideoItem";
+import { useVideosStatusBar } from "@/features/videos/hooks/useVideosStatusBar";
+import { videosScreenStyles as styles } from "@/features/videos/styles";
 
 
 /**
@@ -47,325 +30,7 @@ function useOptionalTabBarHeight() {
   }
 }
 
-const VideoItem = ({
-  item,
-  isVisible,
-  isScreenFocused,
-  onCommentPress,
-  insets,
-  bottomSafeOffset,
-  commentBarHeight,
-  width,
-  height,
-}: {
-  item: Post;
-  isVisible: boolean;
-  isScreenFocused: boolean;
-  onCommentPress: () => void;
-  insets: EdgeInsets;
-  bottomSafeOffset: number;
-  commentBarHeight: number;
-  width: number;
-  height: number;
-}) => {
-  const player = useVideoPlayer(item.video ? { uri: item.video } : undefined);
-  const likeButtonRef = useRef<TouchableOpacity>(null);
-  const postActionBottomSheetRef = useRef<PostActionBottomSheetRef>(null);
-  const { currentUser } = useCurrentUser();
-  const { deletePost, reactToPost, getCurrentUserReaction } = usePosts();
-
-  const currentReaction = useMemo(() => {
-    const reaction = getCurrentUserReaction(item.reactions, currentUser);
-    if (process.env.EXPO_PUBLIC_DEBUG_LOGS === "1") {
-      console.log(`[VideoItem - ${item._id}] Current Reaction:`, reaction);
-      console.log(`[VideoItem - ${item._id}] Item Reactions:`, item.reactions);
-    }
-    return reaction;
-  }, [item.reactions, currentUser, item._id]);
-
-  // Native controls handle play/pause
-  const [pickerVisible, setPickerVisible] = useState(false);
-  const [anchorMeasurements, setAnchorMeasurements] = useState<any>(null);
-  const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
-  const [naturalHeight, setNaturalHeight] = useState<number | null>(null);  
-  const [containerWidth, setContainerWidth] = useState<number>(width);
-  const [isMuted, setIsMuted] = useState(false);
-  const lastTapRef = useRef<number>(0);
-  const [videoOrientation, setVideoOrientation] = useState<
-    "portrait" | "landscape" | null
-  >(null);
-
-  // Animation value for the heart icon bounce
-  const heartScale = useRef(new Animated.Value(1)).current; // New animated value
-
-  // Autoplay / pause
-  useEffect(() => {
-    if (!player) return;
-    if (isVisible && isScreenFocused) {
-      (player as any).play?.();
-      (player as any).setIsMuted?.(isMuted);
-    } else {
-      (player as any).pause?.();
-      (player as any).setIsMuted?.(true);
-      if (!isVisible) (player as any).seekTo?.(0);
-    }
-  }, [isVisible, isScreenFocused, isMuted, player]);
-
-  // Native controls replace custom tap play/pause; keep double-tap like if needed in future
-
-  const toggleMute = async () => {
-    const next = !isMuted;
-    setIsMuted(next);
-    if (!player) return;
-    (player as any).setIsMuted?.(next);
-  };
-
-
-  const containerHeight = useMemo(() => {
-    // Occupy viewport minus the comment bar so video never overlaps it
-    // Also reserve header area so overlays aren't under the status bar
-    const headerReserve = insets.top + 8;
-    return Math.max(0, height - (COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom)) - headerReserve);
-  }, [height, insets.bottom, insets.top]);
-
-
-  const dynamicResizeMode = useMemo(() => {
-    // Fill like TikTok/IG reels
-    return "cover" as const;
-  }, []);
-
-  // No custom progress tracking when using native controls
-
-  // Reaction picker
-  const handleLongPress = () => {
-    likeButtonRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
-      setAnchorMeasurements({ pageX, pageY });
-      setPickerVisible(true);
-    });
-  };
-
-  const handleReactionSelect = (reaction: any) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    reactToPost({
-      postId: item._id,
-      reactionType: reaction ? reaction.type : null,
-    });
-    setPickerVisible(false);
-
-    // Trigger bounce animation for any reaction selection
-    Animated.sequence([
-      Animated.timing(heartScale, {
-        toValue: 0.8, // Scale down quickly
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(heartScale, {
-        toValue: 1, // Spring back to original size
-        friction: 3,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  // PostAction handlers
-  const isOwnPost = currentUser?._id === item.user._id;
-  const isAdmin = currentUser?.isAdmin || false;
-
-  const handlePostActionsPress = () => {
-    postActionBottomSheetRef.current?.open();
-  };
-
-  const handleDeletePost = () => {
-    deletePost(item._id);
-    postActionBottomSheetRef.current?.close();
-  };
-
-  const handleCopyText = async (text: string) => {
-    await Clipboard.setStringAsync(text);
-
-    if (Platform.OS === "android") {
-      ToastAndroid.show("Copied to clipboard", ToastAndroid.SHORT);
-    }
-
-    postActionBottomSheetRef.current?.close();
-  };
-
-  const itemOuterHeight = height;
-  const statusBarHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || insets.top) : insets.top;
-  const totalCommentBarHeight = COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom);
-
-  return (
-    <View style={[styles.videoContainer, { width, height: itemOuterHeight, backgroundColor: 'black' }]}>
-      <View style={[styles.videoWrapper, { height: containerHeight }]}>
-        <View style={StyleSheet.absoluteFillObject} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
-          {item.video && (
-            <VideoView
-              style={StyleSheet.absoluteFillObject}
-              player={player}
-              contentFit={dynamicResizeMode}
-              // Use custom overlays instead of native controls to avoid layout shifts
-              nativeControls={false}
-            />
-          )}
-        </View>
- 
-        <View
-          pointerEvents="box-none"
-          style={[
-            styles.overlay,
-            {
-              paddingTop: 10,
-              paddingLeft: insets.left + 15,
-              paddingRight: insets.right + 15,
-              // Anchor overlays above the comment bar area
-              paddingBottom: COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom) + 4,
-            },
-          ]}
-        >
-        {/* Left side: user info + caption */}
-        <View style={styles.leftContainer}>
-          <View style={styles.userInfo}>
-            <Image
-              source={
-                item.user.profilePicture
-                  ? { uri: item.user.profilePicture }
-                  : require("../../assets/images/default-avatar.png")
-              }
-              style={styles.avatar}
-            />
-            <Text style={styles.username}>
-              {item.user.firstName} {item.user.lastName}
-            </Text>
-          </View>
-          <Text style={[styles.caption, { marginBottom: 10 }]} numberOfLines={2}>
-            {item.content}
-          </Text>
-        </View>
-
-        {/* Right side: actions */}
-        <View style={[styles.rightContainer]}>
-          <TouchableOpacity
-            ref={likeButtonRef}
-            onPress={() => {
-              console.log(
-                `[VideoItem - ${item._id}] Heart icon pressed. Triggering animation.`
-              );
-              reactToPost({
-                postId: item._id,
-                reactionType: currentReaction?.type === "like" ? null : "like",
-              });
-              // Trigger bounce animation on direct like/unlike
-              Animated.sequence([
-                Animated.timing(heartScale, {
-                  toValue: 0.8, // Scale down quickly
-                  duration: 100,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(heartScale, {
-                  toValue: 1, // Spring back to original size
-                  friction: 3,
-                  tension: 40,
-                  useNativeDriver: true,
-                }),
-              ]).start();
-            }}
-            onLongPress={handleLongPress}
-            style={styles.iconContainer}
-          >
-            <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-              <Ionicons
-                name={
-                  currentReaction?.type === "like"
-                    ? "heart-sharp"
-                    : "heart-outline"
-                }
-                size={30}
-                color={currentReaction?.type === "like" ? "red" : "white"}
-                style={styles.iconShadow}
-              />
-            </Animated.View>
-            <Text style={styles.iconText}>
-              {formatNumber(item.reactions.length)}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.iconContainer}
-            onPress={onCommentPress}
-          >
-            <Ionicons
-              name="chatbubble-ellipses-outline"
-              size={30}
-              color="white"
-              style={styles.iconShadow}
-            />
-            <Text style={styles.iconText}>
-              {formatNumber(item.comments.length)}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.iconContainer}>
-            <Ionicons
-              name="share-social-outline"
-              size={30}
-              color="white"
-              style={styles.iconShadow}
-            />
-            <Text style={styles.iconText}>Share</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.iconContainer} onPress={toggleMute}>
-            <Ionicons
-              name={isMuted ? "volume-mute-outline" : "volume-high-outline"}
-              size={28}
-              color="white"
-              style={styles.iconShadow}
-            />
-            <Text style={styles.iconText}>{isMuted ? "Mute" : "Sound"}</Text>
-          </TouchableOpacity>
-
-          {(isOwnPost || isAdmin) && (
-            <TouchableOpacity
-              style={styles.iconContainer}
-              onPress={handlePostActionsPress}
-            >
-              <Entypo
-                name="dots-three-horizontal"
-                size={28}
-                color="white"
-                style={styles.iconShadow}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-      </View>
-
-      {/* Custom controls removed per request */}
-
-      {/* Reaction Picker */}
-      <PostReactionsPicker
-        isVisible={pickerVisible}
-        onClose={() => setPickerVisible(false)}
-        onSelect={handleReactionSelect}
-        anchorMeasurements={anchorMeasurements}
-      />
-
-      {/* Post Actions */}
-      <PostActionBottomSheet
-        ref={postActionBottomSheetRef}
-        onClose={() => postActionBottomSheetRef.current?.close()}
-        onDelete={handleDeletePost}
-        onCopyText={handleCopyText}
-        postContent={item.content}
-        isOwnPost={isOwnPost}
-        isAdmin={isAdmin}
-        postOwnerName={`${item.user.firstName} ${item.user.lastName}`}
-      />
-    </View>
-  );
-};
+// VideoItem moved to features/videos/components/VideoItem
 
 export default function VideosScreen() {
   const { posts, isLoading, error, refetch } = usePosts();
@@ -378,28 +43,7 @@ export default function VideosScreen() {
   const { width, height } = useWindowDimensions();
   const { colors, isDarkMode } = useTheme(); // Use useTheme hook
 
-  useFocusEffect(
-    useCallback(() => {
-      try {
-        RNStatusBar.setHidden(false);
-        RNStatusBar.setTranslucent(true);
-        RNStatusBar.setBackgroundColor('transparent');
-        if (Platform.OS === 'android') {
-          SystemUI.setBackgroundColorAsync('transparent');
-        }
-      } catch {}
-      return () => {
-        try {
-          RNStatusBar.setHidden(false);
-          RNStatusBar.setTranslucent(false);
-          RNStatusBar.setBackgroundColor('#000000');
-          if (Platform.OS === 'android') {
-            SystemUI.setBackgroundColorAsync('#000000');
-          }
-        } catch {}
-      };
-    }, [])
-  );
+  useVideosStatusBar();
 
   const tabBarHeight = useOptionalTabBarHeight();
   // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
@@ -441,9 +85,6 @@ export default function VideosScreen() {
   useEffect(() => {
     if (!isFocused) setViewableItems([]);
   }, [isFocused]);
-
-  // Effect to hide/show the system navigation bar on Android
-  // Removed focus effect that toggles system nav bar; this was introducing delays
 
   const [ready, setReady] = useState(false);
   useFocusEffect(
