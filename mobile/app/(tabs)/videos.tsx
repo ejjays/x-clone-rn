@@ -61,8 +61,8 @@ export default function VideosScreen() {
   const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
   const handleCloseComments = () => bottomSheetRef.current?.close();
 
-  // Each item should be exactly the screen height for perfect paging
-  const itemHeight = height;
+  // Each item should be the screen height minus the comment bar area
+  const itemHeight = height - (COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom));
 
   useEffect(() => {
     // Ensure the sheet is closed whenever this screen mounts or loses focus
@@ -120,7 +120,7 @@ export default function VideosScreen() {
       bottomSafeOffset={bottomSafeOffset}
       commentBarHeight={COMMENT_BAR_HEIGHT}
       width={width}
-      height={height}
+      height={itemHeight}
     />
   ), [viewableItems, isFocused, insets, bottomSafeOffset, width, height]);
 
