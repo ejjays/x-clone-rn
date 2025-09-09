@@ -83,9 +83,8 @@ export default function VideoItem({
 	};
 
 	const containerHeight = useMemo(() => {
-		const headerReserve = insets.top + 8;
-		return Math.max(0, height - (commentBarHeight + Math.max(0, insets.bottom)) - headerReserve);
-	}, [height, insets.bottom, insets.top, commentBarHeight]);
+		return Math.max(0, height - (commentBarHeight + Math.max(0, insets.bottom)));
+	}, [height, insets.bottom, commentBarHeight]);
 
 	const dynamicResizeMode = useMemo(() => {
 		return "cover" as const;
