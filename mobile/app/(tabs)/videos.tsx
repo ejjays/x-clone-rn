@@ -35,7 +35,7 @@ function useOptionalTabBarHeight() {
 
 export default function VideosScreen() {
   const { posts, isLoading, error, refetch } = usePosts();
-  const [viewableItems, setViewableItems] = useState<string[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isRefetching, setIsRefetching] = useState(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
@@ -79,15 +79,11 @@ export default function VideosScreen() {
     setIsRefetching(false);
   };
 
-  const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
-  const onViewableItemsChanged = useCallback(
-    ({ viewableItems: vItems }) => setViewableItems(vItems.map((vi) => vi.key)),
-    []
-  );
-
-  useEffect(() => {
-    if (!isFocused) setViewableItems([]);
-  }, [isFocused]);
+  const handleMomentumEnd = useCallback((e) => {
+    const y = e.nativeEvent.contentOffset?.y ?? 0;
+    const index = Math.max(0, Math.round(y / itemHeight));
+    setActiveIndex(index);
+  }, [itemHeight]);
 
   const [ready, setReady] = useState(false);
   useFocusEffect(
@@ -112,10 +108,10 @@ export default function VideosScreen() {
     }, [])
   );
 
-  const renderItem = useCallback(({ item }: { item: Post }) => (
+  const renderItem = useCallback(({ item, index }: { item: Post, index: number }) => (
     <VideoItem
       item={item}
-      isVisible={viewableItems.includes(item._id)}
+      isVisible={index === activeIndex}
       isScreenFocused={isFocused}
       onCommentPress={handleOpenComments}
       insets={insets}
@@ -124,7 +120,7 @@ export default function VideosScreen() {
       width={width}
       height={itemHeight}
     />
-  ), [viewableItems, isFocused, insets, bottomSafeOffset, width, height]);
+  ), [activeIndex, isFocused, insets, bottomSafeOffset, width, itemHeight]);
 
 
   if (isLoading) {
@@ -210,8 +206,6 @@ export default function VideosScreen() {
         keyExtractor={(item) => item._id}
         pagingEnabled
         showsVerticalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
         getItemLayout={(_, i) => ({
           length: itemHeight,
           offset: itemHeight * i,
@@ -227,6 +221,8 @@ export default function VideosScreen() {
         disableIntervalMomentum
         removeClippedSubviews
         overScrollMode="never"
+        onMomentumScrollEnd={handleMomentumEnd}
+        onScrollEndDrag={handleMomentumEnd}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
