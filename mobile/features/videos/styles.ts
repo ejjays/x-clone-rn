@@ -20,6 +20,11 @@ export const videosScreenStyles = StyleSheet.create({
 		alignItems: "center",
 	},
 	headerTitle: { fontSize: 28, fontWeight: "bold", color: "white" },
+	iconShadow: {
+		textShadowColor: "black",
+		textShadowOffset: { width: 0, height: 0 },
+		textShadowRadius: 7,
+	},
 });
 
 export const videoItemStyles = StyleSheet.create({
