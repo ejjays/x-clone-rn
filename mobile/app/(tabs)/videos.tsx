@@ -13,6 +13,7 @@ import { StatusBar } from "expo-status-bar";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useTheme } from "@/context/ThemeContext";
 import VideoItem from "@/features/videos/components/VideoItem";
+import ReelsListWrapper from "@/features/videos/ReelsListWrapper";
 import { useVideosStatusBar } from "@/features/videos/hooks/useVideosStatusBar";
 import { videosScreenStyles as styles } from "@/features/videos/styles";
 import { usePosts } from "@/hooks/usePosts";
@@ -107,10 +108,10 @@ export default function VideosScreen() {
     }, [])
   );
 
-  const renderItem = useCallback(({ item, index }: { item: Post, index: number }) => (
+  const renderItem = useCallback(({ item, index, isActive }: { item: Post, index: number, isActive: boolean }) => (
     <VideoItem
       item={item}
-      isVisible={index === activeIndex}
+      isVisible={isActive && isFocused}
       isScreenFocused={isFocused}
       onCommentPress={handleOpenComments}
       insets={insets}
@@ -119,7 +120,7 @@ export default function VideosScreen() {
       width={width}
       height={itemHeight}
     />
-  ), [activeIndex, isFocused, insets, bottomSafeOffset, width, itemHeight]);
+  ), [isFocused, insets, bottomSafeOffset, width, itemHeight]);
 
 
   if (isLoading) {
@@ -198,40 +199,12 @@ export default function VideosScreen() {
       </View>
 
       {ready && (
-      <FlatList
-        style={{ flex: 1 }}
-        key={`${COMMENT_BAR_HEIGHT}-${width}`}
+      <ReelsListWrapper
         data={videoPosts}
-        renderItem={renderItem}
-        keyExtractor={(item) => item._id}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        getItemLayout={(_, i) => ({
-          length: itemHeight,
-          offset: itemHeight * i,
-          index: i,
-        })}
-        decelerationRate="fast"
-        initialNumToRender={3}
-        maxToRenderPerBatch={5}
-        windowSize={11}
-        contentContainerStyle={{ paddingTop: 0, paddingBottom: 0 }}
-        snapToInterval={itemHeight}
-        snapToAlignment="start"
-        disableIntervalMomentum
-        removeClippedSubviews
-        overScrollMode="never"
-        onMomentumScrollEnd={handleMomentumEnd}
-        onScrollEndDrag={handleMomentumEnd}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={handlePullToRefresh}
-            colors={[colors.refreshControlColor]}
-            tintColor={colors.refreshControlColor}
-            progressBackgroundColor={colors.refreshControlBackgroundColor}
-          />
-        }
+        height={itemHeight}
+        width={width}
+        onIndexChange={setActiveIndex}
+        renderItem={renderItem as any}
       />)}
 
       <VideoCommentBar onCommentPress={handleOpenComments} />
