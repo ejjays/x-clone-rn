@@ -13,8 +13,15 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app requires camera access for video calls.",
         "NSMicrophoneUsageDescription": "This app requires microphone access for calls.",
-        "UIBackgroundModes": ["audio", "voip"]
-      }
+        "UIBackgroundModes": [
+          "audio",
+          "voip",
+          "audio",
+          "voip"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.ejjays.mobile"
     },
     "android": {
       "adaptiveIcon": {
