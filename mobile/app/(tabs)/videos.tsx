@@ -61,10 +61,9 @@ export default function VideosScreen() {
   const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
   const handleCloseComments = () => bottomSheetRef.current?.close();
 
-  // Calculate header height: insets.top + paddingTop (8) + title height (28) + paddingBottom (10)
-  const headerHeight = insets.top + 8 + 28 + 10;
-  // Each item should be the screen height minus header and comment bar
-  const itemHeight = height - headerHeight - (COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom));
+  // Each item should be the screen height minus the comment bar area.
+  // The header is absolutely positioned and should not reduce item height.
+  const itemHeight = height - (COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom));
 
   useEffect(() => {
     // Ensure the sheet is closed whenever this screen mounts or loses focus
@@ -200,6 +199,7 @@ export default function VideosScreen() {
 
       {ready && (
       <FlatList
+        style={{ flex: 1 }}
         key={`${COMMENT_BAR_HEIGHT}-${width}`}
         data={videoPosts}
         renderItem={renderItem}
@@ -211,11 +211,11 @@ export default function VideosScreen() {
           offset: itemHeight * i,
           index: i,
         })}
-        decelerationRate={0.985}
+        decelerationRate="fast"
         initialNumToRender={3}
         maxToRenderPerBatch={5}
         windowSize={11}
-        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 0 }}
+        contentContainerStyle={{ paddingTop: 0, paddingBottom: 0 }}
         snapToInterval={itemHeight}
         snapToAlignment="start"
         disableIntervalMomentum
