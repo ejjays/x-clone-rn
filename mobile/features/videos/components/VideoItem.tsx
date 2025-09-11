@@ -88,8 +88,9 @@ export default function VideoItem({
 	}, [height]);
 
 	const dynamicResizeMode = useMemo(() => {
-		return "cover" as const;
-	}, []);
+		// Respect post preference: 'full' => cover, 'original' => contain; default to cover
+		return item.videoFit === 'original' ? ("contain" as const) : ("cover" as const);
+	}, [item.videoFit]);
 
 	const handleLongPress = () => {
 		likeButtonRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
