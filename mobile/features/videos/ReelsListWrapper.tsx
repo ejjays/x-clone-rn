@@ -12,13 +12,9 @@ type Props = {
 };
 
 export default function ReelsListWrapper({ data, height, width, renderItem, onIndexChange }: Props) {
-	let ReelsList: any = null;
-	try {
-		// Optional: use library if present at runtime
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const mod = require("react-native-reels-list");
-		ReelsList = mod?.default ?? mod;
-	} catch {}
+	// Disabled dynamic import to avoid duplicate RNGestureHandler registrations.
+	// Library integration can be enabled once deduped and tested.
+	const ReelsList: any = null;
 
 	const [activeIndex, setActiveIndex] = useState(0);
 	const handleIndex = useCallback((index: number) => {
@@ -44,7 +40,9 @@ export default function ReelsListWrapper({ data, height, width, renderItem, onIn
 		<PagerView
 			style={{ flex: 1, width }}
 			initialPage={0}
+			orientation="vertical"
 			onPageSelected={(e) => handleIndex(e.nativeEvent.position)}
+			overScrollMode="never"
 		>
 			{data.map((item, index) => (
 				<View key={item._id} style={{ width, height }}>
