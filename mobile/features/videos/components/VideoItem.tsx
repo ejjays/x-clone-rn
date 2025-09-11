@@ -155,7 +155,7 @@ export default function VideoItem({
 							paddingTop: 10,
 							paddingLeft: insets.left + 15,
 							paddingRight: insets.right + 15,
-							paddingBottom: commentBarHeight + Math.max(0, insets.bottom) + 4,
+							paddingBottom: commentBarHeight + Math.max(0, insets.bottom),
 						},
 					]}
 				>
