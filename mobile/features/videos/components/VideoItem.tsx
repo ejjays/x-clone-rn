@@ -1,7 +1,7 @@
 import React, { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, Animated } from "react-native";
 import { Ionicons, Entypo } from "@expo/vector-icons";
-import { VideoView, useVideoPlayer } from "expo-video";
+import Video from "react-native-video";
 import * as Haptics from "expo-haptics";
 
 import { usePosts } from "@/hooks/usePosts";
@@ -37,7 +37,7 @@ export default function VideoItem({
 	width,
 	height,
 }: VideoItemProps) {
-	const player = useVideoPlayer(item.video ? { uri: item.video } : undefined);
+	const videoRef = useRef<Video | null>(null);
 	const likeButtonRef = useRef<TouchableOpacity>(null);
 	const postActionBottomSheetRef = useRef<PostActionBottomSheetRef>(null);
 	const { currentUser } = useCurrentUser();
@@ -64,16 +64,10 @@ export default function VideoItem({
 	const heartScale = useRef(new Animated.Value(1)).current;
 
 	useEffect(() => {
-		if (!player) return;
-		if (isVisible && isScreenFocused) {
-			(player as any).play?.();
-			(player as any).setIsMuted?.(isMuted);
-		} else {
-			(player as any).pause?.();
-			(player as any).setIsMuted?.(true);
-			if (!isVisible) (player as any).seekTo?.(0);
+		if (!isVisible && videoRef.current) {
+			try { (videoRef.current as any).seek(0); } catch {}
 		}
-	}, [isVisible, isScreenFocused, isMuted, player]);
+	}, [isVisible]);
 
 	const toggleMute = async () => {
 		const next = !isMuted;
@@ -138,11 +132,15 @@ export default function VideoItem({
 			<View style={[styles.videoWrapper, { height: containerHeight }]}> 
 				<View style={StyleSheet.absoluteFillObject} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}> 
 					{item.video && (
-						<VideoView
+						<Video
+							ref={(r) => (videoRef.current = r)}
+							source={{ uri: item.video }}
 							style={StyleSheet.absoluteFillObject}
-							player={player}
-							contentFit={dynamicResizeMode}
-							nativeControls={false}
+							controls
+							resizeMode={dynamicResizeMode}
+							repeat
+							muted={isMuted}
+							paused={!(isVisible && isScreenFocused)}
 						/>
 					)}
 				</View>
