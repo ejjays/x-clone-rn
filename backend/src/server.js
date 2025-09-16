@@ -47,7 +47,10 @@ app.use(async (req, res, next) => {
   if (
     url.startsWith('/api/push/stream-webhook') ||
     url.startsWith('/api/push/debug-webhook-setup') ||
-    url.startsWith('/api/push/debug-webhook-config')
+    url.startsWith('/api/push/debug-webhook-config') ||
+    // Allow upload auth endpoints to work even if DB is not ready
+    url.startsWith('/api/upload/imagekit/auth') ||
+    url.startsWith('/api/upload/signature')
   ) {
     return next();
   }
