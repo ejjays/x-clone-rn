@@ -152,7 +152,7 @@ export default function VideoItem({
 										}
 										: StyleSheet.absoluteFillObject
 								}
-								controls
+								controls={false}
 								resizeMode={dynamicResizeMode}
 								repeat
 								muted={isMuted}
