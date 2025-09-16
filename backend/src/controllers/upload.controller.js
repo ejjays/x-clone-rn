@@ -36,3 +36,28 @@ export const getUploadSignature = async (req, res) => {
   }
 };
 
+export const getImageKitAuthParams = async (_req, res) => {
+  try {
+    if (!ENV.IMAGEKIT_PRIVATE_KEY || !ENV.IMAGEKIT_PUBLIC_KEY) {
+      return res.status(500).json({ error: "ImageKit keys are not configured" });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expire = Math.floor(Date.now() / 1000) + 60 * 10; // 10 minutes
+    const signature = crypto
+      .createHmac("sha1", ENV.IMAGEKIT_PRIVATE_KEY)
+      .update(token + expire)
+      .digest("hex");
+
+    res.json({
+      token,
+      expire,
+      signature,
+      publicKey: ENV.IMAGEKIT_PUBLIC_KEY,
+      urlEndpoint: ENV.IMAGEKIT_URL_ENDPOINT || null,
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to generate ImageKit auth params" });
+  }
+};
+

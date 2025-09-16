@@ -6,7 +6,7 @@ import { offlineQueue } from "@/utils/offline/OfflineQueue"
 import { getIsOnline } from "@/utils/offline/network"
 
 // --- Configuration ---
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL
 
 if (!API_BASE_URL) {
   throw new Error("🔴 FATAL: EXPO_PUBLIC_API_URL is not defined. Please set it in your EAS Secrets.")
