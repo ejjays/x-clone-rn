@@ -131,17 +131,40 @@ export default function VideoItem({
 	return (
 		<View style={[styles.videoContainer, { width, height, backgroundColor: 'black' }]}> 
 			<View style={[styles.videoWrapper, { height: containerHeight }]}> 
-				<View style={StyleSheet.absoluteFillObject} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}> 
+				<View style={StyleSheet.absoluteFillObject} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
 					{item.video && (
 						<Video
 							ref={(r) => (videoRef.current = r)}
 							source={{ uri: getPlayableVideoUrl(item.video) }}
-							style={StyleSheet.absoluteFillObject}
+							style={
+								item.videoFit === 'original' && naturalWidth && naturalHeight
+									? {
+										width: containerWidth,
+										height: Math.min(
+											containerHeight,
+											Math.round(containerWidth * (naturalHeight / naturalWidth)),
+										),
+										alignSelf: 'center',
+									}
+								: StyleSheet.absoluteFillObject
+							}
 							controls
 							resizeMode={dynamicResizeMode}
 							repeat
 							muted={isMuted}
 							paused={!(isVisible && isScreenFocused)}
+							onLoad={(data: any) => {
+								try {
+									const ns = data?.naturalSize
+									if (ns?.width && ns?.height) {
+										setNaturalWidth(Number(ns.width))
+										setNaturalHeight(Number(ns.height))
+										if (ns?.orientation === 'portrait' || ns?.orientation === 'landscape') {
+											setVideoOrientation(ns.orientation)
+										}
+									}
+								} catch {}
+							}}
 						/>
 					)}
 				</View>
