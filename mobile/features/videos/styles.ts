@@ -37,6 +37,7 @@ export const videoItemStyles = StyleSheet.create({
 		width: '100%',
 		backgroundColor: 'black',
 		position: 'relative',
+		overflow: 'hidden',
 	},
 	overlay: {
 		...StyleSheet.absoluteFillObject,

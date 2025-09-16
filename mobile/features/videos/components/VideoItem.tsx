@@ -55,12 +55,8 @@ export default function VideoItem({
 
 	const [pickerVisible, setPickerVisible] = useState(false);
 	const [anchorMeasurements, setAnchorMeasurements] = useState<any>(null);
-	const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
-	const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
-	const [containerWidth, setContainerWidth] = useState<number>(width);
 	const [isMuted, setIsMuted] = useState(false);
 	const lastTapRef = useRef<number>(0);
-	const [videoOrientation, setVideoOrientation] = useState<"portrait" | "landscape" | null>(null);
 
 	const heartScale = useRef(new Animated.Value(1)).current;
 
@@ -131,40 +127,17 @@ export default function VideoItem({
 	return (
 		<View style={[styles.videoContainer, { width, height, backgroundColor: 'black' }]}> 
 			<View style={[styles.videoWrapper, { height: containerHeight }]}> 
-				<View style={StyleSheet.absoluteFillObject} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
+				<View style={StyleSheet.absoluteFillObject}>
 					{item.video && (
 						<Video
 							ref={(r) => (videoRef.current = r)}
 							source={{ uri: getPlayableVideoUrl(item.video) }}
-							style={
-								item.videoFit === 'original' && naturalWidth && naturalHeight
-									? {
-										width: containerWidth,
-										height: Math.min(
-											containerHeight,
-											Math.round(containerWidth * (naturalHeight / naturalWidth)),
-										),
-										alignSelf: 'center',
-									}
-								: StyleSheet.absoluteFillObject
-							}
+							style={StyleSheet.absoluteFillObject}
 							controls
 							resizeMode={dynamicResizeMode}
 							repeat
 							muted={isMuted}
 							paused={!(isVisible && isScreenFocused)}
-							onLoad={(data: any) => {
-								try {
-									const ns = data?.naturalSize
-									if (ns?.width && ns?.height) {
-										setNaturalWidth(Number(ns.width))
-										setNaturalHeight(Number(ns.height))
-										if (ns?.orientation === 'portrait' || ns?.orientation === 'landscape') {
-											setVideoOrientation(ns.orientation)
-										}
-									}
-								} catch {}
-							}}
 						/>
 					)}
 				</View>
