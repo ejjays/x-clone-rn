@@ -44,13 +44,20 @@ export const uploadMediaToImageKit = async (
     formData.append('folder', 'app_uploads')
 
     const uploadEndpoint = 'https://upload.imagekit.io/api/v1/files/upload'
-    const response = await axios.post(uploadEndpoint, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 30000,
-    })
 
-    // Prefer url; fallback to thumbnailUrl
-    const url: string | undefined = response?.data?.url || response?.data?.thumbnailUrl
+    // Use fetch for better reliability with large videos in RN
+    const response = await fetch(uploadEndpoint, {
+      method: 'POST',
+      // Do NOT set Content-Type manually; let RN set the correct multipart boundary
+      body: formData as any,
+    } as any)
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '')
+      throw new Error(text || `HTTP ${response.status}`)
+    }
+    const json = await response.json()
+    const url: string | undefined = json?.url || json?.thumbnailUrl
     return url ?? null
   } catch (error: any) {
     console.error('ImageKit upload failed:', error?.response?.data || error?.message)
