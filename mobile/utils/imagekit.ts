@@ -1,6 +1,6 @@
 // mobile/utils/imagekit.ts
-import axios from 'axios'
-import { useApiClient, API_BASE_URL } from '@/utils/api'
+import axios, { type AxiosInstance } from 'axios'
+import { API_BASE_URL } from '@/utils/api'
 
 export type UploadableMedia = {
   uri: string
@@ -17,20 +17,16 @@ type AuthResponse = {
 
 export const uploadMediaToImageKit = async (
   media: UploadableMedia,
+  api?: AxiosInstance,
 ): Promise<string | null> => {
   try {
-    const api = (useApiClient as any)?.() ?? null
     let auth: AuthResponse
     if (api && typeof api.get === 'function') {
       const res = await api.get('/upload/imagekit/auth')
       auth = res.data
     } else {
-      // Use same base URL source as Axios instance
-      if (!API_BASE_URL) {
-        throw new Error('EXPO_PUBLIC_API_URL is not set')
-      }
-      const res = await axios.get(`${API_BASE_URL}/upload/imagekit/auth`)
-      auth = res.data
+      // Without an authenticated API client, we cannot call the protected auth endpoint
+      throw new Error('Missing authorized API client for ImageKit auth')
     }
 
     const formData = new FormData()

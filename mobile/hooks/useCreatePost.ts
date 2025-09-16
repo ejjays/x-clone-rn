@@ -37,7 +37,7 @@ export const useCreatePost = () => {
   
   // Posts: upload to ImageKit (keep chat on Cloudinary)
   const uploadMediaForPost = async (media: { uri: string; type: 'image' | 'video' }): Promise<string | null> => {
-    const url = await uploadMediaToImageKit(media)
+    const url = await uploadMediaToImageKit(media, api)
     if (!url) {
       Alert.alert('Upload Failed', 'Could not upload your media. Please try again.')
     }
