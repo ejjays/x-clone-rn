@@ -1,5 +1,5 @@
 import React, { useRef, useState, useMemo, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, Animated } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, Animated, ActivityIndicator } from "react-native";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import Video from "react-native-video";
 import { getPlayableVideoUrl } from "@/utils/media";
@@ -59,6 +59,10 @@ export default function VideoItem({
 	const lastTapRef = useRef<number>(0);
 
 	const heartScale = useRef(new Animated.Value(1)).current;
+	const [isLoaded, setIsLoaded] = useState(false);
+	const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
+	const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
+	const [containerWidth, setContainerWidth] = useState<number>(width);
 
 	useEffect(() => {
 		if (!isVisible && videoRef.current) {
@@ -127,18 +131,46 @@ export default function VideoItem({
 	return (
 		<View style={[styles.videoContainer, { width, height, backgroundColor: 'black' }]}> 
 			<View style={[styles.videoWrapper, { height: containerHeight }]}> 
-				<View style={StyleSheet.absoluteFillObject}>
+				<View
+					style={[StyleSheet.absoluteFillObject, { justifyContent: 'center', alignItems: 'center' }]}
+					onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+				>
 					{item.video && (
-						<Video
-							ref={(r) => (videoRef.current = r)}
-							source={{ uri: getPlayableVideoUrl(item.video) }}
-							style={StyleSheet.absoluteFillObject}
-							controls
-							resizeMode={dynamicResizeMode}
-							repeat
-							muted={isMuted}
-							paused={!(isVisible && isScreenFocused)}
-						/>
+						<>
+							{item.videoFit === 'original' && !isLoaded && (
+								<ActivityIndicator size="small" color="#fff" />
+							)}
+							<Video
+								ref={(r) => (videoRef.current = r)}
+								source={{ uri: getPlayableVideoUrl(item.video) }}
+								style={
+									item.videoFit === 'original'
+										? {
+											width: containerWidth,
+											aspectRatio: naturalWidth && naturalHeight ? naturalWidth / naturalHeight : 9 / 16,
+											opacity: isLoaded ? 1 : 0,
+										}
+										: StyleSheet.absoluteFillObject
+								}
+								controls
+								resizeMode={dynamicResizeMode}
+								repeat
+								muted={isMuted}
+								paused={!(isVisible && isScreenFocused)}
+								onLoad={(data: any) => {
+									try {
+										const ns = data?.naturalSize
+										if (ns?.width && ns?.height) {
+											setNaturalWidth(Number(ns.width))
+											setNaturalHeight(Number(ns.height))
+										}
+										setIsLoaded(true)
+									} catch {
+										setIsLoaded(true)
+									}
+								}}
+							/>
+						</>
 					)}
 				</View>
 
