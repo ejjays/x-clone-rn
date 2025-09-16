@@ -20,6 +20,7 @@ import PostReactionsPicker from "./PostReactionsPicker";
 import * as Haptics from "expo-haptics";
 import LikeIcon from "../assets/icons/LikeIcon";
 import { Video } from "expo-video";
+import { getPlayableVideoUrl } from "@/utils/media";
 import {
   reactionComponents,
   reactionTextColor,
@@ -418,7 +419,7 @@ const PostCard = ({
       )}
       {post.video && (videoHeight !== null || videoAspectRatio !== null) && (
         <Video
-          source={{ uri: post.video }}
+          source={{ uri: getPlayableVideoUrl(post.video) }}
           style={
             edgeToEdgeMedia
               ? {

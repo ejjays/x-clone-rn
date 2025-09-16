@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo, useEffect, useCallback } from "react"
 import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, Animated } from "react-native";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import Video from "react-native-video";
+import { getPlayableVideoUrl } from "@/utils/media";
 import * as Haptics from "expo-haptics";
 
 import { usePosts } from "@/hooks/usePosts";
@@ -134,7 +135,7 @@ export default function VideoItem({
 					{item.video && (
 						<Video
 							ref={(r) => (videoRef.current = r)}
-							source={{ uri: item.video }}
+							source={{ uri: getPlayableVideoUrl(item.video) }}
 							style={StyleSheet.absoluteFillObject}
 							controls
 							resizeMode={dynamicResizeMode}
