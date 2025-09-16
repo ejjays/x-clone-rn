@@ -1,4 +1,4 @@
-import React, { memo } from "react"
+import React, { memo, useState } from "react"
 import NoNotificationsFound from "@/components/NoNotificationsFound"
 import NotificationCard from "@/components/NotificationCard"
 import { useNotifications } from "@/hooks/useNotifications"
@@ -11,6 +11,7 @@ import { useTheme } from "@/context/ThemeContext"; // Import useTheme
 const NotificationsScreen = () => {
   const { notifications, isLoading, error, refetch, isRefetching, deleteNotification } = useNotifications()
   const { colors } = useTheme(); // Use useTheme hook
+  const [refreshing, setRefreshing] = useState(false);
 
   const insets = useSafeAreaInsets()
 
@@ -70,8 +71,16 @@ const NotificationsScreen = () => {
 
   const groupedNotifications = groupNotificationsByTime(notifications)
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    refetch().then(() => setRefreshing(false));
+  }, []);
+
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      <View className="px-4 pt-4">
+        <Text className="text-3xl font-bold mb-2" style={{ color: colors.text }}>Notifications</Text>
+      </View>
       {/* Content (header removed per requirement) */}
       <ScrollView
         className="flex-1" style={{ backgroundColor: colors.background }}
@@ -79,8 +88,8 @@ const NotificationsScreen = () => {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl 
-            refreshing={isRefetching} 
-            onRefresh={refetch} 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
             tintColor={colors.refreshControlColor} 
             colors={[colors.refreshControlColor]} 
             progressBackgroundColor={colors.refreshControlBackgroundColor} />
