@@ -8,18 +8,18 @@ export function useVideosStatusBar() {
 		useCallback(() => {
 			try {
 				RNStatusBar.setHidden(false);
-				RNStatusBar.setTranslucent(true);
-				RNStatusBar.setBackgroundColor('transparent');
 				if (Platform.OS === 'android') {
-					SystemUI.setBackgroundColorAsync('transparent');
+					RNStatusBar.setTranslucent(false);
+					RNStatusBar.setBackgroundColor('#000000');
+					SystemUI.setBackgroundColorAsync('#000000');
 				}
 			} catch {}
 			return () => {
 				try {
 					RNStatusBar.setHidden(false);
-					RNStatusBar.setTranslucent(false);
-					RNStatusBar.setBackgroundColor('#000000');
 					if (Platform.OS === 'android') {
+						RNStatusBar.setTranslucent(false);
+						RNStatusBar.setBackgroundColor('#000000');
 						SystemUI.setBackgroundColorAsync('#000000');
 					}
 				} catch {}
