@@ -205,6 +205,9 @@ export default function CustomChannelList({
       renderItem={renderChannelItem}
       keyboardShouldPersistTaps="handled"
       scrollEventThrottle={16}
+      contentInsetAdjustmentBehavior="never"
+      removeClippedSubviews
+      maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

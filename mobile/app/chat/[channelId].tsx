@@ -317,13 +317,13 @@ export default function ChatScreen() {
       {/* Render header immediately; it reads channelId and otherUser snapshot */}
       <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
 
-      <Animated.View className="flex-1" entering={FadeIn.duration(120)}>
+      <Animated.View style={{ flex: 1 }} entering={FadeIn.duration(120)}>
         {client && channel && (
           <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
             <Chat client={client}>
               <Channel channel={channel}>
                 <View style={{ flex: 1 }}>
-                  <MessageList />
+                  <MessageList contentInsetAdjustmentBehavior="never" />
                   <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
                 </View>
               </Channel>
