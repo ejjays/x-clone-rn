@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  StatusBar,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
@@ -131,12 +132,12 @@ export default function MessagesScreen() {
         NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
         NavigationBar.setButtonStyleAsync('light').catch(() => {});
         SystemUI.setBackgroundColorAsync('#000000');
-        RNStatusBar.setTranslucent(false);
       } catch {}
       return () => {
         try {
-          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          NavigationBar.setBackgroundColorAsync('transparent').catch(() => {});
+          NavigationBar.setButtonStyleAsync('dark').catch(() => {});
+          SystemUI.setBackgroundColorAsync('transparent');
         } catch {}
       };
     }, [])
@@ -150,7 +151,7 @@ export default function MessagesScreen() {
         backgroundColor: colors.chatBackground,
       }}
     >
-      {/* StatusBar is globally controlled in app/_layout for this route */}
+      <StatusBar barStyle={"light-content"} backgroundColor="#000000" translucent={false} />
 
       {/* Header */}
       <View

@@ -147,13 +147,7 @@ const InitialLayout = () => {
       <View
         style={{ height: 0 }}
       />
-      {/* Use native RN StatusBar semantics via system UI control; avoid expo-status-bar repaint */}
-      {/* The actual status bar color is controlled via SystemUI/NavigationBar in screens */}
-      {/* Keep a placeholder no-op here to avoid expo-status-bar override */}
-      <View />
-      <View>
-      </View>
-      {/* End placeholder */}
+      {/* StatusBar control is handled per-screen to avoid global overrides */}
       {/* <StatusBar
         style={"light"}
         backgroundColor={
