@@ -13,9 +13,9 @@ export const LightThemeColors = {
 };
 
 export const DarkThemeColors = {
-  background: "#000000",
-  surface: "#000000",
-  card: "#000000", // Card color for dark theme
+  background: "#242526",
+  surface: "#3a3b3c",
+  card: "#3a3b3c", // Card color for dark theme
   text: "#e4e6eb",
   textSecondary: "#b0b3b8",
   textMuted: "#8b8d91",

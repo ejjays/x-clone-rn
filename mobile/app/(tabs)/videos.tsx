@@ -45,13 +45,6 @@ export default function VideosScreen() {
   const navigation = useNavigation();
   const { width, height } = useWindowDimensions();
   const { colors, isDarkMode } = useTheme(); // Use useTheme hook
-  // Override theme colors locally to force pure black surfaces on Reels
-  const videosThemeColors = useMemo(() => ({
-    ...colors,
-    background: '#000000',
-    surface: '#000000',
-    card: '#000000',
-  }), [colors]);
 
   // Removed useVideosStatusBar to avoid overriding StatusBar with translucent/transparent
 
