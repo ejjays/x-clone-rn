@@ -18,7 +18,7 @@ import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
 import { useState, useEffect, useCallback } from "react";
 import LottieView from "lottie-react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/context/ThemeContext";
@@ -152,11 +152,10 @@ export default function MessagesScreen() {
   );
 
   return (
-    <View
+    <SafeAreaView
+      edges={["top", "bottom"]}
       style={{
         flex: 1,
-        position: "relative",
-        paddingTop: 0,
         backgroundColor: colors.chatBackground,
       }}
     >
@@ -165,7 +164,7 @@ export default function MessagesScreen() {
       {/* Header */}
       <View
         className="flex-row items-center justify-between px-4 py-2"
-        style={{ backgroundColor: colors.chatBackground, paddingTop: insets.top }}
+        style={{ backgroundColor: colors.chatBackground }}
       >
         <View className="flex-row items-center">
           <Text
@@ -287,6 +286,6 @@ export default function MessagesScreen() {
 
       {/* Messages Content (CustomChannelList) */}
       <View className="flex-1">{renderContent()}</View>
-    </View>
+    </SafeAreaView>
   );
 }
