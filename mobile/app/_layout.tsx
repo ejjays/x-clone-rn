@@ -152,8 +152,8 @@ const InitialLayout = () => {
             ? "#000000"
             : "transparent"
         }
-        // Keep non-translucent on these chat routes at all times to avoid layout jumps
-        translucent={false}
+        // Non-translucent on chat-related routes; translucent elsewhere
+        translucent={!(pathname?.endsWith("/videos") || pathname?.startsWith("/messages") || pathname?.startsWith("/chat") || pathname === "/new-message")}
       />
       <OfflineBanner queued={queued} />
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}

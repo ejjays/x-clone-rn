@@ -21,7 +21,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StorageKeys } from "@/utils/offline/storageKeys";
 import { offlineQueue } from "@/utils/offline/OfflineQueue";
@@ -271,7 +270,6 @@ export default function ChatScreen() {
         style={{ flex: 1, backgroundColor: colors.background }}
         edges={["top", "bottom"]}
       >
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1DA1F2" />
         </View>
@@ -312,7 +310,6 @@ export default function ChatScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       edges={["top", "bottom"]}
     >
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
       {/* Render header immediately; it reads channelId and otherUser snapshot */}
       <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />

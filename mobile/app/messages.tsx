@@ -15,6 +15,11 @@ import NoMessagesFound from "@/components/NoMessagesFound";
 import { useState, useEffect, useCallback } from "react";
 import LottieView from "lottie-react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import * as NavigationBar from "expo-navigation-bar";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
+import * as SystemUI from "expo-system-ui";
+import { StatusBar as RNStatusBar } from "react-native";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/context/ThemeContext";
@@ -121,7 +126,23 @@ export default function MessagesScreen() {
     );
   };
 
-  // StatusBar is controlled globally in app/_layout for this route; avoid local overrides
+  // Ensure Android NavigationBar is black while on messages
+  useFocusEffect(
+    useCallback(() => {
+      try {
+        NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+        NavigationBar.setButtonStyleAsync('light').catch(() => {});
+        SystemUI.setBackgroundColorAsync('#000000');
+        RNStatusBar.setTranslucent(false);
+      } catch {}
+      return () => {
+        try {
+          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+        } catch {}
+      };
+    }, [])
+  );
 
   return (
     <SafeAreaView
