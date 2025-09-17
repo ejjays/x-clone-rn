@@ -82,10 +82,7 @@ export default function VideoItem({
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(width);
-  const [iconVisible, setIconVisible] = useState(true);
-  const opacity = useRef(new Animated.Value(1)).current;
-  const pausedRef = useRef(true);
-  const [paused, setPaused] = useState(pausedRef.current);
+  
 
   useEffect(() => {
     if (!isVisible && videoRef.current) {
@@ -167,46 +164,7 @@ export default function VideoItem({
     postActionBottomSheetRef.current?.close();
   };
 
-  const togglePlayPause = () => {
-    pausedRef.current = !pausedRef.current;
-    const nextPausedState = !paused;
-    setPaused(nextPausedState);
-    setIconVisible(true);
-    opacity.setValue(1); // Reset opacity to 1
-     if (!nextPausedState) {
-    // If playing, start the fade-out timer
-    setTimeout(() => {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-    }, 2000);
-  }
-  };
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    if (!paused) {
-      timeoutId = setTimeout(() => {
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }).start(() => {
-          // setIconVisible(false);
-        });
-      }, 2000);
-    } else {
-      opacity.setValue(1);
-      setIconVisible(true);
-    }
-
-    return () => {
-      clearTimeout(timeoutId);
-      opacity.setValue(1);
-    };
-  }, [paused]);
+  
 
   return (
     <View
@@ -425,27 +383,7 @@ export default function VideoItem({
             )}
           </View>
         </View>
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: commentBarHeight + Math.max(0, insets.bottom),
-            justifyContent: "center",
-            alignItems: "center",
-            opacity: opacity,
-          }}
-        >
-          <TouchableOpacity onPress={togglePlayPause}>
-            <Ionicons
-              name={paused ? "play-circle-outline" : "pause-circle-outline"}
-              size={72}
-              color="white"
-              style={{ opacity: iconVisible ? 1 : 0 }}
-            />
-          </TouchableOpacity>
-        </Animated.View>
+        
       </View>
 
       <PostReactionsPicker
