@@ -160,17 +160,24 @@ export default function NewMessageScreen() {
   useFocusEffect(
     useCallback(() => {
       try {
-        NavigationBar.setBackgroundColorAsync('#000000');
-        NavigationBar.setButtonStyleAsync('light');
-        NavigationBar.setVisibilityAsync('visible');
+        NavigationBar.setBehaviorAsync('inset-swipe').catch(() => {});
+        NavigationBar.setVisibilityAsync('visible').catch(() => {});
+        NavigationBar.setButtonStyleAsync('light').catch(() => {});
+        NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
         SystemUI.setBackgroundColorAsync('#000000');
+        // Re-assert after a tick to override any system contrast adjustments
+        setTimeout(() => {
+          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+        }, 50);
       } catch (e) {
         console.log('navigation error', e)
       }
       return () => {
         try {
-          NavigationBar.setBackgroundColorAsync(colors.background);
-          NavigationBar.setButtonStyleAsync('light');
+          NavigationBar.setBehaviorAsync('inset-swipe').catch(() => {});
+          NavigationBar.setVisibilityAsync('visible').catch(() => {});
+          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          NavigationBar.setBackgroundColorAsync(colors.background).catch(() => {});
           SystemUI.setBackgroundColorAsync(colors.background);
         } catch {}
       };
@@ -191,7 +198,7 @@ export default function NewMessageScreen() {
           backgroundColor: colors.chatBackground,
         }}
       >
-        <TouchableOpacity onPressIn={() => router.back()} className="mr-4 py-4">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4 py-4">
           <Ionicons name="close" size={24} color={colors.icon} />
         </TouchableOpacity>
         <Text className="text-xl font-bold py-4" style={{ color: colors.text }}>
