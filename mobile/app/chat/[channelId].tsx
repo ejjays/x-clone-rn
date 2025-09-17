@@ -52,19 +52,19 @@ export default function ChatScreen() {
 
   const colors = {
     background: isDarkMode
-      ? DarkThemeColors.background
-      : LightThemeColors.background,
+      ? DarkThemeColors.chatBackground
+      : LightThemeColors.chatBackground,
     cardBackground: isDarkMode
-      ? DarkThemeColors.surface
-      : LightThemeColors.surface,
+      ? DarkThemeColors.chatBackground
+      : LightThemeColors.chatBackground,
     text: isDarkMode ? DarkThemeColors.text : LightThemeColors.text,
     grayText: isDarkMode
       ? DarkThemeColors.textSecondary
       : LightThemeColors.textSecondary,
     border: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
     inputBackground: isDarkMode
-      ? DarkThemeColors.surface
-      : LightThemeColors.surface,
+      ? DarkThemeColors.chatBackground
+      : LightThemeColors.chatBackground,
     inputBorder: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
     blue500: isDarkMode ? DarkThemeColors.blue : LightThemeColors.blue,
     gray200: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,

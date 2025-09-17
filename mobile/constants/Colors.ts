@@ -10,6 +10,7 @@ export const LightThemeColors = {
   icon: "#000000",
   refreshControlColor: "#1877F2", // Light theme pull-to-refresh color
   refreshControlBackgroundColor: "#f3f4f6", // Light theme pull-to-refresh background color (surface)
+  chatBackground: "#000000", // pure black for chat
 };
 
 export const DarkThemeColors = {
@@ -24,4 +25,5 @@ export const DarkThemeColors = {
   icon: "#e4e6eb",
   refreshControlColor: "#1877F2", // Dark theme pull-to-refresh color (same as light for consistency)
   refreshControlBackgroundColor: "#3a3b3c", // Dark theme pull-to-refresh background color (surface)
+  chatBackground: "#000000", // pure black for chat
 };

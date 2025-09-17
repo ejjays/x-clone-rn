@@ -14,8 +14,8 @@ export const createStreamChatTheme = (
       accent_blue: base.blue,
       accent_green: "#20BD5F",
       accent_red: "#FF3742",
-      bg_gradient_end: base.background,
-      bg_gradient_start: base.background,
+      bg_gradient_end: base.chatBackground ?? base.background,
+      bg_gradient_start: base.chatBackground ?? base.background,
       black: "#000000",
       blue_alice: base.blue,
       border: base.border,
@@ -30,7 +30,7 @@ export const createStreamChatTheme = (
       transparent: "transparent",
       white: base.card,
       white_smoke: base.surface,
-      white_snow: base.background,
+      white_snow: base.chatBackground ?? base.background,
     },
     messageInput: {
       container: {
@@ -85,7 +85,7 @@ export const createStreamChatTheme = (
     },
     messageList: {
       container: {
-        backgroundColor: base.background,
+        backgroundColor: base.chatBackground ?? base.background,
         flex: 1,
       },
     },
