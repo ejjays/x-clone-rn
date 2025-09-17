@@ -270,7 +270,7 @@ export default function ChatScreen() {
     }
   };
 
-  if (isConnecting || loading) {
+  if (isConnecting || (loading && !channel)) {
     return (
       <SafeAreaView
         className="flex-1"
@@ -319,6 +319,7 @@ export default function ChatScreen() {
     >
       <StatusBar style={isDarkMode ? "light" : "dark"} />
 
+      {/* Render header immediately; it reads channelId and otherUser snapshot */}
       <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
 
       <View className="flex-1">

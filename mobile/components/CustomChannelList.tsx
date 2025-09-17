@@ -2,7 +2,7 @@ import { useStreamChat } from "@/context/StreamChatContext"
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { formatDistanceToNow } from "date-fns";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -128,11 +128,31 @@ export default function CustomChannelList({
     }
   }, [processedChannels, searchQuery]);
 
+  const navigatingToRef = useRef<string | null>(null);
+  const handleOpenChannel = useCallback((channelId: string) => {
+    if (navigatingToRef.current === channelId) return;
+    navigatingToRef.current = channelId;
+    // Navigate
+    try {
+      router.push(`/chat/${channelId}`);
+    } finally {
+      // Release the guard shortly after to prevent multi-push
+      setTimeout(() => {
+        if (navigatingToRef.current === channelId) navigatingToRef.current = null;
+      }, 600);
+    }
+  }, []);
+
   const renderChannelItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       className="flex-row items-center p-4"
-      onPress={() => router.push(`/chat/${item.id}`)}
+      onPress={() => handleOpenChannel(item.id)}
+      onPressIn={() => {
+        // Prefetch the chat screen for snappier open
+        try { router.prefetch(`/chat/${item.id}`); } catch {}
+      }}
       delayPressIn={50}
+      activeOpacity={0.7}
     >
       <View className="relative mr-4">
         <Image
