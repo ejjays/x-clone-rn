@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
 import { StatusBar as RNStatusBar, StatusBar, Platform, View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, useWindowDimensions } from "react-native";
 import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
-import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI from "expo-system-ui";
 import * as NavigationBar from "expo-navigation-bar";
@@ -136,21 +136,21 @@ export default function VideosScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.centered}>
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#FFF" />
         <Text style={styles.infoText}>Loading videos...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.centered}>
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
         <Text style={styles.infoText}>Could not load videos.</Text>
         <TouchableOpacity onPress={refetch}>
           <Text style={[styles.infoText, { color: "#1877F2" }]}>Retry</Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     );
   }
 
