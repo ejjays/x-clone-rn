@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   FlatList,
   TextInput,
@@ -23,6 +22,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
 import { useFocusEffect } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NewMessageScreen() {
   const [users, setUsers] = useState<User[]>([]);
@@ -169,13 +169,12 @@ export default function NewMessageScreen() {
       }
       return () => {
         try {
-          // Revert to theme background when leaving; messages screen will override to black on focus
           NavigationBar.setBackgroundColorAsync(colors.background);
           NavigationBar.setButtonStyleAsync('light');
           SystemUI.setBackgroundColorAsync(colors.background);
         } catch {}
       };
-    }, [])
+    }, [colors.background])
   );
 
   return (
