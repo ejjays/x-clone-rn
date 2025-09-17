@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,9 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { User } from "@/types";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@clerk/clerk-expo";
+import * as NavigationBar from "expo-navigation-bar";
+import * as SystemUI from "expo-system-ui";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function NewMessageScreen() {
   const [users, setUsers] = useState<User[]>([]);
@@ -123,7 +126,7 @@ export default function NewMessageScreen() {
       className="flex-row items-center p-4"
       onPress={() => handleUserSelect(item)}
       disabled={creating || !isConnected}
-      style={{ backgroundColor: colors.background }} // Apply theme
+      style={{ backgroundColor: colors.chatBackground }} // Apply theme
     >
       {item.profilePicture ? (
         <Image
@@ -154,17 +157,37 @@ export default function NewMessageScreen() {
     </TouchableOpacity>
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      try {
+        NavigationBar.setBackgroundColorAsync('#000000');
+        NavigationBar.setButtonStyleAsync('light');
+        SystemUI.setBackgroundColorAsync('#000000');
+      } catch (e) {
+        console.log('navigation error', e)
+      }
+      return () => {
+        try {
+          NavigationBar.setBackgroundColorAsync('transparent');
+          NavigationBar.setButtonStyleAsync('dark');
+          SystemUI.setBackgroundColorAsync('transparent');
+        } catch {}
+      };
+    }, [])
+  );
+
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: colors.background }}
+      style={{ backgroundColor: colors.chatBackground }}
     >
+      <StatusBar translucent={false} backgroundColor={'#000000'} barStyle={"light-content"} />
+
       {/* Header */}
       <View
         className="flex-row items-center px-4"
         style={{
-          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-          backgroundColor: colors.background,
+          backgroundColor: colors.chatBackground,
         }}
       >
         <TouchableOpacity onPressIn={() => router.back()} className="mr-4 py-4">
@@ -178,7 +201,7 @@ export default function NewMessageScreen() {
       {/* Search */}
       <View
         className="px-4 py-4"
-        style={{ backgroundColor: colors.background }}
+        style={{ backgroundColor: colors.chatBackground }}
       >
         <View
           className="flex-row items-center rounded-full px-4"
@@ -219,7 +242,7 @@ export default function NewMessageScreen() {
       {loading ? (
         <View
           className="flex-1 items-center justify-center"
-          style={{ backgroundColor: colors.background }}
+          style={{ backgroundColor: colors.chatBackground }}
         >
           <ActivityIndicator size="large" color="#3B82F6" />
           <Text
@@ -232,7 +255,7 @@ export default function NewMessageScreen() {
       ) : filteredUsers.length === 0 ? (
         <View
           className="flex-1 items-center justify-center"
-          style={{ backgroundColor: colors.background }}
+          style={{ backgroundColor: colors.chatBackground }}
         >
           <Ionicons name="people-outline" size={48} color="#ccc" />
           <Text
