@@ -60,7 +60,7 @@ export default function MessagesScreen() {
       return (
         <View
           className="flex-1 items-center justify-center"
-          style={{ backgroundColor: colors.background }}
+          style={{ backgroundColor: colors.chatBackground }}
         >
           <LottieView
             source={require("@/assets/animations/loading-loader.json")}
@@ -79,7 +79,7 @@ export default function MessagesScreen() {
       return (
         <View
           className="flex-1 items-center justify-center px-8"
-          style={{ backgroundColor: colors.background }}
+          style={{ backgroundColor: colors.chatBackground }}
         >
           <Ionicons
             name="cloud-offline-outline"
@@ -128,7 +128,7 @@ export default function MessagesScreen() {
         flex: 1,
         position: "relative",
         paddingTop: insets.top,
-        backgroundColor: colors.background,
+        backgroundColor: colors.chatBackground,
       }}
     >
       <StatusBar style={isDarkMode ? "light" : "dark"} />
@@ -136,7 +136,7 @@ export default function MessagesScreen() {
       {/* Header */}
       <View
         className="flex-row items-center justify-between px-4 py-2"
-        style={{ backgroundColor: colors.background }}
+        style={{ backgroundColor: colors.chatBackground }}
       >
         <View className="flex-row items-center">
           <Text
@@ -168,7 +168,7 @@ export default function MessagesScreen() {
       <View className="px-4 py-1">
         <View
           className="flex-row items-center rounded-full px-4"
-          style={{ backgroundColor: colors.surface }}
+          style={{ backgroundColor: colors.chatBackground, borderWidth: 1, borderColor: colors.border }}
         >
           <Ionicons name="search" size={25} color={colors.textMuted} />
           <TextInput
@@ -232,7 +232,7 @@ export default function MessagesScreen() {
                     className="w-20 h-20 rounded-full border-2 items-center justify-center"
                     style={{
                       borderColor: colors.blue,
-                      backgroundColor: colors.surface,
+                      backgroundColor: colors.chatBackground,
                     }}
                   >
                     <Text
