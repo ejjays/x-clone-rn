@@ -17,7 +17,6 @@ import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { StreamVideoProvider } from "@/context/StreamVideoContext";
 import { useEffect } from "react";
 import { persistAuthState } from "@/utils/offline/network";
-import { StatusBar } from "expo-status-bar";
 import { queryClient } from "@/utils/offline/network";
 import { setupReactQueryPersistence, restoreReactQueryPersistence } from "@/utils/offline/persist";
 import { useEffect as useReactEffect } from "react";
@@ -145,16 +144,25 @@ const InitialLayout = () => {
   // Don't block the UI on fonts; render immediately and let fonts load in the background
   return (
     <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
-      <StatusBar
+      <View
+        style={{ height: 0 }}
+      />
+      {/* Use native RN StatusBar semantics via system UI control; avoid expo-status-bar repaint */}
+      {/* The actual status bar color is controlled via SystemUI/NavigationBar in screens */}
+      {/* Keep a placeholder no-op here to avoid expo-status-bar override */}
+      <View />
+      <View>
+      </View>
+      {/* End placeholder */}
+      {/* <StatusBar
         style={"light"}
         backgroundColor={
           pathname?.endsWith("/videos") || pathname?.startsWith("/messages") || pathname?.startsWith("/chat") || pathname === "/new-message"
             ? "#000000"
             : "transparent"
         }
-        // Non-translucent on chat-related routes; translucent elsewhere
-        translucent={!(pathname?.endsWith("/videos") || pathname?.startsWith("/messages") || pathname?.startsWith("/chat") || pathname === "/new-message")}
-      />
+        translucent={false}
+      /> */}
       <OfflineBanner queued={queued} />
       {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
       {client ? (

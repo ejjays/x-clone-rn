@@ -18,7 +18,6 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import * as NavigationBar from "expo-navigation-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import * as SystemUI from "expo-system-ui";
-import { StatusBar as RNStatusBar } from "react-native";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/context/ThemeContext";
