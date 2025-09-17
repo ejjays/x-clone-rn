@@ -16,7 +16,7 @@ import {
   ActivityIndicator,
   Pressable,
 } from "react-native";
-import { Ionicons, Entypo, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, Entypo, FontAwesome5 } from "@expo/vector-icons";
 import Video from "react-native-video";
 import { getPlayableVideoUrl } from "@/utils/media";
 import * as Haptics from "expo-haptics";
@@ -83,7 +83,6 @@ export default function VideoItem({
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(width);
   const indicatorOpacity = useRef(new Animated.Value(1)).current;
-  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
   
 
   useEffect(() => {
@@ -227,22 +226,8 @@ export default function VideoItem({
                 onPress={() => {
                   setIsUserPaused((prev) => {
                     const next = !prev;
-                    // Show indicator immediately on toggle
+                    // Always show play icon immediately when pausing
                     indicatorOpacity.setValue(1);
-                    // If resuming playback, auto-fade the pause icon
-                    if (!next) {
-                      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
-                      fadeTimerRef.current = setTimeout(() => {
-                        Animated.timing(indicatorOpacity, {
-                          toValue: 0,
-                          duration: 400,
-                          useNativeDriver: true,
-                        }).start();
-                      }, 1200);
-                    } else {
-                      // While paused, keep play icon visible (no auto-hide)
-                      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
-                    }
                     return next;
                   });
                 }}
@@ -263,13 +248,7 @@ export default function VideoItem({
               >
                 {isUserPaused ? (
                   <FontAwesome5 name="play" size={52} color="#FFFFFF" />
-                ) : (
-                  <MaterialIcons
-                    name="pause"
-                    size={52}
-                    color="#FFFFFF"
-                  />
-                )}
+                ) : null}
               </Animated.View>
             </>
           )}
