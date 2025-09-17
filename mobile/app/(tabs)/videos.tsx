@@ -4,6 +4,7 @@ import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/n
 import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI from "expo-system-ui";
+import * as NavigationBar from "expo-navigation-bar";
 import BottomSheet from "@gorhom/bottom-sheet";
 
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
@@ -21,7 +22,7 @@ import { usePosts } from "@/hooks/usePosts";
 
 /**
  * Safely attempt to read bottom tab bar height.
- * Returns 0 if this screen isn\'t inside a BottomTabNavigator.
+ * Returns 0 if this screen isn't inside a BottomTabNavigator.
  */
 function useOptionalTabBarHeight() {
   try {
@@ -88,12 +89,15 @@ export default function VideosScreen() {
   const [ready, setReady] = useState(false);
   useFocusEffect(
     useCallback(() => {
-      // Make screen ready immediately; avoid awaited NavigationBar ops to keep tab nav instant
+      // Make screen ready immediately
       setReady(true);
       try {
         RNStatusBar.setHidden(false);
         if (Platform.OS === 'android') {
-          SystemUI.setBackgroundColorAsync('transparent');
+          SystemUI.setBackgroundColorAsync('#000000');
+          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          NavigationBar.setVisibilityAsync('visible').catch(() => {});
         }
       } catch {}
       return () => {
@@ -101,7 +105,10 @@ export default function VideosScreen() {
         try {
           RNStatusBar.setHidden(false);
           if (Platform.OS === 'android') {
-            SystemUI.setBackgroundColorAsync('#000000');
+            // Revert to transparent when leaving
+            SystemUI.setBackgroundColorAsync('transparent');
+            NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+            NavigationBar.setButtonStyleAsync('light').catch(() => {});
           }
         } catch {}
       };
@@ -173,7 +180,7 @@ export default function VideosScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'black' }}>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
+      <StatusBar style="light" backgroundColor="#000000" />
 
       <View
         style={[
