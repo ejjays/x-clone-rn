@@ -46,7 +46,7 @@ export default function VideosScreen() {
   const { width, height } = useWindowDimensions();
   const { colors, isDarkMode } = useTheme(); // Use useTheme hook
 
-  useVideosStatusBar();
+  // Removed useVideosStatusBar to avoid overriding StatusBar with translucent/transparent
 
   const tabBarHeight = useOptionalTabBarHeight();
   // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
