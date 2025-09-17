@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export const videosScreenStyles = StyleSheet.create({
 	centered: {
 		flex: 1,
-		backgroundColor: "black",
+		backgroundColor: "#000000",
 		justifyContent: "center",
 		alignItems: "center",
 	},
