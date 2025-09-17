@@ -8,6 +8,9 @@ import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanima
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { useFocusEffect } from "@react-navigation/native";
+import * as NavigationBar from "expo-navigation-bar";
+import * as SystemUI from "expo-system-ui";
 import { TabsProvider } from "@/context/TabsContext";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -39,6 +42,20 @@ const TabsInner = () => {
     headerHeight.value = pathname === "/" ? HEADER_HEIGHT : 0;
     tabBarHeight.value = TAB_BAR_HEIGHT;
   }, [pathname]);
+
+  // Ensure Android navigation bar matches tab background when tabs are focused
+  useFocusEffect(
+    useCallback(() => {
+      try {
+        if (Platform.OS === 'android') {
+          NavigationBar.setBackgroundColorAsync(colors.background).catch(() => {});
+          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          SystemUI.setBackgroundColorAsync(colors.background);
+        }
+      } catch {}
+      return () => {};
+    }, [colors.background])
+  );
 
   const staticHeaderStyle = {
     height: isHomeScreen ? HEADER_HEIGHT : 0,
