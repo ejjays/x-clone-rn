@@ -14,8 +14,9 @@ import {
   Platform,
   Animated,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
-import { Ionicons, Entypo } from "@expo/vector-icons";
+import { Ionicons, Entypo, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import Video from "react-native-video";
 import { getPlayableVideoUrl } from "@/utils/media";
 import * as Haptics from "expo-haptics";
@@ -73,6 +74,7 @@ export default function VideoItem({
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<any>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isUserPaused, setIsUserPaused] = useState(false);
   const lastTapRef = useRef<number>(0);
 
   const heartScale = useRef(new Animated.Value(1)).current;
@@ -245,7 +247,7 @@ export default function VideoItem({
                 resizeMode={dynamicResizeMode}
                 repeat
                 muted={isMuted}
-                paused={paused || !(isVisible && isScreenFocused)}
+                paused={!isVisible || !isScreenFocused || isUserPaused}
                 onLoad={(data: any) => {
                   try {
                     const ns = data?.naturalSize;
@@ -259,6 +261,34 @@ export default function VideoItem({
                   }
                 }}
               />
+              {/* Tap anywhere on the video to toggle play/pause */}
+              <Pressable
+                style={StyleSheet.absoluteFillObject}
+                onPress={() => setIsUserPaused((p) => !p)}
+              />
+              {/* Center indicator icon */}
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                {isUserPaused ? (
+                  <FontAwesome5 name="play" size={52} color="#FFFFFFCC" />
+                ) : (
+                  <MaterialIcons
+                    name="motion-photos-paused"
+                    size={56}
+                    color="#FFFFFF80"
+                  />
+                )}
+              </View>
             </>
           )}
         </View>
