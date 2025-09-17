@@ -7,8 +7,11 @@ import {
   Platform,
   ScrollView,
   Image,
-  StatusBar,
+  StatusBar as RNStatusBar,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import * as SystemUI from "expo-system-ui";
+import * as NavigationBar from "expo-navigation-bar";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
@@ -122,6 +125,32 @@ export default function MessagesScreen() {
     );
   };
 
+  // Force black status/navigation bars when focused
+  useFocusEffect(
+    useCallback(() => {
+      try {
+        RNStatusBar.setHidden(false);
+        if (Platform.OS === 'android') {
+          RNStatusBar.setTranslucent(false);
+          RNStatusBar.setBackgroundColor('#000000', true);
+          RNStatusBar.setBarStyle('light-content');
+          SystemUI.setBackgroundColorAsync('#000000');
+          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          NavigationBar.setVisibilityAsync('visible').catch(() => {});
+        }
+      } catch {}
+      return () => {
+        try {
+          RNStatusBar.setHidden(false);
+          if (Platform.OS === 'android') {
+            SystemUI.setBackgroundColorAsync('transparent');
+          }
+        } catch {}
+      };
+    }, [])
+  );
+
   return (
     <View
       style={{
@@ -131,7 +160,7 @@ export default function MessagesScreen() {
         backgroundColor: colors.chatBackground,
       }}
     >
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
+      <RNStatusBar barStyle="light-content" backgroundColor="#000000" />
 
       {/* Header */}
       <View
