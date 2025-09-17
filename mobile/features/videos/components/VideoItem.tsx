@@ -238,12 +238,12 @@ export default function VideoItem({
                 }}
               >
                 {isUserPaused ? (
-                  <FontAwesome5 name="play" size={52} color="#FFFFFFCC" />
+                  <FontAwesome5 name="play" size={52} color="#FFFFFF" />
                 ) : (
                   <MaterialIcons
-                    name="motion-photos-paused"
-                    size={56}
-                    color="#FFFFFF80"
+                    name="pause"
+                    size={52}
+                    color="#FFFFFF"
                   />
                 )}
               </View>
