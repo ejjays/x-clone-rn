@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
-import { StatusBar as RNStatusBar, Platform, View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, useWindowDimensions } from "react-native";
+import { StatusBar as RNStatusBar, StatusBar, Platform, View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, useWindowDimensions } from "react-native";
 import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,7 +10,7 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
 import { VideoCommentBar, COMMENT_BAR_HEIGHT } from "@/components/VideoCommentBar";
 import type { Post } from "@/types";
-import { StatusBar } from "expo-status-bar";
+// Remove expo-status-bar to use native StatusBar for precise Android control
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useTheme } from "@/context/ThemeContext";
 import VideoItem from "@/features/videos/components/VideoItem";
@@ -93,6 +93,10 @@ export default function VideosScreen() {
       setReady(true);
       try {
         RNStatusBar.setHidden(false);
+        if (Platform.OS === 'android') {
+          RNStatusBar.setBackgroundColor('#000000', true);
+          RNStatusBar.setBarStyle('light-content');
+        }
         if (Platform.OS === 'android') {
           SystemUI.setBackgroundColorAsync('#000000');
           NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
@@ -180,7 +184,7 @@ export default function VideosScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'black' }}>
-      <StatusBar style="light" backgroundColor="#000000" />
+      <StatusBar barStyle={Platform.OS === 'android' ? 'light-content' : 'light-content'} backgroundColor="#000000" animated />
 
       <View
         style={[
