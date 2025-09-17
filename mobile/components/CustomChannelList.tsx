@@ -131,7 +131,8 @@ export default function CustomChannelList({
   const renderChannelItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       className="flex-row items-center p-4"
-      onPressIn={() => router.push(`/chat/${item.id}`)}
+      onPress={() => router.push(`/chat/${item.id}`)}
+      delayPressIn={50}
     >
       <View className="relative mr-4">
         <Image
@@ -182,6 +183,8 @@ export default function CustomChannelList({
       data={filteredChannels}
       keyExtractor={(item) => item.id}
       renderItem={renderChannelItem}
+      keyboardShouldPersistTaps="handled"
+      scrollEventThrottle={16}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
