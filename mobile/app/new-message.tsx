@@ -21,7 +21,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@clerk/clerk-expo";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NewMessageScreen() {
@@ -35,6 +35,7 @@ export default function NewMessageScreen() {
   const { currentUser } = useCurrentUser();
   const { colors } = useTheme();
   const { isSignedIn } = useAuth();
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (isSignedIn) fetchUsers();
@@ -183,6 +184,22 @@ export default function NewMessageScreen() {
       };
     }, [colors.background])
   );
+
+  // Force nav bar black at the start of the transition to this screen to avoid flicker
+  useEffect(() => {
+    const onTransitionStart = () => {
+      try {
+        NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+        NavigationBar.setButtonStyleAsync('light').catch(() => {});
+        NavigationBar.setVisibilityAsync('visible').catch(() => {});
+        SystemUI.setBackgroundColorAsync('#000000');
+      } catch {}
+    };
+    const unsubStart = navigation.addListener('transitionStart', onTransitionStart);
+    return () => {
+      try { unsubStart && unsubStart(); } catch {}
+    };
+  }, [navigation]);
 
   return (
     <SafeAreaView
