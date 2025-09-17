@@ -82,6 +82,8 @@ export default function VideoItem({
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(width);
+  const indicatorOpacity = useRef(new Animated.Value(1)).current;
+  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
   
 
   useEffect(() => {
@@ -222,10 +224,31 @@ export default function VideoItem({
               {/* Tap anywhere on the video to toggle play/pause */}
               <Pressable
                 style={StyleSheet.absoluteFillObject}
-                onPress={() => setIsUserPaused((p) => !p)}
+                onPress={() => {
+                  setIsUserPaused((prev) => {
+                    const next = !prev;
+                    // Show indicator immediately on toggle
+                    indicatorOpacity.setValue(1);
+                    // If resuming playback, auto-fade the pause icon
+                    if (!next) {
+                      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+                      fadeTimerRef.current = setTimeout(() => {
+                        Animated.timing(indicatorOpacity, {
+                          toValue: 0,
+                          duration: 400,
+                          useNativeDriver: true,
+                        }).start();
+                      }, 1200);
+                    } else {
+                      // While paused, keep play icon visible (no auto-hide)
+                      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+                    }
+                    return next;
+                  });
+                }}
               />
               {/* Center indicator icon */}
-              <View
+              <Animated.View
                 pointerEvents="none"
                 style={{
                   position: 'absolute',
@@ -235,6 +258,7 @@ export default function VideoItem({
                   bottom: 0,
                   justifyContent: 'center',
                   alignItems: 'center',
+                  opacity: indicatorOpacity,
                 }}
               >
                 {isUserPaused ? (
@@ -246,7 +270,7 @@ export default function VideoItem({
                     color="#FFFFFF"
                   />
                 )}
-              </View>
+              </Animated.View>
             </>
           )}
         </View>
