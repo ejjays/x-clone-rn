@@ -207,7 +207,7 @@ export default function CustomChannelList({
       scrollEventThrottle={16}
       contentInsetAdjustmentBehavior="never"
       removeClippedSubviews
-      maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+      maintainVisibleContentPosition={{ minIndexForVisible: 1 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

@@ -7,11 +7,7 @@ import {
   Platform,
   ScrollView,
   Image,
-  StatusBar as RNStatusBar,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import * as SystemUI from "expo-system-ui";
-import * as NavigationBar from "expo-navigation-bar";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
@@ -125,46 +121,7 @@ export default function MessagesScreen() {
     );
   };
 
-  // Force black status/navigation bars when focused
-  useFocusEffect(
-    useCallback(() => {
-      try {
-        RNStatusBar.setHidden(false);
-        if (Platform.OS === 'android') {
-          RNStatusBar.setTranslucent(false);
-          RNStatusBar.setBackgroundColor('#000000', true);
-          RNStatusBar.setBarStyle('light-content');
-          SystemUI.setBackgroundColorAsync('#000000');
-          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-          NavigationBar.setButtonStyleAsync('light').catch(() => {});
-          NavigationBar.setVisibilityAsync('visible').catch(() => {});
-        }
-      } catch {}
-      // Small debounce to ensure any pending system UI transitions complete
-      // and layout remains stable after navigating back
-      setTimeout(() => {
-        try {
-          if (Platform.OS === 'android') {
-            RNStatusBar.setTranslucent(false);
-            RNStatusBar.setBackgroundColor('#000000', true);
-            SystemUI.setBackgroundColorAsync('#000000');
-          }
-        } catch {}
-      }, 50);
-      return () => {
-        try {
-          RNStatusBar.setHidden(false);
-          if (Platform.OS === 'android') {
-            // Keep black to prevent UI flash when navigating away
-            RNStatusBar.setTranslucent(false);
-            RNStatusBar.setBackgroundColor('#000000', true);
-            RNStatusBar.setBarStyle('light-content');
-            SystemUI.setBackgroundColorAsync('#000000');
-          }
-        } catch {}
-      };
-    }, [])
-  );
+  // StatusBar is controlled globally in app/_layout for this route; avoid local overrides
 
   return (
     <SafeAreaView
