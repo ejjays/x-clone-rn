@@ -131,7 +131,7 @@ export default function MessagesScreen() {
         backgroundColor: colors.chatBackground,
       }}
     >
-      <RNStatusBar barStyle="light-content" backgroundColor="#000000" translucent={false} />
+      {/* StatusBar is globally controlled in app/_layout for this route */}
 
       {/* Header */}
       <View
