@@ -134,7 +134,7 @@ export default function CustomChannelList({
     navigatingToRef.current = channelId;
     // Navigate
     try {
-      router.push(`/chat/${channelId}`);
+      router.replace(`/chat/${channelId}`);
     } finally {
       // Release the guard shortly after to prevent multi-push
       setTimeout(() => {

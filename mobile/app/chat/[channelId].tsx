@@ -74,7 +74,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [otherUser, setOtherUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [quotedMessage, setQuotedMessage] = useState<any | null>(null);
@@ -114,11 +114,9 @@ export default function ChatScreen() {
 
         if (ch) {
           setChannel(ch);
-          setLoading(false);
           // Ensure it's watched in background without blocking UI
           ch.watch().catch(() => {});
         } else {
-          setLoading(true);
           ch = client.channel("messaging", channelId);
           await ch.watch();
           setChannel(ch);
@@ -189,11 +187,7 @@ export default function ChatScreen() {
         ch.on("reaction.updated", handleEvent);
         ch.on("reaction.deleted", handleEvent);
 
-        if (loading) {
-          setTimeout(() => {
-            setLoading(false);
-          }, 300);
-        }
+        setLoading(false);
 
         return () => {
           ch.off("message.new", handleEvent);

@@ -177,7 +177,7 @@ const InitialLayout = () => {
             <Stack.Screen name="messages" options={{ animation: "fade" }} />
             <Stack.Screen
               name="chat/[channelId]"
-              options={{ animation: "slide_from_right" }}
+              options={{ animation: "none" }}
             />
             <Stack.Screen
               name="new-message"
