@@ -45,7 +45,7 @@ export default function ChatScreen() {
     typeof params?.channelId === "string"
       ? (params.channelId as string)
       : undefined;
-  const { client, isConnected, isConnecting } = useStreamChat();
+  const { client, isConnected, isConnecting, channels: cachedChannels } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
   const { isDarkMode } = useTheme();
@@ -106,10 +106,23 @@ export default function ChatScreen() {
 
     const initializeChannel = async () => {
       try {
-        setLoading(true);
-        const ch = client.channel("messaging", channelId);
-        await ch.watch();
-        setChannel(ch);
+        let ch: any = null;
+        // Prefer existing channel from context cache for instant render
+        try {
+          ch = (cachedChannels || []).find((c: any) => c?.id === channelId) || null;
+        } catch {}
+
+        if (ch) {
+          setChannel(ch);
+          setLoading(false);
+          // Ensure it's watched in background without blocking UI
+          ch.watch().catch(() => {});
+        } else {
+          setLoading(true);
+          ch = client.channel("messaging", channelId);
+          await ch.watch();
+          setChannel(ch);
+        }
 
         const membersArray = Array.isArray(ch.state.members)
           ? ch.state.members
@@ -176,9 +189,11 @@ export default function ChatScreen() {
         ch.on("reaction.updated", handleEvent);
         ch.on("reaction.deleted", handleEvent);
 
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
+        if (loading) {
+          setTimeout(() => {
+            setLoading(false);
+          }, 300);
+        }
 
         return () => {
           ch.off("message.new", handleEvent);
