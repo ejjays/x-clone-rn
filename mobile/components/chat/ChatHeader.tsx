@@ -12,7 +12,7 @@ interface ChatHeaderProps {
 export default function ChatHeader({ colors, otherUser, channelId }: ChatHeaderProps) {
   return (
     <View className="flex-row items-center p-4 border-b bg-white" style={{ borderBottomColor: colors.border, backgroundColor: colors.background }}>
-      <TouchableOpacity onPressIn={() => router.back()} className="mr-3">
+      <TouchableOpacity onPress={() => router.back()} className="mr-3">
         <Ionicons name="arrow-back" size={24} color={colors.grayText} />
       </TouchableOpacity>
       {otherUser?.image && (

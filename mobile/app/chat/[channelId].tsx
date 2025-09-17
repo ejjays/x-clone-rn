@@ -36,6 +36,7 @@ import { Chat, Channel, MessageList, MessageInput, OverlayProvider } from "strea
 // import KeyboardAvoiderView from "@/components/KeyboardAvoiderView";
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { uploadMediaToCloudinary } from "@/utils/cloudinary";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
 
@@ -316,7 +317,7 @@ export default function ChatScreen() {
       {/* Render header immediately; it reads channelId and otherUser snapshot */}
       <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
 
-      <View className="flex-1">
+      <Animated.View className="flex-1" entering={FadeIn.duration(120)}>
         {client && channel && (
           <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
             <Chat client={client}>
@@ -329,7 +330,7 @@ export default function ChatScreen() {
             </Chat>
           </OverlayProvider>
         )}
-      </View>
+      </Animated.View>
 
       <ReactionPickerModal
         visible={!!selectedMessage}
