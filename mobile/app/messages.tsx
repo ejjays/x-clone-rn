@@ -156,16 +156,16 @@ export default function MessagesScreen() {
       style={{
         flex: 1,
         position: "relative",
-        paddingTop: insets.top,
+        paddingTop: 0,
         backgroundColor: colors.chatBackground,
       }}
     >
-      <RNStatusBar barStyle="light-content" backgroundColor="#000000" />
+      <RNStatusBar barStyle="light-content" backgroundColor="#000000" translucent={false} />
 
       {/* Header */}
       <View
         className="flex-row items-center justify-between px-4 py-2"
-        style={{ backgroundColor: colors.chatBackground }}
+        style={{ backgroundColor: colors.chatBackground, paddingTop: insets.top }}
       >
         <View className="flex-row items-center">
           <Text

@@ -218,7 +218,7 @@ export default function CustomChannelList({
         />
       }
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ flexGrow: 1 }}
+      contentContainerStyle={{ flexGrow: 1, paddingTop: 0 }}
       ListEmptyComponent={
         <View className="flex-1 items-center justify-center">
           <Text style={{ color: colors.textMuted }}>No conversations yet.</Text>

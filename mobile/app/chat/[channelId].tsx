@@ -323,7 +323,7 @@ export default function ChatScreen() {
             <Chat client={client}>
               <Channel channel={channel}>
                 <View style={{ flex: 1 }}>
-                  <MessageList contentInsetAdjustmentBehavior="never" />
+                  <MessageList contentInsetAdjustmentBehavior="never" additionalFlatListProps={{ contentContainerStyle: { paddingTop: 0 } }} />
                   <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
                 </View>
               </Channel>
