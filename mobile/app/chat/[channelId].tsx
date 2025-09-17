@@ -268,8 +268,8 @@ export default function ChatScreen() {
   if (isConnecting || (loading && !channel)) {
     return (
       <SafeAreaView
-        className="flex-1"
-        style={{ backgroundColor: colors.background }}
+        style={{ flex: 1, backgroundColor: colors.background }}
+        edges={["top", "bottom"]}
       >
         <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View className="flex-1 items-center justify-center">

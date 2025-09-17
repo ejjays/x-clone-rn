@@ -144,7 +144,11 @@ export default function MessagesScreen() {
         try {
           RNStatusBar.setHidden(false);
           if (Platform.OS === 'android') {
-            SystemUI.setBackgroundColorAsync('transparent');
+            // Keep black to prevent UI flash when navigating away
+            RNStatusBar.setTranslucent(false);
+            RNStatusBar.setBackgroundColor('#000000', true);
+            RNStatusBar.setBarStyle('light-content');
+            SystemUI.setBackgroundColorAsync('#000000');
           }
         } catch {}
       };
