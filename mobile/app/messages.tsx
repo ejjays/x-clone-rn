@@ -17,7 +17,6 @@ import LottieView from "lottie-react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import * as NavigationBar from "expo-navigation-bar";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
 import * as SystemUI from "expo-system-ui";
 import { StatusBar as RNStatusBar } from "react-native";
 import { useAllUsers } from "@/hooks/useAllUsers";
