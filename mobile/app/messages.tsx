@@ -140,6 +140,17 @@ export default function MessagesScreen() {
           NavigationBar.setVisibilityAsync('visible').catch(() => {});
         }
       } catch {}
+      // Small debounce to ensure any pending system UI transitions complete
+      // and layout remains stable after navigating back
+      setTimeout(() => {
+        try {
+          if (Platform.OS === 'android') {
+            RNStatusBar.setTranslucent(false);
+            RNStatusBar.setBackgroundColor('#000000', true);
+            SystemUI.setBackgroundColorAsync('#000000');
+          }
+        } catch {}
+      }, 50);
       return () => {
         try {
           RNStatusBar.setHidden(false);
