@@ -162,15 +162,17 @@ export default function NewMessageScreen() {
       try {
         NavigationBar.setBackgroundColorAsync('#000000');
         NavigationBar.setButtonStyleAsync('light');
+        NavigationBar.setVisibilityAsync('visible');
         SystemUI.setBackgroundColorAsync('#000000');
       } catch (e) {
         console.log('navigation error', e)
       }
       return () => {
         try {
-          NavigationBar.setBackgroundColorAsync('transparent');
-          NavigationBar.setButtonStyleAsync('dark');
-          SystemUI.setBackgroundColorAsync('transparent');
+          // Revert to theme background when leaving; messages screen will override to black on focus
+          NavigationBar.setBackgroundColorAsync(colors.background);
+          NavigationBar.setButtonStyleAsync('light');
+          SystemUI.setBackgroundColorAsync(colors.background);
         } catch {}
       };
     }, [])
