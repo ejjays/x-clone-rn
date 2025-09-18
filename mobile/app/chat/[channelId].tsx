@@ -368,37 +368,62 @@ export default function ChatScreen() {
       <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
 
       <Animated.View style={{ flex: 1 }} entering={FadeIn.duration(120)}>
-        {client && channel && (
-          <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
-            <Chat client={client}>
-              <Channel channel={channel}>
-                <View style={{ flex: 1 }}>
-                  <MessageList
-                    contentInsetAdjustmentBehavior="never"
-                    additionalFlatListProps={{
-                      contentContainerStyle: { paddingTop: 0 },
-                      onEndReached: async () => {
-                        try {
-                          const msgs: any[] = (channel?.state?.messages || []) as any[];
-                          const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
-                          if (!oldest || !(channel as any)?.query) return;
-                          const res = await (channel as any).query({
-                            messages: { limit: 30, id_lt: oldest.id },
-                          });
-                          if (res?.messages?.length) {
-                            (channel as any).state?.addMessagesSorted?.(res.messages);
-                          }
-                        } catch {}
-                      },
-                      onEndReachedThreshold: 0.1,
-                    }}
-                  />
-                  <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
-                </View>
-              </Channel>
-            </Chat>
-          </OverlayProvider>
-        )}
+        {(() => {
+          const channelHasMessages = Boolean((channel as any)?.state?.messages?.length);
+          const hasCached = Array.isArray(messages) && messages.length > 0;
+          const showFallback = hasCached && !channelHasMessages;
+          if (showFallback) {
+            return (
+              <View style={{ flex: 1 }}>
+                <FlatList
+                  data={messages}
+                  keyExtractor={(m: any) => String(m.id)}
+                  renderItem={({ item }: any) => (
+                    <View style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
+                      <Text style={{ color: colors.text }}>{item.text}</Text>
+                    </View>
+                  )}
+                  inverted
+                  contentContainerStyle={{ paddingTop: 0 }}
+                />
+              </View>
+            );
+          }
+          if (client && channel) {
+            return (
+              <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
+                <Chat client={client}>
+                  <Channel channel={channel}>
+                    <View style={{ flex: 1 }}>
+                      <MessageList
+                        contentInsetAdjustmentBehavior="never"
+                        additionalFlatListProps={{
+                          contentContainerStyle: { paddingTop: 0 },
+                          onEndReached: async () => {
+                            try {
+                              const msgs: any[] = (channel?.state?.messages || []) as any[];
+                              const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
+                              if (!oldest || !(channel as any)?.query) return;
+                              const res = await (channel as any).query({
+                                messages: { limit: 30, id_lt: oldest.id },
+                              });
+                              if (res?.messages?.length) {
+                                (channel as any).state?.addMessagesSorted?.(res.messages);
+                              }
+                            } catch {}
+                          },
+                          onEndReachedThreshold: 0.1,
+                        }}
+                      />
+                      <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
+                    </View>
+                  </Channel>
+                </Chat>
+              </OverlayProvider>
+            );
+          }
+          return null;
+        })()}
       </Animated.View>
 
       <ReactionPickerModal
