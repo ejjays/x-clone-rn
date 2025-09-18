@@ -122,8 +122,7 @@ export default function ChatScreen() {
           ch = (cachedChannels || []).find((c: any) => c?.id === channelId) || null;
         } catch {}
 
-        if (ch) {
-          // Prehydrate state with cached messages for instant header + list
+        const prehydrateFromCache = async (target: any) => {
           try {
             const raw = await AsyncStorage.getItem(
               StorageKeys.CHAT_MESSAGES(channelId)
@@ -131,29 +130,23 @@ export default function ChatScreen() {
             if (raw) {
               const snapshot = JSON.parse(raw);
               if (Array.isArray(snapshot) && snapshot.length > 0) {
-                (ch as any).state?.addMessagesSorted?.(snapshot as any);
+                (target as any).state?.addMessagesSorted?.(snapshot as any);
               }
             }
           } catch {}
+        };
+
+        if (ch) {
+          await prehydrateFromCache(ch);
           setChannel(ch);
           // Ensure it's watched in background without blocking UI
           ch.watch().catch(() => {});
         } else {
           ch = client.channel("messaging", channelId);
-          // Prehydrate before watch
-          try {
-            const raw = await AsyncStorage.getItem(
-              StorageKeys.CHAT_MESSAGES(channelId)
-            );
-            if (raw) {
-              const snapshot = JSON.parse(raw);
-              if (Array.isArray(snapshot) && snapshot.length > 0) {
-                (ch as any).state?.addMessagesSorted?.(snapshot as any);
-              }
-            }
-          } catch {}
-          await ch.watch();
+          await prehydrateFromCache(ch);
           setChannel(ch);
+          // Kick off network watch after initial render
+          ch.watch().catch(() => {});
         }
 
         const membersArray = Array.isArray(ch.state.members)
