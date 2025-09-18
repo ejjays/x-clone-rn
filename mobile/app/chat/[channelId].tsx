@@ -123,11 +123,35 @@ export default function ChatScreen() {
         } catch {}
 
         if (ch) {
+          // Prehydrate state with cached messages for instant header + list
+          try {
+            const raw = await AsyncStorage.getItem(
+              StorageKeys.CHAT_MESSAGES(channelId)
+            );
+            if (raw) {
+              const snapshot = JSON.parse(raw);
+              if (Array.isArray(snapshot) && snapshot.length > 0) {
+                (ch as any).state?.addMessagesSorted?.(snapshot as any);
+              }
+            }
+          } catch {}
           setChannel(ch);
           // Ensure it's watched in background without blocking UI
           ch.watch().catch(() => {});
         } else {
           ch = client.channel("messaging", channelId);
+          // Prehydrate before watch
+          try {
+            const raw = await AsyncStorage.getItem(
+              StorageKeys.CHAT_MESSAGES(channelId)
+            );
+            if (raw) {
+              const snapshot = JSON.parse(raw);
+              if (Array.isArray(snapshot) && snapshot.length > 0) {
+                (ch as any).state?.addMessagesSorted?.(snapshot as any);
+              }
+            }
+          } catch {}
           await ch.watch();
           setChannel(ch);
         }
@@ -330,7 +354,26 @@ export default function ChatScreen() {
             <Chat client={client}>
               <Channel channel={channel}>
                 <View style={{ flex: 1 }}>
-                  <MessageList contentInsetAdjustmentBehavior="never" additionalFlatListProps={{ contentContainerStyle: { paddingTop: 0 } }} />
+                  <MessageList
+                    contentInsetAdjustmentBehavior="never"
+                    additionalFlatListProps={{
+                      contentContainerStyle: { paddingTop: 0 },
+                      onEndReached: async () => {
+                        try {
+                          const msgs: any[] = (channel?.state?.messages || []) as any[];
+                          const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
+                          if (!oldest || !(channel as any)?.query) return;
+                          const res = await (channel as any).query({
+                            messages: { limit: 30, id_lt: oldest.id },
+                          });
+                          if (res?.messages?.length) {
+                            (channel as any).state?.addMessagesSorted?.(res.messages);
+                          }
+                        } catch {}
+                      },
+                      onEndReachedThreshold: 0.1,
+                    }}
+                  />
                   <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
                 </View>
               </Channel>
