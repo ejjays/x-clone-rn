@@ -206,13 +206,11 @@ export default function CustomChannelList({
 
   const keyExtractor = useCallback((item: any) => item.id, []);
 
-  const MemoItem = useMemo(() => React.memo(renderChannelItem), [renderChannelItem]);
-
   return (
     <FlatList
       data={filteredChannels}
       keyExtractor={keyExtractor}
-      renderItem={MemoItem}
+      renderItem={renderChannelItem}
       keyboardShouldPersistTaps="handled"
       scrollEventThrottle={16}
       contentInsetAdjustmentBehavior="never"
