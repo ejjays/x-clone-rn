@@ -98,11 +98,7 @@ export default function CustomChannelList({
           }`,
         otherId: otherMember?.user?.id || "",
         lastMessage: lastMessage?.text || "No messages yet",
-        lastMessageTime: channel.state.last_message_at
-          ? formatDistanceToNow(new Date(channel.state.last_message_at), {
-              addSuffix: true,
-            })
-          : "",
+        lastMessageAt: channel.state.last_message_at || null,
         isFromCurrentUser: lastMessage?.user?.id === currentUser.clerkId,
         online: otherMember?.user?.online || false,
       };
@@ -188,9 +184,11 @@ export default function CustomChannelList({
       </View>
 
       <View className="flex-shrink-0">
-        {item.lastMessageTime && (
-          <Text className="text-xs" style={{ color: colors.textMuted }}>{item.lastMessageTime}</Text>
-        )}
+        {item.lastMessageAt ? (
+          <Text className="text-xs" style={{ color: colors.textMuted }}>
+            {formatDistanceToNow(new Date(item.lastMessageAt), { addSuffix: true })}
+          </Text>
+        ) : null}
       </View>
     </TouchableOpacity>
   );
@@ -216,6 +214,10 @@ export default function CustomChannelList({
       contentInsetAdjustmentBehavior="never"
       removeClippedSubviews
       maintainVisibleContentPosition={{ minIndexForVisible: 1 }}
+      initialNumToRender={12}
+      maxToRenderPerBatch={8}
+      windowSize={5}
+      updateCellsBatchingPeriod={50}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

@@ -14,6 +14,7 @@ import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
 import { useState, useEffect, useCallback } from "react";
+import { InteractionManager } from "react-native";
 import LottieView from "lottie-react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -274,54 +275,66 @@ export default function MessagesScreen() {
             </Text>
           </View>
         ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="px-4"
-          >
-            {realUsers.map((user) => (
-              <TouchableOpacity
-                key={user._id}
-                className="items-center mr-4"
-                onPress={() => handleUserPress(user)}
-              >
-                {user.profilePicture ? (
-                  <Image
-                    source={{ uri: user.profilePicture }}
-                    className="w-20 h-20 rounded-full border-2"
-                    style={{ borderColor: colors.blue }}
-                  />
-                ) : (
-                  <View
-                    className="w-20 h-20 rounded-full border-2 items-center justify-center"
-                    style={{
-                      borderColor: colors.blue,
-                      backgroundColor: colors.chatBackground,
-                    }}
-                  >
-                    <Text
-                      className="font-semibold text-lg"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {getInitials(user.firstName, user.lastName)}
-                    </Text>
-                  </View>
-                )}
-                <Text
-                  className="text-sm mt-1"
-                  numberOfLines={1}
-                  style={{ color: colors.textSecondary }}
-                >
-                  {user.firstName}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+      <DeferredPeopleStrip users={realUsers} colors={colors} getInitials={getInitials} onPress={handleUserPress} />
         )}
       </View>
 
       {/* Messages Content (CustomChannelList) */}
       <View className="flex-1">{renderContent()}</View>
     </SafeAreaView>
+  );
+}
+
+function DeferredPeopleStrip({ users, colors, getInitials, onPress }: any) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => setReady(true));
+    return () => { (task as any)?.cancel?.(); };
+  }, []);
+  if (!ready) return null;
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="px-4"
+    >
+      {users.map((user: any) => (
+        <TouchableOpacity
+          key={user._id}
+          className="items-center mr-4"
+          onPress={() => onPress(user)}
+        >
+          {user.profilePicture ? (
+            <Image
+              source={{ uri: user.profilePicture }}
+              className="w-20 h-20 rounded-full border-2"
+              style={{ borderColor: colors.blue }}
+            />
+          ) : (
+            <View
+              className="w-20 h-20 rounded-full border-2 items-center justify-center"
+              style={{
+                borderColor: colors.blue,
+                backgroundColor: colors.chatBackground,
+              }}
+            >
+              <Text
+                className="font-semibold text-lg"
+                style={{ color: colors.textSecondary }}
+              >
+                {getInitials(user.firstName, user.lastName)}
+              </Text>
+            </View>
+          )}
+          <Text
+            className="text-sm mt-1"
+            numberOfLines={1}
+            style={{ color: colors.textSecondary }}
+          >
+            {user.firstName}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
   );
 }
