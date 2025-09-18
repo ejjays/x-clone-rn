@@ -164,7 +164,7 @@ const InitialLayout = () => {
             <Stack.Screen
               name="messages"
               options={{
-                animation: "slide_from_right",
+                animation: "none",
                 freezeOnBlur: false,
                 detachPreviousScreen: true,
               }}
@@ -207,7 +207,7 @@ const InitialLayout = () => {
           <Stack.Screen
             name="messages"
             options={{
-              animation: "slide_from_right",
+              animation: "none",
               freezeOnBlur: false,
               detachPreviousScreen: true,
             }}

@@ -138,10 +138,14 @@ export default function MessagesScreen() {
     return () => {};
   }, []);
 
-  // Remove NavigationBar/SystemUI changes during focus to avoid blocking
+  // Reset status bar/navigation bar when leaving messages to restore tabs styling
   useFocusEffect(
     useCallback(() => {
-      return () => {};
+      return () => {
+        try {
+          StatusBar.setBarStyle("light-content");
+        } catch {}
+      };
     }, [])
   );
 
