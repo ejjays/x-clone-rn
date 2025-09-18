@@ -60,7 +60,6 @@ export default function CustomChannelList({
 }: CustomChannelListProps) {
   const { channels, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
-  const [processedChannels, setProcessedChannels] = useState<any[]>([]);
   const [filteredChannels, setFilteredChannels] = useState<any[]>([]);
 
   // Dynamic color scheme based on dark mode state
@@ -114,11 +113,11 @@ export default function CustomChannelList({
     if (!searchQuery.trim()) {
       setFilteredChannels(processedChannels);
     } else {
-      const filtered = processedChannels.filter((channel) => {
-        const nameMatch = channel.name
+      const filtered = processedChannels.filter((channel: any) => {
+        const nameMatch = (channel.name || "")
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
-        const messageMatch = channel.lastMessage
+        const messageMatch = (channel.lastMessage || "")
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
         return nameMatch || messageMatch;
