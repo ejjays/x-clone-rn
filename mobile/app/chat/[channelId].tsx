@@ -120,106 +120,106 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!channelId) return;
 
-    // Hydrate cached messages for offline display
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(
-          StorageKeys.CHAT_MESSAGES(channelId)
-        );
-        if (raw) {
-          const snapshot = JSON.parse(raw);
-          if (Array.isArray(snapshot)) setMessages(snapshot);
-        }
-      } catch {}
-    })();
+    // Defer reading cached messages to avoid blocking nav
+    InteractionManager.runAfterInteractions(() => {
+      if (!isActiveRef.current) return;
+      (async () => {
+        try {
+          const raw = await AsyncStorage.getItem(
+            StorageKeys.CHAT_MESSAGES(channelId)
+          );
+          if (raw && isActiveRef.current) {
+            const snapshot = JSON.parse(raw);
+            if (Array.isArray(snapshot)) setMessages(snapshot);
+          }
+        } catch {}
+      })();
+    });
 
     if (!client || !isConnected || !currentUser) return;
 
-    const initializeChannel = async () => {
-      try {
-        let ch: any = null;
-        // Prefer existing channel from context cache for instant render
+    const initializeChannel = () => {
+      InteractionManager.runAfterInteractions(async () => {
+        if (!isActiveRef.current) return;
         try {
-          ch = (cachedChannels || []).find((c: any) => c?.id === channelId) || null;
-        } catch {}
-
-        // Removed AsyncStorage prehydration during channel init to avoid blocking
-
-        if (ch) {
-          setChannel(ch);
-          // Ensure heavy network work starts after transition/animations
-          setTimeout(() => {
-            InteractionManager.runAfterInteractions(() => {
-              ch.watch().catch(() => {});
-            });
-          }, 0);
-        } else {
-          ch = client.channel("messaging", channelId);
-          setChannel(ch);
-          // Kick off network watch after initial render and after interactions
-          setTimeout(() => {
-            InteractionManager.runAfterInteractions(() => {
-              ch.watch().catch(() => {});
-            });
-          }, 0);
-        }
-
-        const membersArray = Array.isArray(ch.state.members)
-          ? ch.state.members
-          : Object.values(ch.state.members || {});
-        const otherMember = membersArray.find(
-          (member: any) => member?.user?.id !== currentUser.clerkId
-        );
-
-        if (otherMember?.user) {
-          setOtherUser({
-            name: otherMember.user.name || "Unknown User",
-            image:
-              otherMember.user.image ||
-              `https://getstream.io/random_png/?name=${otherMember.user.name}`,
-            online: otherMember.user.online || false,
-            id: otherMember.user.id,
-          });
-        }
-
-        const handleEvent = (event: any) => {
-          if (!isActiveRef.current) return;
-          const eventChannel = event.channel || ch;
-          setMessages(eventChannel.state.messages.slice().reverse());
-          // Removed AsyncStorage persistence here to avoid blocking navigation
-        };
-
-        setMessages(ch.state.messages.slice().reverse());
-        // Removed initial AsyncStorage persistence to avoid blocking
-
-        ch.on("message.new", handleEvent);
-        ch.on("message.updated", handleEvent);
-        ch.on("message.deleted", handleEvent);
-        ch.on("reaction.new", handleEvent);
-        ch.on("reaction.updated", handleEvent);
-        ch.on("reaction.deleted", handleEvent);
-
-        // Provide immediate cleanup function
-        const cleanup = () => {
+          let ch: any = null;
           try {
-            ch.off("message.new", handleEvent);
-            ch.off("message.updated", handleEvent);
-            ch.off("message.deleted", handleEvent);
-            ch.off("reaction.new", handleEvent);
-            ch.off("reaction.updated", handleEvent);
-            ch.off("reaction.deleted", handleEvent);
+            ch = (cachedChannels || []).find((c: any) => c?.id === channelId) || null;
           } catch {}
-        };
-        cleanupRef.current = cleanup;
 
-        setLoading(false);
+          if (ch) {
+            setChannel(ch);
+            setTimeout(() => {
+              if (isActiveRef.current) {
+                InteractionManager.runAfterInteractions(() => {
+                  if (isActiveRef.current) ch.watch().catch(() => {});
+                });
+              }
+            }, 100);
+          } else {
+            ch = client.channel("messaging", channelId);
+            setChannel(ch);
+            setTimeout(() => {
+              if (isActiveRef.current) {
+                InteractionManager.runAfterInteractions(() => {
+                  if (isActiveRef.current) ch.watch().catch(() => {});
+                });
+              }
+            }, 100);
+          }
 
-        return cleanup;
-      } catch (error) {
-        console.error("❌ Error initializing channel:", error);
-        Alert.alert("Error", "Failed to load chat. Please try again.");
-        setLoading(false);
-      }
+          const membersArray = Array.isArray(ch.state.members)
+            ? ch.state.members
+            : Object.values(ch.state.members || {});
+          const otherMember = membersArray.find(
+            (member: any) => member?.user?.id !== currentUser.clerkId
+          );
+          if (otherMember?.user) {
+            setOtherUser({
+              name: otherMember.user.name || "Unknown User",
+              image:
+                otherMember.user.image ||
+                `https://getstream.io/random_png/?name=${otherMember.user.name}`,
+              online: otherMember.user.online || false,
+              id: otherMember.user.id,
+            });
+          }
+
+          const handleEvent = (event: any) => {
+            if (!isActiveRef.current) return;
+            const eventChannel = event.channel || ch;
+            setMessages(eventChannel.state.messages.slice().reverse());
+          };
+
+          setMessages(ch.state.messages.slice().reverse());
+
+          ch.on("message.new", handleEvent);
+          ch.on("message.updated", handleEvent);
+          ch.on("message.deleted", handleEvent);
+          ch.on("reaction.new", handleEvent);
+          ch.on("reaction.updated", handleEvent);
+          ch.on("reaction.deleted", handleEvent);
+
+          const cleanup = () => {
+            try {
+              ch.off("message.new", handleEvent);
+              ch.off("message.updated", handleEvent);
+              ch.off("message.deleted", handleEvent);
+              ch.off("reaction.new", handleEvent);
+              ch.off("reaction.updated", handleEvent);
+              ch.off("reaction.deleted", handleEvent);
+            } catch {}
+          };
+          cleanupRef.current = cleanup;
+
+          setLoading(false);
+          return cleanup;
+        } catch (error) {
+          console.error("❌ Error initializing channel:", error);
+          Alert.alert("Error", "Failed to load chat. Please try again.");
+          setLoading(false);
+        }
+      });
     };
 
     initializeChannel();
