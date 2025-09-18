@@ -68,37 +68,16 @@ const InitialLayout = () => {
     }
   }
 
-  // Handle navigation and prefetching AFTER the navigation system is ready
+  // Handle navigation AFTER the navigation system is ready (no prefetch side work)
   useEffect(() => {
     if (!isLoaded) return;
-
-    // Use setTimeout to ensure navigation happens after the current render cycle
     const handleNavigation = setTimeout(() => {
       if (!isSignedIn) {
         router.push("/(auth)");
       } else {
         router.push("/(tabs)");
       }
-
-      // Prefetch common routes after navigation is complete
-      const routesToPrefetch = [
-        "/(tabs)",
-        "/(tabs)/search",
-        "/(tabs)/videos",
-        "/(tabs)/notifications",
-        "/(tabs)/profile",
-        "/messages",
-        "/search-posts",
-      ];
-
-      routesToPrefetch.forEach((route) => {
-        const prefetchPromise = router.prefetch(route);
-        if (prefetchPromise && typeof prefetchPromise.catch === "function") {
-          prefetchPromise.catch(() => {});
-        }
-      });
-    }, 100); // Small delay to ensure navigation system is ready
-
+    }, 100);
     return () => clearTimeout(handleNavigation);
   }, [isLoaded, isSignedIn]);
 
@@ -185,17 +164,17 @@ const InitialLayout = () => {
             <Stack.Screen
               name="messages"
               options={{
-                animation: "fade",
-                freezeOnBlur: true,
-                detachPreviousScreen: false,
+                animation: "slide_from_right",
+                freezeOnBlur: false,
+                detachPreviousScreen: true,
               }}
             />
             <Stack.Screen
               name="chat/[channelId]"
               options={{
-                animation: "fade",
-                freezeOnBlur: true,
-                detachPreviousScreen: false,
+                animation: "slide_from_right",
+                freezeOnBlur: false,
+                detachPreviousScreen: true,
                 gestureEnabled: true,
               }}
             />
@@ -228,17 +207,17 @@ const InitialLayout = () => {
           <Stack.Screen
             name="messages"
             options={{
-              animation: "fade",
-              freezeOnBlur: true,
-              detachPreviousScreen: false,
+              animation: "slide_from_right",
+              freezeOnBlur: false,
+              detachPreviousScreen: true,
             }}
           />
           <Stack.Screen
             name="chat/[channelId]"
             options={{
-              animation: "fade",
-              freezeOnBlur: true,
-              detachPreviousScreen: false,
+              animation: "slide_from_right",
+              freezeOnBlur: false,
+              detachPreviousScreen: true,
               gestureEnabled: true,
             }}
           />
@@ -262,23 +241,16 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <QueryClientProvider client={queryClient}>
-          <ClerkProvider
-            publishableKey={publishableKey}
-            tokenCache={tokenCache}
-          >
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
             <StreamChatProvider>
-              <StreamVideoProvider>
-                <ThemeProvider>
-                  <InitialLayout />
-                </ThemeProvider>
-              </StreamVideoProvider>
+              <InitialLayout />
             </StreamChatProvider>
-          </ClerkProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
-    </ErrorBoundary>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }
