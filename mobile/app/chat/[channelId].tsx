@@ -73,7 +73,17 @@ export default function ChatScreen() {
   const [channel, setChannel] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [otherUser, setOtherUser] = useState<any>(null);
+  const [otherUser, setOtherUser] = useState<any>(() => {
+    try {
+      const name = params?.name ? decodeURIComponent(String(params.name)) : undefined;
+      const image = params?.image ? decodeURIComponent(String(params.image)) : undefined;
+      const id = params?.other ? decodeURIComponent(String(params.other)) : undefined;
+      if (name || image || id) {
+        return { name, image, id, online: false };
+      }
+    } catch {}
+    return null;
+  });
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);

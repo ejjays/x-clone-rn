@@ -97,6 +97,7 @@ export default function CustomChannelList({
           `https://getstream.io/random_png/?name=${
             otherMember?.user?.name || "user"
           }`,
+        otherId: otherMember?.user?.id || "",
         lastMessage: lastMessage?.text || "No messages yet",
         lastMessageTime: channel.state.last_message_at
           ? formatDistanceToNow(new Date(channel.state.last_message_at), {
@@ -129,12 +130,19 @@ export default function CustomChannelList({
   }, [processedChannels, searchQuery]);
 
   const navigatingToRef = useRef<string | null>(null);
-  const handleOpenChannel = useCallback((channelId: string) => {
+  const handleOpenChannel = useCallback((channelId: string, item: any) => {
     if (navigatingToRef.current === channelId) return;
     navigatingToRef.current = channelId;
     // Navigate
     try {
-      router.push(`/chat/${channelId}`);
+      router.push({
+        pathname: `/chat/${channelId}`,
+        params: {
+          name: encodeURIComponent(item?.name || ''),
+          image: encodeURIComponent(item?.image || ''),
+          other: encodeURIComponent(item?.otherId || ''),
+        },
+      } as any);
     } finally {
       // Release the guard shortly after to prevent multi-push
       setTimeout(() => {
@@ -146,7 +154,7 @@ export default function CustomChannelList({
   const renderChannelItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       className="flex-row items-center p-4"
-      onPress={() => handleOpenChannel(item.id)}
+      onPress={() => handleOpenChannel(item.id, item)}
       onPressIn={() => {
         // Prefetch the chat screen for snappier open
         try { router.prefetch(`/chat/${item.id}`); } catch {}
