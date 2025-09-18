@@ -71,6 +71,23 @@ export default function ChatScreen() {
     gray200: isDarkMode ? DarkThemeColors.border : LightThemeColors.border,
   };
 
+  // Track active state for immediate cleanup on blur
+  const isActiveRef = useRef(true);
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      isActiveRef.current = true;
+      return () => {
+        isActiveRef.current = false;
+        if (cleanupRef.current) {
+          try { cleanupRef.current(); } catch {}
+          cleanupRef.current = null;
+        }
+      };
+    }, [])
+  );
+
   const [channel, setChannel] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -177,25 +194,29 @@ export default function ChatScreen() {
         }
 
         const handleEvent = (event: any) => {
+          if (!isActiveRef.current) return;
           const eventChannel = event.channel || ch;
           setMessages(eventChannel.state.messages.slice().reverse());
-          // Persist a small snapshot for offline
-          try {
-            const snapshot = (eventChannel.state.messages || [])
-              .slice(-50)
-              .reverse()
-              .map((m: any) => ({
-                id: m.id,
-                text: m.text,
-                user: m.user,
-                attachments: m.attachments,
-                created_at: m.created_at,
-              }));
-            AsyncStorage.setItem(
-              StorageKeys.CHAT_MESSAGES(channelId),
-              JSON.stringify(snapshot)
-            ).catch(() => {});
-          } catch {}
+          // Defer persistence to avoid blocking navigation/UI
+          InteractionManager.runAfterInteractions(() => {
+            if (!isActiveRef.current) return;
+            try {
+              const snapshot = (eventChannel.state.messages || [])
+                .slice(-50)
+                .reverse()
+                .map((m: any) => ({
+                  id: m.id,
+                  text: m.text,
+                  user: m.user,
+                  attachments: m.attachments,
+                  created_at: m.created_at,
+                }));
+              AsyncStorage.setItem(
+                StorageKeys.CHAT_MESSAGES(channelId),
+                JSON.stringify(snapshot)
+              ).catch(() => {});
+            } catch {}
+          });
         };
 
         setMessages(ch.state.messages.slice().reverse());
@@ -223,16 +244,22 @@ export default function ChatScreen() {
         ch.on("reaction.updated", handleEvent);
         ch.on("reaction.deleted", handleEvent);
 
+        // Provide immediate cleanup function
+        const cleanup = () => {
+          try {
+            ch.off("message.new", handleEvent);
+            ch.off("message.updated", handleEvent);
+            ch.off("message.deleted", handleEvent);
+            ch.off("reaction.new", handleEvent);
+            ch.off("reaction.updated", handleEvent);
+            ch.off("reaction.deleted", handleEvent);
+          } catch {}
+        };
+        cleanupRef.current = cleanup;
+
         setLoading(false);
 
-        return () => {
-          ch.off("message.new", handleEvent);
-          ch.off("message.updated", handleEvent);
-          ch.off("message.deleted", handleEvent);
-          ch.off("reaction.new", handleEvent);
-          ch.off("reaction.updated", handleEvent);
-          ch.off("reaction.deleted", handleEvent);
-        };
+        return cleanup;
       } catch (error) {
         console.error("❌ Error initializing channel:", error);
         Alert.alert("Error", "Failed to load chat. Please try again.");

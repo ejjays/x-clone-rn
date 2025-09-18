@@ -61,7 +61,7 @@ export default function MessagesScreen() {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   };
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (isConnecting && !client) {
       return (
         <View
@@ -131,7 +131,7 @@ export default function MessagesScreen() {
         refreshControlBackgroundColor={colors.refreshControlBackgroundColor}
       />
     );
-  };
+  }, [isConnecting, client, colors, refreshChannels, searchQuery, isDarkMode]);
 
   // Background prefetch: warm message snapshots for fast open (run once per session)
   const didPrefetchRef = useRef(false);
