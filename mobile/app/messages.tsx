@@ -14,7 +14,6 @@ import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
 import { useState, useEffect, useCallback } from "react";
-import { InteractionManager } from "react-native";
 import LottieView from "lottie-react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
