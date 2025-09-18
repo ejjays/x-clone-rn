@@ -13,7 +13,7 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import LottieView from "lottie-react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -133,40 +133,44 @@ export default function MessagesScreen() {
     );
   };
 
-  // Background prefetch: warm message snapshots for fast open
+  // Background prefetch: warm message snapshots for fast open (run once per session)
+  const didPrefetchRef = useRef(false);
   useEffect(() => {
-    (async () => {
-      try {
-        if (!isConnected || !client || !Array.isArray(channels) || channels.length === 0) return;
-        const PREFETCH_LIMIT = 6; // keep light
-        const targets = channels.slice(0, PREFETCH_LIMIT);
-        await Promise.allSettled(
-          targets.map(async (ch: any) => {
-            try {
-              const channelId = ch?.id || ch?.channel?.id || ch?._id;
-              if (!channelId) return;
-              // Skip if we already have a snapshot cached
-              const existing = await AsyncStorage.getItem(StorageKeys.CHAT_MESSAGES(channelId));
-              if (existing) return;
-              // Get channel instance
-              const channelInst = typeof ch?.query === 'function' ? ch : client.channel('messaging', channelId);
-              if (!channelInst || typeof (channelInst as any).query !== 'function') return;
-              const res = await (channelInst as any).query({ messages: { limit: 50 } });
-              const msgs = (res?.messages || []).slice(-50).map((m: any) => ({
-                id: m.id,
-                text: m.text,
-                user: m.user,
-                attachments: m.attachments,
-                created_at: m.created_at,
-              }));
-              if (msgs.length) {
-                await AsyncStorage.setItem(StorageKeys.CHAT_MESSAGES(channelId), JSON.stringify(msgs));
-              }
-            } catch {}
-          })
-        );
-      } catch {}
-    })();
+    if (didPrefetchRef.current) return;
+    if (!isConnected || !client || !Array.isArray(channels) || channels.length === 0) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      (async () => {
+        try {
+          const PREFETCH_LIMIT = 6;
+          const targets = channels.slice(0, PREFETCH_LIMIT);
+          await Promise.allSettled(
+            targets.map(async (ch: any) => {
+              try {
+                const channelId = ch?.id || ch?.channel?.id || ch?._id;
+                if (!channelId) return;
+                const existing = await AsyncStorage.getItem(StorageKeys.CHAT_MESSAGES(channelId));
+                if (existing) return;
+                const channelInst = typeof ch?.query === 'function' ? ch : client.channel('messaging', channelId);
+                if (!channelInst || typeof (channelInst as any).query !== 'function') return;
+                const res = await (channelInst as any).query({ messages: { limit: 50 } });
+                const msgs = (res?.messages || []).slice(-50).map((m: any) => ({
+                  id: m.id,
+                  text: m.text,
+                  user: m.user,
+                  attachments: m.attachments,
+                  created_at: m.created_at,
+                }));
+                if (msgs.length) {
+                  await AsyncStorage.setItem(StorageKeys.CHAT_MESSAGES(channelId), JSON.stringify(msgs));
+                }
+              } catch {}
+            })
+          );
+          didPrefetchRef.current = true;
+        } catch {}
+      })();
+    });
+    return () => { (task as any)?.cancel?.(); };
   }, [isConnected, client, channels]);
 
   // Ensure Android NavigationBar is black while on messages

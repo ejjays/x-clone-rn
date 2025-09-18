@@ -324,6 +324,7 @@ export default function ChatScreen() {
     }
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
+        <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1DA1F2" />
         </View>
