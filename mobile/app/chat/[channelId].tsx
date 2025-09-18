@@ -32,7 +32,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
-import { Chat, Channel, MessageList, MessageInput, OverlayProvider } from "stream-chat-expo"; // Use built-in MessageInput
+import { Channel, MessageList, MessageInput } from "stream-chat-expo"; // Use built-in MessageInput
 // import KeyboardAvoiderView from "@/components/KeyboardAvoiderView";
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { uploadMediaToCloudinary } from "@/utils/cloudinary";
@@ -400,35 +400,31 @@ export default function ChatScreen() {
           }
           if (client && channel) {
             return (
-              <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
-                <Chat client={client}>
-                  <Channel channel={channel}>
-                    <View style={{ flex: 1 }}>
-                      <MessageList
-                        contentInsetAdjustmentBehavior="never"
-                        additionalFlatListProps={{
-                          contentContainerStyle: { paddingTop: 0 },
-                          onEndReached: async () => {
-                            try {
-                              const msgs: any[] = (channel?.state?.messages || []) as any[];
-                              const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
-                              if (!oldest || !(channel as any)?.query) return;
-                              const res = await (channel as any).query({
-                                messages: { limit: 30, id_lt: oldest.id },
-                              });
-                              if (res?.messages?.length) {
-                                (channel as any).state?.addMessagesSorted?.(res.messages);
-                              }
-                            } catch {}
-                          },
-                          onEndReachedThreshold: 0.1,
-                        }}
-                      />
-                      <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
-                    </View>
-                  </Channel>
-                </Chat>
-              </OverlayProvider>
+              <Channel channel={channel}>
+                <View style={{ flex: 1 }}>
+                  <MessageList
+                    contentInsetAdjustmentBehavior="never"
+                    additionalFlatListProps={{
+                      contentContainerStyle: { paddingTop: 0 },
+                      onEndReached: async () => {
+                        try {
+                          const msgs: any[] = (channel?.state?.messages || []) as any[];
+                          const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
+                          if (!oldest || !(channel as any)?.query) return;
+                          const res = await (channel as any).query({
+                            messages: { limit: 30, id_lt: oldest.id },
+                          });
+                          if (res?.messages?.length) {
+                            (channel as any).state?.addMessagesSorted?.(res.messages);
+                          }
+                        } catch {}
+                      },
+                      onEndReachedThreshold: 0.1,
+                    }}
+                  />
+                  <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
+                </View>
+              </Channel>
             );
           }
           return null;
