@@ -292,11 +292,28 @@ export default function ChatScreen() {
   };
 
   if (isConnecting || (loading && !channel)) {
+    if (messages && messages.length > 0) {
+      return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
+          <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
+          <View style={{ flex: 1 }}>
+            <FlatList
+              data={messages}
+              keyExtractor={(m: any) => String(m.id)}
+              renderItem={({ item }: any) => (
+                <View style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
+                  <Text style={{ color: colors.text }}>{item.text}</Text>
+                </View>
+              )}
+              inverted
+              contentContainerStyle={{ paddingTop: 0 }}
+            />
+          </View>
+        </SafeAreaView>
+      );
+    }
     return (
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: colors.background }}
-        edges={["top", "bottom"]}
-      >
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1DA1F2" />
         </View>
@@ -305,22 +322,31 @@ export default function ChatScreen() {
   }
 
   if (!client || !isConnected) {
+    if (messages && messages.length > 0) {
+      return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
+          <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
+          <View style={{ flex: 1 }}>
+            <FlatList
+              data={messages}
+              keyExtractor={(m: any) => String(m.id)}
+              renderItem={({ item }: any) => (
+                <View style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
+                  <Text style={{ color: colors.text }}>{item.text}</Text>
+                </View>
+              )}
+              inverted
+              contentContainerStyle={{ paddingTop: 0 }}
+            />
+          </View>
+        </SafeAreaView>
+      );
+    }
     return (
-      <SafeAreaView
-        className="flex-1"
-        style={{ backgroundColor: colors.background }}
-      >
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <View className="flex-1 items-center justify-center px-8">
-          <Ionicons
-            name="cloud-offline-outline"
-            size={64}
-            color={colors.grayText}
-          />
-          <Text
-            className="text-xl font-semibold mt-4 mb-2"
-            style={{ color: colors.text }}
-          >
+          <Ionicons name="cloud-offline-outline" size={64} color={colors.grayText} />
+          <Text className="text-xl font-semibold mt-4 mb-2" style={{ color: colors.text }}>
             Connection Issue
           </Text>
           <Text className="text-center" style={{ color: colors.grayText }}>
