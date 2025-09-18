@@ -122,24 +122,15 @@ export default function CustomChannelList({
     }
   }, [processedChannels, searchQuery]);
 
-  const navigatingToRef = useRef<string | null>(null);
   const handleOpenChannel = useCallback((channelId: string, item: any) => {
-    if (navigatingToRef.current === channelId) return;
-    navigatingToRef.current = channelId;
-    try {
-      router.push({
-        pathname: `/chat/${channelId}`,
-        params: {
-          name: encodeURIComponent(item?.name || ''),
-          image: encodeURIComponent(item?.image || ''),
-          other: encodeURIComponent(item?.otherId || ''),
-        },
-      } as any);
-    } finally {
-      setTimeout(() => {
-        navigatingToRef.current = null;
-      }, 200);
-    }
+    router.push({
+      pathname: `/chat/${channelId}`,
+      params: {
+        name: encodeURIComponent(item?.name || ''),
+        image: encodeURIComponent(item?.image || ''),
+        other: encodeURIComponent(item?.otherId || ''),
+      },
+    } as any);
   }, []);
 
   const renderChannelItem = ({ item }: { item: any }) => (

@@ -133,82 +133,15 @@ export default function MessagesScreen() {
     );
   }, [isConnecting, client, colors, refreshChannels, searchQuery, isDarkMode]);
 
-  // Background prefetch optimized: run once, delayed, sequential, reduced limits
-  const didPrefetchRef = useRef(false);
-  const prefetchTimeoutRef = useRef<any>(null);
+  // Disable prefetch completely per recommendation
   useEffect(() => {
-    if (didPrefetchRef.current) return;
-    if (!isConnected || !client || !Array.isArray(channels) || channels.length === 0) return;
-    if (prefetchTimeoutRef.current) {
-      clearTimeout(prefetchTimeoutRef.current);
-      prefetchTimeoutRef.current = null;
-    }
-    prefetchTimeoutRef.current = setTimeout(() => {
-      const task = InteractionManager.runAfterInteractions(() => {
-        (async () => {
-          try {
-            const PREFETCH_LIMIT = 3;
-            const targets = channels.slice(0, PREFETCH_LIMIT);
-            for (const ch of targets) {
-              try {
-                const channelId = (ch as any)?.id || (ch as any)?.channel?.id || (ch as any)?._id;
-                if (!channelId) continue;
-                const existing = await AsyncStorage.getItem(StorageKeys.CHAT_MESSAGES(channelId));
-                if (existing) continue;
-                await new Promise((r) => setTimeout(r, 50));
-                const channelInst = typeof (ch as any)?.query === 'function' ? ch : (client as any).channel('messaging', channelId);
-                if (!channelInst || typeof (channelInst as any).query !== 'function') continue;
-                const res = await (channelInst as any).query({ messages: { limit: 25 } });
-                const msgs = (res?.messages || []).slice(-25).map((m: any) => ({
-                  id: m.id,
-                  text: m.text,
-                  user: m.user,
-                  attachments: m.attachments,
-                  created_at: m.created_at,
-                }));
-                if (msgs.length) {
-                  await AsyncStorage.setItem(StorageKeys.CHAT_MESSAGES(channelId), JSON.stringify(msgs));
-                }
-              } catch {}
-            }
-            didPrefetchRef.current = true;
-          } catch {}
-        })();
-      });
-      return () => { (task as any)?.cancel?.(); };
-    }, 2000);
-    return () => {
-      if (prefetchTimeoutRef.current) {
-        clearTimeout(prefetchTimeoutRef.current);
-        prefetchTimeoutRef.current = null;
-      }
-    };
-  }, [isConnected, client, channels]);
+    return () => {};
+  }, []);
 
-  // Ensure Android NavigationBar is black while on messages (defer setup, immediate reset)
+  // Remove NavigationBar/SystemUI changes during focus to avoid blocking
   useFocusEffect(
     useCallback(() => {
-      const setupSystemUI = () => {
-        try {
-          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-          NavigationBar.setButtonStyleAsync('light').catch(() => {});
-          SystemUI.setBackgroundColorAsync('#000000');
-        } catch {}
-      };
-      const resetSystemUI = () => {
-        try {
-          NavigationBar.setBackgroundColorAsync('transparent').catch(() => {});
-          NavigationBar.setButtonStyleAsync('dark').catch(() => {});
-          SystemUI.setBackgroundColorAsync('transparent');
-        } catch {}
-      };
-      const task = InteractionManager.runAfterInteractions(() => {
-        setupSystemUI();
-      });
-      return () => {
-        (task as any)?.cancel?.();
-        resetSystemUI();
-      };
+      return () => {};
     }, [])
   );
 

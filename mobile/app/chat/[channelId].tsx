@@ -84,6 +84,9 @@ export default function ChatScreen() {
           try { cleanupRef.current(); } catch {}
           cleanupRef.current = null;
         }
+        try {
+          (AsyncStorage as any)?.flushGetRequests?.();
+        } catch {}
       };
     }, [])
   );
@@ -140,22 +143,9 @@ export default function ChatScreen() {
           ch = (cachedChannels || []).find((c: any) => c?.id === channelId) || null;
         } catch {}
 
-        const prehydrateFromCache = async (target: any) => {
-          try {
-            const raw = await AsyncStorage.getItem(
-              StorageKeys.CHAT_MESSAGES(channelId)
-            );
-            if (raw) {
-              const snapshot = JSON.parse(raw);
-              if (Array.isArray(snapshot) && snapshot.length > 0) {
-                (target as any).state?.addMessagesSorted?.(snapshot as any);
-              }
-            }
-          } catch {}
-        };
+        // Removed AsyncStorage prehydration during channel init to avoid blocking
 
         if (ch) {
-          await prehydrateFromCache(ch);
           setChannel(ch);
           // Ensure heavy network work starts after transition/animations
           setTimeout(() => {
@@ -165,7 +155,6 @@ export default function ChatScreen() {
           }, 0);
         } else {
           ch = client.channel("messaging", channelId);
-          await prehydrateFromCache(ch);
           setChannel(ch);
           // Kick off network watch after initial render and after interactions
           setTimeout(() => {
@@ -197,45 +186,11 @@ export default function ChatScreen() {
           if (!isActiveRef.current) return;
           const eventChannel = event.channel || ch;
           setMessages(eventChannel.state.messages.slice().reverse());
-          // Defer persistence to avoid blocking navigation/UI
-          InteractionManager.runAfterInteractions(() => {
-            if (!isActiveRef.current) return;
-            try {
-              const snapshot = (eventChannel.state.messages || [])
-                .slice(-50)
-                .reverse()
-                .map((m: any) => ({
-                  id: m.id,
-                  text: m.text,
-                  user: m.user,
-                  attachments: m.attachments,
-                  created_at: m.created_at,
-                }));
-              AsyncStorage.setItem(
-                StorageKeys.CHAT_MESSAGES(channelId),
-                JSON.stringify(snapshot)
-              ).catch(() => {});
-            } catch {}
-          });
+          // Removed AsyncStorage persistence here to avoid blocking navigation
         };
 
         setMessages(ch.state.messages.slice().reverse());
-        try {
-          const snapshot = (ch.state.messages || [])
-            .slice(-50)
-            .reverse()
-            .map((m: any) => ({
-              id: m.id,
-              text: m.text,
-              user: m.user,
-              attachments: m.attachments,
-              created_at: m.created_at,
-            }));
-          AsyncStorage.setItem(
-            StorageKeys.CHAT_MESSAGES(channelId),
-            JSON.stringify(snapshot)
-          ).catch(() => {});
-        } catch {}
+        // Removed initial AsyncStorage persistence to avoid blocking
 
         ch.on("message.new", handleEvent);
         ch.on("message.updated", handleEvent);
