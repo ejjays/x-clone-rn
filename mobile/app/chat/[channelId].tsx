@@ -28,7 +28,7 @@ import { offlineQueue } from "@/utils/offline/OfflineQueue";
 import { useTheme } from "@/context/ThemeContext";
 import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
 import * as SystemUI from "expo-system-ui";
-import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
@@ -50,7 +50,6 @@ export default function ChatScreen() {
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
   const { isDarkMode } = useTheme();
-  const isScreenFocused = useIsFocused();
 
   const colors = {
     background: isDarkMode
@@ -404,31 +403,27 @@ export default function ChatScreen() {
             return (
               <Channel channel={channel}>
                 <View style={{ flex: 1 }}>
-                  {isScreenFocused ? (
-                    <>
-                      <MessageList
-                        contentInsetAdjustmentBehavior="never"
-                        additionalFlatListProps={{
-                          contentContainerStyle: { paddingTop: 0 },
-                          onEndReached: async () => {
-                            try {
-                              const msgs: any[] = (channel?.state?.messages || []) as any[];
-                              const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
-                              if (!oldest || !(channel as any)?.query) return;
-                              const res = await (channel as any).query({
-                                messages: { limit: 30, id_lt: oldest.id },
-                              });
-                              if (res?.messages?.length) {
-                                (channel as any).state?.addMessagesSorted?.(res.messages);
-                              }
-                            } catch {}
-                          },
-                          onEndReachedThreshold: 0.1,
-                        }}
-                      />
-                      <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
-                    </>
-                  ) : null}
+                  <MessageList
+                    contentInsetAdjustmentBehavior="never"
+                    additionalFlatListProps={{
+                      contentContainerStyle: { paddingTop: 0 },
+                      onEndReached: async () => {
+                        try {
+                          const msgs: any[] = (channel?.state?.messages || []) as any[];
+                          const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
+                          if (!oldest || !(channel as any)?.query) return;
+                          const res = await (channel as any).query({
+                            messages: { limit: 30, id_lt: oldest.id },
+                          });
+                          if (res?.messages?.length) {
+                            (channel as any).state?.addMessagesSorted?.(res.messages);
+                          }
+                        } catch {}
+                      },
+                      onEndReachedThreshold: 0.1,
+                    }}
+                  />
+                  <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
                 </View>
               </Channel>
             );
