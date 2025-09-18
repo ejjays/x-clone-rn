@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StorageKeys } from "@/utils/offline/storageKeys";
 import * as NavigationBar from "expo-navigation-bar";
 import { useFocusEffect } from "@react-navigation/native";
+import { InteractionManager } from "react-native";
 import * as SystemUI from "expo-system-ui";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -118,7 +119,12 @@ export default function MessagesScreen() {
 
     return (
       <CustomChannelList
-        onRefresh={refreshChannels}
+        onRefresh={() => {
+          // Avoid blocking UI thread during navigation transitions
+          InteractionManager.runAfterInteractions(() => {
+            refreshChannels();
+          });
+        }}
         searchQuery={searchQuery}
         isDarkMode={isDarkMode}
         refreshControlColor={colors.refreshControlColor}

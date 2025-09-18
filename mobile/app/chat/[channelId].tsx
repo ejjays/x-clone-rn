@@ -16,6 +16,7 @@ import {
   View,
   Image,
   Keyboard,
+  InteractionManager,
 } from "react-native";
 import {
   SafeAreaView,
@@ -139,14 +140,22 @@ export default function ChatScreen() {
         if (ch) {
           await prehydrateFromCache(ch);
           setChannel(ch);
-          // Ensure it's watched in background without blocking UI
-          ch.watch().catch(() => {});
+          // Ensure heavy network work starts after transition/animations
+          setTimeout(() => {
+            InteractionManager.runAfterInteractions(() => {
+              ch.watch().catch(() => {});
+            });
+          }, 0);
         } else {
           ch = client.channel("messaging", channelId);
           await prehydrateFromCache(ch);
           setChannel(ch);
-          // Kick off network watch after initial render
-          ch.watch().catch(() => {});
+          // Kick off network watch after initial render and after interactions
+          setTimeout(() => {
+            InteractionManager.runAfterInteractions(() => {
+              ch.watch().catch(() => {});
+            });
+          }, 0);
         }
 
         const membersArray = Array.isArray(ch.state.members)

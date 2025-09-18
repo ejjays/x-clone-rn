@@ -2,6 +2,7 @@ import { useStreamChat } from "@/context/StreamChatContext"
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { formatDistanceToNow } from "date-fns";
 import { router } from "expo-router";
+import { InteractionManager } from "react-native";
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
@@ -133,7 +134,7 @@ export default function CustomChannelList({
   const handleOpenChannel = useCallback((channelId: string, item: any) => {
     if (navigatingToRef.current === channelId) return;
     navigatingToRef.current = channelId;
-    // Navigate
+    // Navigate immediately; defer heavy JS work until after animation
     try {
       router.push({
         pathname: `/chat/${channelId}`,
@@ -143,11 +144,12 @@ export default function CustomChannelList({
           other: encodeURIComponent(item?.otherId || ''),
         },
       } as any);
+      InteractionManager.runAfterInteractions(() => {});
     } finally {
-      // Release the guard shortly after to prevent multi-push
+      // Release the guard quickly to keep UI responsive but avoid double taps
       setTimeout(() => {
         if (navigatingToRef.current === channelId) navigatingToRef.current = null;
-      }, 600);
+      }, 350);
     }
   }, []);
 

@@ -1,8 +1,9 @@
 import "react-native-gesture-handler";
 import "react-native-reanimated";
-import { enableScreens } from "react-native-screens";
+import { enableScreens, enableFreeze } from "react-native-screens";
 
 enableScreens(true);
+enableFreeze(true);
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack, router, usePathname } from "expo-router";
@@ -10,7 +11,7 @@ import "../global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, Text } from "react-native";
-import { OverlayProvider, Chat } from "stream-chat-react-native";
+import { OverlayProvider, Chat } from "stream-chat-expo";
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
@@ -181,10 +182,21 @@ const InitialLayout = () => {
               name="post/[postId]"
               options={{ animation: "slide_from_right" }}
             />
-            <Stack.Screen name="messages" options={{ animation: "none" }} />
+            <Stack.Screen
+              name="messages"
+              options={{
+                animation: "fade",
+                freezeOnBlur: true,
+                detachPreviousScreen: false,
+              }}
+            />
             <Stack.Screen
               name="chat/[channelId]"
-              options={{ animation: "fade" }}
+              options={{
+                animation: "fade",
+                freezeOnBlur: true,
+                detachPreviousScreen: false,
+              }}
             />
             <Stack.Screen
               name="new-message"
@@ -214,11 +226,19 @@ const InitialLayout = () => {
           />
           <Stack.Screen
             name="messages"
-            options={{ animation: "slide_from_right" }}
+            options={{
+              animation: "fade",
+              freezeOnBlur: true,
+              detachPreviousScreen: false,
+            }}
           />
           <Stack.Screen
             name="chat/[channelId]"
-            options={{ animation: "slide_from_right" }}
+            options={{
+              animation: "fade",
+              freezeOnBlur: true,
+              detachPreviousScreen: false,
+            }}
           />
           <Stack.Screen
             name="new-message"
