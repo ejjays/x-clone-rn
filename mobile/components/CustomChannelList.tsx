@@ -126,7 +126,6 @@ export default function CustomChannelList({
   const handleOpenChannel = useCallback((channelId: string, item: any) => {
     if (navigatingToRef.current === channelId) return;
     navigatingToRef.current = channelId;
-    // Navigate immediately; defer heavy JS work until after animation
     try {
       router.push({
         pathname: `/chat/${channelId}`,
@@ -136,12 +135,10 @@ export default function CustomChannelList({
           other: encodeURIComponent(item?.otherId || ''),
         },
       } as any);
-      InteractionManager.runAfterInteractions(() => {});
     } finally {
-      // Release the guard quickly to keep UI responsive but avoid double taps
       setTimeout(() => {
-        if (navigatingToRef.current === channelId) navigatingToRef.current = null;
-      }, 350);
+        navigatingToRef.current = null;
+      }, 200);
     }
   }, []);
 
