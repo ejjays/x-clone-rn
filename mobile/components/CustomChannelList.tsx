@@ -3,7 +3,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { formatDistanceToNow } from "date-fns";
 import { router } from "expo-router";
 import { InteractionManager } from "react-native";
-import { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -72,10 +72,9 @@ export default function CustomChannelList({
     blue: "#3b82f6",
   };
 
-  useEffect(() => {
-    if (!channels || !currentUser) return;
-
-    const processed = channels.map((channel: Channel) => {
+  const processedChannels = useMemo(() => {
+    if (!channels || !currentUser) return [];
+    return channels.map((channel: Channel) => {
       const membersArray = Array.isArray(channel.state.members)
         ? channel.state.members
         : Object.values(channel.state.members || {});
@@ -109,8 +108,6 @@ export default function CustomChannelList({
         online: otherMember?.user?.online || false,
       };
     });
-
-    setProcessedChannels(processed);
   }, [channels, currentUser]);
 
   useEffect(() => {
@@ -208,11 +205,15 @@ export default function CustomChannelList({
     );
   }
 
+  const keyExtractor = useCallback((item: any) => item.id, []);
+
+  const MemoItem = useMemo(() => React.memo(renderChannelItem), [renderChannelItem]);
+
   return (
     <FlatList
       data={filteredChannels}
-      keyExtractor={(item) => item.id}
-      renderItem={renderChannelItem}
+      keyExtractor={keyExtractor}
+      renderItem={MemoItem}
       keyboardShouldPersistTaps="handled"
       scrollEventThrottle={16}
       contentInsetAdjustmentBehavior="never"

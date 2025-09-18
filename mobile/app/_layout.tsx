@@ -196,6 +196,7 @@ const InitialLayout = () => {
                 animation: "fade",
                 freezeOnBlur: true,
                 detachPreviousScreen: false,
+                gestureEnabled: true,
               }}
             />
             <Stack.Screen
@@ -238,6 +239,7 @@ const InitialLayout = () => {
               animation: "fade",
               freezeOnBlur: true,
               detachPreviousScreen: false,
+              gestureEnabled: true,
             }}
           />
           <Stack.Screen
