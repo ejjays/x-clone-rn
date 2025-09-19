@@ -5,6 +5,7 @@ type Props = {
   dateISO: string;
   style?: StyleProp<TextStyle>;
   intervalMs?: number;
+  startAfterMount?: boolean; // if true, timer starts counting from when shown (or createdAt if later)
 };
 
 const formatTimeAgo = (dateString: string): string => {
@@ -23,12 +24,19 @@ const formatTimeAgo = (dateString: string): string => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
-export default function TimeAgo({ dateISO, style, intervalMs = 1000 }: Props) {
+export default function TimeAgo({ dateISO, style, intervalMs = 1000, startAfterMount = false }: Props) {
   const [, forceTick] = useState(0);
+  const mountedAtRef = React.useRef<number>(Date.now());
   useEffect(() => {
     const id = setInterval(() => forceTick((n) => n + 1), intervalMs);
     return () => clearInterval(id);
   }, [intervalMs]);
-  return <Text style={style}>{dateISO ? formatTimeAgo(dateISO) : ""}</Text>;
+  if (!dateISO) return <Text style={style} />;
+  let baseDate = new Date(dateISO);
+  if (startAfterMount) {
+    const baseMs = Math.max(baseDate.getTime(), mountedAtRef.current);
+    baseDate = new Date(baseMs);
+  }
+  return <Text style={style}>{formatTimeAgo(baseDate.toISOString())}</Text>;
 }
 
