@@ -30,11 +30,8 @@ const FIRST_SEEN_MAP: Map<string, number> = new Map();
 export default function TimeAgo({ dateISO, style, intervalMs = 1000, startAfterMount = false, postId }: Props) {
   const [, forceTick] = useState(0);
   const mountedAtRef = React.useRef<number>(Date.now());
-  const [baselineMs, setBaselineMs] = useState<number>(() => {
-    const created = new Date(dateISO).getTime();
-    if (!startAfterMount) return created;
-    return Math.max(created, mountedAtRef.current);
-  });
+  const createdMs = new Date(dateISO).getTime();
+  const [firstSeenMs, setFirstSeenMs] = useState<number>(() => mountedAtRef.current);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,7 +40,7 @@ export default function TimeAgo({ dateISO, style, intervalMs = 1000, startAfterM
         if (!startAfterMount || !postId) return;
         if (FIRST_SEEN_MAP.has(postId)) {
           const seen = FIRST_SEEN_MAP.get(postId)!;
-          if (!cancelled) setBaselineMs((current) => Math.max(current, seen));
+          if (!cancelled) setFirstSeenMs(seen);
           return;
         }
         const key = `FIRST_SEEN_POST_${postId}`;
@@ -54,8 +51,7 @@ export default function TimeAgo({ dateISO, style, intervalMs = 1000, startAfterM
           await AsyncStorage.setItem(key, String(firstSeen));
         }
         FIRST_SEEN_MAP.set(postId, firstSeen);
-        const created = new Date(dateISO).getTime();
-        if (!cancelled) setBaselineMs(Math.max(created, firstSeen));
+        if (!cancelled) setFirstSeenMs(firstSeen);
       } catch {}
     })();
     return () => {
@@ -67,7 +63,11 @@ export default function TimeAgo({ dateISO, style, intervalMs = 1000, startAfterM
     return () => clearInterval(id);
   }, [intervalMs]);
   if (!dateISO) return <Text style={style} />;
-  const baseDate = new Date(baselineMs);
+  const now = Date.now();
+  const ageSec = Math.floor(Math.max(0, now - createdMs) / 1000);
+  // Use firstSeen baseline ONLY for the initial seconds (<60s); otherwise use createdAt
+  const secondsBaseline = startAfterMount ? Math.max(createdMs, firstSeenMs) : createdMs;
+  const baseDate = new Date(ageSec < 60 ? secondsBaseline : createdMs);
   return <Text style={style}>{formatTimeAgo(baseDate)}</Text>;
 }
 
