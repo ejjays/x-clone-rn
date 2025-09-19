@@ -4,6 +4,7 @@ import type { Post } from "@/types";
 import { View, Text, TouchableOpacity, FlatList, ListRenderItem } from "react-native";
 import PostCard from "./PostCard";
 import PostCardSkeleton from "./PostCardSkeleton";
+import ReelsStrip from "@/components/ReelsStrip";
 import { useTheme } from "@/context/ThemeContext";
 
 interface PostsListProps {
@@ -87,25 +88,33 @@ const PostsList = ({
   }
 
   const filteredPosts = posts.filter((post: Post) => !post.video);
+  const firstFour = filteredPosts.slice(0, 4);
+  const rest = filteredPosts.slice(4);
 
-  const renderItem: ListRenderItem<Post> = ({ item, index }) => (
-    <View>
-      <PostCard
-        post={item}
-        reactToPost={reactToPost}
-        onDelete={deletePost}
-        onComment={onOpenComments || (() => {})}
-        currentUser={currentUser}
-        currentUserReaction={getCurrentUserReaction(item.reactions, currentUser)}
-        onOpenPostMenu={onOpenPostMenu}
-        onReactionPickerVisibilityChange={onReactionPickerVisibilityChange}
-        edgeToEdgeMedia={edgeToEdgeMedia}
-      />
-      {index < filteredPosts.length - 1 && (
-        <View className="h-1" style={{ backgroundColor: "#141414" }} />
-      )}
-    </View>
-  );
+  const renderItem: ListRenderItem<Post> = ({ item, index }) => {
+    const insertReels = index === 3; // after the 4th post (0-based index)
+    return (
+      <View>
+        <PostCard
+          post={item}
+          reactToPost={reactToPost}
+          onDelete={deletePost}
+          onComment={onOpenComments || (() => {})}
+          currentUser={currentUser}
+          currentUserReaction={getCurrentUserReaction(item.reactions, currentUser)}
+          onOpenPostMenu={onOpenPostMenu}
+          onReactionPickerVisibilityChange={onReactionPickerVisibilityChange}
+          edgeToEdgeMedia={edgeToEdgeMedia}
+        />
+        {insertReels && (
+          <ReelsStrip />
+        )}
+        {index < filteredPosts.length - 1 && (
+          <View className="h-1" style={{ backgroundColor: "#141414" }} />
+        )}
+      </View>
+    );
+  };
 
   return (
     <FlatList
