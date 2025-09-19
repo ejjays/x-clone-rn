@@ -38,7 +38,12 @@ export const StreamVideoProvider = ({ children }: { children: React.ReactNode })
         name: user.fullName ?? user.id,
         image: user.imageUrl,
       },
-      tokenProvider: async () => streamToken.data.token as string,
+      tokenProvider: async () => {
+        if (!streamToken?.data?.token) {
+          throw new Error("Stream token is missing or invalid.");
+        }
+        return streamToken.data.token as string;
+      },
     });
     return c;
   }, [user, streamToken]);
@@ -67,4 +72,3 @@ export const useStreamVideo = () => {
   if (!ctx) throw new Error("useStreamVideo must be used within StreamVideoProvider");
   return ctx;
 };
-
