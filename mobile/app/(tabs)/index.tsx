@@ -4,6 +4,7 @@ import React, { memo, useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { InteractionManager } from "react-native";
 import Stories from "@/components/Stories";
+import ReelsStrip from "@/components/ReelsStrip";
 import { usePosts } from "@/hooks/usePosts";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUserSync } from "@/hooks/useUserSync";
@@ -80,6 +81,7 @@ const HomeScreen = () => {
             <View style={{ backgroundColor: colors.background }}>
               <PostComposer animatedPlaceholder={false} />
               <Stories />
+              <ReelsStrip />
               <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
             </View>
           }

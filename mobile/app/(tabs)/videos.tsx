@@ -24,6 +24,7 @@ import {
   useFocusEffect,
 } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI from "expo-system-ui";
 import * as NavigationBar from "expo-navigation-bar";
@@ -61,6 +62,8 @@ function useOptionalTabBarHeight() {
 
 export default function VideosScreen() {
   const { posts, isLoading, error, refetch } = usePosts();
+  const params = useLocalSearchParams();
+  const initialVideoId = typeof params?.videoId === 'string' ? params.videoId : undefined;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isRefetching, setIsRefetching] = useState(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -81,10 +84,14 @@ export default function VideosScreen() {
 
   // Using fixed COMMENT_BAR_HEIGHT for consistent sizing
 
-  const videoPosts = useMemo(
-    () => posts.filter((p) => p.video?.trim()),
-    [posts]
-  );
+  const videoPosts = useMemo(() => posts.filter((p) => p.video?.trim()), [posts]);
+
+  // Jump to tapped video when coming from ReelsStrip
+  useEffect(() => {
+    if (!initialVideoId || videoPosts.length === 0) return;
+    const index = videoPosts.findIndex((p) => p._id === initialVideoId);
+    if (index >= 0) setActiveIndex(index);
+  }, [initialVideoId, videoPosts.length]);
 
   const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
   const handleCloseComments = () => bottomSheetRef.current?.close();
