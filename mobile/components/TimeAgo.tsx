@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Text, TextStyle, StyleProp } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { subscribeToSecondTicks } from "@/utils/secondTicker";
 
 type Props = {
   dateISO: string;
@@ -59,9 +60,9 @@ export default function TimeAgo({ dateISO, style, intervalMs = 1000, startAfterM
     };
   }, [startAfterMount, postId, dateISO]);
   useEffect(() => {
-    const id = setInterval(() => forceTick((n) => n + 1), intervalMs);
-    return () => clearInterval(id);
-  }, [intervalMs]);
+    const unsub = subscribeToSecondTicks(() => forceTick((n) => n + 1));
+    return () => unsub();
+  }, []);
   if (!dateISO) return <Text style={style} />;
   const now = Date.now();
   const ageSec = Math.floor(Math.max(0, now - createdMs) / 1000);
