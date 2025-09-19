@@ -373,7 +373,7 @@ const PostCard = ({
                 <VerifiedBadge style={{ marginLeft: 6 }} size={16} />
               ) : null}
             </View>
-            <TimeAgo dateISO={post.createdAt} startAfterMount style={{ color: colors.textSecondary, fontSize: 12 }} />
+            <TimeAgo dateISO={post.createdAt} startAfterMount postId={post._id} style={{ color: colors.textSecondary, fontSize: 12 }} />
           </View>
           {/* Show menu if user owns the post OR user is admin */}
           {(isOwnPost || currentUser.isAdmin) && (

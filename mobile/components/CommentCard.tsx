@@ -1,6 +1,7 @@
 // mobile/components/CommentCard.tsx
 import type { Comment, User, Reaction, ReactionName } from "@/types";
 import { formatDate } from "@/utils/formatters";
+import TimeAgo from "@/components/TimeAgo";
 import { useEffect, useState, useRef } from "react";
 import {
   View,
@@ -271,12 +272,7 @@ const CommentCard = ({
           {/* Action buttons below the bubble with modern styling */}
           <View className="flex-row items-center mt-2 px-3">
             {/* Timestamp */}
-            <Text
-              className="text-xs font-medium"
-              style={{ color: colors.textSecondary }}
-            >
-              {formatDate(comment.createdAt)}
-            </Text>
+            <TimeAgo dateISO={comment.createdAt} startAfterMount postId={comment._id} style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500" }} />
 
             {/* Like/Reaction button with same functionality as PostCard */}
             <View
