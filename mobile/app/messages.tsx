@@ -25,6 +25,7 @@ import * as SystemUI from "expo-system-ui";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/context/ThemeContext";
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } =
@@ -165,12 +166,23 @@ export default function MessagesScreen() {
         style={{ backgroundColor: colors.chatBackground }}
       >
         <View className="flex-row items-center">
-          <Text
-            className="text-3xl font-extrabold"
-            style={{ color: colors.blue }}
+          <LinearGradient
+            colors={['#FF6B6B', '#FF0000']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            className="rounded-md p-1"
           >
-            messages
-          </Text>
+            <Text
+              className="text-3xl font-extrabold"
+              style={{
+                color: 'transparent',
+                fontSize: 32,
+                fontWeight: '800',
+              }}
+            >
+              messages
+            </Text>
+          </LinearGradient>
         </View>
         <View className="flex-row items-center">
           <TouchableOpacity
