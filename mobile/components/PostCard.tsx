@@ -1,5 +1,7 @@
 import type { Post, User, Reaction, ReactionName } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
+import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   View,
   Text,
@@ -72,6 +74,11 @@ const PostCard = ({
   edgeToEdgeMedia,
 }: PostCardProps) => {
   const isOwnPost = post.user._id === currentUser._id;
+  const [nowTick, setNowTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const likeButtonRef = useRef<RNView>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<{

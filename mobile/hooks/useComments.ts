@@ -17,8 +17,7 @@ export const useComments = () => {
     },
     onSuccess: () => {
       setCommentText("");
-      // This will refetch all posts, which includes the new comment counts and details
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "posts" });
     },
     onError: async (err: any, vars: { postId: string; content: string }) => {
       if (!err?.response) {

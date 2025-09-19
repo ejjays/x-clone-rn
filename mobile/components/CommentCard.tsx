@@ -1,6 +1,7 @@
 // mobile/components/CommentCard.tsx
 import type { Comment, User, Reaction, ReactionName } from "@/types";
 import { formatDate } from "@/utils/formatters";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -46,6 +47,11 @@ const CommentCard = ({
   onDelete,
 }: CommentCardProps) => {
   const { colors, isDarkMode } = useTheme();
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const likeButtonRef = useRef<RNView>(null);
   const bottomSheetRef = useRef<PostActionBottomSheetRef>(null);
   const [pickerVisible, setPickerVisible] = useState(false);

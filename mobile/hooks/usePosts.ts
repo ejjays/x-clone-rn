@@ -20,10 +20,12 @@ export const usePosts = (username?: string) => {
       const response = username ? await postApi.getUserPosts(api, username) : await postApi.getPosts(api);
       return response.data.posts;
     },
-    staleTime: 30_000,
+    staleTime: 5_000,
     gcTime: 5 * 60_000,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: true,
     // Hydrate quickly from storage to display offline content, then network update
     select: (data) => data,
     onSuccess: async (data) => {
@@ -102,7 +104,7 @@ export const usePosts = (username?: string) => {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "posts" });
     },
   });
 
