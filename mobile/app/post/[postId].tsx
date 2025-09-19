@@ -19,6 +19,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import CommentCard from "@/components/CommentCard";
 import { useState } from "react";
 import { formatDate, formatNumber } from "@/utils/formatters";
+import TimeAgo from "@/components/TimeAgo";
 import CommentIcon from "@/assets/icons/Comment";
 import ShareIcon from "@/assets/icons/ShareIcon";
 import { useTheme } from "@/context/ThemeContext";
@@ -222,12 +223,7 @@ const PostDetailsScreen = () => {
                   >
                     {post?.user.firstName} {post?.user.lastName}
                   </Text>
-                  <Text
-                    className="text-sm"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    {post ? formatDate(post.createdAt) : ""}
-                  </Text>
+                  <TimeAgo dateISO={post?.createdAt || ""} style={{ color: colors.textSecondary, fontSize: 12 }} />
                 </View>
                 {isOwnPost && (
                   <TouchableOpacity className="p-2">

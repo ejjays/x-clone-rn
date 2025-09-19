@@ -1,5 +1,6 @@
 import type { Post, User, Reaction, ReactionName } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
+import TimeAgo from "@/components/TimeAgo";
 import {
   View,
   Text,
@@ -372,9 +373,7 @@ const PostCard = ({
                 <VerifiedBadge style={{ marginLeft: 6 }} size={16} />
               ) : null}
             </View>
-            <Text className="text-sm" style={{ color: colors.textSecondary }}>
-              {formatDate(post.createdAt)}
-            </Text>
+            <TimeAgo dateISO={post.createdAt} style={{ color: colors.textSecondary, fontSize: 12 }} />
           </View>
           {/* Show menu if user owns the post OR user is admin */}
           {(isOwnPost || currentUser.isAdmin) && (
