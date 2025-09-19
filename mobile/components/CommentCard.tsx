@@ -1,7 +1,7 @@
 // mobile/components/CommentCard.tsx
 import type { Comment, User, Reaction, ReactionName } from "@/types";
 import { formatDate } from "@/utils/formatters";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,6 @@ import {
   Dimensions,
   type View as RNView,
 } from "react-native";
-import { useRef, useState, useEffect } from "react";
 import PostReactionsPicker from "./PostReactionsPicker";
 import PostActionBottomSheet, {
   type PostActionBottomSheetRef,
@@ -280,7 +279,11 @@ const CommentCard = ({
             </Text>
 
             {/* Like/Reaction button with same functionality as PostCard */}
-            <View ref={likeButtonRef} collapsable={false} style={{ minWidth: 40 }}>
+            <View
+              ref={likeButtonRef}
+              collapsable={false}
+              style={{ minWidth: 40 }}
+            >
               <Pressable
                 onPress={handleQuickPress}
                 onLongPress={handleLongPress}

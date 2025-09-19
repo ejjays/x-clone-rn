@@ -1,7 +1,5 @@
 import type { Post, User, Reaction, ReactionName } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
-import { useEffect, useState } from "react";
-import { useEffect } from "react";
 import {
   View,
   Text,
@@ -31,7 +29,7 @@ import {
 import { FontAwesome, AntDesign, Fontisto } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import * as Clipboard from 'expo-clipboard';
+import * as Clipboard from "expo-clipboard";
 import { sharePost } from "@/utils/share";
 
 const getDynamicPostTextStyle = (content: string): string => {
@@ -58,7 +56,7 @@ interface PostCardProps {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const DRAG_THRESHOLD = 50;
-const SNAP_TO_CLOSE_THRESHOLD = screenHeight / 4; 
+const SNAP_TO_CLOSE_THRESHOLD = screenHeight / 4;
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -93,15 +91,15 @@ const PostCard = ({
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   const { isDarkMode, colors } = useTheme();
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
-  const [showModalContent, setShowModalContent] = useState(false); 
+  const [showModalContent, setShowModalContent] = useState(false);
 
-  const imageTranslateY = useRef(new Animated.Value(0)).current; 
-  const modalFadeAnim = useRef(new Animated.Value(0)).current; 
-  const contentOpacityAnim = useRef(new Animated.Value(0)).current; 
+  const imageTranslateY = useRef(new Animated.Value(0)).current;
+  const modalFadeAnim = useRef(new Animated.Value(0)).current;
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current;
 
   const openImageModal = useCallback(() => {
     setIsImageModalVisible(true);
-    setShowModalContent(true); 
+    setShowModalContent(true);
     imageTranslateY.setValue(50);
     Animated.parallel([
       Animated.timing(modalFadeAnim, {
@@ -115,7 +113,7 @@ const PostCard = ({
         bounciness: 10,
       }),
       Animated.timing(contentOpacityAnim, {
-        toValue: 1, 
+        toValue: 1,
         duration: 300,
         delay: 600,
         useNativeDriver: true,
@@ -143,10 +141,10 @@ const PostCard = ({
       }),
     ]).start(() => {
       setIsImageModalVisible(false);
-      imageTranslateY.setValue(0); 
-      modalFadeAnim.setValue(0); 
-      contentOpacityAnim.setValue(0); 
-      setShowModalContent(true); 
+      imageTranslateY.setValue(0);
+      modalFadeAnim.setValue(0);
+      contentOpacityAnim.setValue(0);
+      setShowModalContent(true);
     });
   }, []);
 
@@ -154,13 +152,13 @@ const PostCard = ({
     setShowModalContent((prev) => {
       const newShowModalContent = !prev;
       Animated.timing(contentOpacityAnim, {
-        toValue: newShowModalContent ? 1 : 0, 
+        toValue: newShowModalContent ? 1 : 0,
         duration: 200,
         useNativeDriver: true,
       }).start();
       return newShowModalContent;
     });
-  }, [contentOpacityAnim]); 
+  }, [contentOpacityAnim]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -364,7 +362,10 @@ const PostCard = ({
           />
           <View className="flex-1">
             <View className="flex-row items-center">
-              <Text className="font-bold text-lg" style={{ color: colors.text }}>
+              <Text
+                className="font-bold text-lg"
+                style={{ color: colors.text }}
+              >
                 {post.user.firstName} {post.user.lastName}
               </Text>
               {post.user.isVerified ? (
@@ -411,7 +412,11 @@ const PostCard = ({
         <TouchableOpacity onPress={openImageModal} activeOpacity={1}>
           <Image
             source={{ uri: post.image }}
-            style={{ width: screenWidth, height: undefined as unknown as number, aspectRatio: imageAspectRatio ?? 4/3 }}
+            style={{
+              width: screenWidth,
+              height: undefined as unknown as number,
+              aspectRatio: imageAspectRatio ?? 4 / 3,
+            }}
             resizeMode="cover"
             onLoad={(e: any) => {
               try {
@@ -524,7 +529,10 @@ const PostCard = ({
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5" onPress={() => sharePost(post)}>
+          <TouchableOpacity
+            className="flex-1 flex-row items-center justify-center py-2.5"
+            onPress={() => sharePost(post)}
+          >
             <ShareIcon size={22} color={colors.textSecondary} />
             <Text
               className="font-semibold ml-1.5"
@@ -543,21 +551,18 @@ const PostCard = ({
       />
       <Modal visible={isImageModalVisible} transparent={true}>
         <Animated.View
-          style={[
-            styles.modalContainer,
-            { opacity: modalFadeAnim }, 
-          ]}
+          style={[styles.modalContainer, { opacity: modalFadeAnim }]}
         >
           {/* Close button - OUTSIDE of content opacity animation */}
-          <Animated.View 
+          <Animated.View
             style={[
-              { 
+              {
                 position: "absolute",
                 top: 40,
-                left: 10, /* Changed from right to left */
+                left: 10 /* Changed from right to left */,
                 zIndex: 1000, // Higher z-index
-                opacity: contentOpacityAnim 
-              }
+                opacity: contentOpacityAnim,
+              },
             ]}
           >
             <TouchableOpacity
@@ -595,7 +600,7 @@ const PostCard = ({
               resizeMode="contain"
               {...panResponder.panHandlers}
             />
-            
+
             {/* Content with ONLY opacity animation control */}
             <Animated.View
               style={[
@@ -626,7 +631,7 @@ const PostCard = ({
                   <VerifiedBadge style={{ marginLeft: 6 }} size={14} />
                 ) : null}
               </View>
-              
+
               {post.content && (
                 <Text
                   style={{ color: "white", fontSize: 16, marginBottom: 15 }}
@@ -683,7 +688,11 @@ const PostCard = ({
                   borderTopWidth: 1,
                 }}
               >
-                <View ref={likeButtonRef} collapsable={false} style={{ flex: 1 }}>
+                <View
+                  ref={likeButtonRef}
+                  collapsable={false}
+                  style={{ flex: 1 }}
+                >
                   <Pressable
                     onPress={handleQuickPress}
                     onLongPress={handleLongPress}
@@ -707,7 +716,10 @@ const PostCard = ({
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5" onPress={() => sharePost(post)}>
+                <TouchableOpacity
+                  className="flex-1 flex-row items-center justify-center py-2.5"
+                  onPress={() => sharePost(post)}
+                >
                   <ShareIcon size={22} color="white" />
                   <Text
                     className="font-semibold ml-1.5"
