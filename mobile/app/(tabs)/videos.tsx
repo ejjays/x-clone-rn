@@ -1,6 +1,28 @@
-import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
-import { StatusBar as RNStatusBar, StatusBar, Platform, View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, useWindowDimensions } from "react-native";
-import { useIsFocused, useNavigation, useFocusEffect } from "@react-navigation/native";
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
+import {
+  StatusBar as RNStatusBar,
+  StatusBar,
+  Platform,
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+  useWindowDimensions,
+  Animated,
+} from "react-native";
+import {
+  useIsFocused,
+  useNavigation,
+  useFocusEffect,
+} from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI from "expo-system-ui";
@@ -8,7 +30,10 @@ import * as NavigationBar from "expo-navigation-bar";
 import BottomSheet from "@gorhom/bottom-sheet";
 
 import CommentsBottomSheet from "@/components/CommentsBottomSheet";
-import { VideoCommentBar, COMMENT_BAR_HEIGHT } from "@/components/VideoCommentBar";
+import {
+  VideoCommentBar,
+  COMMENT_BAR_HEIGHT,
+} from "@/components/VideoCommentBar";
 import type { Post } from "@/types";
 // Remove expo-status-bar to use native StatusBar for precise Android control
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -18,7 +43,6 @@ import ReelsListWrapper from "@/features/videos/ReelsListWrapper";
 // import { useVideosStatusBar } from "@/features/videos/hooks/useVideosStatusBar";
 import { videosScreenStyles as styles } from "@/features/videos/styles";
 import { usePosts } from "@/hooks/usePosts";
-
 
 /**
  * Safely attempt to read bottom tab bar height.
@@ -45,6 +69,8 @@ export default function VideosScreen() {
   const navigation = useNavigation();
   const { width, height } = useWindowDimensions();
   const { colors, isDarkMode } = useTheme(); // Use useTheme hook
+  const [statusBarReady, setStatusBarReady] = useState(false);
+  const headerOpacity = useRef(new Animated.Value(0)).current;
 
   // Removed useVideosStatusBar to avoid overriding StatusBar with translucent/transparent
 
@@ -80,11 +106,14 @@ export default function VideosScreen() {
     setIsRefetching(false);
   };
 
-  const handleMomentumEnd = useCallback((e) => {
-    const y = e.nativeEvent.contentOffset?.y ?? 0;
-    const index = Math.max(0, Math.round(y / itemHeight));
-    setActiveIndex(index);
-  }, [itemHeight]);
+  const handleMomentumEnd = useCallback(
+    (e) => {
+      const y = e.nativeEvent.contentOffset?.y ?? 0;
+      const index = Math.max(0, Math.round(y / itemHeight));
+      setActiveIndex(index);
+    },
+    [itemHeight]
+  );
 
   const [ready, setReady] = useState(false);
   useFocusEffect(
@@ -94,18 +123,31 @@ export default function VideosScreen() {
       try {
         RNStatusBar.setHidden(false);
         if (Platform.OS === 'android') {
-          RNStatusBar.setBackgroundColor(colors.background, true);
-          RNStatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
+          RNStatusBar.setBackgroundColor('#000000', true);
+          RNStatusBar.setBarStyle('light-content');
           NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-        }
-        if (Platform.OS === 'android') {
-          SystemUI.setBackgroundColorAsync(colors.background);
-          NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
+          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          SystemUI.setBackgroundColorAsync('#000000');
           NavigationBar.setVisibilityAsync('visible').catch(() => {});
         }
-      } catch {}
+        // Set statusBarReady after status bar changes are applied
+        setTimeout(() => {
+          setStatusBarReady(true);
+          Animated.timing(headerOpacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }, 50);
+      } catch {}   
       return () => {
         setReady(false);
+        setStatusBarReady(false);
+        Animated.timing(headerOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
         try {
           RNStatusBar.setHidden(false);
           if (Platform.OS === 'android') {
@@ -121,20 +163,30 @@ export default function VideosScreen() {
     }, [colors.background, isDarkMode])
   );
 
-  const renderItem = useCallback(({ item, index, isActive }: { item: Post, index: number, isActive: boolean }) => (
-    <VideoItem
-      item={item}
-      isVisible={isActive && isFocused}
-      isScreenFocused={isFocused}
-      onCommentPress={handleOpenComments}
-      insets={insets}
-      bottomSafeOffset={bottomSafeOffset}
-      commentBarHeight={COMMENT_BAR_HEIGHT}
-      width={width}
-      height={itemHeight}
-    />
-  ), [isFocused, insets, bottomSafeOffset, width, itemHeight]);
-
+  const renderItem = useCallback(
+    ({
+      item,
+      index,
+      isActive,
+    }: {
+      item: Post;
+      index: number;
+      isActive: boolean;
+    }) => (
+      <VideoItem
+        item={item}
+        isVisible={isActive && isFocused}
+        isScreenFocused={isFocused}
+        onCommentPress={handleOpenComments}
+        insets={insets}
+        bottomSafeOffset={bottomSafeOffset}
+        commentBarHeight={COMMENT_BAR_HEIGHT}
+        width={width}
+        height={itemHeight}
+      />
+    ),
+    [isFocused, insets, bottomSafeOffset, width, itemHeight]
+  );
 
   if (isLoading) {
     return (
@@ -159,38 +211,49 @@ export default function VideosScreen() {
   if (videoPosts.length === 0) {
     return (
       <View style={styles.centered}>
-        <View
+        <Animated.View
           style={[
             styles.header,
-            { paddingTop: insets.top + 8, flexDirection: "row", paddingHorizontal: 16 },
+            {
+              paddingTop: insets.top + 8,
+              flexDirection: "row",
+              paddingHorizontal: 16,
+              backgroundColor: 'transparent',
+              opacity: headerOpacity,
+            },
           ]}
         >
-          <TouchableOpacity
-            onPress={() => navigation.navigate("index")}
-            style={{ marginRight: 8 }}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={28}
-              color="white"
-              style={styles.iconShadow}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Reels</Text>
-        </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("index")}
+              style={{ marginRight: 8 }}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={28}
+                color="white"
+                style={styles.iconShadow}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Reels</Text>
+        </Animated.View>
         <Ionicons name="videocam-off-outline" size={64} color="#9CA3AF" />
         <Text style={styles.infoText}>No videos have been posted yet.</Text>
       </View>
     );
-  };
+  }
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'black' }}>
-
-      <View
+    <View style={{ flex: 1, backgroundColor: "black" }}>
+      <Animated.View
         style={[
           styles.header,
-          { paddingTop: insets.top + 8, flexDirection: "row", paddingHorizontal: 16 },
+          {
+            paddingTop: insets.top + 8,
+            flexDirection: "row",
+            paddingHorizontal: 16,
+            backgroundColor: 'transparent',
+            opacity: headerOpacity,
+          },
         ]}
       >
         <TouchableOpacity
@@ -208,16 +271,17 @@ export default function VideosScreen() {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Reels</Text>
-      </View>
+      </Animated.View>
 
       {ready && (
-      <ReelsListWrapper
-        data={videoPosts}
-        height={itemHeight}
-        width={width}
-        onIndexChange={setActiveIndex}
-        renderItem={renderItem as any}
-      />)}
+        <ReelsListWrapper
+          data={videoPosts}
+          height={itemHeight}
+          width={width}
+          onIndexChange={setActiveIndex}
+          renderItem={renderItem as any}
+        />
+      )}
 
       <VideoCommentBar onCommentPress={handleOpenComments} />
 
@@ -231,4 +295,3 @@ export default function VideosScreen() {
     </View>
   );
 }
-
