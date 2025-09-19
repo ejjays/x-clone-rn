@@ -28,6 +28,7 @@ import {
 } from "@/utils/reactions";
 import { FontAwesome, AntDesign, Fontisto } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import * as Clipboard from 'expo-clipboard';
 import { sharePost } from "@/utils/share";
 
@@ -355,9 +356,14 @@ const PostCard = ({
             className="w-14 h-14 rounded-full mr-3"
           />
           <View className="flex-1">
-            <Text className="font-bold text-lg" style={{ color: colors.text }}>
-              {post.user.firstName} {post.user.lastName}
-            </Text>
+            <View className="flex-row items-center">
+              <Text className="font-bold text-lg" style={{ color: colors.text }}>
+                {post.user.firstName} {post.user.lastName}
+              </Text>
+              {post.user.isVerified ? (
+                <VerifiedBadge style={{ marginLeft: 6 }} size={16} />
+              ) : null}
+            </View>
             <Text className="text-sm" style={{ color: colors.textSecondary }}>
               {formatDate(post.createdAt)}
             </Text>
@@ -609,6 +615,9 @@ const PostCard = ({
                 >
                   {post.user.firstName} {post.user.lastName}
                 </Text>
+                {post.user.isVerified ? (
+                  <VerifiedBadge style={{ marginLeft: 6 }} size={14} />
+                ) : null}
               </View>
               
               {post.content && (

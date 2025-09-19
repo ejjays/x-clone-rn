@@ -1,5 +1,6 @@
 // mobile/components/chat/ChatHeader.tsx
 import { View, Text, TouchableOpacity, Image } from "react-native";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
@@ -24,9 +25,13 @@ export default function ChatHeader({ colors, otherUser, channelId }: ChatHeaderP
         </View>
       )}
       <View className="flex-1 min-w-0">
-        <Text className="font-semibold text-xl" numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.text }}>
-          {otherUser?.name || "Chat"}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text className="font-semibold text-xl" numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.text }}>
+            {otherUser?.name || "Chat"}
+          </Text>
+          {/* We do not have verified flag here; if you pass it via params, enable below */}
+          {/* {otherUser?.isVerified ? <VerifiedBadge style={{ marginLeft: 6 }} size={14} /> : null} */}
+        </View>
         {otherUser && (
           <Text className="text-sm" style={{ color: colors.grayText }}>
             {otherUser.online ? "Online" : "Offline"}

@@ -31,6 +31,7 @@ import PostActionBottomSheet, {
 } from "@/components/PostActionBottomSheet";
 import PostReactionsPicker from "@/components/PostReactionsPicker";
 import { videoItemStyles as styles } from "@/features/videos/styles";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 import type { EdgeInsets } from "react-native-safe-area-context";
 
@@ -282,9 +283,14 @@ export default function VideoItem({
                 }
                 style={styles.avatar}
               />
-              <Text style={styles.username}>
-                {item.user.firstName} {item.user.lastName}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.username}>
+                  {item.user.firstName} {item.user.lastName}
+                </Text>
+                {item.user.isVerified ? (
+                  <VerifiedBadge style={{ marginLeft: 6 }} size={14} />
+                ) : null}
+              </View>
             </View>
             <Text
               style={[styles.caption, { marginBottom: 10 }]}

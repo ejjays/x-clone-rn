@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { useFollow } from "@/hooks/useFollow";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 interface UserCardProps {
   user: User;
@@ -68,9 +69,14 @@ const UserCard = ({
 
       {/* User Info */}
       <View className="flex-1">
-        <Text className="text-xl font-semibold" style={{ color: colors.text }}>
-          {user.firstName} {user.lastName}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text className="text-xl font-semibold" style={{ color: colors.text }}>
+            {user.firstName} {user.lastName}
+          </Text>
+          {user.isVerified ? (
+            <VerifiedBadge style={{ marginLeft: 6 }} size={16} />
+          ) : null}
+        </View>
         <Text className="text-sm" style={{ color: colors.textSecondary }}>
           @{user.username}
         </Text>

@@ -22,6 +22,7 @@ export interface User {
   followers?: string[];
   following?: string[];
   createdAt?: string;
+  isVerified?: boolean;
 }
 
 export interface Reaction {
