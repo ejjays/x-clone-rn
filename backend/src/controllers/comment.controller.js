@@ -10,7 +10,7 @@ export const getComments = asyncHandler(async (req, res) => {
 
   const comments = await Comment.find({ post: postId })
     .sort({ createdAt: -1 })
-    .populate("user", "username firstName lastName profilePicture")
+    .populate("user", "username firstName lastName profilePicture isVerified")
 
   res.status(200).json({ comments })
 })
@@ -51,7 +51,7 @@ export const createComment = asyncHandler(async (req, res) => {
 
   const populatedComment = await Comment.findById(comment._id).populate(
     "user",
-    "username firstName lastName profilePicture",
+    "username firstName lastName profilePicture isVerified",
   )
 
   res.status(201).json({ comment: populatedComment })
@@ -105,7 +105,7 @@ export const likeComment = asyncHandler(async (req, res) => {
 
   const updatedComment = await Comment.findById(commentId).populate(
     "user",
-    "username firstName lastName profilePicture",
+    "username firstName lastName profilePicture isVerified",
   )
 
   res.status(200).json({

@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema(
        type: Boolean,
        default: false,
      },
+    isVerified: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     followers: [
       {
         type: mongoose.Schema.Types.ObjectId,

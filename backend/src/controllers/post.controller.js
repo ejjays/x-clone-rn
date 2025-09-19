@@ -8,17 +8,17 @@ import Comment from "../models/comment.model.js";
 // --- HELPER TO POPULATE POSTS ---
 const populatePost = (query) =>
   query
-    .populate("user", "username firstName lastName profilePicture")
+    .populate("user", "username firstName lastName profilePicture isVerified")
     .populate({
       path: "comments",
       populate: {
         path: "user",
-        select: "username firstName lastName profilePicture",
+        select: "username firstName lastName profilePicture isVerified",
       },
     })
     .populate({
       path: "reactions.user",
-      select: "username firstName lastName profilePicture",
+      select: "username firstName lastName profilePicture isVerified",
     });
 
 // --- CONTROLLERS ---
