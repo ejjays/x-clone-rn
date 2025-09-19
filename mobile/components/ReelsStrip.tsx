@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
 import { getPlayableVideoUrl } from "@/utils/media";
+import { Image as ExpoImage } from "expo-image";
 import { usePosts } from "@/hooks/usePosts";
 import { useTheme } from "@/context/ThemeContext";
 import { router } from "expo-router";
@@ -26,10 +27,12 @@ export default function ReelsStrip() {
             activeOpacity={0.8}
           >
             <View style={{ width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surface }}>
-              <Image
-                source={{ uri: getPlayableVideoUrl(item.video as string) }}
+              <ExpoImage
+                source={{ uri: `${getPlayableVideoUrl(item.video as string)}&tr=thumbnail` }}
                 style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                transition={150}
               />
               <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 6, backgroundColor: 'rgba(0,0,0,0.25)' }}>
                 <Text numberOfLines={1} style={{ color: 'white', fontSize: 12 }}>
