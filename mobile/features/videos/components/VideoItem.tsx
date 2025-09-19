@@ -17,6 +17,7 @@ import {
   Pressable,
 } from "react-native";
 import { Ionicons, Entypo, FontAwesome5 } from "@expo/vector-icons";
+import { sharePost } from "@/utils/share";
 import Video from "react-native-video";
 import { getPlayableVideoUrl } from "@/utils/media";
 import * as Haptics from "expo-haptics";
@@ -351,7 +352,7 @@ export default function VideoItem({
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.iconContainer}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => sharePost(item)}>
               <Ionicons
                 name="share-social-outline"
                 size={30}

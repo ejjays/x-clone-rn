@@ -29,6 +29,7 @@ import {
 import { FontAwesome, AntDesign, Fontisto } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 import * as Clipboard from 'expo-clipboard';
+import { sharePost } from "@/utils/share";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -510,7 +511,7 @@ const PostCard = ({
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
+          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5" onPress={() => sharePost(post)}>
             <ShareIcon size={22} color={colors.textSecondary} />
             <Text
               className="font-semibold ml-1.5"
@@ -690,7 +691,7 @@ const PostCard = ({
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5">
+                <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2.5" onPress={() => sharePost(post)}>
                   <ShareIcon size={22} color="white" />
                   <Text
                     className="font-semibold ml-1.5"
