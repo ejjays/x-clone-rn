@@ -8,7 +8,7 @@ type Props = {
   style?: StyleProp<TextStyle>;
   intervalMs?: number;
   startAfterMount?: boolean; // if true, timer starts counting from when shown (or createdAt if later)
-  postId?: string; // for persistence so it doesn't reset after restart
+  postId?: string; // for persistence so it's doesn't reset after restart
 };
 
 const formatTimeAgo = (date: Date): string => {
@@ -19,10 +19,10 @@ const formatTimeAgo = (date: Date): string => {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return `${seconds}s`;
-  if (minutes < 60) return `${minutes}m`;
-  if (hours < 24) return `${hours}h`;
-  if (days < 7) return `${days}d`;
+  if (seconds < 60) return `${seconds} second${seconds === 1 ? "" : "s"} ago`;
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
@@ -71,4 +71,3 @@ export default function TimeAgo({ dateISO, style, intervalMs = 1000, startAfterM
   const baseDate = new Date(ageSec < 60 ? secondsBaseline : createdMs);
   return <Text style={style}>{formatTimeAgo(baseDate)}</Text>;
 }
-
