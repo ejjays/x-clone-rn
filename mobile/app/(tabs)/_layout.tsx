@@ -29,7 +29,7 @@ const TabsInner = () => {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const screenWidth = Dimensions.get('window').width;
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   const headerHeight = useSharedValue(HEADER_HEIGHT);
   const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
@@ -88,7 +88,7 @@ const TabsInner = () => {
           />
         ) : (
           <StatusBar
-            style="light"
+            style={isDarkMode ? "light" : "dark"}
             hidden={false}
             translucent={false}
             backgroundColor={colors.background}

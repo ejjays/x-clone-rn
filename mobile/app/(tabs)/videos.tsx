@@ -15,7 +15,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useTheme } from "@/context/ThemeContext";
 import VideoItem from "@/features/videos/components/VideoItem";
 import ReelsListWrapper from "@/features/videos/ReelsListWrapper";
-import { useVideosStatusBar } from "@/features/videos/hooks/useVideosStatusBar";
+// import { useVideosStatusBar } from "@/features/videos/hooks/useVideosStatusBar";
 import { videosScreenStyles as styles } from "@/features/videos/styles";
 import { usePosts } from "@/hooks/usePosts";
 
@@ -94,13 +94,13 @@ export default function VideosScreen() {
       try {
         RNStatusBar.setHidden(false);
         if (Platform.OS === 'android') {
-          RNStatusBar.setBackgroundColor('#000000', true);
-          RNStatusBar.setBarStyle('light-content');
+          RNStatusBar.setBackgroundColor(colors.background, true);
+          RNStatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
+          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
         }
         if (Platform.OS === 'android') {
-          SystemUI.setBackgroundColorAsync('#000000');
-          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          SystemUI.setBackgroundColorAsync(colors.background);
+          NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
           NavigationBar.setVisibilityAsync('visible').catch(() => {});
         }
       } catch {}
@@ -109,14 +109,16 @@ export default function VideosScreen() {
         try {
           RNStatusBar.setHidden(false);
           if (Platform.OS === 'android') {
-            // Revert to transparent when leaving
-            SystemUI.setBackgroundColorAsync('transparent');
-            NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-            NavigationBar.setButtonStyleAsync('light').catch(() => {});
+            // Revert to theme colors when leaving videos screen
+            RNStatusBar.setBackgroundColor(colors.background, true);
+            RNStatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
+            SystemUI.setBackgroundColorAsync(colors.background);
+            NavigationBar.setBackgroundColorAsync(colors.background).catch(() => {});
+            NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
           }
         } catch {}
       };
-    }, [])
+    }, [colors.background, isDarkMode])
   );
 
   const renderItem = useCallback(({ item, index, isActive }: { item: Post, index: number, isActive: boolean }) => (
@@ -184,7 +186,6 @@ export default function VideosScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'black' }}>
-      <StatusBar barStyle={Platform.OS === 'android' ? 'light-content' : 'light-content'} backgroundColor="#000000" animated />
 
       <View
         style={[
