@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ScrollView, View, Text, TouchableOpacity } from "react-native";
 import { getPlayableVideoUrl } from "@/utils/media";
 import { Image as ExpoImage } from "expo-image";
 import { usePosts } from "@/hooks/usePosts";
@@ -9,13 +9,30 @@ import { router } from "expo-router";
 export default function ReelsStrip() {
   const { posts } = usePosts();
   const { colors } = useTheme();
+  const [thumbs, setThumbs] = useState<Record<string, string>>({});
 
   const videos = useMemo(() => posts.filter((p) => !!p.video), [posts]);
   if (videos.length === 0) return null;
 
+  useEffect(() => {
+    (async () => {
+      const targets = videos.slice(0, 12).filter((v) => v.video && !thumbs[v._id]);
+      if (targets.length === 0) return;
+      try {
+        const { getThumbnailAsync } = await import('expo-video-thumbnails');
+        for (const item of targets) {
+          try {
+            const { uri } = await getThumbnailAsync(item.video as string, { time: 1000 });
+            setThumbs((prev) => ({ ...prev, [item._id]: uri }));
+          } catch {}
+        }
+      } catch {}
+    })();
+  }, [videos.length]);
+
   return (
     <View style={{ paddingVertical: 8 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, marginBottom: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, marginTop: 8, marginBottom: 8 }}>
         <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 18 }}>Reels</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
@@ -23,12 +40,12 @@ export default function ReelsStrip() {
           <TouchableOpacity
             key={item._id}
             onPress={() => router.push({ pathname: "/(tabs)/videos", params: { videoId: item._id } } as any)}
-            style={{ width: 112, height: 192, borderRadius: 12, overflow: 'hidden' }}
+            className="w-28 h-48 rounded-xl overflow-hidden"
             activeOpacity={0.8}
           >
             <View style={{ width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surface }}>
               <ExpoImage
-                source={{ uri: `${getPlayableVideoUrl(item.video as string)}&tr=thumbnail` }}
+                source={{ uri: thumbs[item._id] || `${getPlayableVideoUrl(item.video as string)}` }}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
                 cachePolicy="memory-disk"
