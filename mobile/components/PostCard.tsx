@@ -220,20 +220,11 @@ const PostCard = ({
   useEffect(() => {
     try {
       if (isImageModalVisible) {
-        RNStatusBar.setHidden(false);
+        RNStatusBar.setHidden(true);
         if (Platform.OS === 'android') {
-          RNStatusBar.setBackgroundColor('#000000', true);
-          RNStatusBar.setBarStyle('light-content');
-          SystemUI.setBackgroundColorAsync('#000000');
-          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-          NavigationBar.setButtonStyleAsync('light').catch(() => {});
-          NavigationBar.setBehaviorAsync('inset-swipe').catch(() => {});
-          NavigationBar.setVisibilityAsync('visible').catch(() => {});
-          // Re-apply shortly after to win against competing updates
-          setTimeout(() => {
-            NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-            NavigationBar.setButtonStyleAsync('light').catch(() => {});
-          }, 50);
+          // Enter immersive-like mode: hide system nav bar
+          NavigationBar.setVisibilityAsync('hidden').catch(() => {});
+          NavigationBar.setBehaviorAsync('overlay-swipe').catch(() => {});
         }
       } else {
         RNStatusBar.setHidden(false);
@@ -245,6 +236,13 @@ const PostCard = ({
           NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
           NavigationBar.setBehaviorAsync('inset-touch').catch(() => {});
           NavigationBar.setVisibilityAsync('visible').catch(() => {});
+          // Re-apply shortly after restore
+          setTimeout(() => {
+            NavigationBar.setBackgroundColorAsync(colors.background).catch(() => {});
+            NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
+            NavigationBar.setBehaviorAsync('inset-touch').catch(() => {});
+            NavigationBar.setVisibilityAsync('visible').catch(() => {});
+          }, 50);
         }
       }
     } catch {}
