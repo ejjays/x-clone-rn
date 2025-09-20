@@ -227,6 +227,8 @@ const PostCard = ({
           SystemUI.setBackgroundColorAsync('#000000');
           NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
           NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          NavigationBar.setBehaviorAsync('inset-swipe').catch(() => {});
+          NavigationBar.setVisibilityAsync('visible').catch(() => {});
         }
       } else {
         RNStatusBar.setHidden(false);
@@ -236,6 +238,8 @@ const PostCard = ({
           SystemUI.setBackgroundColorAsync(colors.background);
           NavigationBar.setBackgroundColorAsync(colors.background).catch(() => {});
           NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
+          NavigationBar.setBehaviorAsync('inset-touch').catch(() => {});
+          NavigationBar.setVisibilityAsync('visible').catch(() => {});
         }
       }
     } catch {}
