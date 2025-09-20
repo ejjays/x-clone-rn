@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { ScrollView, View, Text, TouchableOpacity } from "react-native";
 import { getPlayableVideoUrl, getVideoThumbnailUrl } from "@/utils/media";
 import { Image as ExpoImage } from "expo-image";
@@ -9,26 +9,9 @@ import { router } from "expo-router";
 export default function ReelsStrip() {
   const { posts } = usePosts();
   const { colors } = useTheme();
-  const [thumbs, setThumbs] = useState<Record<string, string>>({});
 
   const videos = useMemo(() => posts.filter((p) => !!p.video), [posts]);
   if (videos.length === 0) return null;
-
-  useEffect(() => {
-    (async () => {
-      const targets = videos.slice(0, 12).filter((v) => v.video && !thumbs[v._id]);
-      if (targets.length === 0) return;
-      try {
-        const { getThumbnailAsync } = await import('expo-video-thumbnails');
-        for (const item of targets) {
-          try {
-            const { uri } = await getThumbnailAsync(item.video as string, { time: 1000 });
-            setThumbs((prev) => ({ ...prev, [item._id]: uri }));
-          } catch {}
-        }
-      } catch {}
-    })();
-  }, [videos.length]);
 
   return (
     <View style={{ paddingVertical: 8 }}>
@@ -45,7 +28,7 @@ export default function ReelsStrip() {
           >
             <View style={{ width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surface }}>
               <ExpoImage
-                source={{ uri: thumbs[item._id] || getVideoThumbnailUrl(item.video as string) || `${getPlayableVideoUrl(item.video as string)}` }}
+                source={{ uri: getVideoThumbnailUrl(item.video as string) || `${getPlayableVideoUrl(item.video as string)}` }}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
                 cachePolicy="memory-disk"
