@@ -25,6 +25,8 @@ import * as SystemUI from "expo-system-ui";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/context/ThemeContext";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { LinearGradient } from "expo-linear-gradient";
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function MessagesScreen() {
@@ -166,23 +168,27 @@ export default function MessagesScreen() {
         style={{ backgroundColor: colors.chatBackground }}
       >
         <View className="flex-row items-center">
-          <LinearGradient
-            colors={['#FF6B6B', '#FF0000']}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            className="rounded-md p-1"
+          <MaskedView
+            maskElement={
+              <Text
+                className="text-3xl font-extrabold"
+                style={{ backgroundColor: 'transparent', color: 'black' }}
+              >
+                messages
+              </Text>
+            }
           >
-            <Text
-              className="text-3xl font-extrabold"
-              style={{
-                color: 'transparent',
-                fontSize: 32,
-                fontWeight: '800',
-              }}
+            <LinearGradient
+              colors={["#FF6B6B", "#FF0000"]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
             >
-              messages
-            </Text>
-          </LinearGradient>
+              {/* Invisible sizing text to bound the gradient */}
+              <Text className="text-3xl font-extrabold" style={{ opacity: 0 }}>
+                messages
+              </Text>
+            </LinearGradient>
+          </MaskedView>
         </View>
         <View className="flex-row items-center">
           <TouchableOpacity
