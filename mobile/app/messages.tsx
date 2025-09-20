@@ -167,27 +167,36 @@ export default function MessagesScreen() {
         style={{ backgroundColor: colors.chatBackground }}
       >
         <View className="flex-row items-center">
-          <MaskedView
-            maskElement={
-              <Text
-                className="text-3xl font-extrabold"
-                style={{ backgroundColor: 'transparent', color: 'black' }}
-              >
-                messages
-              </Text>
-            }
-          >
-            <LinearGradient
-              colors={["#FF6B6B", "#FF0000"]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
+          <View style={{ position: 'relative' }}>
+            {/* Thin white outline using 4-direction layered texts */}
+            <Text style={{ position: 'absolute', left: -0.6, top: 0, color: '#FFFFFF', fontSize: 32, fontWeight: '800' }}>messages</Text>
+            <Text style={{ position: 'absolute', left: 0.6, top: 0, color: '#FFFFFF', fontSize: 32, fontWeight: '800' }}>messages</Text>
+            <Text style={{ position: 'absolute', left: 0, top: -0.6, color: '#FFFFFF', fontSize: 32, fontWeight: '800' }}>messages</Text>
+            <Text style={{ position: 'absolute', left: 0, top: 0.6, color: '#FFFFFF', fontSize: 32, fontWeight: '800' }}>messages</Text>
+
+            {/* Gradient fill on top using masked view */}
+            <MaskedView
+              maskElement={
+                <Text
+                  className="text-3xl font-extrabold"
+                  style={{ backgroundColor: 'transparent', color: 'black' }}
+                >
+                  messages
+                </Text>
+              }
             >
-              {/* Invisible sizing text to bound the gradient */}
-              <Text className="text-3xl font-extrabold" style={{ opacity: 0 }}>
-                messages
-              </Text>
-            </LinearGradient>
-          </MaskedView>
+              <LinearGradient
+                colors={["#FF6B6B", "#FF0000"]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+              >
+                {/* Invisible sizing text to bound the gradient */}
+                <Text className="text-3xl font-extrabold" style={{ opacity: 0 }}>
+                  messages
+                </Text>
+              </LinearGradient>
+            </MaskedView>
+          </View>
         </View>
         <View className="flex-row items-center">
           <TouchableOpacity
