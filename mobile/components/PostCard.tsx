@@ -229,6 +229,11 @@ const PostCard = ({
           NavigationBar.setButtonStyleAsync('light').catch(() => {});
           NavigationBar.setBehaviorAsync('inset-swipe').catch(() => {});
           NavigationBar.setVisibilityAsync('visible').catch(() => {});
+          // Re-apply shortly after to win against competing updates
+          setTimeout(() => {
+            NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+            NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          }, 50);
         }
       } else {
         RNStatusBar.setHidden(false);
