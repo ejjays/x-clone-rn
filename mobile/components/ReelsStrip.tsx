@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, View, Text, TouchableOpacity } from "react-native";
-import { getPlayableVideoUrl } from "@/utils/media";
+import { getPlayableVideoUrl, getVideoThumbnailUrl } from "@/utils/media";
 import { Image as ExpoImage } from "expo-image";
 import { usePosts } from "@/hooks/usePosts";
 import { useTheme } from "@/context/ThemeContext";
@@ -45,7 +45,7 @@ export default function ReelsStrip() {
           >
             <View style={{ width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surface }}>
               <ExpoImage
-                source={{ uri: thumbs[item._id] || `${getPlayableVideoUrl(item.video as string)}` }}
+                source={{ uri: thumbs[item._id] || getVideoThumbnailUrl(item.video as string) || `${getPlayableVideoUrl(item.video as string)}` }}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
                 cachePolicy="memory-disk"
