@@ -36,7 +36,6 @@ import * as Clipboard from "expo-clipboard";
 import { sharePost } from "@/utils/share";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -98,7 +97,6 @@ const PostCard = ({
   const { isDarkMode, colors } = useTheme();
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [showModalContent, setShowModalContent] = useState(false);
-  const insets = useSafeAreaInsets();
 
   const imageTranslateY = useRef(new Animated.Value(0)).current;
   const modalFadeAnim = useRef(new Animated.Value(0)).current;
@@ -229,19 +227,13 @@ const PostCard = ({
           SystemUI.setBackgroundColorAsync('#000000');
           NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
           NavigationBar.setButtonStyleAsync('light').catch(() => {});
-          NavigationBar.setBehaviorAsync('overlay-swipe').catch(() => {});
+          NavigationBar.setBehaviorAsync('inset-swipe').catch(() => {});
           NavigationBar.setVisibilityAsync('visible').catch(() => {});
           // Re-apply shortly after to win against competing updates
           setTimeout(() => {
             NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
             NavigationBar.setButtonStyleAsync('light').catch(() => {});
-            NavigationBar.setBehaviorAsync('overlay-swipe').catch(() => {});
           }, 50);
-          setTimeout(() => {
-            NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-            NavigationBar.setButtonStyleAsync('light').catch(() => {});
-            NavigationBar.setBehaviorAsync('overlay-swipe').catch(() => {});
-          }, 300);
         }
       } else {
         RNStatusBar.setHidden(false);
@@ -594,14 +586,9 @@ const PostCard = ({
         onSelect={handleReactionSelect}
         anchorMeasurements={anchorMeasurements}
       />
-      <Modal
-        visible={isImageModalVisible}
-        transparent={Platform.OS === 'ios' ? true : false}
-        statusBarTranslucent={false}
-        presentationStyle="fullScreen"
-      >
+      <Modal visible={isImageModalVisible} transparent={true}>
         <Animated.View
-          style={[styles.modalContainer, { opacity: modalFadeAnim, backgroundColor: '#000000' }]}
+          style={[styles.modalContainer, { opacity: modalFadeAnim }]}
         >
           {/* Close button - OUTSIDE of content opacity animation */}
           <Animated.View
