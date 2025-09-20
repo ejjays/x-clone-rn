@@ -594,9 +594,14 @@ const PostCard = ({
         onSelect={handleReactionSelect}
         anchorMeasurements={anchorMeasurements}
       />
-      <Modal visible={isImageModalVisible} transparent={true}>
+      <Modal
+        visible={isImageModalVisible}
+        transparent={Platform.OS === 'ios' ? true : false}
+        statusBarTranslucent={false}
+        presentationStyle="fullScreen"
+      >
         <Animated.View
-          style={[styles.modalContainer, { opacity: modalFadeAnim }]}
+          style={[styles.modalContainer, { opacity: modalFadeAnim, backgroundColor: '#000000' }]}
         >
           {/* Close button - OUTSIDE of content opacity animation */}
           <Animated.View
