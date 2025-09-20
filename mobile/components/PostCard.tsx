@@ -13,6 +13,8 @@ import {
   StyleSheet,
   PanResponder,
   Animated,
+  StatusBar as RNStatusBar,
+  Platform,
 } from "react-native";
 import CommentIcon from "../assets/icons/Comment";
 import ShareIcon from "../assets/icons/ShareIcon";
@@ -32,6 +34,8 @@ import { useTheme } from "@/context/ThemeContext";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import * as Clipboard from "expo-clipboard";
 import { sharePost } from "@/utils/share";
+import * as NavigationBar from "expo-navigation-bar";
+import * as SystemUI from "expo-system-ui";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -211,6 +215,31 @@ const PostCard = ({
       setIsMediaLoading(false);
     }
   }, [post.image, post.video]);
+
+  // Ensure system UI is black when image modal is visible
+  useEffect(() => {
+    try {
+      if (isImageModalVisible) {
+        RNStatusBar.setHidden(false);
+        if (Platform.OS === 'android') {
+          RNStatusBar.setBackgroundColor('#000000', true);
+          RNStatusBar.setBarStyle('light-content');
+          SystemUI.setBackgroundColorAsync('#000000');
+          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+        }
+      } else {
+        RNStatusBar.setHidden(false);
+        if (Platform.OS === 'android') {
+          RNStatusBar.setBackgroundColor(colors.background, true);
+          RNStatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
+          SystemUI.setBackgroundColorAsync(colors.background);
+          NavigationBar.setBackgroundColorAsync(colors.background).catch(() => {});
+          NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
+        }
+      }
+    } catch {}
+  }, [isImageModalVisible, colors.background, isDarkMode]);
 
   useEffect(() => {
     if (onReactionPickerVisibilityChange) {
