@@ -27,7 +27,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/context/ThemeContext";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function MessagesScreen() {
   const { isConnecting, isConnected, channels, client, refreshChannels } =
