@@ -16,6 +16,7 @@ import {
   useCallStateHooks,
 } from "@stream-io/video-react-native-sdk";
 import { useTheme } from "@/context/ThemeContext";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function CallScreen() {
   const params = useLocalSearchParams();
