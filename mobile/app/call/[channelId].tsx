@@ -1,6 +1,6 @@
 // mobile/app/call/[channelId].tsx
 import { useLocalSearchParams, router } from "expo-router";
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Platform, View, Pressable, StyleSheet, Animated, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
@@ -29,23 +29,12 @@ export default function CallScreen() {
   const [joined, setJoined] = useState(false);
   const [otherUserId, setOtherUserId] = useState<string | undefined>(otherFromParams);
   const [localReactions, setLocalReactions] = useState<{ id: string; emoji: string }[]>([]);
-  // Expose local reaction emitter for controls to trigger and for remote events
-  useEffect(() => {
-    // @ts-ignore
-    (global as any).__CALL_LOCAL_REACTION_EMITTER__ = (emoji: string) => {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      setLocalReactions((prev) => [...prev, { id, emoji }]);
-      setTimeout(() => {
-        setLocalReactions((cur) => cur.filter((r) => r.id !== id));
-      }, 1100);
-    };
-    return () => {
-      // @ts-ignore
-      if ((global as any).__CALL_LOCAL_REACTION_EMITTER__) {
-        // @ts-ignore
-        (global as any).__CALL_LOCAL_REACTION_EMITTER__ = undefined;
-      }
-    };
+  const emitLocalReaction = useCallback((emoji: string) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setLocalReactions((prev) => [...prev, { id, emoji }]);
+    setTimeout(() => {
+      setLocalReactions((cur) => cur.filter((r) => r.id !== id));
+    }, 1100);
   }, []);
 
   const call = useMemo(() => {
@@ -95,39 +84,22 @@ export default function CallScreen() {
     };
   }, [call, clerkUser?.id, otherUserId]);
 
-  // Listen for remote custom reaction events and display local overlay
+  // Listen for remote reaction events and display local overlay
   useEffect(() => {
     if (!call) return;
-    const anyCall: any = call as any;
-    const emojiMap: Record<string, string> = { heart: '❤️', thumbs_up: '👍', joy: '😂', fire: '🔥' };
-    const emit = (emoji?: string) => {
-      // @ts-ignore
-      const emitter = (global as any).__CALL_LOCAL_REACTION_EMITTER__ as undefined | ((e: string) => void);
-      if (emoji && typeof emitter === 'function') emitter(emoji);
-    };
-    const onCustom = (e: any) => {
-      const emoji: string | undefined = e?.emoji || (e?.reaction && emojiMap[e.reaction]);
-      emit(emoji);
-    };
-    // Attach defensively to multiple potential event keys
-    const offFns: Array<() => void> = [];
-    try {
-      const off = anyCall.on?.('custom', onCustom);
-      if (typeof off === 'function') offFns.push(off);
-    } catch {}
-    try {
-      const off = anyCall.on?.('custom-reaction', onCustom);
-      if (typeof off === 'function') offFns.push(off);
-    } catch {}
-    try {
-      const off = anyCall.on?.('reaction', onCustom);
-      if (typeof off === 'function') offFns.push(off);
-    } catch {}
-    return () => {
-      offFns.forEach((fn) => {
-        try { fn(); } catch {}
-      });
-    };
+    const unsubscribe = (call as any).on?.('call.reaction_new', (event: any) => {
+      const code: string | undefined = event?.reaction?.emoji_code;
+      if (!code) return;
+      const toChar: Record<string, string> = {
+        ':heart:': '❤️',
+        ':thumbsup:': '👍',
+        ':joy:': '😂',
+        ':fire:': '🔥',
+      };
+      const emoji = toChar[code] || '❤️';
+      emitLocalReaction(emoji);
+    });
+    return unsubscribe;
   }, [call]);
 
   // Enter Android PiP when user backgrounds
@@ -173,7 +145,7 @@ export default function CallScreen() {
       <StatusBar hidden />
       {Platform.OS === "ios" && <RTCViewPipIOS />}
       <StreamCall call={call}>
-        <CallContent CallControls={FloatingControlsFactory()} />
+        <CallContent CallControls={FloatingControlsFactory(emitLocalReaction)} />
         {/* Local reactions overlay */}
         <View pointerEvents="none" style={styles.reactionsOverlay}>
           {localReactions.map((r) => (
@@ -186,24 +158,13 @@ export default function CallScreen() {
 }
 
 // Factory to inject local reaction emitter via closure
-const FloatingControlsFactory = () => {
-  // Closure state lives in CallScreen; wire via global ref on first render
-  const addLocalReactionRef = useRef<null | ((emoji: string) => void)>(null);
+const FloatingControlsFactory = (emitLocal: (emoji: string) => void) => {
   return function FloatingControls() {
   const call = useCall();
   const { useCameraState, useMicrophoneState } = useCallStateHooks();
   const { camera, isEnabled: isCamOn } = useCameraState();
   const { microphone, isEnabled: isMicOn } = useMicrophoneState();
   const [showReactions, setShowReactions] = React.useState(false);
-    // Grab setter from parent via React global state hack by walking up tree is not possible;
-    // Instead, expose a dispatch function on CallContent context via ref on first render.
-    // We'll look up a global placed on the window object to get the emitter. The emitter
-    // will be assigned by CallScreen below via a side-effect component.
-    const emitLocal = (emoji: string) => {
-      // @ts-ignore
-      const emitter = (global as any).__CALL_LOCAL_REACTION_EMITTER__ as undefined | ((e: string) => void);
-      if (typeof emitter === 'function') emitter(emoji);
-    };
 
   const toggleMic = async () => {
     if (isMicOn) await microphone?.disable(); else await microphone?.enable();
@@ -218,25 +179,31 @@ const FloatingControlsFactory = () => {
     await call?.leave();
     router.back();
   };
-    const sendReaction = async (type: string) => {
-      // Map to emoji for local overlay
-      const emojiMap: Record<string, string> = {
-        heart: '❤️',
-        thumbs_up: '👍',
-        joy: '😂',
-        fire: '🔥',
+    const sendReaction = async (kind: string) => {
+      // Map to Stream emoji codes and display chars
+      const toCode: Record<string, string> = {
+        heart: ':heart:',
+        thumbs_up: ':thumbsup:',
+        joy: ':joy:',
+        fire: ':fire:',
       };
-      const emoji = emojiMap[type] ?? '❤️';
+      const toChar: Record<string, string> = {
+        ':heart:': '❤️',
+        ':thumbsup:': '👍',
+        ':joy:': '😂',
+        ':fire:': '🔥',
+      };
+      const emoji_code = toCode[kind] ?? ':heart:';
+      const emojiChar = toChar[emoji_code] ?? '❤️';
       try {
         const anyCall: any = call;
         if (anyCall?.sendReaction) {
-          await anyCall.sendReaction(type);
+          await anyCall.sendReaction({ type: 'reaction', emoji_code, custom: {} });
         } else if (anyCall?.sendCustomEvent) {
-          await anyCall.sendCustomEvent({ type: 'custom-reaction', emoji, reaction: type });
+          await anyCall.sendCustomEvent({ type: 'call.reaction_new', reaction: { emoji_code } });
         }
       } catch {}
-      // Always show local overlay for immediate feedback
-      emitLocal(emoji);
+      emitLocal(emojiChar);
       setShowReactions(false);
     };
 
