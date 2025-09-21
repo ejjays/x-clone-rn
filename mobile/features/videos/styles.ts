@@ -9,10 +9,8 @@ export const videosScreenStyles = StyleSheet.create({
 	},
 	infoText: { color: "white", fontSize: 16, marginTop: 10 },
 	header: {
-		position: "absolute",
 		left: 0,
 		right: 0,
-		top: 0,
 		paddingHorizontal: 16,
 		paddingBottom: 10,
 		zIndex: 10,
@@ -77,4 +75,3 @@ export const videoItemStyles = StyleSheet.create({
 		textShadowRadius: 7,
 	},
 });
-

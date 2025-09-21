@@ -30,4 +30,3 @@ export const getVideoThumbnailUrl = (url: string): string | null => {
     return null
   }
 }
-

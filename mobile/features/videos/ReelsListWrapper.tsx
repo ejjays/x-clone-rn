@@ -9,14 +9,15 @@ type Props = {
 	width: number;
 	renderItem: (args: { item: Post; index: number; isActive: boolean }) => React.ReactElement;
 	onIndexChange?: (index: number) => void;
+	initialIndex?: number;
 };
 
-export default function ReelsListWrapper({ data, height, width, renderItem, onIndexChange }: Props) {
+export default function ReelsListWrapper({ data, height, width, renderItem, onIndexChange, initialIndex = 0 }: Props) {
 	// Disabled dynamic import to avoid duplicate RNGestureHandler registrations.
 	// Library integration can be enabled once deduped and tested.
 	const ReelsList: any = null;
 
-	const [activeIndex, setActiveIndex] = useState(0);
+	const [activeIndex, setActiveIndex] = useState(initialIndex);
 	const handleIndex = useCallback((index: number) => {
 		setActiveIndex(index);
 		onIndexChange?.(index);
@@ -39,7 +40,7 @@ export default function ReelsListWrapper({ data, height, width, renderItem, onIn
 	return (
 		<PagerView
 			style={{ flex: 1, width }}
-			initialPage={0}
+			initialPage={initialIndex}
 			orientation="vertical"
 			onPageSelected={(e) => handleIndex(e.nativeEvent.position)}
 			overScrollMode="never"
@@ -52,4 +53,3 @@ export default function ReelsListWrapper({ data, height, width, renderItem, onIn
 		</PagerView>
 	);
 }
-

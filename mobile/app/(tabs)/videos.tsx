@@ -222,9 +222,11 @@ export default function VideosScreen() {
           style={[
             styles.header,
             {
-              paddingTop: insets.top + 8,
+              position: "absolute",
+              top: insets.top,
               flexDirection: "row",
               paddingHorizontal: 16,
+              paddingVertical: 8,
               backgroundColor: 'transparent',
               opacity: headerOpacity,
             },
@@ -255,9 +257,11 @@ export default function VideosScreen() {
         style={[
           styles.header,
           {
-            paddingTop: insets.top + 8,
+            position: "absolute",
+            top: insets.top,
             flexDirection: "row",
             paddingHorizontal: 16,
+            paddingVertical: 8,
             backgroundColor: 'transparent',
             opacity: headerOpacity,
           },
@@ -287,6 +291,7 @@ export default function VideosScreen() {
           width={width}
           onIndexChange={setActiveIndex}
           renderItem={renderItem as any}
+          initialIndex={activeIndex}
         />
       )}
 

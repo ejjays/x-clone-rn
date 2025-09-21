@@ -5,6 +5,7 @@ import { Image as ExpoImage } from "expo-image";
 import { usePosts } from "@/hooks/usePosts";
 import { useTheme } from "@/context/ThemeContext";
 import { router } from "expo-router";
+import { X } from "lucide-react-native"; 
 
 export default function ReelsStrip() {
   const { posts } = usePosts();
@@ -12,16 +13,19 @@ export default function ReelsStrip() {
 
   const { width: screenWidth } = Dimensions.get("window");
 
-  const cardWidth = screenWidth * 0.70; // 45% of screen width
-  const cardHeight = screenWidth * 1.25; // 65% of screen width
+  const cardWidth = screenWidth * 0.6; // Width
+  const cardHeight = screenWidth * 1; // Height
 
   const videos = useMemo(() => posts.filter((p) => !!p.video), [posts]);
   if (videos.length === 0) return null;
 
   return (
     <View style={{ paddingVertical: 8 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, marginTop: 8, marginBottom: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, marginTop: 8, marginBottom: 8 }}>
         <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 28 }}>Reels</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <X size={24} color={colors.text} />
+        </TouchableOpacity>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 12 }}>
         {videos.map((item) => (
