@@ -1,7 +1,7 @@
 // mobile/app/call/[channelId].tsx
 import { useLocalSearchParams, router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { Platform, View } from "react-native";
+import { Platform, View, Pressable, StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import { useStreamVideo } from "@/context/StreamVideoContext";
@@ -118,11 +118,125 @@ export default function CallScreen() {
       <StatusBar hidden />
       {Platform.OS === "ios" && <RTCViewPipIOS />}
       <StreamCall call={call}>
-        <CallContent />
+        <CallContent CallControls={FloatingControls} />
       </StreamCall>
     </View>
   );
 }
 
-// Using built-in Stream call controls via <CallContent />
+const FloatingControls = () => {
+  const call = useCall();
+  const { useCameraState, useMicrophoneState } = useCallStateHooks();
+  const { camera, isEnabled: isCamOn } = useCameraState();
+  const { microphone, isEnabled: isMicOn } = useMicrophoneState();
+  const [showReactions, setShowReactions] = React.useState(false);
+
+  const toggleMic = async () => {
+    if (isMicOn) await microphone?.disable(); else await microphone?.enable();
+  };
+  const toggleCam = async () => {
+    if (isCamOn) await camera?.disable(); else await camera?.enable();
+  };
+  const flipCam = async () => {
+    await camera?.flip();
+  };
+  const hangup = async () => {
+    await call?.leave();
+    router.back();
+  };
+  const sendReaction = async (type: string) => {
+    try {
+      const anyCall: any = call;
+      if (anyCall?.sendReaction) {
+        await anyCall.sendReaction(type);
+      } else if (anyCall?.sendCustomEvent) {
+        await anyCall.sendCustomEvent({ type: 'reaction', reaction: type });
+      }
+    } catch {}
+    setShowReactions(false);
+  };
+
+  return (
+    <View style={styles.controlsContainer} pointerEvents="box-none">
+      {showReactions && (
+        <View style={styles.reactionsRow}>
+          <RoundButton onPress={() => sendReaction('heart')} bg="#E11D48">
+            <Ionicons name="heart" size={20} color="#fff" />
+          </RoundButton>
+          <RoundButton onPress={() => sendReaction('thumbs_up')} bg="#2563EB">
+            <Ionicons name="thumbs-up" size={20} color="#fff" />
+          </RoundButton>
+          <RoundButton onPress={() => sendReaction('joy')} bg="#F59E0B">
+            <Ionicons name="happy" size={20} color="#fff" />
+          </RoundButton>
+          <RoundButton onPress={() => sendReaction('fire')} bg="#DC2626">
+            <Ionicons name="flame" size={20} color="#fff" />
+          </RoundButton>
+        </View>
+      )}
+      <View style={styles.controlsRow}>
+        <RoundButton onPress={toggleMic} bg={isMicOn ? "#222" : "#E11D48"}>
+          <Ionicons name={isMicOn ? "mic" : "mic-off"} size={22} color="#fff" />
+        </RoundButton>
+        <RoundButton onPress={toggleCam} bg={isCamOn ? "#222" : "#E11D48"}>
+          <Ionicons name={isCamOn ? "videocam" : "videocam-off"} size={22} color="#fff" />
+        </RoundButton>
+        <RoundButton onPress={flipCam} bg="#222">
+          <Ionicons name="camera-reverse-outline" size={22} color="#fff" />
+        </RoundButton>
+        <RoundButton onPress={() => setShowReactions((s) => !s)} bg="#222">
+          <Ionicons name="heart" size={22} color="#fff" />
+        </RoundButton>
+        <RoundButton onPress={hangup} bg="#DC2626">
+          <Ionicons name="call" size={22} color="#fff" />
+        </RoundButton>
+      </View>
+    </View>
+  );
+};
+
+const RoundButton = ({ children, onPress, bg }: { children: React.ReactNode; onPress: () => void; bg: string }) => (
+  <Pressable onPress={onPress} style={[styles.roundBtn, { backgroundColor: bg }]}> 
+    {children}
+  </Pressable>
+);
+
+const styles = StyleSheet.create({
+  controlsContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 30,
+    alignItems: "center",
+  },
+  reactionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 999,
+    marginBottom: 10,
+  },
+  controlsRow: {
+    flexDirection: "row",
+    gap: 16,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 999,
+  },
+  roundBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+});
 
