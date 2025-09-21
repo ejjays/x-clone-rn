@@ -1,7 +1,7 @@
 // mobile/app/call/[channelId].tsx
 import { useLocalSearchParams, router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { Platform, View, Pressable, StyleSheet } from "react-native";
+import { Platform, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import { useStreamVideo } from "@/context/StreamVideoContext";
@@ -15,7 +15,6 @@ import {
   useCall,
   useCallStateHooks,
 } from "@stream-io/video-react-native-sdk";
-import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function CallScreen() {
@@ -119,85 +118,11 @@ export default function CallScreen() {
       <StatusBar hidden />
       {Platform.OS === "ios" && <RTCViewPipIOS />}
       <StreamCall call={call}>
-        <CallContent CallControls={FloatingControls} />
+        <CallContent />
       </StreamCall>
     </View>
   );
 }
 
-const FloatingControls = () => {
-  const call = useCall();
-  const { useCameraState, useMicrophoneState } = useCallStateHooks();
-  const { camera, isEnabled: isCamOn } = useCameraState();
-  const { microphone, isEnabled: isMicOn } = useMicrophoneState();
-
-  const toggleMic = async () => {
-    if (isMicOn) await microphone?.disable(); else await microphone?.enable();
-  };
-  const toggleCam = async () => {
-    if (isCamOn) await camera?.disable(); else await camera?.enable();
-  };
-  const flipCam = async () => {
-    await camera?.flip();
-  };
-  const hangup = async () => {
-    await call?.leave();
-    router.back();
-  };
-
-  return (
-    <View style={styles.controlsContainer} pointerEvents="box-none">
-      <View style={styles.controlsRow}>
-        <RoundButton onPress={toggleMic} bg={isMicOn ? "#222" : "#E11D48"}>
-          <Ionicons name={isMicOn ? "mic" : "mic-off"} size={22} color="#fff" />
-        </RoundButton>
-        <RoundButton onPress={toggleCam} bg={isCamOn ? "#222" : "#E11D48"}>
-          <Ionicons name={isCamOn ? "videocam" : "videocam-off"} size={22} color="#fff" />
-        </RoundButton>
-        <RoundButton onPress={flipCam} bg="#222">
-          <Ionicons name="camera-reverse-outline" size={22} color="#fff" />
-        </RoundButton>
-        <RoundButton onPress={hangup} bg="#DC2626">
-          <Ionicons name="call" size={22} color="#fff" />
-        </RoundButton>
-      </View>
-    </View>
-  );
-};
-
-const RoundButton = ({ children, onPress, bg }: { children: React.ReactNode; onPress: () => void; bg: string }) => (
-  <Pressable onPress={onPress} style={[styles.roundBtn, { backgroundColor: bg }]}>
-    {children}
-  </Pressable>
-);
-
-const styles = StyleSheet.create({
-  controlsContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 30,
-    alignItems: "center",
-  },
-  controlsRow: {
-    flexDirection: "row",
-    gap: 16,
-    backgroundColor: "rgba(0,0,0,0.2)",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 999,
-  },
-  roundBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-  },
-});
+// Using built-in Stream call controls via <CallContent />
 
