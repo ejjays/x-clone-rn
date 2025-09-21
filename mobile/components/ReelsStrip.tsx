@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ScrollView, View, Text, TouchableOpacity } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, Dimensions } from "react-native";
 import { getPlayableVideoUrl, getVideoThumbnailUrl } from "@/utils/media";
 import { Image as ExpoImage } from "expo-image";
 import { usePosts } from "@/hooks/usePosts";
@@ -10,20 +10,26 @@ export default function ReelsStrip() {
   const { posts } = usePosts();
   const { colors } = useTheme();
 
+  const { width: screenWidth } = Dimensions.get("window");
+
+  const cardWidth = screenWidth * 0.70; // 45% of screen width
+  const cardHeight = screenWidth * 1.25; // 65% of screen width
+
   const videos = useMemo(() => posts.filter((p) => !!p.video), [posts]);
   if (videos.length === 0) return null;
 
   return (
     <View style={{ paddingVertical: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, marginTop: 8, marginBottom: 8 }}>
-        <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 18 }}>Reels</Text>
+        <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 28 }}>Reels</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
-        {videos.slice(0, 12).map((item) => (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 12 }}>
+        {videos.map((item) => (
           <TouchableOpacity
             key={item._id}
             onPress={() => router.push({ pathname: "/(tabs)/videos", params: { videoId: item._id } } as any)}
-            className="w-28 h-48 rounded-xl overflow-hidden"
+            style={{ width: cardWidth, height: cardHeight }}
+            className="rounded-xl overflow-hidden"
             activeOpacity={0.8}
           >
             <View style={{ width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surface }}>
@@ -46,4 +52,3 @@ export default function ReelsStrip() {
     </View>
   );
 }
-

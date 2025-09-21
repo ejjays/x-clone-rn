@@ -40,7 +40,7 @@ const PostsList = ({
     deletePost,
     getCurrentUserReaction,
   } = usePosts(username);
-  const { colors } = useTheme(); // Use useTheme hook
+  const { colors, isDarkMode } = useTheme(); // Use useTheme hook
 
   if (isPostsLoading || isUserLoading) {
     return (
@@ -107,10 +107,14 @@ const PostsList = ({
           edgeToEdgeMedia={edgeToEdgeMedia}
         />
         {insertReels && (
-          <ReelsStrip />
+          <>
+            <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
+            <ReelsStrip />
+            <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
+          </>
         )}
-        {index < filteredPosts.length - 1 && (
-          <View className="h-1" style={{ backgroundColor: "#141414" }} />
+        {index < filteredPosts.length - 1 && !insertReels && (
+          <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
         )}
       </View>
     );
