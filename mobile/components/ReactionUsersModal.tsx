@@ -1,6 +1,15 @@
 import React from "react";
-import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
+import {
+  Modal,
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
 import { useTheme } from "../context/ThemeContext";
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface ReactionUsersModalProps {
   isVisible: boolean;
@@ -23,12 +32,24 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
     >
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable onPress={(e) => e.stopPropagation()}>
-          <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Users who reacted</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Users who reacted
+            </Text>
             {/* Content for displaying users will go here */}
-            <Text style={{ color: colors.text, marginTop: 10 }}>No users found yet!</Text>
-            <Pressable style={styles.closeButton} onPress={onClose}>
-              <Text style={[styles.closeButtonText, { color: colors.primary }]}>Close</Text>
+            <Text style={{ color: colors.text, marginTop: 10 }}>
+              No users found yet!
+            </Text>
+            <Pressable
+              style={[
+                styles.closeButton,
+                { backgroundColor: colors.border + "33" },
+              ]}
+              onPress={onClose}
+            >
+              <Text style={[styles.closeButtonText, { color: colors.primary }]}>
+                Close
+              </Text>
             </Pressable>
           </View>
         </Pressable>
@@ -40,15 +61,17 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-end", // Aligns content to the bottom
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.8)", // Semi-transparent black for the background behind the modal
   },
   modalContent: {
-    width: 300,
+    width: screenWidth * 0.9, // Make it 90% of screen width
+    height: screenHeight * 0.4, // Make it 40% of screen height
     padding: 20,
     borderRadius: 15,
     alignItems: "center",
+    marginBottom: 20, // Add some margin from the bottom
   },
   modalTitle: {
     fontSize: 18,
@@ -60,11 +83,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 10,
-    backgroundColor: 'rgba(0, 122, 255, 0.1)', // Example, adjust as needed
   },
   closeButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 
