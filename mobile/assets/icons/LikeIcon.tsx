@@ -1,6 +1,7 @@
 import { reactionComponents } from "@/utils/reactions";
-import { Path, Svg } from "react-native-svg";
-import { FontAwesome } from "@expo/vector-icons";
+import Octicons from "@expo/vector-icons/Octicons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useTheme } from "@/context/ThemeContext";
 
 const LikeIcon = ({
   userReaction,
@@ -9,6 +10,8 @@ const LikeIcon = ({
   userReaction?: string;
   [key: string]: any;
 }) => {
+  const { colors } = useTheme();
+
   const ReactionComponent = userReaction
     ? reactionComponents[userReaction as keyof typeof reactionComponents]
     : null;
@@ -18,7 +21,11 @@ const LikeIcon = ({
   }
 
   return (
-    <FontAwesome name="thumbs-up" size={props.size || 24} color="#657786" />
+    <FontAwesome
+      name="thumbs-o-up"
+      size={props.size || 24}
+      color="#b0b3b8"
+    />
   );
 };
 export default LikeIcon;

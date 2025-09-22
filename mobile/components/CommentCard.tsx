@@ -69,7 +69,7 @@ const CommentCard = ({
   useEffect(() => {
     // If comment has an image attachment, calculate its dimensions
     // This is a placeholder for when you add image support to comments
-    // For now, we'll handle profile pictures with proper aspect ratio
+    // For now, we\'ll handle profile pictures with proper aspect ratio
   }, []);
 
   const handleQuickPress = () => {
@@ -162,9 +162,8 @@ const CommentCard = ({
 
     return (
       <View className="flex-row items-center">
-        <LikeIcon userReaction={currentUserCommentReaction?.type} size={18} />
         <Text
-          className="font-semibold capitalize ml-1 text-xs"
+          className="font-semibold capitalize ml-1 text-sm"
           style={{ color: textColor }}
         >
           {reactionLabel}
@@ -191,13 +190,14 @@ const CommentCard = ({
         {/* Comment content container */}
         <View className="flex-1 ml-3">
           {/* Comment bubble with modern dark theme */}
-          <View
+          <Pressable
+            onLongPress={handleMenuPress}
             className="rounded-2xl px-3.5 py-2.5 max-w-[85%]"
             style={{ backgroundColor: colors.surface }}
           >
             {/* User name with proper dark theme color */}
             <Text
-              className="font-bold text-sm mb-1"
+              className="font-bold text-base mb-1"
               style={{ color: colors.text }}
             >
               {comment.user.firstName} {comment.user.lastName}
@@ -212,8 +212,7 @@ const CommentCard = ({
             </Text>
 
             {/* If comment has image attachment, show it in original aspect ratio */}
-            {/* This is a placeholder for when you add image support to comments */}
-            {/* You can uncomment and modify this when implementing image attachments
+            {/* This is a placeholder for when you add image support to comments
             {comment.image && (
               <Image
                 source={{ uri: comment.image }}
@@ -233,46 +232,21 @@ const CommentCard = ({
               />
             )}
             */}
-          </View>
-
-          {/* Reactions display (similar to PostCard) */}
-          {reactionCount > 0 && (
-            <View className="flex-row items-center mt-1 ml-2">
-              <View className="flex-row items-center">
-                {/* Show top 3 reaction emojis */}
-                {topReactions.map((reactionType, index) => {
-                  const ReactionComponent =
-                    reactionComponents[reactionType as ReactionName];
-                  return (
-                    <View
-                      key={reactionType}
-                      className="w-4 h-4 rounded-full border border-white"
-                      style={{
-                        marginLeft: index > 0 ? -4 : 0,
-                        backgroundColor: colors.background,
-                        zIndex: topReactions.length - index,
-                      }}
-                    >
-                      <ReactionComponent width={16} height={16} />
-                    </View>
-                  );
-                })}
-
-                {/* Reaction count */}
-                <Text
-                  className="text-xs ml-2 font-medium"
-                  style={{ color: colors.textSecondary }}
-                >
-                  {reactionCount}
-                </Text>
-              </View>
-            </View>
-          )}
+          </Pressable>
 
           {/* Action buttons below the bubble with modern styling */}
           <View className="flex-row items-center mt-2 px-3">
             {/* Timestamp */}
-            <TimeAgo dateISO={comment.createdAt} startAfterMount postId={comment._id} style={{ color: colors.textSecondary, fontSize: 12, fontWeight: "500" }} />
+            <TimeAgo
+              dateISO={comment.createdAt}
+              startAfterMount
+              postId={comment._id}
+              style={{
+                color: colors.textSecondary,
+                fontSize: 12,
+                fontWeight: "500",
+              }}
+            />
 
             {/* Like/Reaction button with same functionality as PostCard */}
             <View
@@ -297,27 +271,12 @@ const CommentCard = ({
               className="ml-4 py-1"
             >
               <Text
-                className="font-medium text-xs"
+                className="font-medium text-sm"
                 style={{ color: colors.textSecondary }}
               >
                 Reply
               </Text>
             </TouchableOpacity>
-
-            {/* Three dots menu (replaces trash icon) */}
-            {(isOwnComment || currentUser?.isAdmin) && (
-              <TouchableOpacity
-                onPress={handleMenuPress}
-                className="ml-auto p-1"
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <FontAwesome
-                  name="ellipsis-h"
-                  size={14}
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            )}
           </View>
         </View>
       </View>

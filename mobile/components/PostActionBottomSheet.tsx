@@ -241,18 +241,6 @@ const PostActionBottomSheet = forwardRef<
               </Text>
             </TouchableOpacity>
             
-            <TouchableOpacity
-              className="flex-row items-center py-3 mt-2 border-t border-gray-700"
-              onPress={() => {
-                if (!isDragging) {
-                  handleClose();
-                }
-              }}
-            >
-              <Text className="flex-1 text-center text-blue-500 text-lg font-bold">
-                Cancel
-              </Text>
-            </TouchableOpacity>
           </View>
         </Animated.View>
       </Pressable>
