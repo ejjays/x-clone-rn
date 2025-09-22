@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Modal,
   View,
@@ -9,6 +9,8 @@ import {
   useColorScheme,
   Image,
   ScrollView,
+  Animated,
+  Easing,
 } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { FontAwesome6 } from "@expo/vector-icons";
@@ -40,6 +42,31 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
   const { colors } = useTheme();
   const colorScheme = useColorScheme();
 
+  const animatedScale = useRef(new Animated.Value(0)).current;
+  const animatedOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isVisible) {
+      Animated.parallel([
+        Animated.spring(animatedScale, {
+          toValue: 1,
+          friction: 8, // Adjust for more or less bounce
+          tension: 70, // Adjust for speed
+          useNativeDriver: true,
+        }),
+        Animated.timing(animatedOpacity, {
+          toValue: 1,
+          duration: 200,
+          easing: Easing.ease,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      animatedScale.setValue(0);
+      animatedOpacity.setValue(0);
+    }
+  }, [isVisible]);
+
   const modalBackgroundColor =
     colorScheme === "dark" ? "#2c2d2e" : colors.card;
 
@@ -70,16 +97,19 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
   return (
     <Modal
       transparent={true}
-      animationType="fade"
       visible={isVisible}
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable onPress={(e) => e.stopPropagation()}>
-          <View
+          <Animated.View
             style={[
               styles.modalContent,
               { backgroundColor: modalBackgroundColor },
+              {
+                transform: [{ scale: animatedScale }],
+                opacity: animatedOpacity,
+              },
             ]}
           >
             <View style={styles.modalHeader}>
@@ -137,7 +167,7 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
                 </View>
               )}
             </ScrollView>
-          </View>
+          </Animated.View>
         </Pressable>
       </Pressable>
     </Modal>
@@ -149,7 +179,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.6)",
   },
   modalContent: {
     width: screenWidth * 0.9,  
