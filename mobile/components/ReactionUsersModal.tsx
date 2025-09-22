@@ -15,6 +15,15 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import type { Reaction } from "../types";
 import VerifiedBadge from "./VerifiedBadge";
 
+// Import SVG emoji components
+import LikeEmoji from "../assets/icons/reactions/LikeEmoji";
+import HeartEmoji from "../assets/icons/reactions/HeartEmoji";
+import CelebrateEmoji from "../assets/icons/reactions/CelebrateEmoji";
+import WowEmoji from "../assets/icons/reactions/WowEmoji";
+import LaughingEmoji from "../assets/icons/reactions/LaughingEmoji";
+import CryingEmoji from "../assets/icons/reactions/CryingEmoji";
+import AngryEmoji from "../assets/icons/reactions/AngryEmoji";
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface ReactionUsersModalProps {
@@ -44,17 +53,18 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
   }, {});
 
   // Get reaction emoji mapping
-  const getReactionEmoji = (reactionType: string) => {
-    const emojiMap: { [key: string]: string } = {
-      like: "👍",
-      love: "❤️",
-      celebrate: "🎉",
-      wow: "😮",
-      haha: "😂",
-      sad: "😢",
-      angry: "😡",
+  const getReactionEmojiComponent = (reactionType: string) => {
+    const emojiMap: { [key: string]: React.FC<any> } = {
+      like: LikeEmoji,
+      love: HeartEmoji,
+      celebrate: CelebrateEmoji,
+      wow: WowEmoji,
+      haha: LaughingEmoji,
+      sad: CryingEmoji,
+      angry: AngryEmoji,
     };
-    return emojiMap[reactionType] || "👍";
+    const EmojiComponent = emojiMap[reactionType];
+    return EmojiComponent ? <EmojiComponent width={28} height={28} /> : null;
   };
 
   return (
@@ -90,12 +100,6 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
                 Object.entries(groupedReactions).map(
                   ([reactionType, reactionList], groupIndex) => (
                     <View key={groupIndex}>
-                      {/* Reaction type header */}
-                      <View style={styles.reactionTypeHeader}>
-                        <Text style={[styles.reactionTypeText, { color: colors.text }]}>
-                          {getReactionEmoji(reactionType)} {reactionType.charAt(0).toUpperCase() + reactionType.slice(1)} ({(reactionList as Reaction[]).length})
-                        </Text>
-                      </View>
                       
                       {/* Users who made this reaction */}
                       {(reactionList as Reaction[]).map((reaction) => (
@@ -116,13 +120,10 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
                                 <VerifiedBadge size={16} />
                               )}
                             </View>
-                            <Text style={[styles.username, { color: colors.textSecondary }]}>
-                              @{reaction.user.username}
-                            </Text>
                           </View>
-                          <Text style={styles.reactionEmoji}>
-                            {getReactionEmoji(reaction.type)}
-                          </Text>
+                          <View style={styles.reactionEmoji}>
+                            {getReactionEmojiComponent(reaction.type)}
+                          </View>
                         </View>
                       ))}
                     </View>
@@ -148,10 +149,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   modalContent: {
-    width: screenWidth * 0.9,
+    width: screenWidth * 0.9,  
     maxHeight: screenHeight * 0.6,
     paddingTop: 15,
     paddingHorizontal: 20,
@@ -175,15 +176,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-  },
-  reactionTypeHeader: {
-    paddingVertical: 8,
-    marginTop: 10,
-  },
-  reactionTypeText: {
-    fontSize: 14,
-    fontWeight: "600",
-    opacity: 0.7,
   },
   reactionItem: {
     flexDirection: "row",
@@ -213,7 +205,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   reactionEmoji: {
-    fontSize: 20,
+    marginLeft: 'auto',
   },
   emptyContainer: {
     alignItems: "center",
