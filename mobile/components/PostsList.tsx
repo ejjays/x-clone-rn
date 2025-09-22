@@ -1,9 +1,9 @@
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
-import { View, Text, TouchableOpacity, FlatList, ListRenderItem } from "react-native";
+import { View, Text, TouchableOpacity, FlatList, ListRenderItem, RefreshControl } from "react-native";
 import PostCard from "./PostCard";
-import PostCardSkeleton from "./PostCardSkeleton";
+import PostCardSkeleton from "././PostCardSkeleton";
 import ReelsStrip from "@/components/ReelsStrip";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -17,6 +17,7 @@ interface PostsListProps {
   contentBottomPadding?: number;
   refreshing?: boolean;
   onRefresh?: () => void;
+  refreshControlBackgroundColor?: string;
 }
 
 const PostsList = ({
@@ -29,6 +30,7 @@ const PostsList = ({
   contentBottomPadding,
   refreshing,
   onRefresh,
+  refreshControlBackgroundColor,
 }: PostsListProps) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
@@ -132,8 +134,14 @@ const PostsList = ({
       maxToRenderPerBatch={6}
       windowSize={9}
       updateCellsBatchingPeriod={40}
-      refreshing={refreshing}
-      onRefresh={onRefresh}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing || false}
+          onRefresh={onRefresh || (() => {})}
+          tintColor={colors.refreshControlColor} // Color of the refresh indicator
+          progressBackgroundColor={refreshControlBackgroundColor} // Background color of the refresh indicator
+        />
+      }
       showsVerticalScrollIndicator={false}
     />
   );

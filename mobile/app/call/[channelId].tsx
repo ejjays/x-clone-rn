@@ -1,4 +1,3 @@
-// mobile/app/call/[channelId].tsx
 import { useLocalSearchParams, router } from "expo-router";
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Platform, View, Pressable, StyleSheet, Animated, Text } from "react-native";
@@ -235,9 +234,10 @@ const FloatingControlsFactory = (emitLocal: (emoji: string) => void) => {
           <RoundButton onPress={flipCam} bg="#222">
             <Ionicons name="camera-reverse-outline" size={22} color="#fff" />
           </RoundButton>
-          <RoundButton onPress={() => setShowReactions((s) => !s)} bg="#222">
-            <Ionicons name="heart" size={22} color="#fff" />
-          </RoundButton>
+          {/* REMOVE THIS LINE */}
+          {/* <RoundButton onPress={() => setShowReactions((s) => !s)} bg="#222"> */}
+          {/*   <Ionicons name="heart" size={22} color="#fff" /> */}
+          {/* </RoundButton> */}          
           <RoundButton onPress={hangup} bg="#DC2626">
             <Ionicons name="call" size={22} color="#fff" />
           </RoundButton>
@@ -308,4 +308,3 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
   },
 });
-

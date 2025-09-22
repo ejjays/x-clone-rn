@@ -410,7 +410,7 @@ const PostCard = ({
                 {post.user.firstName} {post.user.lastName}
               </Text>
               {post.user.isVerified ? (
-                <VerifiedBadge style={{ marginLeft: 6 }} size={16} />
+                <VerifiedBadge style={{ marginLeft: 4 }} size={15} />
               ) : null}
             </View>
             <TimeAgo dateISO={post.createdAt} startAfterMount postId={post._id} style={{ color: colors.textSecondary, fontSize: 12 }} />

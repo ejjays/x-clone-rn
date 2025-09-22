@@ -120,7 +120,7 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
                 onPress={onClose}
                 style={[styles.closeIcon, { backgroundColor: "#636363" }]}
               >
-                <FontAwesome6 name="xmark" size={16} color={colors.text} />
+                <FontAwesome6 name="xmark" size={14} color={colors.text} />
               </Pressable>
             </View>
 
@@ -147,7 +147,7 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
                                 {reaction.user.firstName} {reaction.user.lastName}
                               </Text>
                               {reaction.user.isVerified && (
-                                <VerifiedBadge size={16} />
+                                <VerifiedBadge size={15} />
                               )}
                             </View>
                           </View>
@@ -197,8 +197,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   closeIcon: {
-    width: 25,
-    height: 25,
+    width: 21,
+    height: 21,
     borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
