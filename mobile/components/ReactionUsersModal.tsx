@@ -12,13 +12,15 @@ import {
 } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { FontAwesome6 } from "@expo/vector-icons";
+import type { Reaction } from "../types";
+import VerifiedBadge from "./VerifiedBadge";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface ReactionUsersModalProps {
   isVisible: boolean;
   onClose: () => void;
-  reactions: { userId: string; reaction: string }[] | undefined;
+  reactions: Reaction[] | undefined; // Changed to use the proper Reaction type
 }
 
 const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
@@ -32,27 +34,28 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
   const modalBackgroundColor =
     colorScheme === "dark" ? "#2c2d2e" : colors.card;
 
-  // Dummy user data (replace with actual data fetching later)
-  const users = [
-    { id: "1", name: "Christian Edica", avatar: "https://randomuser.me/api/portraits/men/1.jpg" },
-    { id: "2", name: "Hans Raven Ramos", avatar: "https://randomuser.me/api/portraits/men/2.jpg" },
-    { id: "3", name: "Kristine Managat", avatar: "https://randomuser.me/api/portraits/women/3.jpg" },
-    // Add more users as needed
-  ];
-
-  // Function to get user info by ID
-  const getUserById = (userId: string) => {
-    return users.find((user) => user.id === userId);
-  };
-
-  // Group reactions by type
+  // Group reactions by type and count them
   const groupedReactions = (reactions || []).reduce((acc: any, reaction) => {
-    if (!acc[reaction.reaction]) {
-      acc[reaction.reaction] = [];
+    if (!acc[reaction.type]) {
+      acc[reaction.type] = [];
     }
-    acc[reaction.reaction].push(reaction.userId);
+    acc[reaction.type].push(reaction);
     return acc;
   }, {});
+
+  // Get reaction emoji mapping
+  const getReactionEmoji = (reactionType: string) => {
+    const emojiMap: { [key: string]: string } = {
+      like: "👍",
+      love: "❤️",
+      celebrate: "🎉",
+      wow: "😮",
+      haha: "😂",
+      sad: "😢",
+      angry: "😡",
+    };
+    return emojiMap[reactionType] || "👍";
+  };
 
   return (
     <Modal
@@ -71,7 +74,7 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
           >
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
-                Reactions
+                Reactions ({reactions?.length || 0})
               </Text>
               <Pressable
                 onPress={onClose}
@@ -81,27 +84,56 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
               </Pressable>
             </View>
 
-            <ScrollView>
-              {Object.entries(groupedReactions).map(
-                ([reaction, userIds], index) => (
-                  <View key={index}>
-                    {userIds.map((userId) => {
-                      const user = getUserById(userId);
-                      if (!user) return null; // Handle case where user is not found
-
-                      return (
-                        <View key={userId} style={styles.reactionItem}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {reactions && reactions.length > 0 ? (
+                // Show all reactions grouped by type
+                Object.entries(groupedReactions).map(
+                  ([reactionType, reactionList], groupIndex) => (
+                    <View key={groupIndex}>
+                      {/* Reaction type header */}
+                      <View style={styles.reactionTypeHeader}>
+                        <Text style={[styles.reactionTypeText, { color: colors.text }]}>
+                          {getReactionEmoji(reactionType)} {reactionType.charAt(0).toUpperCase() + reactionType.slice(1)} ({(reactionList as Reaction[]).length})
+                        </Text>
+                      </View>
+                      
+                      {/* Users who made this reaction */}
+                      {(reactionList as Reaction[]).map((reaction) => (
+                        <View key={reaction._id} style={styles.reactionItem}>
                           <Image
                             style={styles.avatar}
-                            source={{ uri: user.avatar }}
+                            source={{
+                              uri: reaction.user.profilePicture || 
+                                   `https://ui-avatars.com/api/?name=${reaction.user.firstName}+${reaction.user.lastName}&background=random`,
+                            }}
                           />
-                          <Text style={{ color: colors.text }}>{user.name}</Text>
-                          <Text>{reaction}</Text> {/* Display the reaction */}
+                          <View style={styles.userInfo}>
+                            <View style={styles.nameContainer}>
+                              <Text style={[styles.userName, { color: colors.text }]}>
+                                {reaction.user.firstName} {reaction.user.lastName}
+                              </Text>
+                              {reaction.user.isVerified && (
+                                <VerifiedBadge size={16} />
+                              )}
+                            </View>
+                            <Text style={[styles.username, { color: colors.textSecondary }]}>
+                              @{reaction.user.username}
+                            </Text>
+                          </View>
+                          <Text style={styles.reactionEmoji}>
+                            {getReactionEmoji(reaction.type)}
+                          </Text>
                         </View>
-                      );
-                    })}
-                  </View>
+                      ))}
+                    </View>
+                  )
                 )
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                    No reactions yet
+                  </Text>
+                </View>
               )}
             </ScrollView>
           </View>
@@ -120,7 +152,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: screenWidth * 0.9,
-    height: screenHeight * 0.4,
+    maxHeight: screenHeight * 0.6,
     paddingTop: 15,
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -131,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 5,
+    marginBottom: 15,
   },
   closeIcon: {
     width: 25,
@@ -144,16 +176,53 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  reactionTypeHeader: {
+    paddingVertical: 8,
+    marginTop: 10,
+  },
+  reactionTypeText: {
+    fontSize: 14,
+    fontWeight: "600",
+    opacity: 0.7,
+  },
   reactionItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 5,
+    paddingVertical: 10,
   },
   avatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  nameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  username: {
+    fontSize: 14,
+    marginTop: 2,
+  },
+  reactionEmoji: {
+    fontSize: 20,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontStyle: "italic",
   },
 });
 

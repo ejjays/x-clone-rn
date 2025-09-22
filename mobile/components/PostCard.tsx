@@ -504,19 +504,15 @@ const PostCard = ({
           <View className="flex-row justify-between items-center px-4 pt-3">
             {post.reactions && post.reactions.length > 0 ? (
               <TouchableOpacity
-                className="flex-row items-center"
                 onPress={() => setIsReactionUsersModalVisible(true)}
+                style={styles.reactionsContainer}
               >
                 <View className="flex-row">
-                  {getTopThreeReactions().map((reaction) => {
-                    const Emoji =
-                      reactionComponents[
-                        reaction as keyof typeof reactionComponents
-                      ];
-                    if (!Emoji) {
-                      return null;
-                    }
-                    return <Emoji key={reaction} width={20} height={20} />;
+                  {getTopThreeReactions().map((reaction, index) => {
+                    const ReactionComponent = reactionComponents[reaction];
+                    return (
+                      <ReactionComponent key={reaction} width={16} height={16} />
+                    );
                   })}
                 </View>
                 <Text
@@ -778,6 +774,7 @@ const PostCard = ({
       <ReactionUsersModal
         isVisible={isReactionUsersModalVisible}
         onClose={() => setIsReactionUsersModalVisible(false)}
+        reactions={post.reactions}
       />
     </>
   );
@@ -802,6 +799,10 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 20,
     backgroundColor: "rgba(0,0,0,0.7)",
+  },
+  reactionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 
