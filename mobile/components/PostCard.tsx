@@ -36,6 +36,7 @@ import * as Clipboard from "expo-clipboard";
 import { sharePost } from "@/utils/share";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
+import ReactionUsersModal from './ReactionUsersModal';
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -97,6 +98,7 @@ const PostCard = ({
   const { isDarkMode, colors } = useTheme();
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [showModalContent, setShowModalContent] = useState(false);
+  const [isReactionUsersModalVisible, setIsReactionUsersModalVisible] = useState(false);
 
   const imageTranslateY = useRef(new Animated.Value(0)).current;
   const modalFadeAnim = useRef(new Animated.Value(0)).current;
@@ -499,9 +501,12 @@ const PostCard = ({
         {/* Reactions and Comments Count */}
         {((post.reactions && post.reactions.length > 0) ||
           (post.comments && post.comments.length > 0)) && (
-          <View className="flex-row justify-between items-center px-4 py-1">
+          <View className="flex-row justify-between items-center px-4 pt-3">
             {post.reactions && post.reactions.length > 0 ? (
-              <View className="flex-row items-center">
+              <TouchableOpacity
+                className="flex-row items-center"
+                onPress={() => setIsReactionUsersModalVisible(true)}
+              >
                 <View className="flex-row">
                   {getTopThreeReactions().map((reaction) => {
                     const Emoji =
@@ -520,7 +525,7 @@ const PostCard = ({
                 >
                   {formatNumber(post.reactions.length)}
                 </Text>
-              </View>
+              </TouchableOpacity>
             ) : (
               <View />
             )}
@@ -539,8 +544,8 @@ const PostCard = ({
 
         {/* Post Actions */}
         <View
-          className="flex-row justify-around py-1 border-t"
-          style={{ borderColor: colors.border, marginTop: 8 }}
+          className="flex-row justify-around py-1"
+          style={{ marginTop: 1 }}
         >
           <View ref={likeButtonRef} collapsable={false} style={{ flex: 1 }}>
             <Pressable
@@ -721,8 +726,8 @@ const PostCard = ({
               <View
                 className="flex-row justify-around pt-3 mt-3"
                 style={{
-                  borderTopColor: "rgba(255,255,255,0.2)",
-                  borderTopWidth: 1,
+                  borderTopColor: "rgba(255,255,255,0.0)", // Changed to 0.0
+                  borderTopWidth: 0, // Changed to 0
                 }}
               >
                 <View
@@ -770,6 +775,10 @@ const PostCard = ({
           </Pressable>
         </Animated.View>
       </Modal>
+      <ReactionUsersModal
+        isVisible={isReactionUsersModalVisible}
+        onClose={() => setIsReactionUsersModalVisible(false)}
+      />
     </>
   );
 };

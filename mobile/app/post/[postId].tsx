@@ -1,4 +1,3 @@
-// mobile/app/post/[postId].tsx
 import { useLocalSearchParams, router } from "expo-router";
 import {
   View,
@@ -11,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  RefreshControl, 
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Send, Heart, Trash } from "lucide-react-native";
@@ -25,7 +25,6 @@ import ShareIcon from "@/assets/icons/ShareIcon";
 import { useTheme } from "@/context/ThemeContext";
 import LikeIcon from "@/assets/icons/LikeIcon";
 
-// Comment skeleton component
 const CommentSkeleton = () => {
   const { colors } = useTheme();
   return (
@@ -109,7 +108,6 @@ const PostDetailsScreen = () => {
 
   const HEADER_HEIGHT = 60;
 
-  // Show missing or error state
   if (!postId) {
     return (
       <View
@@ -139,7 +137,6 @@ const PostDetailsScreen = () => {
     );
   }
 
-  // Calculate reactions
   const currentUserReaction = post?.reactions.find(
     (r) => r.user?._id === currentUser?._id
   );
@@ -201,6 +198,15 @@ const PostDetailsScreen = () => {
           showsVerticalScrollIndicator={false}
           className="flex-1"
           contentContainerStyle={styles.listContentContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refetch}
+              tintColor={colors.refreshControlColor}
+              colors={[colors.refreshControlColor]} 
+              progressBackgroundColor={colors.refreshControlBackgroundColor} 
+            />
+          }
           ListHeaderComponent={
             <View
               className="mb-4 pb-4"
@@ -218,12 +224,17 @@ const PostDetailsScreen = () => {
                 />
                 <View className="flex-1">
                   <Text
-                    className="font-bold text-base"
+                    className="font-bold text-lg"
                     style={{ color: colors.text }}
                   >
                     {post?.user.firstName} {post?.user.lastName}
                   </Text>
-                  <TimeAgo dateISO={post?.createdAt || ""} startAfterMount postId={post?._id} style={{ color: colors.textSecondary, fontSize: 12 }} />
+                  <TimeAgo
+                    dateISO={post?.createdAt || ""}
+                    startAfterMount
+                    postId={post?._id}
+                    style={{ color: colors.textSecondary, fontSize: 12 }}
+                  />
                 </View>
                 {isOwnPost && (
                   <TouchableOpacity className="p-2">
@@ -263,12 +274,12 @@ const PostDetailsScreen = () => {
                     size={22}
                   />
                   <Text
-                    className={`font-medium ml-1`}
+                    className={`font-medium ml-2`}
                     style={{
                       color: isLiked ? "#E0245E" : colors.textSecondary,
                     }}
                   >
-                    {formatNumber(likeCount)} Like
+                    Like
                   </Text>
                 </TouchableOpacity>
                 <View className="flex-row items-center space-x-2">
