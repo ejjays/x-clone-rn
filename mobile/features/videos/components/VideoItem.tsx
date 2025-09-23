@@ -16,7 +16,7 @@ import {
   ActivityIndicator,
   Pressable,
 } from "react-native";
-import { Ionicons, Entypo, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons, Entypo, FontAwesome5, Feather } from "@expo/vector-icons";
 import { sharePost } from "@/utils/share";
 import Video from "react-native-video";
 import { getPlayableVideoUrl } from "@/utils/media";
@@ -32,6 +32,7 @@ import PostActionBottomSheet, {
 import PostReactionsPicker from "@/components/PostReactionsPicker";
 import { videoItemStyles as styles } from "@/features/videos/styles";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import ShareIcon from "@/assets/icons/ShareIcon";
 
 import type { EdgeInsets } from "react-native-safe-area-context";
 
@@ -359,22 +360,30 @@ export default function VideoItem({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.iconContainer} onPress={() => sharePost(item)}>
-              <Ionicons
-                name="share-social-outline"
-                size={30}
+              <ShareIcon
+                width={30}
+                height={30}
                 color="white"
-                style={styles.iconShadow}
               />
               <Text style={styles.iconText}>Share</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.iconContainer} onPress={toggleMute}>
-              <Ionicons
-                name={isMuted ? "volume-mute-outline" : "volume-high-outline"}
-                size={28}
-                color="white"
-                style={styles.iconShadow}
-              />
+              {isMuted ? (
+                <Feather
+                  name="volume-x"
+                  size={28}
+                  color="white"
+                  style={styles.iconShadow}
+                />
+              ) : (
+                <Ionicons
+                  name="volume-medium-outline"
+                  size={28}
+                  color="white"
+                  style={styles.iconShadow}
+                />
+              )}
               <Text style={styles.iconText}>{isMuted ? "Mute" : "Sound"}</Text>
             </TouchableOpacity>
 
