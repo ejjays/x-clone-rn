@@ -16,7 +16,7 @@ import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { StreamVideoProvider } from "@/context/StreamVideoContext";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { persistAuthState } from "@/utils/offline/network";
 import { queryClient } from "@/utils/offline/network";
 import { readPersistedAuthState, getIsOnline } from "@/utils/offline/network";
@@ -57,7 +57,7 @@ const InitialLayout = () => {
   const { isChecking, isDownloading, error } = useOTAUpdates();
   
   const navigatedRef = useRef(false);
-  const [bypassAuthLoad, setBypassAuthLoad] = React.useState(false);
+  const [bypassAuthLoad, setBypassAuthLoad] = useState(false);
 
   // Early offline navigation: do not wait for Clerk when offline and we have a persisted session
   useEffect(() => {
