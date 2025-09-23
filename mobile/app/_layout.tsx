@@ -32,6 +32,8 @@ import {
 // ADD THESE IMPORTS FOR PUSH NOTIFICATIONS
 import * as Notifications from "expo-notifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+// Add this import at the top
+import { useOTAUpdates } from '@/hooks/useOTAUpdates';
 
 // Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
@@ -50,6 +52,9 @@ const InitialLayout = () => {
   // ADD PUSH NOTIFICATIONS HOOK HERE
   const { expoPushToken } = usePushNotifications();
 
+  // ADD THIS LINE - OTA Updates hook
+  const { isChecking, isDownloading, error } = useOTAUpdates();
+  
   // Set a global default font for all Text components
   if (!Text.defaultProps) {
     Text.defaultProps = {} as any;

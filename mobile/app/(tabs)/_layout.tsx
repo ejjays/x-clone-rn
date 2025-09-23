@@ -120,7 +120,7 @@ const TabsInner = () => {
               fontWeight: fontsLoaded ? "normal" : "bold",
             }}
           >
-            quezon
+            pcmi
           </Text>
           <View className="flex-row space-x-2">
             <TouchableOpacity

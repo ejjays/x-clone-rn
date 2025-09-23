@@ -18,6 +18,7 @@ import { useTheme } from "@/context/ThemeContext";
 import ConfirmationAlert from "@/components/ConfirmationAlert";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import * as Clipboard from "expo-clipboard";
+import { useOTAUpdates } from '@/hooks/useOTAUpdates';
 
 const ProfileScreens = () => {
   const { currentUser, isLoading } = useCurrentUser();
@@ -25,6 +26,7 @@ const ProfileScreens = () => {
   const { handleSignOut, isSignOutAlertVisible, confirmSignOut, cancelSignOut } = useSignOut();
   const { colors } = useTheme();
   const { expoPushToken, permissionStatus, isRegistered, sendTestNotification } = usePushNotifications();
+  const { checkForUpdates, isChecking } = useOTAUpdates();
 
   const {
     posts: userPosts,
@@ -214,6 +216,16 @@ const ProfileScreens = () => {
               <Text style={{ color: colors.blue }}>Copy</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            className="mt-3 px-4 py-2 rounded-full items-center"
+            onPress={checkForUpdates}
+            disabled={isChecking}
+            style={{ backgroundColor: colors.blue }}
+          >
+            <Text className="font-semibold text-white">
+              {isChecking ? 'Checking for Updates...' : 'Check for Updates'}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             className="mt-3 px-4 py-2 rounded-full items-center"
             onPress={() => sendTestNotification({ title: "Test", body: "Hello from app" })}
