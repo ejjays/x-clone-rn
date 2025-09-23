@@ -74,6 +74,9 @@
     "experiments": {
       "typedRoutes": true
     },
+    "updates": {
+      "url": "https://u.expo.dev/c99bd73f-554c-4cdf-8ecd-438221db173c"
+    },
     "extra": {
       "router": {},
       "eas": {
