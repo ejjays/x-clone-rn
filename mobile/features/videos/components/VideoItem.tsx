@@ -81,12 +81,12 @@ export default function VideoItem({
   const lastTapRef = useRef<number>(0);
 
   const heartScale = useRef(new Animated.Value(1)).current;
+  const playIconScale = useRef(new Animated.Value(0)).current; // Initial scale for play icon
   const [isLoaded, setIsLoaded] = useState(false);
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(width);
-  const indicatorOpacity = useRef(new Animated.Value(1)).current;
-  
+  const indicatorOpacity = useRef(new Animated.Value(0)).current; // Initial opacity for play icon
 
   useEffect(() => {
     if (!isVisible && videoRef.current) {
@@ -99,8 +99,7 @@ export default function VideoItem({
   const toggleMute = async () => {
     const next = !isMuted;
     setIsMuted(next);
-    if (!player) return;
-    (player as any).setIsMuted?.(next);
+    // Removed player check as it's not defined
   };
 
   const containerHeight = useMemo(() => {
@@ -168,7 +167,34 @@ export default function VideoItem({
     postActionBottomSheetRef.current?.close();
   };
 
-  
+  const animatePlayIcon = (toValue: number, callback?: () => void) => {
+    Animated.parallel([
+      Animated.timing(indicatorOpacity, {
+        toValue: toValue,
+        duration: 20,
+        useNativeDriver: true,
+      }),
+      Animated.spring(playIconScale, {
+        toValue: toValue === 1 ? 1.09 : 0, // Bounce up when showing, shrink when hiding
+        friction: 8,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (toValue === 0) {
+        playIconScale.setValue(0); // Reset scale after hiding
+      }
+      callback?.();
+    });
+  };
+
+  useEffect(() => {
+    if (isUserPaused) {
+      animatePlayIcon(1); // Show play icon with animation
+    } else {
+      animatePlayIcon(0); // Hide play icon with animation
+    }
+  }, [isUserPaused]);
 
   return (
     <View
@@ -227,30 +253,26 @@ export default function VideoItem({
               <Pressable
                 style={StyleSheet.absoluteFillObject}
                 onPress={() => {
-                  setIsUserPaused((prev) => {
-                    const next = !prev;
-                    // Always show play icon immediately when pausing
-                    indicatorOpacity.setValue(1);
-                    return next;
-                  });
+                  setIsUserPaused((prev) => !prev);
                 }}
               />
               {/* Center indicator icon */}
               <Animated.View
                 pointerEvents="none"
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  justifyContent: 'center',
-                  alignItems: 'center',
+                  justifyContent: "center",
+                  alignItems: "center",
                   opacity: indicatorOpacity,
+                  transform: [{ scale: playIconScale }],
                 }}
               >
                 {isUserPaused ? (
-                  <FontAwesome5 name="play" size={52} color="#FFFFFF" />
+                  <FontAwesome5 name="play" size={50} color="#FFFFFF" />
                 ) : null}
               </Animated.View>
             </>
@@ -284,7 +306,7 @@ export default function VideoItem({
                 }
                 style={styles.avatar}
               />
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text style={styles.username}>
                   {item.user.firstName} {item.user.lastName}
                 </Text>
@@ -319,7 +341,7 @@ export default function VideoItem({
                   Animated.spring(heartScale, {
                     toValue: 1,
                     friction: 3,
-                    tension: 40,
+                    tension: 100,
                     useNativeDriver: true,
                   }),
                 ]).start();
@@ -359,12 +381,11 @@ export default function VideoItem({
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.iconContainer} onPress={() => sharePost(item)}>
-              <ShareIcon
-                width={30}
-                height={30}
-                color="white"
-              />
+            <TouchableOpacity
+              style={styles.iconContainer}
+              onPress={() => sharePost(item)}
+            >
+              <ShareIcon width={30} height={30} color="white" />
               <Text style={styles.iconText}>Share</Text>
             </TouchableOpacity>
 
@@ -402,7 +423,6 @@ export default function VideoItem({
             )}
           </View>
         </View>
-        
       </View>
 
       <PostReactionsPicker
