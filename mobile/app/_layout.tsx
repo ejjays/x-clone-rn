@@ -19,6 +19,7 @@ import { StreamVideoProvider } from "@/context/StreamVideoContext";
 import { useEffect } from "react";
 import { persistAuthState } from "@/utils/offline/network";
 import { queryClient } from "@/utils/offline/network";
+import { readPersistedAuthState, getIsOnline } from "@/utils/offline/network";
 import { setupReactQueryPersistence, restoreReactQueryPersistence } from "@/utils/offline/persist";
 import { useEffect as useReactEffect } from "react";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
@@ -41,7 +42,7 @@ LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
 // queryClient is centralized in utils/offline/network to keep online/focus managers consistent
 
 const InitialLayout = () => {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const { client } = useStreamChat();
   const [fontsLoaded] = useFonts({
     Lato_900Black, // Use Lato_900Black
@@ -76,22 +77,39 @@ const InitialLayout = () => {
   // Handle navigation AFTER the navigation system is ready (no prefetch side work)
   useEffect(() => {
     if (!isLoaded) return;
-    const handleNavigation = setTimeout(() => {
-      if (!isSignedIn) {
+    let cancelled = false;
+    const handleNavigation = setTimeout(async () => {
+      let signedIn = isSignedIn;
+      if (!signedIn) {
+        try {
+          const [online, persisted] = await Promise.all([
+            getIsOnline(),
+            readPersistedAuthState(),
+          ]);
+          if (!online && persisted?.isSignedIn) {
+            signedIn = true;
+          }
+        } catch {}
+      }
+      if (cancelled) return;
+      if (!signedIn) {
         router.push("/(auth)");
       } else {
         router.push("/(tabs)");
       }
     }, 100);
-    return () => clearTimeout(handleNavigation);
+    return () => {
+      cancelled = true;
+      clearTimeout(handleNavigation);
+    };
   }, [isLoaded, isSignedIn]);
 
   // Persist auth state for instant offline boot
   useEffect(() => {
     if (isLoaded) {
-      persistAuthState(Boolean(isSignedIn)).catch(() => {});
+      persistAuthState(Boolean(isSignedIn), userId).catch(() => {});
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, userId]);
 
   // Bootstrapping: restore React Query persistence once
   useReactEffect(() => {

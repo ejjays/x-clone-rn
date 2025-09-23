@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
 import { Redirect, router, withLayoutContext, usePathname } from "expo-router";
-import React, { useEffect, memo, useMemo, useCallback } from "react";
+import React, { useEffect, memo, useMemo, useCallback, useState } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -25,6 +25,7 @@ import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import { readPersistedAuthState, getIsOnline } from "@/utils/offline/network";
 
 const HEADER_HEIGHT = 40;
 const TAB_BAR_HEIGHT = 50;
@@ -33,7 +34,9 @@ const { Navigator } = createMaterialTopTabNavigator();
 export const MaterialTopTabs = withLayoutContext(Navigator);
 
 const TabsInner = () => {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
+  const [allowOfflineTabs, setAllowOfflineTabs] = useState<boolean>(false);
+  const [checkedOffline, setCheckedOffline] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const screenWidth = Dimensions.get("window").width;
@@ -78,7 +81,30 @@ const TabsInner = () => {
   };
 
   const [fontsLoaded] = useFonts({ Lato_700Bold });
-  if (!isSignedIn) return <Redirect href="/(auth)" />;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const online = await getIsOnline();
+        if (!online) {
+          const persisted = await readPersistedAuthState();
+          if (persisted?.isSignedIn) {
+            if (!cancelled) setAllowOfflineTabs(true);
+          }
+        }
+      } catch {}
+      if (!cancelled) setCheckedOffline(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (isLoaded && !isSignedIn && !allowOfflineTabs) {
+    if (!checkedOffline) return null;
+    return <Redirect href="/(auth)" />;
+  }
 
   return (
     <View
