@@ -24,7 +24,6 @@ import { TabsProvider } from "@/context/TabsContext";
 import { ScrollProvider } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
-// Removed Android navigation bar toggling to avoid jank on tab switches
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 
 const HEADER_HEIGHT = 40;
