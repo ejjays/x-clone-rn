@@ -35,8 +35,7 @@
     },
     "androidNavigationBar": {
       "backgroundColor": "#242526",
-      "barStyle": "dark-content",
-      "visible": true
+      "barStyle": "dark-content"
     },
     "plugins": [
       "expo-dev-client",
