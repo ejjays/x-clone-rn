@@ -109,7 +109,7 @@ const TabsInner = () => {
                 fontWeight: fontsLoaded ? "normal" : "bold",
               }}
             >
-              pcmi
+              infanta
             </Text>
             <View className="flex-row space-x-2">
               <TouchableOpacity

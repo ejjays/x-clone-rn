@@ -13,12 +13,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app requires camera access for video calls.",
         "NSMicrophoneUsageDescription": "This app requires microphone access for calls.",
-        "UIBackgroundModes": [
-          "audio",
-          "voip",
-          "audio",
-          "voip"
-        ],
+        "UIBackgroundModes": ["audio", "voip"],
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.ejjays.mobile"
@@ -63,13 +58,9 @@
         {
           "icon": "./assets/images/notification-icon.png",
           "color": "#ffffff",
-          "sounds": [
-            "./assets/sounds/notification.mp3"
-          ]
+          "sounds": ["./assets/sounds/notification.mp3"]
         }
-      ],
-      "expo-video",
-      "expo-audio"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -83,6 +74,9 @@
         "projectId": "c99bd73f-554c-4cdf-8ecd-438221db173c"
       }
     },
-    "owner": "ejjays"
+    "owner": "ejjays",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
