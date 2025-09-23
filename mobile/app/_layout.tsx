@@ -10,7 +10,7 @@ import { Stack, router, usePathname } from "expo-router";
 import "../global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ActivityIndicator, View, Text } from "react-native";
+import { ActivityIndicator, View, Text, InteractionManager } from "react-native";
 import { OverlayProvider, Chat } from "stream-chat-expo";
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -57,6 +57,7 @@ const InitialLayout = () => {
   const { isChecking, isDownloading, error } = useOTAUpdates();
   
   const navigatedRef = useRef(false);
+  const [bypassAuthLoad, setBypassAuthLoad] = React.useState(false);
 
   // Early offline navigation: do not wait for Clerk when offline and we have a persisted session
   useEffect(() => {
@@ -69,7 +70,13 @@ const InitialLayout = () => {
         ]);
         if (!cancelled && !online && persisted?.isSignedIn) {
           navigatedRef.current = true;
-          router.replace("/(tabs)");
+          setBypassAuthLoad(true);
+          // Defer navigation until after interactions to avoid container readiness issues
+          InteractionManager.runAfterInteractions(() => {
+            setTimeout(() => {
+              try { router.replace("/(tabs)"); } catch {}
+            }, 50);
+          });
         }
       } catch {}
     })();
@@ -101,7 +108,7 @@ const InitialLayout = () => {
     if (!isLoaded) return;
     let cancelled = false;
     const handleNavigation = setTimeout(async () => {
-      let signedIn = isSignedIn;
+      let signedIn = isSignedIn || bypassAuthLoad;
       if (!signedIn) {
         try {
           const [online, persisted] = await Promise.all([
@@ -125,7 +132,7 @@ const InitialLayout = () => {
       cancelled = true;
       clearTimeout(handleNavigation);
     };
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, bypassAuthLoad]);
 
   // Persist auth state for instant offline boot
   useEffect(() => {
@@ -159,7 +166,7 @@ const InitialLayout = () => {
   const { queued } = useOfflineSync();
 
   // Only block for auth loading, NOT for Stream Chat client
-  if (!isLoaded) {
+  if (!isLoaded && !bypassAuthLoad) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#1DA1F2" />

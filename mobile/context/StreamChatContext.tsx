@@ -20,8 +20,9 @@ interface StreamChatContextType {
 const StreamChatContext = createContext<StreamChatContextType | undefined>(undefined);
 
 // --- Provider Component ---
-const STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY!;
-const chatClient = StreamChat.getInstance(STREAM_API_KEY);
+const STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY;
+// Guard against missing key in production builds; create a dummy client only if key exists
+const chatClient = STREAM_API_KEY ? StreamChat.getInstance(STREAM_API_KEY) : (undefined as unknown as StreamChat);
 
 export const StreamChatProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoaded } = useUser();
@@ -34,7 +35,7 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
   const { data: streamToken, error: tokenError, isLoading: tokenLoading } = useQuery({
     queryKey: ["streamToken", user?.id],
     queryFn: () => streamApi.getToken(api),
-    enabled: isLoaded && !!user,
+    enabled: Boolean(isLoaded && user && STREAM_API_KEY),
     staleTime: 1000 * 60 * 55, // 55 minutes
   });
 
@@ -55,6 +56,8 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
 
   // Ensure the chat client is connected as the current Clerk user
   const ensureConnectedAsCurrentUser = useCallback(async () => {
+    if (!STREAM_API_KEY) return; // stream disabled
+    if (!chatClient) return;
     if (!user || !streamToken) return;
     // If already connected as the correct user, do nothing
     if (chatClient.userID === user.id && isConnected) return;
@@ -92,7 +95,7 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
 
   // Disconnect when user signs out
   useEffect(() => {
-    if (!user && chatClient.userID) {
+    if (STREAM_API_KEY && chatClient && !user && chatClient.userID) {
       (async () => {
         try {
           await chatClient.disconnectUser();
@@ -107,7 +110,7 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
 
   // Function to refresh channels
   const refreshChannels = useCallback(async () => {
-    if (!chatClient || !user) return;
+    if (!STREAM_API_KEY || !chatClient || !user) return;
     try {
       const filter = { type: "messaging", members: { $in: [user.id] } };
       const sort: any = { last_message_at: -1 };
@@ -130,7 +133,7 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
 
   // Function to create a new channel
   const createChannel = async (memberId: string, name?: string) => {
-    if (!chatClient || !user) throw new Error("Chat client not ready");
+    if (!STREAM_API_KEY || !chatClient || !user) throw new Error("Chat client not ready");
     const extraData: any = {
       members: [user.id, memberId],
     };
@@ -165,7 +168,7 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
   }, [isConnected, refreshChannels]);
 
   const value = {
-    client: chatClient,
+    client: STREAM_API_KEY ? chatClient : null,
     isConnected,
     isConnecting,
     channels,
