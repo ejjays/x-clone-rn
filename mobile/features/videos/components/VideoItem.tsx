@@ -16,7 +16,7 @@ import {
   ActivityIndicator,
   Pressable,
 } from "react-native";
-import { Ionicons, Entypo, FontAwesome5, Feather } from "@expo/vector-icons";
+import { Ionicons, Entypo, FontAwesome5, Feather, Octicons } from "@expo/vector-icons";
 import { sharePost } from "@/utils/share";
 import Video from "react-native-video";
 import { getPlayableVideoUrl } from "@/utils/media";
@@ -335,7 +335,7 @@ export default function VideoItem({
                 Animated.sequence([
                   Animated.timing(heartScale, {
                     toValue: 0.8,
-                    duration: 100,
+                    duration: 50,
                     useNativeDriver: true,
                   }),
                   Animated.spring(heartScale, {
@@ -350,13 +350,9 @@ export default function VideoItem({
               style={styles.iconContainer}
             >
               <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                <Ionicons
-                  name={
-                    currentReaction?.type === "like"
-                      ? "heart-sharp"
-                      : "heart-outline"
-                  }
-                  size={30}
+                <Octicons
+                  name={currentReaction?.type === "like" ? "heart-fill" : "heart"}
+                  size={28}
                   color={currentReaction?.type === "like" ? "red" : "white"}
                   style={styles.iconShadow}
                 />
@@ -370,8 +366,8 @@ export default function VideoItem({
               style={styles.iconContainer}
               onPress={onCommentPress}
             >
-              <Ionicons
-                name="chatbubble-ellipses-outline"
+              <FontAwesome5
+                name="comment"
                 size={30}
                 color="white"
                 style={styles.iconShadow}
@@ -385,7 +381,7 @@ export default function VideoItem({
               style={styles.iconContainer}
               onPress={() => sharePost(item)}
             >
-              <ShareIcon width={30} height={30} color="white" />
+              <ShareIcon width={30} height={30} color="white" strokeWidth="0.6" />
               <Text style={styles.iconText}>Share</Text>
             </TouchableOpacity>
 
@@ -393,14 +389,14 @@ export default function VideoItem({
               {isMuted ? (
                 <Feather
                   name="volume-x"
-                  size={28}
+                  size={30} // Increased size to 30
                   color="white"
                   style={styles.iconShadow}
                 />
               ) : (
                 <Ionicons
                   name="volume-medium-outline"
-                  size={28}
+                  size={30} // Increased size to 30
                   color="white"
                   style={styles.iconShadow}
                 />
