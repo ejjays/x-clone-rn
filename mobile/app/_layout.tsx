@@ -16,7 +16,7 @@ import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
 import { StreamVideoProvider } from "@/context/StreamVideoContext";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { persistAuthState } from "@/utils/offline/network";
 import { queryClient } from "@/utils/offline/network";
 import { readPersistedAuthState, getIsOnline } from "@/utils/offline/network";
@@ -56,6 +56,28 @@ const InitialLayout = () => {
   // ADD THIS LINE - OTA Updates hook
   const { isChecking, isDownloading, error } = useOTAUpdates();
   
+  const navigatedRef = useRef(false);
+
+  // Early offline navigation: do not wait for Clerk when offline and we have a persisted session
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [online, persisted] = await Promise.all([
+          getIsOnline(),
+          readPersistedAuthState(),
+        ]);
+        if (!cancelled && !online && persisted?.isSignedIn) {
+          navigatedRef.current = true;
+          router.replace("/(tabs)");
+        }
+      } catch {}
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Set a global default font for all Text components
   if (!Text.defaultProps) {
     Text.defaultProps = {} as any;
@@ -92,6 +114,7 @@ const InitialLayout = () => {
         } catch {}
       }
       if (cancelled) return;
+      if (navigatedRef.current) return; // early offline navigation already handled
       if (!signedIn) {
         router.push("/(auth)");
       } else {
