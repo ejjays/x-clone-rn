@@ -58,7 +58,8 @@
           "android": {
             "useLegacyPackaging": true,
             "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-dontwarn org.slf4j.**\n-keep class org.slf4j.** { *; }\n-dontwarn javax.annotation.**"
           }
         }
       ],
