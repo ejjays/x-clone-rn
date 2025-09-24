@@ -198,7 +198,7 @@ export default function MenuScreen() {
             )}
             <View
               className="h-px mx-4"
-              style={{ backgroundColor: colors.border }}
+              style={{ backgroundColor: "gray" }}
             />
             <TouchableOpacity className="flex-row items-center p-4">
               <View className="w-10 h-10 rounded-full bg-gray-700 items-center justify-center">
@@ -300,8 +300,8 @@ export default function MenuScreen() {
               </Text>
             </TouchableOpacity>
             <View
-              className="h-px mx-4"
-              style={{ backgroundColor: colors.border }}
+              className="h-px mx-0"
+              style={{ backgroundColor: "gray" }}
             />
             <TouchableOpacity className="flex-row items-center p-4">
               <MaterialIcons name="settings" size={26} color={colors.text} />
@@ -313,8 +313,8 @@ export default function MenuScreen() {
               </Text>
             </TouchableOpacity>
             <View
-              className="h-px mx-4"
-              style={{ backgroundColor: colors.border }}
+              className="h-px mx-0"
+              style={{ backgroundColor: "gray" }}
             />
             <TouchableOpacity className="flex-row items-center p-4">
               <MaterialCommunityIcons
