@@ -11,10 +11,12 @@ const PostComposer = () => {
   return (
     <View className="p-4" style={{ backgroundColor: colors.background }}>
       <View className="flex-row items-center">
-        <Image
-          source={{ uri: user?.imageUrl }}
-          className="w-10 h-10 rounded-full mr-3"
-        />
+        <TouchableOpacity onPressIn={() => router.push("/my-profile")}>
+          <Image
+            source={{ uri: user?.imageUrl }}
+            className="w-10 h-10 rounded-full mr-3"
+          />
+        </TouchableOpacity>
         <TouchableOpacity
           onPressIn={() => router.push("/create-post")}
           className="flex-1 rounded-full px-4 py-3"
