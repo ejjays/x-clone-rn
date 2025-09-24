@@ -14,15 +14,29 @@ export const useCurrentUser = () => {
   const { data, isLoading, error, refetch } = useQuery<User>({
     queryKey: ["authUser", userId],
     queryFn: async () => {
-      const resp = await userApi.getCurrentUser(api);
-      return resp.data as User;
+      try {
+        const resp = await userApi.getCurrentUser(api);
+        return resp.data as User;
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          console.log("User not found in DB, attempting to sync...");
+          // If user not found, try to sync them
+          await userApi.syncUser(api);
+          // After syncing, try to get the user again
+          const resp = await userApi.getCurrentUser(api);
+          return resp.data as User;
+        }
+        throw err; // Re-throw other errors
+      }
     },
     enabled: !!isSignedIn,
     retry: (failureCount: number, err: any) => {
-      if (err?.response?.status === 404 && failureCount < 3) {
+      // Only retry if it's a 404 and we haven't retried too many times
+      if (err?.response?.status === 404 && failureCount < 1) { // Only one retry for 404 specifically
         return true;
       }
-      return false;
+      // For other errors, use default retry logic (if any) or stop retrying
+      return failureCount < 3; // Example: retry other network errors 3 times
     },
     retryDelay: (attemptIndex: number) => Math.min(attemptIndex * 1000 + 500, 3000),
     staleTime: 5 * 60 * 1000,
