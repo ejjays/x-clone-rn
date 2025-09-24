@@ -139,7 +139,7 @@ export default function MenuScreen() {
             <TouchableOpacity onPress={() => router.push("/settings")}>
               <Ionicons name="settings" size={24} color={colors.text} />
             </TouchableOpacity>
-            <View className="w-3" />
+            <View className="w-2" />
             <TouchableOpacity onPress={() => router.push("(tabs)/search")}>
               <FontAwesome name="search" size={24} color={colors.text} />
             </TouchableOpacity>
@@ -228,9 +228,9 @@ export default function MenuScreen() {
             showsHorizontalScrollIndicator={false}
             className="mt-4 mb-4"
           >
-            {users.map((user) => (
+            {users.map((user, index) => (
               <TouchableOpacity
-                key={user.id}
+                key={user.id || index}
                 onPress={() => router.push(`/messages`)}
                 className="items-center mr-4"
               >
