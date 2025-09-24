@@ -13,10 +13,18 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 
 export default function UserProfile() {
-  const { userId, username: usernameParam } = useLocalSearchParams<{ userId: string; username?: string }>();
+  const { userId, username: usernameParam, user: userParam } = useLocalSearchParams<{ userId: string; username?: string; user?: string }>();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const api = useApiClient();
+
+  const preloaded = React.useMemo(() => {
+    try {
+      return userParam ? JSON.parse(decodeURIComponent(String(userParam))) : null;
+    } catch {
+      return null;
+    }
+  }, [userParam]);
 
   const { data: user, isLoading } = useQuery({
     queryKey: ["userProfile", userId, usernameParam],
@@ -33,7 +41,8 @@ export default function UserProfile() {
         throw e;
       }
     },
-    enabled: Boolean(userId || usernameParam),
+    enabled: Boolean(!preloaded && (userId || usernameParam)),
+    initialData: preloaded || undefined,
   });
 
   const { data: posts = [] } = useQuery({

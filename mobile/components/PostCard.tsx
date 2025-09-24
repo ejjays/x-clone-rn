@@ -396,7 +396,14 @@ const PostCard = ({
         <View className="flex-row px-2 py-3 items-center">
           <TouchableOpacity
             onPressIn={() =>
-              router.push({ pathname: "/user/[userId]", params: { userId: post.user._id, username: (post.user as any).username || "" } })
+              router.push({
+                pathname: "/user/[userId]",
+                params: {
+                  userId: post.user._id,
+                  username: (post.user as any).username || "",
+                  user: encodeURIComponent(JSON.stringify(post.user)),
+                },
+              })
             }
           >
             <Image
@@ -412,7 +419,14 @@ const PostCard = ({
             <View className="flex-row items-center">
               <TouchableOpacity
                 onPressIn={() =>
-                  router.push({ pathname: "/user/[userId]", params: { userId: post.user._id, username: (post.user as any).username || "" } })
+                  router.push({
+                    pathname: "/user/[userId]",
+                    params: {
+                      userId: post.user._id,
+                      username: (post.user as any).username || "",
+                      user: encodeURIComponent(JSON.stringify(post.user)),
+                    },
+                  })
                 }
               >
                 <Text
