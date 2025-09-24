@@ -47,7 +47,7 @@ const TabsInner = () => {
 
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
-  const isProfileScreen = pathname === "/profile";
+  const isProfileScreen = pathname === "/menu";
 
   useEffect(() => {
     headerHeight.value = pathname === "/" ? HEADER_HEIGHT : 0;
@@ -192,7 +192,7 @@ const TabsInner = () => {
           <MaterialTopTabs.Screen name="search" />
           <MaterialTopTabs.Screen name="videos" />
           <MaterialTopTabs.Screen name="notifications" />
-          <MaterialTopTabs.Screen name="profile" />
+          <MaterialTopTabs.Screen name="menu" />
         </MaterialTopTabs>
       </View>
     </View>
@@ -213,8 +213,8 @@ const TopIconBar = memo(function TopIconBar({
   colors,
   screenWidth,
 }: any) {
-  const ROUTES = ["/", "/search", "/videos", "/notifications", "/profile"];
-  const TAB_KEYS = ["index", "search", "videos", "notifications", "profile"];
+  const ROUTES = ["/", "/search", "/videos", "/notifications", "/menu"];
+  const TAB_KEYS = ["index", "search", "videos", "notifications", "menu"];
   const activeIndex = ROUTES.indexOf(pathname);
   const goIndex = useCallback(() => navigation.jumpTo("index"), [navigation]);
   const goSearch = useCallback(() => navigation.jumpTo("search"), [navigation]);
@@ -224,7 +224,7 @@ const TopIconBar = memo(function TopIconBar({
     [navigation]
   );
   const goProfile = useCallback(
-    () => navigation.jumpTo("profile"),
+    () => navigation.jumpTo("menu"),
     [navigation]
   );
   return (
@@ -279,13 +279,13 @@ const TopIconBar = memo(function TopIconBar({
         </TouchableOpacity>
         <TouchableOpacity
           className="flex-1 items-center justify-center h-full"
-          onPressIn={() => navigation.jumpTo("profile")}
+          onPressIn={() => navigation.jumpTo("menu")}
           activeOpacity={1}
           delayPressIn={0}
         >
           <Menu
             size={26}
-            color={pathname === "/profile" ? colors.blue : "white"}
+            color={pathname === "/menu" ? colors.blue : "white"}
           />
         </TouchableOpacity>
       </View>
