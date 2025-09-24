@@ -13,15 +13,27 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 
 export default function UserProfile() {
-  const { userId } = useLocalSearchParams<{ userId: string }>();
+  const { userId, username: usernameParam } = useLocalSearchParams<{ userId: string; username?: string }>();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const api = useApiClient();
 
   const { data: user, isLoading } = useQuery({
-    queryKey: ["userProfile", userId],
-    queryFn: async () => (await userApi.getUserById(api, String(userId))).data,
-    enabled: Boolean(userId),
+    queryKey: ["userProfile", userId, usernameParam],
+    queryFn: async () => {
+      try {
+        return (await userApi.getUserById(api, String(userId))).data;
+      } catch (e: any) {
+        // Fallback to username param if backend route differs
+        const username = usernameParam as string | undefined;
+        if (username) {
+          const res = await api.get(`/users/username/${username}`);
+          return res.data;
+        }
+        throw e;
+      }
+    },
+    enabled: Boolean(userId || usernameParam),
   });
 
   const { data: posts = [] } = useQuery({

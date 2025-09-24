@@ -394,7 +394,11 @@ const PostCard = ({
       <View style={{ backgroundColor: colors.background }}>
         {/* Post Header */}
         <View className="flex-row px-2 py-3 items-center">
-          <TouchableOpacity onPressIn={() => router.push(`/user/${post.user._id}`)}>
+          <TouchableOpacity
+            onPressIn={() =>
+              router.push({ pathname: "/user/[userId]", params: { userId: post.user._id, username: (post.user as any).username || "" } })
+            }
+          >
             <Image
               source={
                 post.user.profilePicture
@@ -406,7 +410,11 @@ const PostCard = ({
           </TouchableOpacity>
           <View className="flex-1">
             <View className="flex-row items-center">
-              <TouchableOpacity onPressIn={() => router.push(`/user/${post.user._id}`)}>
+              <TouchableOpacity
+                onPressIn={() =>
+                  router.push({ pathname: "/user/[userId]", params: { userId: post.user._id, username: (post.user as any).username || "" } })
+                }
+              >
                 <Text
                   className="font-bold text-lg"
                   style={{ color: colors.text }}
