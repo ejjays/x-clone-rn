@@ -1,48 +1,260 @@
+import EditProfileModal from "@/components/EditProfileModal";
+import PostsList from "@/components/PostsList";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useTheme } from "@/context/ThemeContext";
+import { usePosts } from "@/hooks/usePosts";
+import { useProfile } from "@/hooks/useProfile";
+import { useSignOut } from "@/hooks/useSignOut";
+import { MapPin, UserX } from "lucide-react-native";
+import { format } from "date-fns";
+import { View, Text, ActivityIndicator, Image, TouchableOpacity, FlatList } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
+import { MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
+import { useTheme } from "@/context/ThemeContext";
+import ConfirmationAlert from "@/components/ConfirmationAlert";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import * as Clipboard from "expo-clipboard";
+import { useOTAUpdates } from "@/hooks/useOTAUpdates";
 import { ChevronLeft } from "lucide-react-native";
 
 export default function MyProfile() {
-  const { currentUser } = useCurrentUser();
+  const { currentUser, isLoading } = useCurrentUser();
+  const insets = useSafeAreaInsets();
+  const { handleSignOut, isSignOutAlertVisible, confirmSignOut, cancelSignOut } = useSignOut();
   const { colors } = useTheme();
+  const { expoPushToken, permissionStatus, isRegistered, sendTestNotification } = usePushNotifications();
+  const { checkForUpdates, isChecking } = useOTAUpdates();
+
+  const {
+    posts: userPosts,
+    refetch: refetchPosts,
+    isLoading: isRefetching,
+  } = usePosts(currentUser?.username);
+
+  const {
+    isEditModalVisible,
+    openEditModal,
+    closeEditModal,
+    formData,
+    saveProfile,
+    updateFormField,
+    isUpdating,
+    refetch: refetchProfile,
+  } = useProfile();
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.blue} />
+        <Text className="mt-2" style={{ color: colors.textMuted }}>Loading profile...</Text>
+      </View>
+    );
+  }
 
   if (!currentUser) {
-    return <View className="flex-1" style={{ backgroundColor: colors.background }} />;
+    return (
+      <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: colors.background }}>
+        <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: colors.surface }}>
+          <UserX size={32} color={colors.textMuted} />
+        </View>
+        <Text className="text-xl font-bold mb-3" style={{ color: colors.text }}>
+          Profile not available
+        </Text>
+        <Text className="text-center text-base leading-6 mb-6" style={{ color: colors.textMuted }}>
+          We couldn't load your profile. Please check your connection and try
+          again.
+        </Text>
+        <TouchableOpacity
+          className="px-6 py-3 rounded-full shadow-md"
+          onPressIn={() => router.push("/(tabs)/")}
+          style={{ backgroundColor: colors.blue }}
+        >
+          <Text className="font-semibold text-white">Go to Home</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
+
+  const header = (
+    <View>
+      <View className="relative">
+        <Image
+          source={{
+            uri:
+              currentUser.bannerImage ||
+              "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop",
+          }}
+          className="w-full h-56"
+          resizeMode="cover"
+        />
+
+        {/* Back chevron overlay */}
+        <TouchableOpacity
+          onPressIn={() => router.back()}
+          style={{ position: "absolute", top: 12 + insets.top, left: 12, padding: 8, borderRadius: 9999, backgroundColor: "rgba(0,0,0,0.35)" }}
+        >
+          <ChevronLeft size={26} color="#fff" />
+        </TouchableOpacity>
+
+        <View className="absolute -bottom-16 left-6 z-10">
+          <View className="relative">
+            <Image
+              source={{
+                uri:
+                  currentUser.profilePicture ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.firstName + " " + currentUser.lastName)}&background=2563EB&color=fff&size=120`,
+              }}
+              className="w-40 h-40 rounded-full border-4 shadow-lg" style={{ borderColor: colors.blue }}
+            />
+            <TouchableOpacity className="absolute bottom-2 right-2 w-10 h-10 rounded-full items-center justify-center border-2 shadow-md" style={{ backgroundColor: colors.surface, borderColor: colors.background }}>
+              <Entypo name="camera" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <View className="px-6 pt-20 pb-6 border-b" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+        <View className="flex-row justify-between items-start mb-4">
+          <View className="flex-1 pr-4">
+            <View className="flex-row items-center mb-1">
+              <Text className="text-2xl font-bold mr-2" style={{ color: colors.text }}>
+                {currentUser.firstName} {currentUser.lastName}
+              </Text>
+            </View>
+
+            <View className="flex-row space-x-6 mt-2">
+              <TouchableOpacity className="mr-4">
+                <Text style={{ color: colors.text }}>
+                  <Text className="font-bold text-lg">
+                    {currentUser.following?.length || 0}
+                  </Text>
+                  <Text className="text-sm" style={{ color: colors.textSecondary }}> Following</Text>
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Text style={{ color: colors.text }}>
+                  <Text className="font-bold text-lg">
+                    {currentUser.followers?.length || 0}
+                  </Text>
+                  <Text className="text-sm" style={{ color: colors.textSecondary }}> Followers</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View className="space-y-3 mt-4">
+              {currentUser.location && (
+                <View className="flex-row items-center mb-2">
+                  <MapPin size={18} color={colors.textSecondary} />
+                  <Text className="ml-2" style={{ color: colors.textSecondary }}>
+                    {currentUser.location}
+                  </Text>
+                </View>
+              )}
+
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons
+                  name="calendar-clock"
+                  size={18}
+                  color={colors.textSecondary}
+                />
+                <Text className="ml-2" style={{ color: colors.textSecondary }}>
+                  Joined {currentUser.createdAt ? format(new Date(currentUser.createdAt), "MMMM yyyy") : "Recently"}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            className="px-5 py-2.5 rounded-full shadow-md"
+            onPress={openEditModal}
+            style={{ backgroundColor: colors.blue }}
+          >
+            <Text className="font-semibold text-white text-sm">
+              Edit profile
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {currentUser.bio && (
+          <Text className="text-lg mt-3 leading-6 font-medium" style={{ color: colors.textSecondary }}>
+            {currentUser.bio}
+          </Text>
+        )}
+      </View>
+
+      {/* Debug: Push Token & Test */}
+      <View className="px-6 py-4 border-b" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+        <Text className="text-lg font-bold" style={{ color: colors.text }}>Debug</Text>
+        <Text className="text-sm mt-2" style={{ color: colors.textMuted }}>Expo Push Token</Text>
+        <View className="mt-2 flex-row items-center justify-between rounded-lg px-3 py-2 border" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+          <Text numberOfLines={1} ellipsizeMode="middle" className="flex-1 mr-3" style={{ color: colors.textSecondary }}>
+            {expoPushToken || "Not available yet"}
+          </Text>
+          <TouchableOpacity
+            className="px-3 py-1.5 rounded-full"
+            onPress={async () => {
+              if (!expoPushToken) return;
+              try { await Clipboard.setStringAsync(expoPushToken); } catch {}
+            }}
+          >
+            <Text style={{ color: colors.blue }}>Copy</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity className="mt-3 px-4 py-2 rounded-full items-center" onPress={checkForUpdates} disabled={isChecking} style={{ backgroundColor: colors.blue }}>
+          <Text className="font-semibold text-white">
+            {isChecking ? 'Checking for Updates...' : 'Check for Updates'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity className="mt-3 px-4 py-2 rounded-full items-center" onPress={() => sendTestNotification({ title: "Test", body: "Hello from app" })} style={{ backgroundColor: colors.blue }}>
+          <Text className="font-semibold text-white">Send Test Notification</Text>
+        </TouchableOpacity>
+        <Text className="text-xs mt-2" style={{ color: colors.textMuted }}>
+          Status: {permissionStatus} {isRegistered ? "(registered)" : "(not registered)"}
+        </Text>
+      </View>
+
+      <View className="px-6 py-4 border-b" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+        <Text className="text-lg font-bold" style={{ color: colors.text }}>Posts</Text>
+        <Text className="text-sm" style={{ color: colors.textMuted }}>
+          {Array.isArray(userPosts) ? (userPosts as any[]).length : 0} posts
+        </Text>
+      </View>
+    </View>
+  );
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
-          <Image
-            source={{ uri: currentUser.bannerImage || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop" }}
-            className="w-full h-56"
-            resizeMode="cover"
-          />
-          <TouchableOpacity
-            onPressIn={() => router.back()}
-            style={{ position: "absolute", top: 14, left: 14, padding: 8, borderRadius: 9999, backgroundColor: "rgba(0,0,0,0.35)" }}
-          >
-            <ChevronLeft size={26} color="#fff" />
-          </TouchableOpacity>
+      <FlatList
+        data={[{ key: "posts" }]}
+        keyExtractor={(i) => i.key}
+        renderItem={() => (
+          <PostsList username={currentUser?.username} onOpenPostMenu={() => {}} />
+        )}
+        ListHeaderComponent={header}
+        refreshing={isRefetching}
+        onRefresh={() => { refetchProfile(); refetchPosts(); }}
+        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+        showsVerticalScrollIndicator={false}
+      />
 
-          <View style={{ marginTop: -64, paddingHorizontal: 16 }}>
-            <Image
-              source={{ uri: currentUser.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.firstName + " " + currentUser.lastName)}&background=2563EB&color=fff&size=120` }}
-              className="w-32 h-32 rounded-full border-4"
-              style={{ borderColor: colors.background }}
-            />
-            <Text className="text-2xl font-bold mt-4" style={{ color: colors.text }}>
-              {currentUser.firstName} {currentUser.lastName}
-            </Text>
-            {currentUser.bio ? (
-              <Text className="mt-2" style={{ color: colors.textSecondary }}>{currentUser.bio}</Text>
-            ) : null}
-          </View>
-        </View>
-      </ScrollView>
+      <EditProfileModal
+        isVisible={isEditModalVisible}
+        onClose={closeEditModal}
+        formData={formData}
+        saveProfile={saveProfile}
+        updateFormField={updateFormField}
+        isUpdating={isUpdating}
+      />
+
+      <ConfirmationAlert
+        visible={isSignOutAlertVisible}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        onConfirm={confirmSignOut}
+        onCancel={cancelSignOut}
+        confirmTextColor="#EF4444"
+      />
     </View>
   );
 }
