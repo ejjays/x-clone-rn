@@ -109,10 +109,10 @@ export default function MenuScreen() {
   const { isSignedIn } = useAuth();
   const { users } = useAllUsers();
   const [isSignOutAlertVisible, setSignOutAlertVisible] = useState(false);
-  const { handleSignOut } = useSignOut();
+  const { handleSignOut: handleSignOutFromHook, confirmSignOut: confirmSignOutFromHook } = useSignOut();
 
   const confirmSignOut = () => {
-    handleSignOut();
+    confirmSignOutFromHook();
     setSignOutAlertVisible(false);
   };
 
@@ -139,7 +139,7 @@ export default function MenuScreen() {
             <TouchableOpacity onPress={() => router.push("/settings")}>
               <Ionicons name="settings" size={24} color={colors.text} />
             </TouchableOpacity>
-            <View className="w-2" />
+            <View className="w-3" />
             <TouchableOpacity onPress={() => router.push("(tabs)/search")}>
               <FontAwesome name="search" size={24} color={colors.text} />
             </TouchableOpacity>
@@ -169,12 +169,15 @@ export default function MenuScreen() {
                   }}
                   className="w-12 h-12 rounded-full"
                 />
-                <Text
-                  className="text-xl font-bold ml-4"
-                  style={{ color: colors.text }}
-                >
-                  {currentUser?.firstName} {currentUser?.lastName}
-                </Text>
+                <View className="flex-1 ml-4">
+                  <Text
+                    className="text-xl font-bold"
+                    style={{ color: colors.text }}
+                    numberOfLines={1}
+                  >
+                    {currentUser?.firstName} {currentUser?.lastName}
+                  </Text>
+                </View>
                 <View className="ml-auto">
                   <View className="bg-gray-700 rounded-full p-2">
                     <FontAwesome

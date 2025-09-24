@@ -395,7 +395,7 @@ const PostCard = ({
         {/* Post Header */}
         <View className="flex-row px-2 py-3 items-center">
           <TouchableOpacity
-            onPressIn={() =>
+            onPress={() =>
               router.push({
                 pathname: "/user/[userId]",
                 params: {
@@ -418,7 +418,7 @@ const PostCard = ({
           <View className="flex-1">
             <View className="flex-row items-center">
               <TouchableOpacity
-                onPressIn={() =>
+                onPress={() =>
                   router.push({
                     pathname: "/user/[userId]",
                     params: {
