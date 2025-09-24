@@ -82,6 +82,7 @@ export const userApi = {
   updateProfile: (api: AxiosInstance, data: any) => api.put("/users/profile", data),
   getAllUsers: (api: AxiosInstance) => api.get("/users/all"),
   followUser: (api: AxiosInstance, userId: string) => api.post(`/users/follow/${userId}`),
+  getUserById: (api: AxiosInstance, userId: string) => api.get(`/users/${userId}`),
 }
 
 export const postApi = {

@@ -32,6 +32,7 @@ import {
 import { FontAwesome, AntDesign, Fontisto } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { router } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { sharePost } from "@/utils/share";
 import * as NavigationBar from "expo-navigation-bar";
@@ -393,22 +394,26 @@ const PostCard = ({
       <View style={{ backgroundColor: colors.background }}>
         {/* Post Header */}
         <View className="flex-row px-2 py-3 items-center">
-          <Image
-            source={
-              post.user.profilePicture
-                ? { uri: post.user.profilePicture }
-                : require("../assets/images/default-avatar.png")
-            }
-            className="w-14 h-14 rounded-full mr-3"
-          />
+          <TouchableOpacity onPressIn={() => router.push(`/user/${post.user._id}`)}>
+            <Image
+              source={
+                post.user.profilePicture
+                  ? { uri: post.user.profilePicture }
+                  : require("../assets/images/default-avatar.png")
+              }
+              className="w-14 h-14 rounded-full mr-3"
+            />
+          </TouchableOpacity>
           <View className="flex-1">
             <View className="flex-row items-center">
-              <Text
-                className="font-bold text-lg"
-                style={{ color: colors.text }}
-              >
-                {post.user.firstName} {post.user.lastName}
-              </Text>
+              <TouchableOpacity onPressIn={() => router.push(`/user/${post.user._id}`)}>
+                <Text
+                  className="font-bold text-lg"
+                  style={{ color: colors.text }}
+                >
+                  {post.user.firstName} {post.user.lastName}
+                </Text>
+              </TouchableOpacity>
               {post.user.isVerified ? (
                 <VerifiedBadge style={{ marginLeft: 4 }} size={15} />
               ) : null}
