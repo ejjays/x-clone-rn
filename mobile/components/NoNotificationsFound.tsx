@@ -14,15 +14,11 @@ const NoNotificationsFound = () => {
 
   useFocusEffect(
     useCallback(() => {
-      animationRef.current?.play();
-
-      const interval = setInterval(() => {
-        animationRef.current?.play();
-      }, 4000);
+      animationRef.current?.reset(); // Reset animation to the beginning
+      animationRef.current?.play(); // Play animation
 
       return () => {
-        clearInterval(interval);
-        animationRef.current?.reset();
+        animationRef.current?.reset(); // Reset animation on blur as well
       };
     }, [])
   );

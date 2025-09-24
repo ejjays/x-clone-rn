@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, Image, ScrollView, Linking } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -12,6 +12,11 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useSignOut } from "@/hooks/useSignOut";
 import ConfirmationAlert from "@/components/ConfirmationAlert";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import PressableScale from "@/constants/PressableScale"; // Import the new component
+
+const openExternalLink = (url) => {
+  Linking.openURL(url).catch((err) => console.error("Couldn't load page", err));
+};
 
 const menuItems = [
   {
@@ -24,6 +29,7 @@ const menuItems = [
       />
     ),
     color: "#2E89FF",
+    onPress: () => openExternalLink("https://about-pcmi.vercel.app"),
   },
   {
     title: "Saved",
@@ -229,10 +235,10 @@ export default function MenuScreen() {
             className="mt-4 mb-4"
           >
             {users.map((user, index) => (
-              <TouchableOpacity
+              <PressableScale
                 key={user.id || index}
                 onPress={() => router.push(`/messages`)}
-                className="items-center mr-4"
+                style={{ alignItems: "center", marginRight: 16 }} // Moved className styles to style prop
               >
                 <Image
                   source={{
@@ -247,15 +253,15 @@ export default function MenuScreen() {
                 <Text className="text-xs mt-2" style={{ color: colors.text }}>
                   {user.firstName}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             ))}
           </ScrollView>
           <View className="flex-row flex-wrap justify-between mt-4">
             {menuItems.map((item, index) => (
-              <TouchableOpacity
+              <PressableScale // Replaced TouchableOpacity with PressableScale
                 key={`${item.title}-${index}`}
-                className="w-[49%] mb-2 p-4 rounded-2xl"
-                style={{ backgroundColor: colors.surface }}
+                onPress={item.onPress}
+                style={[{ backgroundColor: colors.surface }, { width: '49%', marginBottom: 8, padding: 16, borderRadius: 16 }]} // Apply styles directly to PressableScale
               >
                 <View>
                   {renderIcon(item)}
@@ -276,7 +282,7 @@ export default function MenuScreen() {
                     )}
                   </View>
                 </View>
-              </TouchableOpacity>
+              </PressableScale>
             ))}
           </View>
           <View
@@ -331,9 +337,17 @@ export default function MenuScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            className="flex-row items-center justify-center p-3 mt-4 mb-3 rounded-xl"
-            style={{ backgroundColor: colors.surface }}
+          <PressableScale // Replaced TouchableOpacity with PressableScale
+            style={{
+              backgroundColor: colors.surface,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 12,
+              marginTop: 16,
+              marginBottom: 12,
+              borderRadius: 12,
+            }}
             onPress={() => setSignOutAlertVisible(true)}
           >
             <Text
@@ -342,7 +356,7 @@ export default function MenuScreen() {
             >
               Logout
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </ScrollView>
       <ConfirmationAlert
