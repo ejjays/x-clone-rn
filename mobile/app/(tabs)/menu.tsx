@@ -1,17 +1,19 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useAuth } from "@clerk/clerk-expo";
+import { useAllUsers } from "@/hooks/useAllUsers"; // Import useAllUsers
 
 export default function MenuScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { currentUser, isLoading } = useCurrentUser();
   const { isSignedIn } = useAuth();
+  const { users } = useAllUsers(); // Fetch all users
 
   if (!isSignedIn) {
     router.replace("/(auth)/login");
@@ -31,7 +33,7 @@ export default function MenuScreen() {
           <TouchableOpacity onPress={() => router.push("/settings")}>
             <Ionicons name="settings" size={24} color={colors.text} />
           </TouchableOpacity>
-          <View className="w-4" />
+          <View className="w-2" />
           <TouchableOpacity onPress={() => router.push("(tabs)/search")}>
             <FontAwesome name="search" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -96,6 +98,26 @@ export default function MenuScreen() {
             </View>
           </TouchableOpacity>
         </View>
+        <Text className="text-lg font-bold mt-4 px-2" style={{ color: colors.text }}>
+          Message shortcut
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-4">
+          {users.map((user) => (
+            <TouchableOpacity
+              key={user.id}
+              onPress={() => router.push(`/messages`)}
+              className="items-center mr-4"
+            >
+              <Image
+                source={{ uri: user.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent((user.firstName || "") + " " + (user.lastName || ""))}&background=1877F2&color=fff&size=40` }}
+                className="w-16 h-16 rounded-full"
+              />
+              <Text className="text-xs mt-2" style={{ color: colors.text }}>
+                {user.firstName}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
     </View>
   );
