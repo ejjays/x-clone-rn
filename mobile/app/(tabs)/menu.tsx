@@ -11,47 +11,81 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useSignOut } from "@/hooks/useSignOut";
 import ConfirmationAlert from "@/components/ConfirmationAlert";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const menuItems = [
   {
     title: "About us",
-    icon: "time-outline",
-    library: "Ionicons",
+    iconComponent: (
+      <Image
+        source={require("@/assets/images/menu/about-us.png")}
+        style={{ width: 32, height: 32 }}
+        interpolation="high"
+      />
+    ),
     color: "#2E89FF",
   },
   {
     title: "Saved",
-    icon: "bookmark",
-    library: "FontAwesome",
+    iconComponent: (
+      <Image
+        source={require("@/assets/images/menu/saved.png")}
+        style={{ width: 32, height: 32 }}
+        interpolation="high"
+      />
+    ),
     color: "#C43E9C",
   },
   {
-    title: "Groups",
-    icon: "group",
-    library: "FontAwesome",
+    title: "Kapatids",
+    iconComponent: (
+      <Image
+        source={require("@/assets/images/menu/friends.png")}
+        style={{ width: 33, height: 33 }}
+        interpolation="high"
+      />
+    ),
     color: "#2E89FF",
   },
   {
     title: "Reels",
-    icon: "play-box-outline",
-    library: "MaterialCommunityIcons",
+    iconComponent: (
+      <Image
+        source={require("@/assets/images/menu/reels.png")}
+        style={{ width: 33, height: 33 }}
+        interpolation="high"
+      />
+    ),
     color: "#E53935",
   },
   {
-    title: "Marketplace",
-    icon: "storefront-outline",
-    library: "MaterialCommunityIcons",
+    title: "iGive",
+    iconComponent: (
+      <Image
+        source={require("@/assets/images/menu/igive.png")}
+        style={{ width: 32, height: 32 }}
+        interpolation="high"
+      />
+    ),
     color: "#2E89FF",
   },
   {
-    title: "Friends",
-    icon: "user-friends",
-    library: "FontAwesome5",
+    title: "Events",
+    iconComponent: (
+      <Image
+        source={require("@/assets/images/menu/events.png")}
+        style={{ width: 30, height: 30 }}
+        interpolation="high"
+      />
+    ),
     color: "#2E89FF",
   },
 ];
 
 const renderIcon = (item) => {
+  if (item.iconComponent) {
+    return item.iconComponent;
+  }
   switch (item.library) {
     case "FontAwesome":
       return <FontAwesome name={item.icon} size={28} color={item.color} />;
@@ -214,15 +248,15 @@ export default function MenuScreen() {
             ))}
           </ScrollView>
           <View className="flex-row flex-wrap justify-between mt-4">
-            {menuItems.map((item) => (
+            {menuItems.map((item, index) => (
               <TouchableOpacity
-                key={item.title}
+                key={`${item.title}-${index}`}
                 className="w-[49%] mb-2 p-4 rounded-2xl"
                 style={{ backgroundColor: colors.surface }}
               >
                 <View>
                   {renderIcon(item)}
-                  <View className="mt-4">
+                  <View className="mt-2">
                     <Text
                       className="text-base font-bold"
                       style={{ color: colors.text }}
@@ -250,8 +284,8 @@ export default function MenuScreen() {
             }}
           >
             <TouchableOpacity className="flex-row items-center p-4">
-              <MaterialCommunityIcons
-                name="help-circle-outline"
+              <FontAwesome
+                name="question-circle"
                 size={28}
                 color={colors.text}
               />
@@ -267,7 +301,7 @@ export default function MenuScreen() {
               style={{ backgroundColor: colors.border }}
             />
             <TouchableOpacity className="flex-row items-center p-4">
-              <Ionicons name="settings-outline" size={26} color={colors.text} />
+              <MaterialIcons name="settings" size={26} color={colors.text} />
               <Text
                 className="text-lg font-semibold ml-4"
                 style={{ color: colors.text }}
@@ -280,8 +314,8 @@ export default function MenuScreen() {
               style={{ backgroundColor: colors.border }}
             />
             <TouchableOpacity className="flex-row items-center p-4">
-              <Ionicons
-                name="analytics-outline"
+              <MaterialCommunityIcons
+                name="google-analytics"
                 size={26}
                 color={colors.text}
               />
