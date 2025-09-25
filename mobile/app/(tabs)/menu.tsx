@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView, Linking } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Linking,
+} from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -12,7 +19,7 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useSignOut } from "@/hooks/useSignOut";
 import ConfirmationAlert from "@/components/ConfirmationAlert";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import PressableScale from "@/constants/PressableScale"; // Import the new component
+import PressableScale from "@/constants/PressableScale";
 
 const openExternalLink = (url) => {
   Linking.openURL(url).catch((err) => console.error("Couldn't load page", err));
@@ -46,7 +53,7 @@ const menuItems = [
     title: "Kapatids",
     iconComponent: (
       <Image
-        source={require("@/assets/images/menu/friends.png")}
+        source={require("@/assets/images/menu/kapatids.png")}
         style={{ width: 33, height: 33 }}
         interpolation="high"
       />
@@ -115,7 +122,10 @@ export default function MenuScreen() {
   const { isSignedIn } = useAuth();
   const { users } = useAllUsers();
   const [isSignOutAlertVisible, setSignOutAlertVisible] = useState(false);
-  const { handleSignOut: handleSignOutFromHook, confirmSignOut: confirmSignOutFromHook } = useSignOut();
+  const {
+    handleSignOut: handleSignOutFromHook,
+    confirmSignOut: confirmSignOutFromHook,
+  } = useSignOut();
 
   const confirmSignOut = () => {
     confirmSignOutFromHook();
@@ -202,10 +212,7 @@ export default function MenuScreen() {
                 <Text style={{ color: colors.text }}>User not found.</Text>
               </View>
             )}
-            <View
-              className="h-px mx-4"
-              style={{ backgroundColor: "gray" }}
-            />
+            <View className="h-px mx-4" style={{ backgroundColor: "gray" }} />
             <TouchableOpacity className="flex-row items-center p-4">
               <View className="w-10 h-10 rounded-full bg-gray-700 items-center justify-center">
                 <FontAwesome name="plus" size={24} color={colors.text} />
@@ -261,7 +268,15 @@ export default function MenuScreen() {
               <PressableScale // Replaced TouchableOpacity with PressableScale
                 key={`${item.title}-${index}`}
                 onPress={item.onPress}
-                style={[{ backgroundColor: colors.surface }, { width: '49%', marginBottom: 8, padding: 16, borderRadius: 16 }]} // Apply styles directly to PressableScale
+                style={[
+                  { backgroundColor: colors.surface },
+                  {
+                    width: "49%",
+                    marginBottom: 8,
+                    padding: 16,
+                    borderRadius: 16,
+                  },
+                ]} // Apply styles directly to PressableScale
               >
                 <View>
                   {renderIcon(item)}
@@ -305,10 +320,7 @@ export default function MenuScreen() {
                 Help & feedback
               </Text>
             </TouchableOpacity>
-            <View
-              className="h-px mx-0"
-              style={{ backgroundColor: "gray" }}
-            />
+            <View className="h-px mx-0" style={{ backgroundColor: "gray" }} />
             <TouchableOpacity className="flex-row items-center p-4">
               <MaterialIcons name="settings" size={26} color={colors.text} />
               <Text
@@ -318,13 +330,10 @@ export default function MenuScreen() {
                 Settings & privacy
               </Text>
             </TouchableOpacity>
-            <View
-              className="h-px mx-0"
-              style={{ backgroundColor: "gray" }}
-            />
+            <View className="h-px mx-0" style={{ backgroundColor: "gray" }} />
             <TouchableOpacity className="flex-row items-center p-4">
-              <MaterialCommunityIcons
-                name="google-analytics"
+              <MaterialIcons
+                name="call"
                 size={26}
                 color={colors.text}
               />
@@ -332,7 +341,7 @@ export default function MenuScreen() {
                 className="text-lg font-semibold ml-4"
                 style={{ color: colors.text }}
               >
-                Analytics
+                Contact
               </Text>
             </TouchableOpacity>
           </View>
@@ -340,9 +349,9 @@ export default function MenuScreen() {
           <PressableScale // Replaced TouchableOpacity with PressableScale
             style={{
               backgroundColor: colors.surface,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
               padding: 12,
               marginTop: 16,
               marginBottom: 12,
