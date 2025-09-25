@@ -48,6 +48,7 @@ const menuItems = [
       />
     ),
     color: "#C43E9C",
+    onPress: (router) => {},
   },
   {
     title: "Kapatids",
@@ -59,6 +60,7 @@ const menuItems = [
       />
     ),
     color: "#2E89FF",
+    onPress: (router) => router.push("(tabs)/search"),
   },
   {
     title: "Reels",
@@ -70,6 +72,7 @@ const menuItems = [
       />
     ),
     color: "#E53935",
+    onPress: (router) => router.push("(tabs)/videos"),
   },
   {
     title: "iGive",
@@ -81,6 +84,7 @@ const menuItems = [
       />
     ),
     color: "#2E89FF",
+    onPress: (router) => {},
   },
   {
     title: "Events",
@@ -92,6 +96,7 @@ const menuItems = [
       />
     ),
     color: "#2E89FF",
+    onPress: (router) => {},
   },
 ];
 
@@ -267,7 +272,7 @@ export default function MenuScreen() {
             {menuItems.map((item, index) => (
               <PressableScale // Replaced TouchableOpacity with PressableScale
                 key={`${item.title}-${index}`}
-                onPress={item.onPress}
+                onPress={() => item.onPress(router)}
                 style={[
                   { backgroundColor: colors.surface },
                   {
@@ -310,7 +315,7 @@ export default function MenuScreen() {
             <TouchableOpacity className="flex-row items-center p-4">
               <FontAwesome
                 name="question-circle"
-                size={28}
+                size={26}
                 color={colors.text}
               />
               <Text
@@ -322,16 +327,16 @@ export default function MenuScreen() {
             </TouchableOpacity>
             <View className="h-px mx-0" style={{ backgroundColor: "gray" }} />
             <TouchableOpacity className="flex-row items-center p-4">
-              <MaterialIcons name="settings" size={26} color={colors.text} />
+              <MaterialIcons name="privacy-tip" size={26} color={colors.text} />
               <Text
                 className="text-lg font-semibold ml-4"
                 style={{ color: colors.text }}
               >
-                Settings & privacy
+                Privacy Policy
               </Text>
             </TouchableOpacity>
             <View className="h-px mx-0" style={{ backgroundColor: "gray" }} />
-            <TouchableOpacity className="flex-row items-center p-4">
+            <TouchableOpacity className="flex-row items-center p-4" onPress={() => Linking.openURL('tel:09982238464')}>
               <MaterialIcons
                 name="call"
                 size={26}
@@ -346,15 +351,15 @@ export default function MenuScreen() {
             </TouchableOpacity>
           </View>
 
-          <PressableScale // Replaced TouchableOpacity with PressableScale
+          <PressableScale 
             style={{
               backgroundColor: colors.surface,
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
-              padding: 12,
-              marginTop: 16,
-              marginBottom: 12,
+              padding: 10,
+              marginTop: 14,
+              marginBottom: 10,
               borderRadius: 12,
             }}
             onPress={() => setSignOutAlertVisible(true)}
