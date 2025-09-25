@@ -13,14 +13,14 @@ interface PressableScaleProps {
   children: React.ReactNode;
   scaleTo?: number;
   style?: StyleProp<ViewStyle>;
-  activeOpacity?: number; // Added to allow disabling default opacity
+  activeOpacity?: number; 
 }
 
 const PressableScale: React.FC<PressableScaleProps> = ({
   onPress,
   onLongPress,
   children,
-  scaleTo = 0.97,
+  scaleTo = 0.95, // Shrink Scale
   style,
   activeOpacity = 1, // Default to 1 to remove opacity effect
 }) => {
@@ -56,10 +56,10 @@ const PressableScale: React.FC<PressableScaleProps> = ({
     <TouchableOpacity
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      onPress={onPress}
+      onPress={onPress} 
       onLongPress={onLongPress}
       activeOpacity={activeOpacity}
-      style={[style, { transform: [{ scale: animatedScale }] }]} // Apply external style and animated scale directly to TouchableOpacity
+      style={[style, { transform: [{ scale: animatedScale }] }]}
     >
       {children}
     </TouchableOpacity>

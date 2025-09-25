@@ -38,6 +38,7 @@ import { sharePost } from "@/utils/share";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
 import ReactionUsersModal from './ReactionUsersModal';
+import PressableScale from "@/constants/PressableScale";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -406,14 +407,25 @@ const PostCard = ({
               })
             }
           >
-            <Image
-              source={
-                post.user.profilePicture
-                  ? { uri: post.user.profilePicture }
-                  : require("../assets/images/default-avatar.png")
-              }
-              className="w-14 h-14 rounded-full mr-3"
-            />
+            <PressableScale onPress={() =>
+              router.push({
+                pathname: "/user/[userId]",
+                params: {
+                  userId: post.user._id,
+                  username: (post.user as any).username || "",
+                  user: encodeURIComponent(JSON.stringify(post.user)),
+                },
+              })
+            }>
+              <Image
+                source={
+                  post.user.profilePicture
+                    ? { uri: post.user.profilePicture }
+                    : require("../assets/images/default-avatar.png")
+                }
+                className="w-14 h-14 rounded-full mr-3"
+              />
+            </PressableScale>
           </TouchableOpacity>
           <View className="flex-1">
             <View className="flex-row items-center">
