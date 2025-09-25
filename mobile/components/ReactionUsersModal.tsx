@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Modal,
   View,
@@ -16,6 +16,7 @@ import { useTheme } from "../context/ThemeContext";
 import { FontAwesome6 } from "@expo/vector-icons";
 import type { Reaction } from "../types";
 import VerifiedBadge from "./VerifiedBadge";
+import { reactionComponents } from "../utils/reactions";
 
 // Import SVG emoji components
 import LikeEmoji from "../assets/icons/reactions/LikeEmoji";
@@ -31,7 +32,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 interface ReactionUsersModalProps {
   isVisible: boolean;
   onClose: () => void;
-  reactions: Reaction[] | undefined; // Changed to use the proper Reaction type
+  reactions: Reaction[] | undefined;
 }
 
 const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
@@ -41,6 +42,7 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
 }) => {
   const { colors } = useTheme();
   const colorScheme = useColorScheme();
+  const [selectedReactionType, setSelectedReactionType] = useState("all");
 
   const animatedScale = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
@@ -50,8 +52,8 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
       Animated.parallel([
         Animated.spring(animatedScale, {
           toValue: 1,
-          friction: 8, // Adjust for more or less bounce
-          tension: 70, // Adjust for speed
+          friction: 8,
+          tension: 70,
           useNativeDriver: true,
         }),
         Animated.timing(animatedOpacity, {
@@ -94,6 +96,10 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
     return EmojiComponent ? <EmojiComponent width={28} height={28} /> : null;
   };
 
+  const filteredReactions = selectedReactionType === "all"
+    ? reactions
+    : reactions?.filter(reaction => reaction.type === selectedReactionType);
+
   return (
     <Modal
       transparent={true}
@@ -114,7 +120,7 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
           >
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
-                Reactions ({reactions?.length || 0})
+                Reactions
               </Text>
               <Pressable
                 onPress={onClose}
@@ -125,40 +131,31 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {reactions && reactions.length > 0 ? (
-                // Show all reactions grouped by type
-                Object.entries(groupedReactions).map(
-                  ([reactionType, reactionList], groupIndex) => (
-                    <View key={groupIndex}>
-                      
-                      {/* Users who made this reaction */}
-                      {(reactionList as Reaction[]).map((reaction) => (
-                        <View key={reaction._id} style={styles.reactionItem}>
-                          <Image
-                            style={styles.avatar}
-                            source={{
-                              uri: reaction.user.profilePicture || 
-                                   `https://ui-avatars.com/api/?name=${reaction.user.firstName}+${reaction.user.lastName}&background=random`,
-                            }}
-                          />
-                          <View style={styles.userInfo}>
-                            <View style={styles.nameContainer}>
-                              <Text style={[styles.userName, { color: colors.text }]}>
-                                {reaction.user.firstName} {reaction.user.lastName}
-                              </Text>
-                              {reaction.user.isVerified && (
-                                <VerifiedBadge size={15} />
-                              )}
-                            </View>
-                          </View>
-                          <View style={styles.reactionEmoji}>
-                            {getReactionEmojiComponent(reaction.type)}
-                          </View>
-                        </View>
-                      ))}
+              {filteredReactions && filteredReactions.length > 0 ? (
+                filteredReactions.map(reaction => (
+                  <View key={reaction._id} style={styles.reactionItem}>
+                    <Image
+                      style={styles.avatar}
+                      source={{
+                        uri: reaction.user.profilePicture ||
+                             `https://ui-avatars.com/api/?name=${reaction.user.firstName}+${reaction.user.lastName}&background=random`,
+                      }}
+                    />
+                    <View style={styles.userInfo}>
+                      <View style={styles.nameContainer}>
+                        <Text style={[styles.userName, { color: colors.text }]}>
+                          {reaction.user.firstName} {reaction.user.lastName}
+                        </Text>
+                        {reaction.user.isVerified && (
+                          <VerifiedBadge size={15} />
+                        )}
+                      </View>
                     </View>
-                  )
-                )
+                    <View style={styles.reactionEmoji}>
+                      {getReactionEmojiComponent(reaction.type)}
+                    </View>
+                  </View>
+                ))
               ) : (
                 <View style={styles.emptyContainer}>
                   <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
@@ -167,6 +164,68 @@ const ReactionUsersModal: React.FC<ReactionUsersModalProps> = ({
                 </View>
               )}
             </ScrollView>
+
+            <View style={[styles.reactionTypeTabs, { justifyContent: 'center' }]}>
+              <Pressable
+                style={[
+                  styles.reactionTypeTab,
+                  selectedReactionType === "all" && styles.activeReactionTypeTab,
+                ]}
+                onPress={() => setSelectedReactionType("all")}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text
+                    style={[
+                      styles.reactionTypeTabLabel,
+                      { fontWeight: "600",
+                        color: 'white',
+                      },
+                    ]}
+                  >
+                    All
+                  </Text>
+                  <Text style={{ color: 'white', fontSize: 12, marginLeft: 4 }}>
+                    {reactions?.length || 0}
+                  </Text>
+                </View>
+              </Pressable>
+              {Object.keys(groupedReactions).map(reactionType => {
+                const ReactionIcon = reactionComponents[reactionType];
+
+                return (
+                  <Pressable
+                    key={reactionType}
+                    style={[
+                      styles.reactionTypeTab,
+                      selectedReactionType === reactionType && styles.activeReactionTypeTab,
+                    ]}
+                    onPress={() => setSelectedReactionType(reactionType)}
+                  >
+                    {ReactionIcon ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <ReactionIcon width={20} height={20} />
+                        <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 4 }}>
+                          {groupedReactions[reactionType].length}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text
+                        style={[
+                          styles.reactionTypeTabLabel,
+                          {
+                            color: selectedReactionType === reactionType
+                              ? colors.primary
+                              : colors.textSecondary,
+                          },
+                        ]}
+                      >
+                        {reactionType}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
           </Animated.View>
         </Pressable>
       </Pressable>
@@ -182,7 +241,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.6)",
   },
   modalContent: {
-    width: screenWidth * 0.9,  
+    width: screenWidth * 0.9,
     maxHeight: screenHeight * 0.6,
     paddingTop: 15,
     paddingHorizontal: 20,
@@ -245,6 +304,25 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontStyle: "italic",
+  },
+  reactionTypeTabs: {
+    flexDirection: "row",
+    marginTop: 10,
+    paddingHorizontal: 10,
+    justifyContent: 'center', // Add this line
+  },
+  reactionTypeTab: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: '#434445',
+  },
+  activeReactionTypeTab: {
+    backgroundColor: '#5a5b5c', // Light gray
+  },
+  reactionTypeTabLabel: {
+    fontSize: 14,
   },
 });
 
