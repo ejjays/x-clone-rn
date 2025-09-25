@@ -4,6 +4,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useFollow } from "@/hooks/useFollow";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import PressableScale from "@/constants/PressableScale"; 
 
 interface UserCardProps {
   user: User;
@@ -21,7 +22,6 @@ const UserCard = ({
   const { followUser, isLoading: isFollowLoading } = useFollow();
   const { currentUser, setCurrentUser } = useCurrentUser();
 
-  // Check if current user is following this user
   const isFollowing = currentUser?.following?.includes(user._id) || false;
 
   const toggleFollowOptimistic = () => {
@@ -33,21 +33,15 @@ const UserCard = ({
 
     setCurrentUser({ ...currentUser, following: newFollowing });
 
-    followUser(user.clerkId); // Use clerkId as the backend expects it
+    followUser(user.clerkId); 
   };
 
   const handleMessage = () => {
     if (onMessage) {
       onMessage(user);
-    } else {
-      Alert.alert(
-        "Message",
-        `Start a conversation with ${user.firstName} ${user.lastName}`
-      );
     }
   };
 
-  // Fallback profile picture if user doesn't have one
   const profilePicture =
     user.profilePicture ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`;
@@ -55,17 +49,21 @@ const UserCard = ({
   return (
     <TouchableOpacity
       className="flex-row items-center p-4"
-      activeOpacity={0.7}
+      activeOpacity={1} 
       style={{ backgroundColor: colors.background }}
     >
       {/* Profile Picture */}
-      <Image
-        source={{ uri: profilePicture }}
-        className="w-[85px] h-[85px] rounded-full mr-4"
-        defaultSource={{
-          uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`,
-        }}
-      />
+      <PressableScale activeOpacity={1} onPress={() => { /* Optional: add specific onPress for the image here */ }}>
+        <View>
+          <Image
+            source={{ uri: profilePicture }}
+            className="w-[85px] h-[85px] rounded-full mr-4"
+            defaultSource={{
+              uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + " " + user.lastName)}&background=1877F2&color=fff&size=120`,
+            }}
+          />
+        </View>
+      </PressableScale>
 
       {/* User Info */}
       <View className="flex-1">

@@ -10,9 +10,7 @@ import { useTheme } from "@/context/ThemeContext";
 
 const SearchScreen = () => {
   const [searchText, setSearchText] = useState("");
-  const [activeTab, setActiveTab] = useState<"suggestions" | "yourFriends">(
-    "suggestions"
-  );
+  const [activeTab, setActiveTab] = useState<"suggestions" | "yourFriends">("suggestions");
   const { users, isLoading, error, refetch } = useAllUsers();
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
@@ -73,101 +71,101 @@ const SearchScreen = () => {
     );
   }
 
-  return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      {/* HEADER */}
-      <View
-        className="px-4 py-4"
-        style={{ backgroundColor: colors.background }}
+  const renderHeader = () => (
+    <View
+      className="px-4 pt-4" // Removed bottom padding to be part of the list
+      style={{ backgroundColor: colors.background }}
+    >
+      <Text
+        className="text-3xl font-bold mb-3"
+        style={{ color: colors.text }}
       >
-        <Text
-          className="text-3xl font-bold mb-3"
-          style={{ color: colors.text }}
-        >
-          Peoples
-        </Text>
-        <View
-          className="flex-row items-center rounded-full px-4"
-          style={{ backgroundColor: colors.surface }}
-        >
-          <Search size={20} color={colors.textMuted} />
-          <TextInput
-            placeholder="Search people"
-            className="flex-1 ml-3 text-base"
-            placeholderTextColor={colors.textMuted}
-            value={searchText}
-            onChangeText={setSearchText}
-            style={{
-              paddingVertical: Platform.OS === "android" ? 8 : 12,
-              color: colors.text,
-            }}
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchText("")}>
-              <X size={20} color={colors.textMuted} />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Tab Navigation */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              {
-                backgroundColor:
-                  activeTab === "suggestions"
-                    ? colors.surface
-                    : colors.background,
-              },
-            ]}
-            onPress={() => setActiveTab("suggestions")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                {
-                  color:
-                    activeTab === "suggestions"
-                      ? colors.text
-                      : colors.textMuted,
-                },
-              ]}
-            >
-              Suggestions
-            </Text>
+        Peoples
+      </Text>
+      <View
+        className="flex-row items-center rounded-full px-4"
+        style={{ backgroundColor: colors.surface }}
+      >
+        <Search size={20} color={colors.textMuted} />
+        <TextInput
+          placeholder="Search people"
+          className="flex-1 ml-3 text-base"
+          placeholderTextColor={colors.textMuted}
+          value={searchText}
+          onChangeText={setSearchText}
+          style={{
+            paddingVertical: Platform.OS === "android" ? 8 : 12,
+            color: colors.text,
+          }}
+        />
+        {searchText.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchText("")}>
+            <X size={20} color={colors.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              {
-                backgroundColor:
-                  activeTab === "yourFriends"
-                    ? colors.surface
-                    : colors.background,
-              },
-            ]}
-            onPress={() => setActiveTab("yourFriends")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                {
-                  color:
-                    activeTab === "yourFriends"
-                      ? colors.text
-                      : colors.textMuted,
-                },
-              ]}
-            >
-              Your friends
-            </Text>
-          </TouchableOpacity>
-        </View>
+        )}
       </View>
 
-      {/* USERS LIST */}
-      {isLoading ? (
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            {
+              backgroundColor:
+                activeTab === "suggestions"
+                  ? colors.surface
+                  : "transparent", // Changed to transparent
+            },
+          ]}
+          onPress={() => setActiveTab("suggestions")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  activeTab === "suggestions"
+                    ? colors.text
+                    : colors.textMuted,
+              },
+            ]}
+          >
+            Suggestions
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            {
+              backgroundColor:
+                activeTab === "yourFriends"
+                  ? colors.surface
+                  : "transparent", // Changed to transparent
+            },
+          ]}
+          onPress={() => setActiveTab("yourFriends")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  activeTab === "yourFriends"
+                    ? colors.text
+                    : colors.textMuted,
+              },
+            ]}
+          >
+            Your friends
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      {isLoading && !displayedUsers.length ? ( // Show loading indicator only when there are no users
         <View
           className="flex-1 items-center justify-center p-8"
           style={{ backgroundColor: colors.background }}
@@ -184,7 +182,8 @@ const SearchScreen = () => {
           renderItem={({ item }) => (
             <UserCard user={item} onMessage={handleMessage} />
           )}
-          contentContainerStyle={{ paddingBottom: 100 + insets.bottom, backgroundColor: colors.background }}
+          ListHeaderComponent={renderHeader} // Use ListHeaderComponent
+          contentContainerStyle={{ paddingBottom: insets.bottom }}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
@@ -198,7 +197,7 @@ const SearchScreen = () => {
           ListEmptyComponent={
             <View
               className="flex-1 items-center justify-center p-8"
-              style={{ backgroundColor: colors.background }}
+              style={{ minHeight: 400 }} // give it some height
             >
               <View className="items-center">
                 <View
@@ -216,7 +215,7 @@ const SearchScreen = () => {
                 </Text>
                 <Text className="text-center text-base leading-6 max-w-xs" style={{ color: colors.textMuted }}>
                   {searchText
-                    ? `No results found for \"${searchText}\"`
+                    ? `No results found for \'''${searchText}\'''`
                     : activeTab === "suggestions"
                     ? "Suggestions will appear here."
                     : "People you follow will appear here."}
@@ -235,6 +234,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: 16,
     gap: 8,
+    paddingBottom: 8, // Add some padding at the bottom
   },
   tabButton: {
     paddingVertical: 8,
