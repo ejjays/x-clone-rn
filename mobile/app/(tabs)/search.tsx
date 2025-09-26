@@ -4,9 +4,12 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { User } from "@/types";
 import { Search, Users, X } from "lucide-react-native";
 import React, { useState, memo } from "react";
-import { View, TextInput, FlatList, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform, StyleSheet } from "react-native";
+import { View, TextInput, FlatList, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform, StyleSheet, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
+import LottieView from "lottie-react-native";
+
+const { width } = Dimensions.get('window');
 
 const SearchScreen = () => {
   const [searchText, setSearchText] = useState("");
@@ -197,15 +200,15 @@ const SearchScreen = () => {
           ListEmptyComponent={
             <View
               className="flex-1 items-center justify-center p-8"
-              style={{ minHeight: 400 }} // give it some height
+              style={{ minHeight: 400 }} 
             >
               <View className="items-center">
-                <View
-                  className="w-20 h-20 rounded-full items-center justify-center mb-6"
-                  style={{ backgroundColor: colors.surface }}
-                >
-                  <Users size={32} color={colors.textMuted} />
-                </View>
+                <LottieView
+                  source={require("../../assets/animations/empty-follow.json")} 
+                  autoPlay
+                  loop
+                  style={{ width: width * 0.85, height: width * 0.85, marginBottom: -20 }}
+                />
                 <Text className="text-xl font-semibold mb-3" style={{ color: colors.text }}>
                   {searchText
                     ? "No people found"

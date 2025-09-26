@@ -200,7 +200,7 @@ export default function MenuScreen() {
                   </Text>
                 </View>
                 <View className="ml-auto">
-                  <View className="bg-gray-700 rounded-full p-2">
+                  <View className="bg-gray-600 rounded-full p-2">
                     <FontAwesome
                       name="chevron-down"
                       size={15}
@@ -209,7 +209,7 @@ export default function MenuScreen() {
                   </View>
                   <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-4 h-4 items-center justify-center">
                     <Text className="text-white text-xs font-bold">1</Text>
-                  </View>
+                  </View> 
                 </View>
               </TouchableOpacity>
             ) : (
@@ -218,19 +218,22 @@ export default function MenuScreen() {
               </View>
             )}
             <View className="h-px mx-4" style={{ backgroundColor: "gray" }} />
-            <TouchableOpacity className="flex-row items-center p-4">
-              <View className="w-10 h-10 rounded-full bg-gray-700 items-center justify-center">
-                <FontAwesome name="plus" size={24} color={colors.text} />
+            <TouchableOpacity
+              className="flex-row items-center p-4"
+              onPress={() => router.push("/edit-profile")}
+            >
+              <View className="w-10 h-10 rounded-full bg-gray-600 items-center justify-center">
+                <MaterialIcons name="mode-edit" size={24} color={colors.text} />
               </View>
               <View className="ml-4">
                 <Text
                   className="text-lg font-bold"
                   style={{ color: colors.text }}
                 >
-                  Create new profile or Page
+                  Edit Profile
                 </Text>
                 <Text className="text-sm" style={{ color: colors.text }}>
-                  Switch between profiles with one login.
+                  Make changes to your profile.
                 </Text>
               </View>
             </TouchableOpacity>

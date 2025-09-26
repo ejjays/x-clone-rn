@@ -28,38 +28,35 @@ import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { LogBox } from "react-native";
 import {
   useFonts,
-  Lato_900Black, // Import Lato_900Black
-} from "@expo-google-fonts/lato"; // Import from lato
-// ADD THESE IMPORTS FOR PUSH NOTIFICATIONS
+  Lato_900Black, 
+} from "@expo-google-fonts/lato"; 
+import {
+  Poppins_600SemiBold, 
+} from "@expo-google-fonts/poppins"; 
 import * as Notifications from "expo-notifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-// Add this import at the top
 import { useOTAUpdates } from '@/hooks/useOTAUpdates';
 
-// Suppress dev warning from libraries that schedule updates in useInsertionEffect
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
 
-// queryClient is centralized in utils/offline/network to keep online/focus managers consistent
 
 const InitialLayout = () => {
   const { isLoaded, isSignedIn, userId } = useAuth();
   const { client } = useStreamChat();
   const [fontsLoaded] = useFonts({
-    Lato_900Black, // Use Lato_900Black
+    Lato_900Black, 
+    Poppins_600SemiBold, 
   });
   const { colors, isDarkMode } = useTheme();
   const pathname = usePathname();
   
-  // ADD PUSH NOTIFICATIONS HOOK HERE
   const { expoPushToken } = usePushNotifications();
 
-  // ADD THIS LINE - OTA Updates hook
   const { isChecking, isDownloading, error } = useOTAUpdates();
   
   const navigatedRef = useRef(false);
   const [bypassAuthLoad, setBypassAuthLoad] = useState(false);
 
-  // Early offline navigation: do not wait for Clerk when offline and we have a persisted session
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -71,7 +68,6 @@ const InitialLayout = () => {
         if (!cancelled && !online && persisted?.isSignedIn) {
           navigatedRef.current = true;
           setBypassAuthLoad(true);
-          // Defer navigation until after interactions to avoid container readiness issues
           InteractionManager.runAfterInteractions(() => {
             setTimeout(() => {
               try { router.replace("/(tabs)"); } catch {}
@@ -85,12 +81,11 @@ const InitialLayout = () => {
     };
   }, []);
 
-  // Set a global default font for all Text components
   if (!Text.defaultProps) {
     Text.defaultProps = {} as any;
   }
   if (!Text.defaultProps.style) {
-    Text.defaultProps.style = { fontFamily: "Lato_900Black" }; // Use Lato_900Black
+    Text.defaultProps.style = { fontFamily: "Lato_900Black" }; 
   } else {
     const prev = Text.defaultProps.style as any;
     const alreadyApplied = Array.isArray(prev)
@@ -103,7 +98,6 @@ const InitialLayout = () => {
     }
   }
 
-  // Handle navigation AFTER the navigation system is ready (no prefetch side work)
   useEffect(() => {
     if (!isLoaded) return;
     let cancelled = false;
@@ -121,7 +115,7 @@ const InitialLayout = () => {
         } catch {}
       }
       if (cancelled) return;
-      if (navigatedRef.current) return; // early offline navigation already handled
+      if (navigatedRef.current) return; 
       if (!signedIn) {
         router.push("/(auth)");
       } else {
@@ -134,21 +128,18 @@ const InitialLayout = () => {
     };
   }, [isLoaded, isSignedIn, bypassAuthLoad]);
 
-  // Persist auth state for instant offline boot
   useEffect(() => {
     if (isLoaded) {
       persistAuthState(Boolean(isSignedIn), userId).catch(() => {});
     }
   }, [isLoaded, isSignedIn, userId]);
 
-  // Bootstrapping: restore React Query persistence once
   useReactEffect(() => {
     restoreReactQueryPersistence(queryClient).finally(() => {
       setupReactQueryPersistence(queryClient);
     });
   }, []);
 
-  // ADD NOTIFICATION HANDLING FOR DEEP LINKING
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
@@ -165,7 +156,6 @@ const InitialLayout = () => {
 
   const { queued } = useOfflineSync();
 
-  // Only block for auth loading, NOT for Stream Chat client
   if (!isLoaded && !bypassAuthLoad) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -174,7 +164,6 @@ const InitialLayout = () => {
     );
   }
 
-  // Don't block the UI on fonts; render immediately and let fonts load in the background
   return (
     <OverlayProvider value={{ style: createStreamChatTheme(isDarkMode) }}>
       <View
