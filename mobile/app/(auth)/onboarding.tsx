@@ -40,7 +40,7 @@ const pages = [
     type: "lottie",
   },
   {
-    text: "Connect with our kapatids, church family, no matter the distance.",
+    text: "Connect with our kapatids and church family, no matter the distance.",
     image: require("../../assets/animations/connect.json"),
     type: "lottie",
   },
@@ -265,8 +265,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   const { colors, isDarkMode } = useTheme();
   const router = useRouter();
 
-  const onComplete = () => {
-    router.push("/login");
+  const onComplete = () => { 
+    router.push("/login-template");
   };
 
   const changeNavBarColor = (color: string) => {
