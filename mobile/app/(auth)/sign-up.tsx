@@ -260,11 +260,7 @@ export default function SignupTemplate() {
                 style={styles.socialButton}
                 disabled={isLoading}
               >
-                {isSocialAuthLoading ? (
-                  <ActivityIndicator size="small" color="#4285F4" />
-                ) : (
-                  <Image source={GOOGLE_LOGO} style={styles.socialLogo} />
-                )}
+                <Image source={GOOGLE_LOGO} style={styles.socialLogo} />
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.8}

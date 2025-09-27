@@ -36,7 +36,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const pages = [
   {
-    text: "Welcome to PCMI - Infanta\'s mobile app!  We\'re glad you are here.",
+    text: "Welcome to PCMI - Infanta's mobile app! We're glad you are here.",
     image: require("../../assets/animations/welcome.json"),
     type: "lottie",
   },

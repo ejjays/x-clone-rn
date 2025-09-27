@@ -87,78 +87,80 @@ export default function AuthScreen() {
         </View>
 
         <View style={styles.content}>
-          <View style={styles.brandRow}>
-            <View style={styles.logoFallback}>
-              <Image source={PCMI_ICON} style={styles.logoImage} />
+          <View>
+            <View style={styles.brandRow}>
+              <View style={styles.logoFallback}>
+                <Image source={PCMI_ICON} style={styles.logoImage} />
+              </View>
+              <Text allowFontScaling style={styles.brandText}>PCMI</Text>
             </View>
-            <Text allowFontScaling style={styles.brandText}>PCMI</Text>
-          </View>
 
-          <Text allowFontScaling style={styles.subtitle} numberOfLines={1} adjustsFontSizeToFit>Pag-ibig Christian Ministries - Infanta Quezon</Text>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleEmailSignup}
-            style={styles.primaryButton}
-          >
-            <Text allowFontScaling style={styles.primaryButtonText}>Sign up with Email</Text>
-          </TouchableOpacity>
-
-          <View style={styles.orRow}>
-            <View style={styles.orLine} />
-            <Text allowFontScaling style={styles.orText}>or continue with</Text>
-            <View style={styles.orLine} />
-          </View>
-
-          <View style={styles.socialRow}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => handleSocialAuth("oauth_google")}
-              style={[styles.socialButton, { marginRight: getHorizontalResponsiveSize(8, width) }]}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#4285F4" />
-              ) : (
-                <Image source={GOOGLE_LOGO} style={styles.socialLogo} />
-              )}
-            </TouchableOpacity>
+            <Text allowFontScaling style={styles.subtitle} numberOfLines={1} adjustsFontSizeToFit>Pag-ibig Christian Ministries - Infanta Quezon</Text>
 
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => handleSocialAuth("oauth_facebook")}
-              style={[styles.socialButton, { marginLeft: getHorizontalResponsiveSize(8, width) }]}
-              disabled={isLoading}
+              onPress={handleEmailSignup}
+              style={styles.primaryButton}
             >
-              <Image source={FACEBOOK_LOGO} style={styles.socialLogo} />
+              <Text allowFontScaling style={styles.primaryButtonText}>Sign up with Email</Text>
             </TouchableOpacity>
+
+            <View style={styles.orRow}>
+              <View style={styles.orLine} />
+              <Text allowFontScaling style={styles.orText}>or continue with</Text>
+              <View style={styles.orLine} />
+            </View>
+
+            <View style={styles.socialRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleSocialAuth("oauth_google")}
+                style={[styles.socialButton, { marginRight: getHorizontalResponsiveSize(8, width) }]}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#4285F4" />
+                ) : (
+                  <Image source={GOOGLE_LOGO} style={styles.socialLogo} />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleSocialAuth("oauth_facebook")}
+                style={[styles.socialButton, { marginLeft: getHorizontalResponsiveSize(8, width) }]}
+                disabled={isLoading}
+              >
+                <Image source={FACEBOOK_LOGO} style={styles.socialLogo} />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-        <View style={styles.footer}>
-          <Text allowFontScaling style={styles.disclaimer}>
-            By continuing, you agree to PCMI's{' '}
-            <Text
-              style={styles.link}
-              onPress={() => Linking.openURL('https://bandlab.com/terms')}
-            >
-              Terms of Use
-            </Text>{' '}
-            and{' '}
-            <Text
-              style={styles.link}
-              onPress={() => Linking.openURL('https://bandlab.com/privacy')}
-            >
-              Privacy Policy
+          <View style={styles.footer}>
+            <Text allowFontScaling style={styles.disclaimer}>
+              By continuing, you agree to PCMI's{' '}
+              <Text
+                style={styles.link}
+                onPress={() => Linking.openURL('https://bandlab.com/terms')}
+              >
+                Terms of Use
+              </Text>{' '}
+              and{' '}
+              <Text
+                style={styles.link}
+                onPress={() => Linking.openURL('https://bandlab.com/privacy')}
+              >
+                Privacy Policy
+              </Text>
             </Text>
-          </Text>
-          <View style={styles.loginRow}>
-            <Text allowFontScaling style={styles.loginText}>Have an account? </Text>
-            <Text
-              style={[styles.loginText, styles.loginLink]}
-              onPress={handleLogin}
-            >
-              Log in
-            </Text>
+            <View style={styles.loginRow}>
+              <Text allowFontScaling style={styles.loginText}>Have an account? </Text>
+              <Text
+                style={[styles.loginText, styles.loginLink]}
+                onPress={handleLogin}
+              >
+                Log in
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -172,18 +174,19 @@ const getStyles = (width, height) => StyleSheet.create({
     backgroundColor: '#000',
   },
   container: {
-    flex: 1,
     backgroundColor: '#000',
     alignItems: 'center',
+    flex: 1, // Added flex: 1 to the container
+    justifyContent: 'space-between', // Distribute content vertically
   },
   content: {
-    flex: 1,
     backgroundColor: '#000',
     paddingHorizontal: getHorizontalResponsiveSize(24, width),
-    paddingTop: getVerticalResponsiveSize(32, height),
-    justifyContent: 'space-between',
+    paddingTop: getVerticalResponsiveSize(32, height), 
     width: '100%',
     maxWidth: 500,
+    flex: 1, // Allow content to expand
+    justifyContent: 'space-between', // Distribute content vertically within content
   },
   brandRow: {
     flexDirection: 'row',
@@ -250,7 +253,6 @@ const getStyles = (width, height) => StyleSheet.create({
   socialRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: getVerticalResponsiveSize(24, height),
   },
   socialButton: {
     flex: 1,
@@ -272,7 +274,6 @@ const getStyles = (width, height) => StyleSheet.create({
     color: '#828282',
     lineHeight: getVerticalResponsiveSize(18, height),
     marginBottom: getVerticalResponsiveSize(8, height),
-    paddingHorizontal: getHorizontalResponsiveSize(24, width),
   },
   link: {
     color: '#ffffff',
@@ -283,6 +284,7 @@ const getStyles = (width, height) => StyleSheet.create({
     paddingBottom: 0,
     width: '100%',
     maxWidth: 500,
+    // Removed marginTop, it was pushing the footer down, causing overflow
   },
   loginRow: {
     flexDirection: 'row',
