@@ -28,14 +28,15 @@ import { useFocusEffect, useRouter } from "expo-router";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
 import { useTheme } from "@/context/ThemeContext";
-import { LinearGradient } from "expo-linear-gradient"; // Import LinearGradient
+import { LinearGradient } from "expo-linear-gradient"; 
 import LottieView from "lottie-react-native";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const pages = [
   {
-    text: "Welcome to PCMI - Infanta's mobile app!  We're glad you are here.",
+    text: "Welcome to PCMI - Infanta\'s mobile app!  We\'re glad you are here.",
     image: require("../../assets/animations/welcome.json"),
     type: "lottie",
   },
@@ -245,7 +246,7 @@ const Button: React.FC<ButtonProps> = ({
           Get Started
         </Animated.Text>
         <Animated.View style={[styles.arrow, arrowAnimationStyle]}>
-          <Text style={styles.arrowText}>→</Text>
+          <AntDesign name="arrowright" size={24} color="black" />
         </Animated.View>
       </Animated.View>
     </Pressable>
@@ -297,7 +298,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     }, [colors, isDarkMode])
   );
 
-  // Removed useAnimatedReaction for background color interpolation as we're using a static gradient
+  // Removed useAnimatedReaction for background color interpolation as we\'re using a static gradient
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {

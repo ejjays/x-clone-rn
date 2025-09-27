@@ -27,5 +27,12 @@ export default function AuthLayout() {
     return <Redirect href={"/(tabs)"} />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" options={{ animation: "fade" }} />
+      <Stack.Screen name="main-auth" options={{ animation: "fade" }} />
+      <Stack.Screen name="login" options={{ animation: "fade" }} />
+      <Stack.Screen name="sign-up" options={{ animation: "fade" }} />
+    </Stack>
+  );
 }
