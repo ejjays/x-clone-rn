@@ -26,6 +26,8 @@ import {
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { useRouter } from "expo-router";
 import * as NavigationBar from "expo-navigation-bar";
+import { useSignIn } from "@clerk/clerk-expo";
+import CustomAlert from "@/components/CustomAlert";
 
 const GOOGLE_LOGO = require("../../assets/images/google.png");
 const FACEBOOK_LOGO = require("../../assets/images/facebook.png");
@@ -53,12 +55,15 @@ export default function EmailLoginScreen() {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const styles = getStyles(width, height);
-  const { handleSocialAuth, isLoading } = useSocialAuth();
+  const { handleSocialAuth, isLoading: isSocialAuthLoading } = useSocialAuth();
   const router = useRouter();
+  const { isLoaded, signIn, setActive } = useSignIn();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ visible: false, message: "" });
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -75,8 +80,33 @@ export default function EmailLoginScreen() {
     return <View style={{ flex: 1, backgroundColor: "#000" }} />;
   }
 
-  const handleLogin = () => {
-    console.log("Log in pressed");
+  const handleLogin = async () => {
+    if (!isLoaded) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const completeSignIn = await signIn.create({
+        identifier: username,
+        password,
+      });
+      await setActive({ session: completeSignIn.createdSessionId });
+      router.replace("/");
+    } catch (err: any) {
+      console.error(JSON.stringify(err, null, 2));
+      let message = "Login failed";
+      if (err.errors && err.errors.length > 0) {
+        const errorCode = err.errors[0].code;
+        if (['form_param_format_invalid', 'form_identifier_not_found', 'form_password_incorrect'].includes(errorCode)) {
+          message = "Username or password incorrect";
+        } else {
+          message = err.errors[0].longMessage || err.errors[0].message;
+        }
+      }
+      setAlertInfo({ visible: true, message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -113,6 +143,7 @@ export default function EmailLoginScreen() {
                 placeholderTextColor="#828282"
                 value={username}
                 onChangeText={setUsername}
+                autoCapitalize="none"
               />
             </View>
             <View>
@@ -142,12 +173,16 @@ export default function EmailLoginScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity activeOpacity={0.8} onPress={handleLogin}>
+            <TouchableOpacity activeOpacity={0.8} onPress={handleLogin} disabled={isLoading}>
               <LinearGradient
                 colors={["#1e3a8a", "#831843"]}
                 style={styles.primaryButton}
               >
-                <Text style={styles.primaryButtonText}>Log in</Text>
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Log in</Text>
+                )}
               </LinearGradient>
             </TouchableOpacity>
 
@@ -162,9 +197,9 @@ export default function EmailLoginScreen() {
                 activeOpacity={0.8}
                 onPress={() => handleSocialAuth("oauth_google")}
                 style={styles.socialButton}
-                disabled={isLoading}
+                disabled={isSocialAuthLoading}
               >
-                {isLoading ? (
+                {isSocialAuthLoading ? (
                   <ActivityIndicator size="small" color="#4285F4" />
                 ) : (
                   <Image source={GOOGLE_LOGO} style={styles.socialLogo} />
@@ -174,7 +209,7 @@ export default function EmailLoginScreen() {
                 activeOpacity={0.8}
                 onPress={() => handleSocialAuth("oauth_facebook")}
                 style={styles.socialButton}
-                disabled={isLoading}
+                disabled={isSocialAuthLoading}
               >
                 <Image source={FACEBOOK_LOGO} style={styles.socialLogo} />
               </TouchableOpacity>
@@ -182,7 +217,7 @@ export default function EmailLoginScreen() {
                 activeOpacity={0.8}
                 onPress={() => handleSocialAuth("oauth_apple")}
                 style={styles.socialButton}
-                disabled={isLoading}
+                disabled={isSocialAuthLoading}
               >
                 <Image source={APPLE_LOGO} style={styles.socialLogo} />
               </TouchableOpacity>
@@ -206,6 +241,11 @@ export default function EmailLoginScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <CustomAlert
+        visible={alertInfo.visible}
+        message={alertInfo.message}
+        onOk={() => setAlertInfo({ visible: false, message: "" })}
+      />
     </View>
   );
 }
