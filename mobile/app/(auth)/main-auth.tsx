@@ -67,11 +67,11 @@ export default function AuthScreen() {
   }
 
   const handleEmailSignup = () => {
-    router.push('/(auth)/signup-template');
+    router.push('/(auth)/sign-up');
   };
 
   const handleLogin = () => {
-    router.push('/(auth)/email-template');
+    router.push('/(auth)/login');
   };
 
   return (

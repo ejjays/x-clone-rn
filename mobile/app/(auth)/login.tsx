@@ -1,183 +1,371 @@
-import { useSocialAuth } from "@/hooks/useSocialAuth";
-import { ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
-import { router } from "expo-router";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Linking,
+  Platform,
+  KeyboardAvoidingView,
+  useWindowDimensions,
+  ActivityIndicator,
+  PixelRatio,
+  TextInput,
+  StatusBar,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+} from "@expo-google-fonts/poppins";
+import { useSocialAuth } from "@/hooks/useSocialAuth";
+import { useRouter } from "expo-router";
+import * as NavigationBar from "expo-navigation-bar";
 import { useSignIn } from "@clerk/clerk-expo";
-import { useTheme } from "@/context/ThemeContext";
-import { StatusBar } from "expo-status-bar";
+import CustomAlert from "@/components/CustomAlert";
 
-export default function Login() {
-  const { handleSocialAuth, isLoading } = useSocialAuth();
+const GOOGLE_LOGO = require("../../assets/images/google.png");
+const FACEBOOK_LOGO = require("../../assets/images/facebook.png");
+const APPLE_LOGO = require("../../assets/images/apple-logo.png");
+
+const getHorizontalResponsiveSize = (size, width) => {
+  const scale = width / 375;
+  const newSize = size * scale;
+  const lowerBound = size * 0.85;
+  const upperBound = size * 1.25;
+  const clampedSize = Math.max(lowerBound, Math.min(newSize, upperBound));
+  return Math.round(PixelRatio.roundToNearestPixel(clampedSize));
+};
+
+const getVerticalResponsiveSize = (size, height) => {
+  const scale = height / 812; // Base height
+  const newSize = size * scale;
+  const lowerBound = size * 0.85;
+  const upperBound = size * 1.25;
+  const clampedSize = Math.max(lowerBound, Math.min(newSize, upperBound));
+  return Math.round(PixelRatio.roundToNearestPixel(clampedSize));
+};
+
+export default function EmailLoginScreen() {
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const styles = getStyles(width, height);
+  const { handleSocialAuth, isLoading: isSocialAuthLoading } = useSocialAuth();
+  const router = useRouter();
   const { isLoaded, signIn, setActive } = useSignIn();
-  const { isDarkMode, colors } = useTheme();
 
-  const [emailAddress, setEmailAddress] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ visible: false, message: "" });
 
-  const handleEmailLogin = async () => {
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+  });
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      NavigationBar.setBackgroundColorAsync("#000");
+    }
+  }, []);
+
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1, backgroundColor: "#000" }} />;
+  }
+
+  const handleLogin = async () => {
     if (!isLoaded) {
       return;
     }
-
+    setIsLoading(true);
     try {
       const completeSignIn = await signIn.create({
-        identifier: emailAddress,
+        identifier: username,
         password,
       });
       await setActive({ session: completeSignIn.createdSessionId });
-      // Redirect to home or dashboard after successful login
       router.replace("/");
     } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
-      Alert.alert("Error", err.errors[0].message);
+      let message = "Login failed";
+      if (err.errors && err.errors.length > 0) {
+        const errorCode = err.errors[0].code;
+        if (['form_param_format_invalid', 'form_identifier_not_found', 'form_password_incorrect'].includes(errorCode)) {
+          message = "Username or password incorrect";
+        } else {
+          message = err.errors[0].longMessage || err.errors[0].message;
+        }
+      }
+      setAlertInfo({ visible: true, message });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleForgotPassword = () => {
+    console.log("Forgot Password pressed");
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
-      <View className="flex-1 px-8 justify-center">
-        {/* TITLE */}
-        <View className="mb-8">
-          <Text
-            className="text-4xl font-bold text-center mb-3"
-            style={{ color: colors.text }}
-          >
-            Login
-          </Text>
-          <Text
-            className="text-center text-base font-medium"
-            style={{ color: colors.textSecondary }}
-          >
-            Welcome back, you've been missed!
-          </Text>
-        </View>
-
-        {/* EMAIL INPUT */}
-        <View className="mb-5">
-          <View className="relative">
-            <TextInput
-              className="rounded-2xl px-6 py-5 text-base pr-12"
-              style={{
-                backgroundColor: colors.surface,
-                color: colors.text,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-              placeholder="Email"
-              placeholderTextColor={colors.textMuted}
-              value={emailAddress}
-              onChangeText={setEmailAddress}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <View className="absolute right-4 top-5">
-              <Ionicons name="mail-outline" size={20} color={colors.textMuted} />
-            </View>
-          </View>
-        </View>
-
-        {/* PASSWORD INPUT */}
-        <View className="mb-3">
-          <View className="relative">
-            <TextInput
-              className="rounded-2xl px-6 py-5 text-base pr-12"
-              style={{
-                backgroundColor: colors.surface,
-                color: colors.text,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-              placeholder="Password"
-              placeholderTextColor={colors.textMuted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity className="absolute right-4 top-5" onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={colors.textMuted} />
+    <View style={[styles.safe, { paddingTop: insets.top }]}>
+      <ExpoStatusBar style="light" />
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={getHorizontalResponsiveSize(24, width)}
+                color="#fff"
+              />
             </TouchableOpacity>
+            <Text style={styles.headerTitle}>Log in</Text>
+          </View>
+          <View style={styles.content}>
+            <View>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor="#828282"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+              />
+            </View>
+            <View>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter at least 6 characters"
+                  placeholderTextColor="#828282"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off" : "eye"}
+                    size={getHorizontalResponsiveSize(24, width)}
+                    color="#828282"
+                  />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={handleForgotPassword}>
+                <Text style={styles.forgotPassword}>Forgot Password</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity activeOpacity={0.8} onPress={handleLogin} disabled={isLoading}>
+              <LinearGradient
+                colors={["#1e3a8a", "#831843"]}
+                style={styles.primaryButton}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Log in</Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <View style={styles.orRow}>
+              <View style={styles.orLine} />
+              <Text style={styles.orText}>or continue with</Text>
+              <View style={styles.orLine} />
+            </View>
+
+            <View style={styles.socialRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleSocialAuth("oauth_google")}
+                style={styles.socialButton}
+                disabled={isSocialAuthLoading}
+              >
+                {isSocialAuthLoading ? (
+                  <ActivityIndicator size="small" color="#4285F4" />
+                ) : (
+                  <Image source={GOOGLE_LOGO} style={styles.socialLogo} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleSocialAuth("oauth_facebook")}
+                style={styles.socialButton}
+                disabled={isSocialAuthLoading}
+              >
+                <Image source={FACEBOOK_LOGO} style={styles.socialLogo} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleSocialAuth("oauth_apple")}
+                style={styles.socialButton}
+                disabled={isSocialAuthLoading}
+              >
+                <Image source={APPLE_LOGO} style={styles.socialLogo} />
+              </TouchableOpacity>
+            </View>
+            <Text allowFontScaling style={styles.disclaimer}>
+              By continuing, you agree to PCMI's{" "}
+              <Text
+                style={styles.link}
+                onPress={() => Linking.openURL("https://bandlab.com/terms")}
+              >
+                Terms of Use
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={styles.link}
+                onPress={() => Linking.openURL("https://bandlab.com/privacy")}
+              >
+                Privacy Policy
+              </Text>
+            </Text>
           </View>
         </View>
-
-        {/* FORGOT PASSWORD */}
-        <TouchableOpacity className="mb-8">
-          <Text className="text-right text-base font-medium" style={{ color: colors.blue }}>
-            Forgot your password?
-          </Text>
-        </TouchableOpacity>
-
-        {/* SIGN IN BUTTON */}
-        <TouchableOpacity
-          className="rounded-2xl py-5 mb-7"
-          style={{ backgroundColor: colors.blue }}
-          onPress={handleEmailLogin}
-          activeOpacity={0.85}
-        >
-          <Text className="font-bold text-lg text-center" style={{ color: "#ffffff" }}>
-            Sign in
-          </Text>
-        </TouchableOpacity>
-
-        {/* CREATE ACCOUNT LINK */}
-        <TouchableOpacity className="mb-10" onPressIn={() => router.push("/(auth)/register")}>
-          <Text className="text-center text-base font-medium" style={{ color: colors.blue }}>
-            Create new account
-          </Text>
-        </TouchableOpacity>
-
-        {/* OR CONTINUE WITH */}
-        <View className="flex-row items-center mb-7">
-          <View className="flex-1 h-px mr-2" style={{ backgroundColor: colors.border }} />
-          <Text className="text-center text-base font-medium" style={{ color: colors.textMuted }}>
-            Or continue with
-          </Text>
-          <View className="flex-1 h-px ml-2" style={{ backgroundColor: colors.border }} />
-        </View>
-
-        {/* SOCIAL AUTH BUTTONS */}
-        <View className="flex-row justify-center gap-6">
-          <TouchableOpacity
-            className="rounded-2xl p-4 w-16 h-16 items-center justify-center"
-            style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
-            onPress={() => handleSocialAuth("oauth_google")}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#4285F4" />
-            ) : (
-              <Image source={require("../../assets/images/google.png")} className="w-12 h-12" resizeMode="contain" />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="rounded-2xl p-4 w-16 h-16 items-center justify-center"
-            style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
-            onPress={() => handleSocialAuth("oauth_apple")}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#000" />
-            ) : (
-              <Image source={require("../../assets/images/apple.png")} className="w-6 h-8" resizeMode="contain" />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="rounded-2xl p-4 w-16 h-16 items-center justify-center"
-            style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
-            onPress={() => handleSocialAuth("oauth_facebook")}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="logo-facebook" size={30} color="#1877F2" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      </KeyboardAvoidingView>
+      <CustomAlert
+        visible={alertInfo.visible}
+        message={alertInfo.message}
+        onOk={() => setAlertInfo({ visible: false, message: "" })}
+      />
     </View>
   );
 }
+
+const getStyles = (width, height) =>
+  StyleSheet.create({
+    safe: {
+      flex: 1,
+      backgroundColor: "#000",
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: "#000",
+      paddingHorizontal: getHorizontalResponsiveSize(24, width),
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: getVerticalResponsiveSize(12, height),
+    },
+    backButton: {
+      marginRight: getHorizontalResponsiveSize(16, width),
+    },
+    headerTitle: {
+      fontFamily: "Poppins_600SemiBold",
+      fontSize: getHorizontalResponsiveSize(20, width),
+      color: "#ffffff",
+    },
+    content: {
+      flex: 1,
+      paddingTop: getVerticalResponsiveSize(36, height),
+    },
+    label: {
+      fontFamily: "Poppins_400Regular",
+      fontSize: getHorizontalResponsiveSize(14, width),
+      color: "#BDBDBD",
+      marginBottom: getVerticalResponsiveSize(8, height),
+    },
+    input: {
+      backgroundColor: "#1c1c1e",
+      borderRadius: getHorizontalResponsiveSize(12, width),
+      paddingHorizontal: getHorizontalResponsiveSize(16, width),
+      paddingVertical: getVerticalResponsiveSize(12, height),
+      fontFamily: "Poppins_400Regular",
+      fontSize: getHorizontalResponsiveSize(16, width),
+      color: "#ffffff",
+      marginBottom: getVerticalResponsiveSize(16, height),
+    },
+    passwordContainer: {
+      position: "relative",
+    },
+    eyeIcon: {
+      position: "absolute",
+      right: getHorizontalResponsiveSize(16, width),
+      top: getVerticalResponsiveSize(12, height),
+    },
+    forgotPassword: {
+      fontFamily: "Poppins_600SemiBold",
+      fontSize: getHorizontalResponsiveSize(14, width),
+      color: "#ffffff",
+      textAlign: "right",
+      marginBottom: getVerticalResponsiveSize(24, height),
+    },
+    primaryButton: {
+      borderRadius: getHorizontalResponsiveSize(24, width),
+      height: getVerticalResponsiveSize(48, height),
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: getVerticalResponsiveSize(20, height),
+    },
+    primaryButtonText: {
+      fontFamily: "Poppins_600SemiBold",
+      fontSize: getHorizontalResponsiveSize(16, width),
+      color: "#ffffff",
+    },
+    orRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: getVerticalResponsiveSize(20, height),
+    },
+    orLine: {
+      flex: 1,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: "#555",
+    },
+    orText: {
+      marginHorizontal: getHorizontalResponsiveSize(12, width),
+      fontFamily: "Poppins_400Regular",
+      fontSize: getHorizontalResponsiveSize(12, width),
+      color: "#BDBDBD",
+    },
+    socialRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: getVerticalResponsiveSize(24, height),
+    },
+    socialButton: {
+      width: getHorizontalResponsiveSize(100, width),
+      height: getVerticalResponsiveSize(48, height),
+      borderRadius: getHorizontalResponsiveSize(24, width),
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#ffffff",
+    },
+    socialLogo: {
+      width: getHorizontalResponsiveSize(24, width),
+      height: getHorizontalResponsiveSize(24, width),
+    },
+    disclaimer: {
+      textAlign: "center",
+      fontFamily: "Poppins_400Regular",
+      fontSize: getHorizontalResponsiveSize(12, width),
+      color: "#828282",
+      lineHeight: getVerticalResponsiveSize(18, height),
+    },
+    link: {
+      color: "#ffffff",
+      fontFamily: "Poppins_600SemiBold",
+    },
+  });

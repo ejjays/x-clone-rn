@@ -265,8 +265,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   const { colors, isDarkMode } = useTheme();
   const router = useRouter();
 
-  const onComplete = () => { 
-    router.push("/login-template");
+  const onComplete = () => {
+    router.push("/main-auth");
   };
 
   const changeNavBarColor = (color: string) => {

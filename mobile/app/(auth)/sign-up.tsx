@@ -26,6 +26,8 @@ import {
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { useRouter } from "expo-router";
 import * as NavigationBar from "expo-navigation-bar";
+import { useSignUp } from "@clerk/clerk-expo";
+import CustomAlert from "../../components/CustomAlert";
 
 const GOOGLE_LOGO = require("../../assets/images/google.png");
 const FACEBOOK_LOGO = require("../../assets/images/facebook.png");
@@ -49,17 +51,24 @@ const getVerticalResponsiveSize = (size, height) => {
   return Math.round(PixelRatio.roundToNearestPixel(clampedSize));
 };
 
-export default function EmailLoginScreen() {
+export default function SignupTemplate() {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const styles = getStyles(width, height);
-  const { handleSocialAuth, isLoading } = useSocialAuth();
+  const { handleSocialAuth, isSocialAuthLoading } = useSocialAuth();
+  const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(true);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isEmailRegistering, setIsEmailRegistering] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -72,13 +81,55 @@ export default function EmailLoginScreen() {
     }
   }, []);
 
+  const handleEmailRegister = async () => {
+    if (!isLoaded || isEmailRegistering) {
+      return;
+    }
+
+    if (!firstName || !lastName || !emailAddress || !password) {
+      setAlertMessage("Please fill out all fields to register.");
+      setAlertVisible(true);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setAlertMessage("Passwords do not match");
+      setAlertVisible(true);
+      return;
+    }
+
+    setIsEmailRegistering(true);
+
+    try {
+      const signUpAttempt = await signUp.create({
+        firstName,
+        lastName,
+        emailAddress,
+        password,
+      });
+
+      if (signUpAttempt.createdSessionId) {
+        await setActive({ session: signUpAttempt.createdSessionId });
+        router.replace("/(tabs)");
+      } else {
+        setAlertMessage("Please check your email to verify your account before logging in.");
+        setAlertVisible(true);
+        router.push("/(auth)/login");
+      }
+    } catch (err: any) {
+      const errorMessage = err.errors?.[0]?.message || "An unknown error occurred during registration.";
+      setAlertMessage(errorMessage);
+      setAlertVisible(true);
+    } finally {
+      setIsEmailRegistering(false);
+    }
+  };
+
+  const isLoading = isEmailRegistering || isSocialAuthLoading;
+
   if (!fontsLoaded) {
     return <View style={{ flex: 1, backgroundColor: "#000" }} />;
   }
-
-  const handleLogin = () => {
-    console.log("Log in pressed");
-  };
 
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
@@ -102,24 +153,38 @@ export default function EmailLoginScreen() {
             <Text style={styles.headerTitle}>Create an Account</Text>
           </View>
           <View style={styles.content}>
-            <View>
-              <Text style={styles.label}>Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your name"
-                placeholderTextColor="#828282"
-                value={name}
-                onChangeText={setName}
-              />
+            <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+              <View style={{flex: 1, marginRight: 8}}>
+                <Text style={styles.label}>First Name</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="First name"
+                    placeholderTextColor="#828282"
+                    value={firstName}
+                    onChangeText={setFirstName}
+                />
+              </View>
+              <View style={{flex: 1, marginLeft: 8}}>
+                <Text style={styles.label}>Last Name</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Last name"
+                    placeholderTextColor="#828282"
+                    value={lastName}
+                    onChangeText={setLastName}
+                />
+              </View>
             </View>
             <View>
-              <Text style={styles.label}>Username or email</Text>
+              <Text style={styles.label}>Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Username / Email"
+                placeholder="Email"
                 placeholderTextColor="#828282"
-                value={username}
-                onChangeText={setUsername}
+                value={emailAddress}
+                onChangeText={setEmailAddress}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
             </View>
             <View>
@@ -145,13 +210,40 @@ export default function EmailLoginScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+            <View>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  placeholderTextColor="#828282"
+                  secureTextEntry={!showConfirmPassword}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={showConfirmPassword ? "eye-off" : "eye"}
+                    size={getHorizontalResponsiveSize(24, width)}
+                    color="#828282"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            <TouchableOpacity activeOpacity={0.8} onPress={handleLogin}>
+            <TouchableOpacity activeOpacity={0.8} onPress={handleEmailRegister} disabled={isLoading}>
               <LinearGradient
                 colors={["#1e3a8a", "#831843"]}
                 style={[styles.primaryButton, {marginTop: getVerticalResponsiveSize(12, height)}]}
               >
-                <Text style={styles.primaryButtonText}>Sign up</Text>
+                {isEmailRegistering ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Sign up</Text>
+                )}
               </LinearGradient>
             </TouchableOpacity>
 
@@ -168,7 +260,7 @@ export default function EmailLoginScreen() {
                 style={styles.socialButton}
                 disabled={isLoading}
               >
-                {isLoading ? (
+                {isSocialAuthLoading ? (
                   <ActivityIndicator size="small" color="#4285F4" />
                 ) : (
                   <Image source={GOOGLE_LOGO} style={styles.socialLogo} />
@@ -210,6 +302,11 @@ export default function EmailLoginScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onOk={() => setAlertVisible(false)}
+      />
     </View>
   );
 }
