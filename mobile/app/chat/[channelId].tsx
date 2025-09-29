@@ -76,30 +76,47 @@ export default function ChatScreen() {
   const cleanupRef = useRef<(() => void) | null>(null);
 
   const navigateBack = useCallback(() => {
-    // Immediately start navigation
+    // Mark as inactive immediately to stop all operations
+    isActiveRef.current = false;
+    
+    // Start navigation immediately - don't wait for anything
     router.back();
     
-    // Defer cleanup to avoid blocking navigation
+    // Defer ALL cleanup operations to not block navigation
     setTimeout(() => {
       if (cleanupRef.current) {
         try { cleanupRef.current(); } catch {}
         cleanupRef.current = null;
       }
-    }, 100);
+      // Clear any pending interactions
+      try {
+        (AsyncStorage as any)?.flushGetRequests?.();
+      } catch {}
+    }, 200); // Increased delay to ensure navigation completes first
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       isActiveRef.current = true;
+      
       return () => {
+        // Immediate cleanup - mark as inactive first
         isActiveRef.current = false;
-        if (cleanupRef.current) {
-          try { cleanupRef.current(); } catch {}
-          cleanupRef.current = null;
-        }
-        try {
-          (AsyncStorage as any)?.flushGetRequests?.();
-        } catch {}
+        
+        // Defer heavy cleanup operations
+        requestAnimationFrame(() => {
+          if (cleanupRef.current) {
+            try { cleanupRef.current(); } catch {}
+            cleanupRef.current = null;
+          }
+          
+          // Defer storage operations even more
+          setTimeout(() => {
+            try {
+              (AsyncStorage as any)?.flushGetRequests?.();
+            } catch {}
+          }, 100);
+        });
       };
     }, [])
   );
@@ -130,6 +147,26 @@ export default function ChatScreen() {
   const messageRefs = useRef<{ [key: string]: View | null }>({});
   const inputRef = useRef<TextInput | null>(null);
 
+  // Add this right after your state declarations
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Add this effect to handle navigation state
+  useEffect(() => {
+    const unsubscribe = router.events?.on?.('routeChangeStart', () => {
+      setIsNavigating(true);
+      isActiveRef.current = false;
+    });
+    
+    const unsubscribeComplete = router.events?.on?.('routeChangeComplete', () => {
+      setIsNavigating(false);
+    });
+    
+    return () => {
+      unsubscribe?.();
+      unsubscribeComplete?.();
+    };
+  }, []);
+
   useEffect(() => {
     if (!channelId) return;
 
@@ -152,86 +189,108 @@ export default function ChatScreen() {
     if (!client || !isConnected || !currentUser) return;
 
     const initializeChannel = () => {
-      InteractionManager.runAfterInteractions(async () => {
-        if (!isActiveRef.current) return;
-        try {
-          let ch: any = null;
+      // Use double InteractionManager for better performance
+      InteractionManager.runAfterInteractions(() => {
+        InteractionManager.runAfterInteractions(async () => {
+          if (!isActiveRef.current) return;
+          
           try {
-            ch = (cachedChannels || []).find((c: any) => c?.id === channelId) || null;
-          } catch {}
-
-          if (ch) {
-            setChannel(ch);
-            setTimeout(() => {
-              if (isActiveRef.current) {
-                InteractionManager.runAfterInteractions(() => {
-                  if (isActiveRef.current) ch.watch().catch(() => {});
-                });
-              }
-            }, 100);
-          } else {
-            ch = client.channel("messaging", channelId);
-            setChannel(ch);
-            setTimeout(() => {
-              if (isActiveRef.current) {
-                InteractionManager.runAfterInteractions(() => {
-                  if (isActiveRef.current) ch.watch().catch(() => {});
-                });
-              }
-            }, 100);
-          }
-
-          const membersArray = Array.isArray(ch.state.members)
-            ? ch.state.members
-            : Object.values(ch.state.members || {});
-          const otherMember = membersArray.find(
-            (member: any) => member?.user?.id !== currentUser.clerkId
-          );
-          if (otherMember?.user) {
-            setOtherUser({
-              name: otherMember.user.name || "Unknown User",
-              image:
-                otherMember.user.image ||
-                `https://getstream.io/random_png/?name=${otherMember.user.name}`,
-              online: otherMember.user.online || false,
-              id: otherMember.user.id,
-            });
-          }
-
-          const handleEvent = (event: any) => {
-            if (!isActiveRef.current) return;
-            const eventChannel = event.channel || ch;
-            setMessages(eventChannel.state.messages.slice().reverse());
-          };
-
-          setMessages(ch.state.messages.slice().reverse());
-
-          ch.on("message.new", handleEvent);
-          ch.on("message.updated", handleEvent);
-          ch.on("message.deleted", handleEvent);
-          ch.on("reaction.new", handleEvent);
-          ch.on("reaction.updated", handleEvent);
-          ch.on("reaction.deleted", handleEvent);
-
-          const cleanup = () => {
+            let ch: any = null;
+            
+            // Quick cache lookup first
             try {
-              ch.off("message.new", handleEvent);
-              ch.off("message.updated", handleEvent);
-              ch.off("message.deleted", handleEvent);
-              ch.off("reaction.new", handleEvent);
-              ch.off("reaction.updated", handleEvent);
-              ch.off("reaction.deleted", handleEvent);
+              ch = (cachedChannels || []).find((c: any) => c?.id === channelId) || null;
             } catch {}
-          };
-          cleanupRef.current = cleanup;
 
-          setLoading(false);
-          return cleanup;
-        } catch (error) {
-          console.error("❌ Error initializing channel:", error);
-          Alert.alert("Error", "Failed to load chat. Please try again.");
-          setLoading(false);
-        }
+            if (ch) {
+              setChannel(ch);
+              
+              // Defer channel watching to avoid blocking
+              requestAnimationFrame(() => {
+                if (isActiveRef.current) {
+                  setTimeout(() => {
+                    if (isActiveRef.current) ch.watch().catch(() => {});
+                  }, 50);
+                }
+              });
+            } else {
+              ch = client.channel("messaging", channelId);
+              setChannel(ch);
+              
+              // Defer channel watching
+              requestAnimationFrame(() => {
+                if (isActiveRef.current) {
+                  setTimeout(() => {
+                    if (isActiveRef.current) ch.watch().catch(() => {});
+                  }, 50);
+                }
+              });
+            }
+
+            // Get other user info quickly
+            const membersArray = Array.isArray(ch.state.members)
+              ? ch.state.members
+              : Object.values(ch.state.members || {});
+            const otherMember = membersArray.find(
+              (member: any) => member?.user?.id !== currentUser.clerkId
+            );
+            if (otherMember?.user) {
+              setOtherUser({
+                name: otherMember.user.name || "Unknown User",
+                image:
+                  otherMember.user.image ||
+                  `https://getstream.io/random_png/?name=${otherMember.user.name}`,
+                online: otherMember.user.online || false,
+                id: otherMember.user.id,
+              });
+            }
+
+            // Event handling setup - make it lightweight
+            const handleEvent = (event: any) => {
+              // Quick exit if inactive
+              if (!isActiveRef.current) return;
+              
+              requestAnimationFrame(() => {
+                if (!isActiveRef.current) return;
+                const eventChannel = event.channel || ch;
+                setMessages(eventChannel.state.messages.slice().reverse());
+              });
+            };
+
+            // Set initial messages
+            setMessages(ch.state.messages.slice().reverse());
+
+            // Add event listeners
+            ch.on("message.new", handleEvent);
+            ch.on("message.updated", handleEvent);
+            ch.on("message.deleted", handleEvent);
+            ch.on("reaction.new", handleEvent);
+            ch.on("reaction.updated", handleEvent);
+            ch.on("reaction.deleted", handleEvent);
+
+            // Lightweight cleanup function
+            const cleanup = () => {
+              try {
+                ch.off("message.new", handleEvent);
+                ch.off("message.updated", handleEvent);
+                ch.off("message.deleted", handleEvent);
+                ch.off("reaction.new", handleEvent);
+                ch.off("reaction.updated", handleEvent);
+                ch.off("reaction.deleted", handleEvent);
+              } catch {}
+            };
+            cleanupRef.current = cleanup;
+
+            setLoading(false);
+            return cleanup;
+          } catch (error) {
+            console.error("❌ Error initializing channel:", error);
+            if (isActiveRef.current) {
+              Alert.alert("Error", "Failed to load chat. Please try again.");
+            }
+            setLoading(false);
+          }
+        });
       });
     };
 
@@ -295,8 +354,9 @@ export default function ChatScreen() {
     }
   };
 
-  if (isConnecting || (loading && !channel)) {
+  if (isNavigating || (isConnecting && !messages.length) || (loading && !channel)) {
     if (messages && messages.length > 0) {
+      // Show cached messages immediately
       return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
           <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} onBack={navigateBack} />
@@ -311,11 +371,15 @@ export default function ChatScreen() {
               )}
               inverted
               contentContainerStyle={{ paddingTop: 0 }}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={3}
+              windowSize={3}
             />
           </View>
         </SafeAreaView>
       );
     }
+    
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
         <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} onBack={navigateBack} />

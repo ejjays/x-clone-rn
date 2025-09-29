@@ -15,6 +15,7 @@ export const useAllUsers = () => {
     queryKey: ["allUsers"],
     queryFn: () => api.get("/users/all"),
     enabled: Boolean(isSignedIn),
+    refetchOnWindowFocus: false,
     select: (response) => response.data,
   });
 

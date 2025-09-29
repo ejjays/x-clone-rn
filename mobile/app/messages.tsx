@@ -14,7 +14,7 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
 import NoMessagesFound from "@/components/NoMessagesFound";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import LottieView from "lottie-react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -37,12 +37,13 @@ export default function MessagesScreen() {
   const { currentUser } = useCurrentUser();
   const { colors } = useTheme();
   const [isRefetching, setIsRefetching] = useState(false);
-  const [isReturningFromChat, setIsReturningFromChat] = useState(false);
+  const [justReturnedFromChat, setJustReturnedFromChat] = useState(false);
 
   const isDarkMode = true;
 
-  const realUsers =
-    allUsers?.filter((user) => user._id !== currentUser?._id) || [];
+  const realUsers = useMemo(() => {
+    return allUsers?.filter((user) => user._id !== currentUser?._id) || [];
+  }, [allUsers, currentUser]);
 
   const handleNewMessage = () => {
     router.push("/new-message");
@@ -66,29 +67,25 @@ export default function MessagesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      const isFromChat = router.canGoBack();
-      setIsReturningFromChat(isFromChat);
-
-      if (isFromChat) {
-        InteractionManager.runAfterInteractions(() => {
-          if (refreshChannels) {
-            refreshChannels();
-          }
-        });
-
-        setTimeout(() => setIsReturningFromChat(false), 500);
+      // Quick check if we're returning from a chat
+      const returnedFromChat = router.canGoBack();
+      
+      if (returnedFromChat) {
+        setJustReturnedFromChat(true);
+        // Clear the flag after a short delay
+        setTimeout(() => setJustReturnedFromChat(false), 300);
       }
-
+      
       return () => {
         try {
           StatusBar.setBarStyle("light-content");
         } catch {}
       };
-    }, [refreshChannels])
+    }, [])
   );
 
   const renderContent = useCallback(() => {
-    if (isReturningFromChat && channels.length > 0) {
+    if (justReturnedFromChat && channels.length > 0) {
       return (
         <CustomChannelList
           onRefresh={() => {
@@ -172,7 +169,7 @@ export default function MessagesScreen() {
         refreshControlBackgroundColor={colors.refreshControlBackgroundColor}
       />
     );
-  }, [isConnecting, client, colors, refreshChannels, searchQuery, isDarkMode, isReturningFromChat, channels.length]);
+  }, [isConnecting, client, colors, refreshChannels, searchQuery, isDarkMode, justReturnedFromChat, channels.length]);
 
   return (
     <SafeAreaView
@@ -190,27 +187,12 @@ export default function MessagesScreen() {
         style={{ backgroundColor: colors.chatBackground }}
       >
         <View className="flex-row items-center">
-          <MaskedView
-            maskElement={
-              <Text
-                className="text-3xl font-extrabold"
-                style={{ backgroundColor: 'transparent', color: 'black' }}
-              >
-                messages
-              </Text>
-            }
+          <Text
+            className="text-3xl font-extrabold"
+            style={{ color: colors.text }}
           >
-            <LinearGradient
-              colors={["#FF6B6B", "#FF0000"]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-            >
-              {/* Invisible sizing text to bound the gradient */}
-              <Text className="text-3xl font-extrabold" style={{ opacity: 0 }}>
-                messages
-              </Text>
-            </LinearGradient>
-          </MaskedView>
+            messages
+          </Text>
         </View>
         <View className="flex-row items-center">
           <TouchableOpacity
