@@ -1,4 +1,4 @@
-import { useStreamChat } from "@/context/StreamChatContext"
+import { useStreamChat } from "@/context/StreamChatContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { formatDistanceToNow } from "date-fns";
 import { router } from "expo-router";
@@ -50,13 +50,13 @@ interface Channel {
   state: ChannelState;
 }
 
-export default function CustomChannelList({
+const CustomChannelList = React.memo(function CustomChannelList({
   onRefresh,
   refreshing = false,
   searchQuery = "",
-  isDarkMode, // Destructure isDarkMode prop
-  refreshControlColor, // Destructure new prop
-  refreshControlBackgroundColor, // Destructure new prop
+  isDarkMode,
+  refreshControlColor,
+  refreshControlBackgroundColor,
 }: CustomChannelListProps) {
   const { channels, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
@@ -93,9 +93,7 @@ export default function CustomChannelList({
         name: otherMember?.user?.name || "Unknown User",
         image:
           otherMember?.user?.image ||
-          `https://getstream.io/random_png/?name=${
-            otherMember?.user?.name || "user"
-          }`,
+          `https://getstream.io/random_png/?name=${otherMember?.user?.name || "user"}`,
         otherId: otherMember?.user?.id || "",
         lastMessage: lastMessage?.text || "No messages yet",
         lastMessageAt: channel.state.last_message_at || null,
@@ -133,21 +131,24 @@ export default function CustomChannelList({
     } as any);
   }, []);
 
-  const renderChannelItem = ({ item }: { item: any }) => (
+  const renderChannelItem = useCallback(({ item }: { item: any }) => (
     <TouchableOpacity
       className="flex-row items-center p-4"
-      onPress={() => handleOpenChannel(item.id, item)}
-      onPressIn={() => {
-        // Prefetch the chat screen for snappier open
-        try { router.prefetch(`/chat/${item.id}`); } catch {}
+      onPress={() => {
+        // Use requestAnimationFrame for smoother navigation
+        requestAnimationFrame(() => {
+          handleOpenChannel(item.id, item);
+        });
       }}
-      delayPressIn={50}
       activeOpacity={0.7}
     >
       <View className="relative mr-4">
         <Image
           source={item.image ? { uri: item.image } : require("../assets/images/default-avatar.png")}
           className="w-16 h-16 rounded-full"
+          // Add these props for better performance
+          resizeMode="cover"
+          fadeDuration={0}
         />
         {item.online && (
           <View className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
@@ -155,7 +156,6 @@ export default function CustomChannelList({
       </View>
 
       <View className="flex-1 min-w-0 mr-2">
-        {/* --- ⬆️ TEXT SIZE INCREASED HERE --- */}
         <Text
           className="font-semibold text-lg mb-1"
           numberOfLines={1}
@@ -164,7 +164,6 @@ export default function CustomChannelList({
         >
           {item.name}
         </Text>
-        {/* --- ⬆️ TEXT SIZE INCREASED HERE --- */}
         <Text className="text-base" numberOfLines={1} style={{ color: colors.textSecondary }}>
           {item.isFromCurrentUser ? "You: " : ""}
           {item.lastMessage}
@@ -179,7 +178,7 @@ export default function CustomChannelList({
         ) : null}
       </View>
     </TouchableOpacity>
-  );
+  ), [colors, handleOpenChannel]);
 
   if (isConnecting && channels.length === 0) {
     return (
@@ -198,14 +197,17 @@ export default function CustomChannelList({
       keyExtractor={keyExtractor}
       renderItem={renderChannelItem}
       keyboardShouldPersistTaps="handled"
-      scrollEventThrottle={16}
-      contentInsetAdjustmentBehavior="never"
-      removeClippedSubviews
-      maintainVisibleContentPosition={{ minIndexForVisible: 1 }}
-      initialNumToRender={12}
-      maxToRenderPerBatch={8}
-      windowSize={5}
-      updateCellsBatchingPeriod={50}
+      scrollEventThrottle={32} // Increased for better performance
+      removeClippedSubviews={true}
+      initialNumToRender={8} // Reduced for faster initial render
+      maxToRenderPerBatch={4} // Reduced for smoother scrolling
+      windowSize={3} // Reduced memory footprint
+      updateCellsBatchingPeriod={100} // Less frequent updates
+      getItemLayout={(data, index) => ({
+        length: 88, // Approximate item height (16 padding * 2 + 56 content)
+        offset: 88 * index,
+        index,
+      })}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -224,4 +226,6 @@ export default function CustomChannelList({
       }
     />
   );
-}
+});
+
+export default CustomChannelList;

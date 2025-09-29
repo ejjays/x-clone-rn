@@ -8,6 +8,7 @@ import {
   ScrollView,
   Image,
   StatusBar,
+  InteractionManager,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
@@ -20,7 +21,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StorageKeys } from "@/utils/offline/storageKeys";
 import * as NavigationBar from "expo-navigation-bar";
 import { useFocusEffect } from "@react-navigation/native";
-import { InteractionManager } from "react-native";
 import * as SystemUI from "expo-system-ui";
 import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -37,6 +37,7 @@ export default function MessagesScreen() {
   const { currentUser } = useCurrentUser();
   const { colors } = useTheme();
   const [isRefetching, setIsRefetching] = useState(false);
+  const [isReturningFromChat, setIsReturningFromChat] = useState(false);
 
   const isDarkMode = true;
 
@@ -63,7 +64,46 @@ export default function MessagesScreen() {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      const isFromChat = router.canGoBack();
+      setIsReturningFromChat(isFromChat);
+
+      if (isFromChat) {
+        InteractionManager.runAfterInteractions(() => {
+          if (refreshChannels) {
+            refreshChannels();
+          }
+        });
+
+        setTimeout(() => setIsReturningFromChat(false), 500);
+      }
+
+      return () => {
+        try {
+          StatusBar.setBarStyle("light-content");
+        } catch {}
+      };
+    }, [refreshChannels])
+  );
+
   const renderContent = useCallback(() => {
+    if (isReturningFromChat && channels.length > 0) {
+      return (
+        <CustomChannelList
+          onRefresh={() => {
+            InteractionManager.runAfterInteractions(() => {
+              refreshChannels();
+            });
+          }}
+          searchQuery={searchQuery}
+          isDarkMode={isDarkMode}
+          refreshControlColor={colors.refreshControlColor}
+          refreshControlBackgroundColor={colors.refreshControlBackgroundColor}
+        />
+      );
+    }
+
     if (isConnecting && !client) {
       return (
         <View
@@ -122,7 +162,6 @@ export default function MessagesScreen() {
     return (
       <CustomChannelList
         onRefresh={() => {
-          // Avoid blocking UI thread during navigation transitions
           InteractionManager.runAfterInteractions(() => {
             refreshChannels();
           });
@@ -133,23 +172,7 @@ export default function MessagesScreen() {
         refreshControlBackgroundColor={colors.refreshControlBackgroundColor}
       />
     );
-  }, [isConnecting, client, colors, refreshChannels, searchQuery, isDarkMode]);
-
-  // Disable prefetch completely per recommendation
-  useEffect(() => {
-    return () => {};
-  }, []);
-
-  // Reset status bar/navigation bar when leaving messages to restore tabs styling
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        try {
-          StatusBar.setBarStyle("light-content");
-        } catch {}
-      };
-    }, [])
-  );
+  }, [isConnecting, client, colors, refreshChannels, searchQuery, isDarkMode, isReturningFromChat, channels.length]);
 
   return (
     <SafeAreaView
@@ -265,28 +288,38 @@ export default function MessagesScreen() {
 
 function DeferredPeopleStrip({ users, colors, getInitials, onPress }: any) {
   const [ready, setReady] = useState(false);
+  
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => setReady(true));
-    return () => { (task as any)?.cancel?.(); };
+    // Use shorter delay for faster appearance
+    const timeout = setTimeout(() => setReady(true), 50);
+    return () => clearTimeout(timeout);
   }, []);
-  if (!ready) return null;
+  
+  if (!ready || !users?.length) return null;
+  
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       className="px-4"
+      // Add performance props
+      removeClippedSubviews={true}
+      scrollEventThrottle={32}
     >
       {users.map((user: any) => (
         <TouchableOpacity
           key={user._id}
           className="items-center mr-4"
           onPress={() => onPress(user)}
+          activeOpacity={0.7}
         >
           {user.profilePicture ? (
             <Image
               source={{ uri: user.profilePicture }}
               className="w-20 h-20 rounded-full border-2"
               style={{ borderColor: colors.blue }}
+              resizeMode="cover"
+              fadeDuration={0}
             />
           ) : (
             <View

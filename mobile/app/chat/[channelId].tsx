@@ -75,6 +75,19 @@ export default function ChatScreen() {
   const isActiveRef = useRef(true);
   const cleanupRef = useRef<(() => void) | null>(null);
 
+  const navigateBack = useCallback(() => {
+    // Immediately start navigation
+    router.back();
+    
+    // Defer cleanup to avoid blocking navigation
+    setTimeout(() => {
+      if (cleanupRef.current) {
+        try { cleanupRef.current(); } catch {}
+        cleanupRef.current = null;
+      }
+    }, 100);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       isActiveRef.current = true;
@@ -286,7 +299,7 @@ export default function ChatScreen() {
     if (messages && messages.length > 0) {
       return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
-          <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
+          <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} onBack={navigateBack} />
           <View style={{ flex: 1 }}>
             <FlatList
               data={messages}
@@ -305,7 +318,7 @@ export default function ChatScreen() {
     }
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
-        <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
+        <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} onBack={navigateBack} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1DA1F2" />
         </View>
@@ -317,7 +330,7 @@ export default function ChatScreen() {
     if (messages && messages.length > 0) {
       return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
-          <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
+          <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} onBack={navigateBack} />
           <View style={{ flex: 1 }}>
             <FlatList
               data={messages}
@@ -357,7 +370,7 @@ export default function ChatScreen() {
     >
 
       {/* Render header immediately; it reads channelId and otherUser snapshot */}
-      <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} />
+      <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} onBack={navigateBack} />
 
       <Animated.View style={{ flex: 1 }} entering={FadeIn.duration(120)}>
         {(() => {
