@@ -2,6 +2,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types";
 import { View, Text, TouchableOpacity, FlatList, ListRenderItem, RefreshControl } from "react-native";
+import Animated from "react-native-reanimated";
 import PostCard from "./PostCard";
 import PostCardSkeleton from "././PostCardSkeleton";
 import ReelsStrip from "@/components/ReelsStrip";
@@ -19,6 +20,8 @@ interface PostsListProps {
   refreshing?: boolean;
   onRefresh?: () => void;
   refreshControlBackgroundColor?: string;
+  onScroll?: any;
+  scrollEventThrottle?: number;
 }
 
 const PostsList = ({
@@ -32,6 +35,8 @@ const PostsList = ({
   refreshing,
   onRefresh,
   refreshControlBackgroundColor,
+  onScroll,
+  scrollEventThrottle,
 }: PostsListProps) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
@@ -122,13 +127,13 @@ const PostsList = ({
   }
 
   return (
-    <FlatList
+    <Animated.FlatList
       data={filteredPosts}
       keyExtractor={(item) => item._id}
       renderItem={renderItem}
       ListHeaderComponent={ListHeaderComponent}
       contentContainerStyle={{ backgroundColor: colors.background, paddingBottom: contentBottomPadding ?? 0 }}
-      removeClippedSubviews
+
       initialNumToRender={5}
       maxToRenderPerBatch={6}
       windowSize={9}
@@ -142,6 +147,8 @@ const PostsList = ({
         />
       }
       showsVerticalScrollIndicator={false}
+      onScroll={onScroll}
+      scrollEventThrottle={scrollEventThrottle}
     />
   );
 };

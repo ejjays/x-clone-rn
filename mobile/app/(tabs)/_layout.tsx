@@ -12,7 +12,8 @@ import {
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
 import Animated, {
   useAnimatedStyle,
-  useSharedValue,
+  interpolate,
+  Extrapolate,
 } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,7 +22,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
 import { TabsProvider } from "@/context/TabsContext";
-import { ScrollProvider } from "@/context/ScrollContext";
+import { ScrollProvider, useScroll } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import PcmiChatIcon from "@/assets/icons/PcmiChatIcon";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
@@ -41,6 +42,7 @@ const TabsInner = () => {
   const pathname = usePathname();
   const screenWidth = Dimensions.get("window").width;
   const { colors, isDarkMode } = useTheme();
+  const { scrollY, headerTranslateY } = useScroll();
 
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
@@ -69,11 +71,29 @@ const TabsInner = () => {
     }, [colors.background, isTabsRoute])
   );
 
-  const staticHeaderStyle = {
-    height: isHomeScreen ? HEADER_HEIGHT : 0,
-    opacity: isHomeScreen ? 1 : 0,
-    overflow: "hidden" as const,
-  };
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: headerTranslateY.value }],
+      height: isHomeScreen ? HEADER_HEIGHT : 0,
+      overflow: "hidden",
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 2,
+    };
+  });
+
+  const tabBarAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: headerTranslateY.value }],
+      position: "absolute",
+      top: isHomeScreen ? HEADER_HEIGHT : 0,
+      left: 0,
+      right: 0,
+      zIndex: 1,
+    };
+  });
 
   const handleMessagePress = () => {
     router.push("/messages");
@@ -131,7 +151,7 @@ const TabsInner = () => {
         />
       )}
 
-      <View style={staticHeaderStyle}>
+      <Animated.View style={headerAnimatedStyle}>
         <View
           className="flex-row justify-between items-center px-3 h-full"
           style={{ backgroundColor: colors.background }}
@@ -161,9 +181,9 @@ const TabsInner = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
-      <View className="flex-1">
+      <View style={{ flex: 1 }}>
         <MaterialTopTabs
           initialLayout={{ width: screenWidth }}
           screenOptions={{
@@ -178,12 +198,14 @@ const TabsInner = () => {
           }}
           tabBar={(props) =>
             pathname === "/videos" ? null : (
-              <TopIconBar
-                navigation={props.navigation}
-                pathname={pathname}
-                colors={colors}
-                screenWidth={screenWidth}
-              />
+              <Animated.View style={tabBarAnimatedStyle}>
+                <TopIconBar
+                  navigation={props.navigation}
+                  pathname={pathname}
+                  colors={colors}
+                  screenWidth={screenWidth}
+                />
+              </Animated.View>
             )
           }
         >
@@ -200,9 +222,11 @@ const TabsInner = () => {
 
 export default function TabsLayout() {
   return (
-    <TabsProvider>
-      <TabsInner />
-    </TabsProvider>
+    <ScrollProvider headerHeight={HEADER_HEIGHT} tabBarHeight={TAB_BAR_HEIGHT}>
+      <TabsProvider>
+        <TabsInner />
+      </TabsProvider>
+    </ScrollProvider>
   );
 }
 

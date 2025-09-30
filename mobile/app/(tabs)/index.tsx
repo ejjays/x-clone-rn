@@ -14,10 +14,13 @@ import PostActionBottomSheet, {
   type PostActionBottomSheetRef,
 } from "@/components/PostActionBottomSheet";
 import type { Post } from "@/types";
-// import { useScroll } from "@/context/ScrollContext";
+import { useScroll } from "@/context/ScrollContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; // Import useSafeAreaInsets
 import { useEffect } from "react";
+
+const HEADER_HEIGHT = 40;
+const TAB_BAR_HEIGHT = 50;
 
 const HomeScreen = () => {
   const [isRefetching, setIsRefetching] = useState(false);
@@ -27,7 +30,7 @@ const HomeScreen = () => {
   const [selectedPostForMenu, setSelectedPostForMenu] = useState<Post | null>(
     null
   );
-  // Removed ScrollContext dependency to avoid provider requirement
+  const { handleScroll } = useScroll();
   const { isDarkMode, colors } = useTheme();
   const [isReactionPickerVisible, setIsReactionPickerVisible] = useState(false);
   const insets = useSafeAreaInsets(); // Get safe area insets
@@ -77,7 +80,7 @@ const HomeScreen = () => {
       {ready ? (
         <PostsList
           ListHeaderComponent={
-            <View style={{ backgroundColor: colors.background }}>
+            <View style={{ backgroundColor: colors.background, paddingTop: HEADER_HEIGHT + TAB_BAR_HEIGHT }}>
               <PostComposer animatedPlaceholder={false} />
               <Stories />
               <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
@@ -90,6 +93,8 @@ const HomeScreen = () => {
           edgeToEdgeMedia
           refreshing={isRefetching}
           onRefresh={handlePullToRefresh}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
         />
       ) : (
         <View style={{ flex: 1, backgroundColor: colors.background }} />
