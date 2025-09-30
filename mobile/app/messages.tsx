@@ -85,6 +85,69 @@ export default function MessagesScreen() {
   );
 
   const renderContent = useCallback(() => {
+    const MessagesListHeader = () => (
+      <>
+        {/* Search Field */}
+        <View className="px-4 py-1">
+          <View
+            className="flex-row items-center rounded-full px-4"
+            style={{
+              backgroundColor: colors.chatBackground,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <Ionicons name="search" size={25} color={colors.textMuted} />
+            <TextInput
+              className="flex-1 ml-3 text-base"
+              placeholder="Search conversations..."
+              placeholderTextColor={colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              style={{
+                paddingVertical: Platform.OS === "android" ? 10 : 12,
+                color: colors.text,
+              }}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={clearSearch} className="ml-2">
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={colors.textMuted}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Horizontal List of Real Users */}
+        <View className="py-2">
+          {usersLoading ? (
+            <View className="flex-row items-center justify-center py-4">
+              <LottieView
+                source={require("@/assets/animations/loading-loader.json")}
+                autoPlay
+                loop
+                className="w-8 h-8"
+              />
+              <Text style={{ color: colors.textMuted }} className="ml-2">
+                Loading users...
+              </Text>
+            </View>
+          ) : (
+            <DeferredPeopleStrip
+              users={realUsers}
+              colors={colors}
+              getInitials={getInitials}
+              onPress={handleUserPress}
+            />
+          )}
+        </View>
+      </>
+    );
+
     if (justReturnedFromChat && channels.length > 0) {
       return (
         <CustomChannelList
@@ -97,6 +160,7 @@ export default function MessagesScreen() {
           isDarkMode={isDarkMode}
           refreshControlColor={colors.refreshControlColor}
           refreshControlBackgroundColor={colors.refreshControlBackgroundColor}
+          ListHeaderComponent={MessagesListHeader}
         />
       );
     }
@@ -167,9 +231,24 @@ export default function MessagesScreen() {
         isDarkMode={isDarkMode}
         refreshControlColor={colors.refreshControlColor}
         refreshControlBackgroundColor={colors.refreshControlBackgroundColor}
+        ListHeaderComponent={MessagesListHeader}
       />
     );
-  }, [isConnecting, client, colors, refreshChannels, searchQuery, isDarkMode, justReturnedFromChat, channels.length]);
+  }, [
+    isConnecting,
+    client,
+    colors,
+    refreshChannels,
+    searchQuery,
+    isDarkMode,
+    justReturnedFromChat,
+    channels.length,
+    usersLoading,
+    realUsers,
+    clearSearch,
+    handleUserPress,
+    getInitials,
+  ]);
 
   return (
     <SafeAreaView
@@ -179,7 +258,11 @@ export default function MessagesScreen() {
         backgroundColor: colors.chatBackground,
       }}
     >
-      <StatusBar barStyle={"light-content"} backgroundColor="#000000" translucent={false} />
+      <StatusBar
+        barStyle={"light-content"}
+        backgroundColor="#000000"
+        translucent={false}
+      />
 
       {/* Header */}
       <View
@@ -210,56 +293,6 @@ export default function MessagesScreen() {
             <FontAwesome5 name="facebook" size={26} color={colors.icon} />
           </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Search Field */}
-      <View className="px-4 py-1">
-        <View
-          className="flex-row items-center rounded-full px-4"
-          style={{ backgroundColor: colors.chatBackground, borderWidth: 1, borderColor: colors.border }}
-        >
-          <Ionicons name="search" size={25} color={colors.textMuted} />
-          <TextInput
-            className="flex-1 ml-3 text-base"
-            placeholder="Search conversations..."
-            placeholderTextColor={colors.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-            style={{
-              paddingVertical: Platform.OS === "android" ? 10 : 12,
-              color: colors.text,
-            }}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} className="ml-2">
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color={colors.textMuted}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Horizontal List of Real Users */}
-      <View className="py-2">
-        {usersLoading ? (
-          <View className="flex-row items-center justify-center py-4">
-            <LottieView
-              source={require("@/assets/animations/loading-loader.json")}
-              autoPlay
-              loop
-              className="w-8 h-8"
-            />
-            <Text style={{ color: colors.textMuted }} className="ml-2">
-              Loading users...
-            </Text>
-          </View>
-        ) : (
-      <DeferredPeopleStrip users={realUsers} colors={colors} getInitials={getInitials} onPress={handleUserPress} />
-        )}
       </View>
 
       {/* Messages Content (CustomChannelList) */}
@@ -298,15 +331,17 @@ function DeferredPeopleStrip({ users, colors, getInitials, onPress }: any) {
           {user.profilePicture ? (
             <Image
               source={{ uri: user.profilePicture }}
-              className="w-20 h-20 rounded-full border-2"
-              style={{ borderColor: colors.blue }}
+              className="rounded-full border-2"
+              style={{ width: 68, height: 68, borderColor: colors.blue }}
               resizeMode="cover"
               fadeDuration={0}
             />
           ) : (
             <View
-              className="w-20 h-20 rounded-full border-2 items-center justify-center"
+              className="rounded-full border-2 items-center justify-center"
               style={{
+                width: 68,
+                height: 68,
                 borderColor: colors.blue,
                 backgroundColor: colors.chatBackground,
               }}
