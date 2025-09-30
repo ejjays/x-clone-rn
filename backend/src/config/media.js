@@ -33,10 +33,15 @@ export const deleteFromCloudinary = async (fileUrl) => {
  */
 export const deleteFromImageKit = async (fileUrl) => {
   try {
-    const urlEndpointId = ENV.IMAGEKIT_URL_ENDPOINT.split('/').pop();
-    const filePath = new URL(fileUrl).pathname.replace(`/${urlEndpointId}`, '').substring(1);
+    // Extract the filename from the URL.
+    const fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+    if (!fileName) {
+      console.warn(`Could not extract filename from ImageKit URL: ${fileUrl}`);
+      return;
+    }
 
-    const searchResponse = await fetch(`https://api.imagekit.io/v1/files?searchQuery=path="${filePath}"`, {
+    // Search for the file by name to get its fileId.
+    const searchResponse = await fetch(`https://api.imagekit.io/v1/files?searchQuery=name="${fileName}"`, {
       headers: {
         'Authorization': `Basic ${Buffer.from(ENV.IMAGEKIT_PRIVATE_KEY + ':').toString('base64')}`
       }
@@ -44,11 +49,12 @@ export const deleteFromImageKit = async (fileUrl) => {
 
     const searchResult = await searchResponse.json();
     if (!searchResult || searchResult.length === 0) {
-      console.warn(`ImageKit file not found for path: ${filePath}`);
+      console.warn(`ImageKit file not found for name: ${fileName}`);
       return;
     }
     const fileId = searchResult[0].fileId;
 
+    // Delete the file using the fileId.
     await fetch(`https://api.imagekit.io/v1/files/${fileId}`, {
       method: 'DELETE',
       headers: {
