@@ -15,6 +15,7 @@ import {
   Animated,
   ActivityIndicator,
   Pressable,
+  ToastAndroid,
 } from "react-native";
 import { Ionicons, Entypo, FontAwesome5, Feather, Octicons } from "@expo/vector-icons";
 import { sharePost } from "@/utils/share";
@@ -33,6 +34,7 @@ import PostReactionsPicker from "@/components/PostReactionsPicker";
 import { videoItemStyles as styles } from "@/features/videos/styles";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import ShareIcon from "@/assets/icons/ShareIcon";
+import { setStringAsync } from 'expo-clipboard';
 
 import type { EdgeInsets } from "react-native-safe-area-context";
 
@@ -157,11 +159,11 @@ export default function VideoItem({
   };
 
   const handleCopyText = async (text: string) => {
-    await (await import("expo-clipboard")).setStringAsync(text);
+    await setStringAsync(text);
     if (Platform.OS === "android") {
-      (await import("react-native")).ToastAndroid.show(
+      ToastAndroid.show(
         "Copied to clipboard",
-        (await import("react-native")).ToastAndroid.SHORT
+        ToastAndroid.SHORT
       );
     }
     postActionBottomSheetRef.current?.close();

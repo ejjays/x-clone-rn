@@ -15,10 +15,11 @@ import {
   useState,
   useRef,
   useEffect,
+  useMemo,
 } from "react";
 import { Dimensions } from "react-native";
 import ConfirmationAlert from "./ConfirmationAlert";
-import * as Clipboard from 'expo-clipboard';
+import { setStringAsync } from 'expo-clipboard';
 import { useTheme } from "@/context/ThemeContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; 
 
@@ -50,16 +51,16 @@ const PostActionBottomSheet = forwardRef<
   const [isDragging, setIsDragging] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { colors } = useTheme(); 
-  const insets = useSafeAreaInsets(); 
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
-  const bottomSheetStyle = {
-    backgroundColor: colors.background, 
+  const bottomSheetStyle = useMemo(() => ({
+    backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    marginBottom: insets.bottom, 
+    marginBottom: insets.bottom,
     transform: [{ translateY: translateY }],
-  };
+  }), [colors.background, insets.bottom]);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -135,7 +136,7 @@ const PostActionBottomSheet = forwardRef<
     if (!isDragging) {
       handleClose();
       if (postContent) {
-        Clipboard.setStringAsync(postContent);
+        setStringAsync(postContent);
       }
     }
   };

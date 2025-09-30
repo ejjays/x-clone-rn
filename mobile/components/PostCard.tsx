@@ -41,6 +41,7 @@ import * as SystemUI from "expo-system-ui";
 import ReactionUsersModal from './ReactionUsersModal';
 import PressableScale from "@/constants/PressableScale";
 import CustomAlert from "./CustomAlert";
+import { setStringAsync } from 'expo-clipboard';
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -350,7 +351,7 @@ const PostCard = ({
 
   const handleCopyPostContent = () => {
     if (post.content) {
-      Clipboard.setStringAsync(post.content);
+      setStringAsync(post.content);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };

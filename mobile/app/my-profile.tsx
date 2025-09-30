@@ -13,7 +13,7 @@ import { MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 import ConfirmationAlert from "@/components/ConfirmationAlert";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import * as Clipboard from "expo-clipboard";
+import { setStringAsync } from "expo-clipboard";
 import { useOTAUpdates } from "@/hooks/useOTAUpdates";
 import { ChevronLeft } from "lucide-react-native";
 
@@ -193,7 +193,7 @@ export default function MyProfile() {
             className="px-3 py-1.5 rounded-full"
             onPress={async () => {
               if (!expoPushToken) return;
-              try { await Clipboard.setStringAsync(expoPushToken); } catch {}
+              try { await setStringAsync(expoPushToken); } catch {}
             }}
           >
             <Text style={{ color: colors.blue }}>Copy</Text>

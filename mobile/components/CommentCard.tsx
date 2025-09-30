@@ -25,6 +25,7 @@ import {
 } from "@/utils/reactions";
 import { useTheme } from "@/context/ThemeContext";
 import { FontAwesome } from "@expo/vector-icons";
+import { setStringAsync } from 'expo-clipboard';
 
 interface CommentCardProps {
   comment: Comment;
@@ -106,7 +107,7 @@ const CommentCard = ({
   };
 
   const handleCopyText = async (text: string) => {
-    await Clipboard.setStringAsync(text);
+    await setStringAsync(text);
     // You might want to show a toast notification here
   };
 
