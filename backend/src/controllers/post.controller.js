@@ -5,6 +5,8 @@ import { getAuth } from "@clerk/express";
 import Notification from "../models/notification.model.js";
 import Comment from "../models/comment.model.js";
 
+import { deleteFromCloudinary, deleteFromImageKit } from "../config/media.js";
+
 // --- HELPER TO POPULATE POSTS ---
 const populatePost = (query) =>
   query
@@ -142,6 +144,16 @@ export const deletePost = asyncHandler(async (req, res) => {
 
   if (!isOwner && !isAdmin) {
     return res.status(403).json({ error: "You can only delete your own posts" });
+  }
+
+  // Delete media from cloud services before deleting the post
+  const mediaUrl = post.image || post.video;
+  if (mediaUrl) {
+    if (mediaUrl.includes('cloudinary.com')) {
+      await deleteFromCloudinary(mediaUrl);
+    } else if (mediaUrl.includes('imagekit.io')) {
+      await deleteFromImageKit(mediaUrl);
+    }
   }
 
   await Comment.deleteMany({ post: postId });
