@@ -7,9 +7,10 @@ import {
   Platform,
   ScrollView,
   Image,
-  StatusBar,
   InteractionManager,
+  StatusBar as ReactNativeStatusBar,
 } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useStreamChat } from "@/context/StreamChatContext";
 import CustomChannelList from "@/components/CustomChannelList";
@@ -69,6 +70,7 @@ export default function MessagesScreen() {
     useCallback(() => {
       if (Platform.OS === "android") {
         NavigationBar.setBackgroundColorAsync("black");
+        ReactNativeStatusBar.setBackgroundColor("black", false);
       }
       // Quick check if we're returning from a chat
       const returnedFromChat = router.canGoBack();
@@ -80,11 +82,12 @@ export default function MessagesScreen() {
       }
 
       return () => {
-        try {
-          StatusBar.setBarStyle("light-content");
-        } catch {}
+        if (Platform.OS === "android") {
+          NavigationBar.setBackgroundColorAsync(colors.background);
+          ReactNativeStatusBar.setBackgroundColor(colors.background, false);
+        }
       };
-    }, [])
+    }, [colors.background])
   );
 
   const renderContent = useCallback(() => {
@@ -309,11 +312,7 @@ export default function MessagesScreen() {
         backgroundColor: colors.chatBackground,
       }}
     >
-      <StatusBar
-        barStyle={"light-content"}
-        backgroundColor="#000000"
-        translucent={false}
-      />
+      <StatusBar barStyle={"light-content"} />
 
       {/* Header */}
       <View
