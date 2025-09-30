@@ -38,7 +38,7 @@ export default function ReelsStrip() {
           >
             <View style={{ width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surface }}>
               <ExpoImage
-                source={{ uri: getVideoThumbnailUrl(item.video as string) || `${getPlayableVideoUrl(item.video as string)}` }}
+                source={{ uri: getVideoThumbnailUrl(item.video as string) || getPlayableVideoUrl(item.video as string) }}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
                 cachePolicy="memory-disk"

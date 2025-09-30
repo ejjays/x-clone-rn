@@ -15,18 +15,30 @@ export const getPlayableVideoUrl = (url: string): string => {
 
 export const getVideoThumbnailUrl = (url: string): string | null => {
   try {
-    if (!url) return null
-    const isImageKit = url.includes('imagekit.io')
-    if (!isImageKit) return null
-    // Replace any existing tr param with jpg frame at ~1s
-    const hasQuery = url.includes('?')
-    const trPattern = /([?&])tr=[^&]*/
-    if (trPattern.test(url)) {
-      return url.replace(trPattern, '$1tr=f-jpg,so-1')
+    if (!url) return null;
+
+    // Handle ImageKit URLs
+    if (url.includes('imagekit.io')) {
+      // Appending /ik-thumbnail.jpg is the recommended way to get a basic thumbnail.
+      const baseUrl = url.split('?')[0]; // Remove any existing query params
+      return `${baseUrl}/ik-thumbnail.jpg`;
     }
-    const sep = hasQuery ? '&' : '?'
-    return `${url}${sep}tr=f-jpg,so-1`
+
+    // Handle Cloudinary URLs
+    if (url.includes('cloudinary.com')) {
+      const baseUrl = url.split('?')[0];
+      const urlWithoutExt = baseUrl.substring(0, baseUrl.lastIndexOf('.')) || baseUrl;
+      
+      if (urlWithoutExt.includes('/upload/')) {
+        // Use so_auto for automatic frame selection and force format to jpg
+        return urlWithoutExt.replace('/upload/', '/upload/so_auto,f_jpg/');
+      }
+      return `${urlWithoutExt}.jpg`;
+    }
+
+    // For other URLs, we can't reliably generate a thumbnail
+    return null;
   } catch {
-    return null
+    return null;
   }
 }
