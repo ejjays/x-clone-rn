@@ -45,12 +45,19 @@ const TabsInner = () => {
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/menu";
+  const isTabsRoute = [
+    "/",
+    "/search",
+    "/videos",
+    "/notifications",
+    "/menu",
+  ].includes(pathname);
 
   // Ensure Android navigation bar matches tab background when tabs are focused
   useFocusEffect(
     useCallback(() => {
       try {
-        if (Platform.OS === "android") {
+        if (Platform.OS === "android" && isTabsRoute) {
           NavigationBar.setBackgroundColorAsync(colors.background).catch(
             () => {}
           );
@@ -59,7 +66,7 @@ const TabsInner = () => {
         }
       } catch {}
       return () => {};
-    }, [colors.background])
+    }, [colors.background, isTabsRoute])
   );
 
   const staticHeaderStyle = {

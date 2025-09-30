@@ -67,15 +67,18 @@ export default function MessagesScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (Platform.OS === "android") {
+        NavigationBar.setBackgroundColorAsync("black");
+      }
       // Quick check if we're returning from a chat
       const returnedFromChat = router.canGoBack();
-      
+
       if (returnedFromChat) {
         setJustReturnedFromChat(true);
         // Clear the flag after a short delay
         setTimeout(() => setJustReturnedFromChat(false), 300);
       }
-      
+
       return () => {
         try {
           StatusBar.setBarStyle("light-content");
@@ -137,12 +140,60 @@ export default function MessagesScreen() {
               </Text>
             </View>
           ) : (
-            <DeferredPeopleStrip
-              users={realUsers}
-              colors={colors}
-              getInitials={getInitials}
-              onPress={handleUserPress}
-            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="px-4"
+              removeClippedSubviews={true}
+              scrollEventThrottle={32}
+            >
+              {realUsers.map((user: any) => (
+                <TouchableOpacity
+                  key={user._id}
+                  className="items-center mr-4"
+                  onPress={() => handleUserPress(user)}
+                  activeOpacity={0.7}
+                >
+                  {user.profilePicture ? (
+                    <Image
+                      source={{ uri: user.profilePicture }}
+                      className="rounded-full border-2"
+                      style={{
+                        width: 68,
+                        height: 68,
+                        borderColor: colors.blue,
+                      }}
+                      resizeMode="cover"
+                      fadeDuration={0}
+                    />
+                  ) : (
+                    <View
+                      className="rounded-full border-2 items-center justify-center"
+                      style={{
+                        width: 68,
+                        height: 68,
+                        borderColor: colors.blue,
+                        backgroundColor: colors.chatBackground,
+                      }}
+                    >
+                      <Text
+                        className="font-semibold text-lg"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {getInitials(user.firstName, user.lastName)}
+                      </Text>
+                    </View>
+                  )}
+                  <Text
+                    className="text-sm mt-1"
+                    numberOfLines={1}
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {user.firstName}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           )}
         </View>
       </>
@@ -298,71 +349,5 @@ export default function MessagesScreen() {
       {/* Messages Content (CustomChannelList) */}
       <View className="flex-1">{renderContent()}</View>
     </SafeAreaView>
-  );
-}
-
-function DeferredPeopleStrip({ users, colors, getInitials, onPress }: any) {
-  const [ready, setReady] = useState(false);
-  
-  useEffect(() => {
-    // Use shorter delay for faster appearance
-    const timeout = setTimeout(() => setReady(true), 50);
-    return () => clearTimeout(timeout);
-  }, []);
-  
-  if (!ready || !users?.length) return null;
-  
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      className="px-4"
-      // Add performance props
-      removeClippedSubviews={true}
-      scrollEventThrottle={32}
-    >
-      {users.map((user: any) => (
-        <TouchableOpacity
-          key={user._id}
-          className="items-center mr-4"
-          onPress={() => onPress(user)}
-          activeOpacity={0.7}
-        >
-          {user.profilePicture ? (
-            <Image
-              source={{ uri: user.profilePicture }}
-              className="rounded-full border-2"
-              style={{ width: 68, height: 68, borderColor: colors.blue }}
-              resizeMode="cover"
-              fadeDuration={0}
-            />
-          ) : (
-            <View
-              className="rounded-full border-2 items-center justify-center"
-              style={{
-                width: 68,
-                height: 68,
-                borderColor: colors.blue,
-                backgroundColor: colors.chatBackground,
-              }}
-            >
-              <Text
-                className="font-semibold text-lg"
-                style={{ color: colors.textSecondary }}
-              >
-                {getInitials(user.firstName, user.lastName)}
-              </Text>
-            </View>
-          )}
-          <Text
-            className="text-sm mt-1"
-            numberOfLines={1}
-            style={{ color: colors.textSecondary }}
-          >
-            {user.firstName}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
   );
 }
