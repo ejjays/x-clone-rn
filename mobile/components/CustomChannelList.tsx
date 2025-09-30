@@ -21,6 +21,7 @@ interface CustomChannelListProps {
   isDarkMode: boolean; // Add isDarkMode prop
   refreshControlColor?: string; // Add refreshControlColor prop
   refreshControlBackgroundColor?: string; // Add refreshControlBackgroundColor prop
+  ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
 }
 
 interface ChannelMember {
@@ -50,6 +51,77 @@ interface Channel {
   state: ChannelState;
 }
 
+const ChannelListItem = React.memo(
+  ({
+    item,
+    colors,
+    handleOpenChannel,
+  }: {
+    item: any;
+    colors: any;
+    handleOpenChannel: (channelId: string, item: any) => void;
+  }) => {
+    return (
+      <TouchableOpacity
+        className="flex-row items-center p-4"
+        onPress={() => {
+          // Use requestAnimationFrame for smoother navigation
+          requestAnimationFrame(() => {
+            handleOpenChannel(item.id, item);
+          });
+        }}
+        activeOpacity={0.7}
+      >
+        <View className="relative mr-4">
+          <Image
+            source={
+              item.image
+                ? { uri: item.image }
+                : require("../assets/images/default-avatar.png")
+            }
+            className="w-16 h-16 rounded-full"
+            // Add these props for better performance
+            resizeMode="cover"
+            fadeDuration={0}
+          />
+          {item.online && (
+            <View className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+          )}
+        </View>
+
+        <View className="flex-1 min-w-0 mr-2">
+          <Text
+            className="font-semibold text-lg mb-1"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={{ color: colors.text }}
+          >
+            {item.name}
+          </Text>
+          <Text
+            className="text-base"
+            numberOfLines={1}
+            style={{ color: colors.textSecondary }}
+          >
+            {item.isFromCurrentUser ? "You: " : ""}
+            {item.lastMessage}
+          </Text>
+        </View>
+
+        <View className="flex-shrink-0">
+          {item.lastMessageAt ? (
+            <Text className="text-xs" style={{ color: colors.textMuted }}>
+              {formatDistanceToNow(new Date(item.lastMessageAt), {
+                addSuffix: true,
+              })}
+            </Text>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+    );
+  }
+);
+
 const CustomChannelList = React.memo(function CustomChannelList({
   onRefresh,
   refreshing = false,
@@ -57,19 +129,22 @@ const CustomChannelList = React.memo(function CustomChannelList({
   isDarkMode,
   refreshControlColor,
   refreshControlBackgroundColor,
+  ListHeaderComponent,
 }: CustomChannelListProps) {
   const { channels, isConnecting } = useStreamChat();
   const { currentUser } = useCurrentUser();
   const [filteredChannels, setFilteredChannels] = useState<any[]>([]);
 
-  // Dynamic color scheme based on dark mode state
-  const colors = {
-    text: isDarkMode ? "#ffffff" : "#111827",
-    textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
-    textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
-    border: isDarkMode ? "#374151" : "#e5e7eb",
-    blue: "#3b82f6",
-  };
+  const colors = useMemo(
+    () => ({
+      text: isDarkMode ? "#ffffff" : "#111827",
+      textSecondary: isDarkMode ? "#d1d5db" : "#6b7280",
+      textMuted: isDarkMode ? "#9ca3af" : "#9ca3af",
+      border: isDarkMode ? "#374151" : "#e5e7eb",
+      blue: "#3b82f6",
+    }),
+    [isDarkMode]
+  );
 
   const processedChannels = useMemo(() => {
     if (!channels || !currentUser) return [];
@@ -124,61 +199,23 @@ const CustomChannelList = React.memo(function CustomChannelList({
     router.push({
       pathname: `/chat/${channelId}`,
       params: {
-        name: encodeURIComponent(item?.name || ''),
-        image: encodeURIComponent(item?.image || ''),
-        other: encodeURIComponent(item?.otherId || ''),
+        name: encodeURIComponent(item?.name || ""),
+        image: encodeURIComponent(item?.image || ""),
+        other: encodeURIComponent(item?.otherId || ""),
       },
     } as any);
   }, []);
 
-  const renderChannelItem = useCallback(({ item }: { item: any }) => (
-    <TouchableOpacity
-      className="flex-row items-center p-4"
-      onPress={() => {
-        // Use requestAnimationFrame for smoother navigation
-        requestAnimationFrame(() => {
-          handleOpenChannel(item.id, item);
-        });
-      }}
-      activeOpacity={0.7}
-    >
-      <View className="relative mr-4">
-        <Image
-          source={item.image ? { uri: item.image } : require("../assets/images/default-avatar.png")}
-          className="w-16 h-16 rounded-full"
-          // Add these props for better performance
-          resizeMode="cover"
-          fadeDuration={0}
-        />
-        {item.online && (
-          <View className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
-        )}
-      </View>
-
-      <View className="flex-1 min-w-0 mr-2">
-        <Text
-          className="font-semibold text-lg mb-1"
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          style={{ color: colors.text }}
-        >
-          {item.name}
-        </Text>
-        <Text className="text-base" numberOfLines={1} style={{ color: colors.textSecondary }}>
-          {item.isFromCurrentUser ? "You: " : ""}
-          {item.lastMessage}
-        </Text>
-      </View>
-
-      <View className="flex-shrink-0">
-        {item.lastMessageAt ? (
-          <Text className="text-xs" style={{ color: colors.textMuted }}>
-            {formatDistanceToNow(new Date(item.lastMessageAt), { addSuffix: true })}
-          </Text>
-        ) : null}
-      </View>
-    </TouchableOpacity>
-  ), [colors, handleOpenChannel]);
+  const renderChannelItem = useCallback(
+    ({ item }: { item: any }) => (
+      <ChannelListItem
+        item={item}
+        colors={colors}
+        handleOpenChannel={handleOpenChannel}
+      />
+    ),
+    [colors, handleOpenChannel]
+  );
 
   if (isConnecting && channels.length === 0) {
     return (
@@ -196,6 +233,7 @@ const CustomChannelList = React.memo(function CustomChannelList({
       data={filteredChannels}
       keyExtractor={keyExtractor}
       renderItem={renderChannelItem}
+      ListHeaderComponent={ListHeaderComponent}
       keyboardShouldPersistTaps="handled"
       scrollEventThrottle={32} // Increased for better performance
       removeClippedSubviews={true}

@@ -6,6 +6,7 @@ import PostCard from "./PostCard";
 import PostCardSkeleton from "././PostCardSkeleton";
 import ReelsStrip from "@/components/ReelsStrip";
 import { useTheme } from "@/context/ThemeContext";
+import { useCallback } from "react";
 
 interface PostsListProps {
   username?: string;
@@ -43,6 +44,37 @@ const PostsList = ({
     getCurrentUserReaction,
   } = usePosts(username);
   const { colors, isDarkMode } = useTheme(); // Use useTheme hook
+
+  const filteredPosts = posts.filter((post: Post) => !post.video);
+
+  const renderItem: ListRenderItem<Post> = useCallback(({ item, index }) => {
+    const insertReels = index === 3; // after the 4th post (0-based index)
+    return (
+      <View>
+        <PostCard
+          post={item}
+          reactToPost={reactToPost}
+          onDelete={deletePost}
+          onComment={onOpenComments || (() => {})}
+          currentUser={currentUser}
+          currentUserReaction={getCurrentUserReaction(item.reactions, currentUser)}
+          onOpenPostMenu={onOpenPostMenu}
+          onReactionPickerVisibilityChange={onReactionPickerVisibilityChange}
+          edgeToEdgeMedia={edgeToEdgeMedia}
+        />
+        {insertReels && (
+          <>
+            <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
+            <ReelsStrip />
+            <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
+          </>
+        )}
+        {index < filteredPosts.length - 1 && !insertReels && (
+          <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
+        )}
+      </View>
+    );
+  }, [reactToPost, deletePost, onOpenComments, currentUser, getCurrentUserReaction, onOpenPostMenu, onReactionPickerVisibilityChange, edgeToEdgeMedia, isDarkMode, colors, filteredPosts.length]);
 
   if (isPostsLoading || isUserLoading) {
     return (
@@ -88,39 +120,6 @@ const PostsList = ({
       </View>
     );
   }
-
-  const filteredPosts = posts.filter((post: Post) => !post.video);
-  const firstFour = filteredPosts.slice(0, 4);
-  const rest = filteredPosts.slice(4);
-
-  const renderItem: ListRenderItem<Post> = ({ item, index }) => {
-    const insertReels = index === 3; // after the 4th post (0-based index)
-    return (
-      <View>
-        <PostCard
-          post={item}
-          reactToPost={reactToPost}
-          onDelete={deletePost}
-          onComment={onOpenComments || (() => {})}
-          currentUser={currentUser}
-          currentUserReaction={getCurrentUserReaction(item.reactions, currentUser)}
-          onOpenPostMenu={onOpenPostMenu}
-          onReactionPickerVisibilityChange={onReactionPickerVisibilityChange}
-          edgeToEdgeMedia={edgeToEdgeMedia}
-        />
-        {insertReels && (
-          <>
-            <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
-            <ReelsStrip />
-            <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
-          </>
-        )}
-        {index < filteredPosts.length - 1 && !insertReels && (
-          <View className="h-1" style={{ backgroundColor: isDarkMode ? '#141414' : colors.border }} />
-        )}
-      </View>
-    );
-  };
 
   return (
     <FlatList

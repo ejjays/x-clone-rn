@@ -42,17 +42,9 @@ const TabsInner = () => {
   const screenWidth = Dimensions.get("window").width;
   const { colors, isDarkMode } = useTheme();
 
-  const headerHeight = useSharedValue(HEADER_HEIGHT);
-  const tabBarHeight = useSharedValue(TAB_BAR_HEIGHT);
-
   const isHomeScreen = pathname === "/";
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/menu";
-
-  useEffect(() => {
-    headerHeight.value = pathname === "/" ? HEADER_HEIGHT : 0;
-    tabBarHeight.value = TAB_BAR_HEIGHT;
-  }, [pathname]);
 
   // Ensure Android navigation bar matches tab background when tabs are focused
   useFocusEffect(

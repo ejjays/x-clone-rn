@@ -29,16 +29,18 @@ import {
   reactionTextColor,
   reactionLabels,
 } from "@/utils/reactions";
-import { FontAwesome, AntDesign, Fontisto } from "@expo/vector-icons";
+import { FontAwesome, AntDesign, Fontisto, Feather } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { router } from "expo-router";
-import * as Clipboard from "expo-clipboard";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system";
 import { sharePost } from "@/utils/share";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
 import ReactionUsersModal from './ReactionUsersModal';
 import PressableScale from "@/constants/PressableScale";
+import CustomAlert from "./CustomAlert";
 
 const getDynamicPostTextStyle = (content: string): string => {
   if (content.length <= 60) {
@@ -80,11 +82,6 @@ const PostCard = ({
   edgeToEdgeMedia,
 }: PostCardProps) => {
   const isOwnPost = post.user._id === currentUser._id;
-  const [nowTick, setNowTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setNowTick((n) => n + 1), 60_000);
-    return () => clearInterval(id);
-  }, []);
   const likeButtonRef = useRef<RNView>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [anchorMeasurements, setAnchorMeasurements] = useState<{
@@ -101,10 +98,24 @@ const PostCard = ({
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [showModalContent, setShowModalContent] = useState(false);
   const [isReactionUsersModalVisible, setIsReactionUsersModalVisible] = useState(false);
+  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const imageTranslateY = useRef(new Animated.Value(0)).current;
   const modalFadeAnim = useRef(new Animated.Value(0)).current;
   const contentOpacityAnim = useRef(new Animated.Value(0)).current;
+
+  const navigateToUserProfile = useCallback(() => {
+    router.push({
+      pathname: "/user/[userId]",
+      params: {
+        userId: post.user._id,
+        username: (post.user as any).username || "",
+        user: encodeURIComponent(JSON.stringify(post.user)),
+      },
+    });
+  }, [post.user]);
 
   const openImageModal = useCallback(() => {
     setIsImageModalVisible(true);
@@ -293,6 +304,33 @@ const PostCard = ({
     setIsMediaLoading(false);
   };
 
+  const handleDownload = async () => {
+    if (!permissionResponse?.granted) {
+      const response = await requestPermission();
+      if (!response.granted) {
+        setAlertMessage(
+          "Permission to access media library is required to download images."
+        );
+        setAlertVisible(true);
+        return;
+      }
+    }
+
+    if (post.image) {
+      try {
+        const fileUri = FileSystem.documentDirectory + `${post._id}.jpg`;
+        const { uri } = await FileSystem.downloadAsync(post.image, fileUri);
+        await MediaLibrary.saveToLibraryAsync(uri);
+        setAlertMessage("Image downloaded successfully!");
+        setAlertVisible(true);
+      } catch (error) {
+        console.error("Error downloading image:", error);
+        setAlertMessage("Failed to download image.");
+        setAlertVisible(true);
+      }
+    }
+  };
+
   const handleQuickPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const newReaction = currentUserReaction?.type === "like" ? null : "like";
@@ -396,27 +434,9 @@ const PostCard = ({
         {/* Post Header */}
         <View className="flex-row px-2 py-3 items-center">
           <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: "/user/[userId]",
-                params: {
-                  userId: post.user._id,
-                  username: (post.user as any).username || "",
-                  user: encodeURIComponent(JSON.stringify(post.user)),
-                },
-              })
-            }
+            onPress={navigateToUserProfile}
           >
-            <PressableScale onPress={() =>
-              router.push({
-                pathname: "/user/[userId]",
-                params: {
-                  userId: post.user._id,
-                  username: (post.user as any).username || "",
-                  user: encodeURIComponent(JSON.stringify(post.user)),
-                },
-              })
-            }>
+            <PressableScale onPress={navigateToUserProfile}>
               <Image
                 source={
                   post.user.profilePicture
@@ -430,16 +450,7 @@ const PostCard = ({
           <View className="flex-1">
             <View className="flex-row items-center">
               <TouchableOpacity
-                onPress={() =>
-                  router.push({
-                    pathname: "/user/[userId]",
-                    params: {
-                      userId: post.user._id,
-                      username: (post.user as any).username || "",
-                      user: encodeURIComponent(JSON.stringify(post.user)),
-                    },
-                  })
-                }
+                onPress={navigateToUserProfile}
               >
                 <Text
                   className="font-bold text-lg"
@@ -636,8 +647,8 @@ const PostCard = ({
               {
                 position: "absolute",
                 top: 40,
-                left: 10 /* Changed from right to left */,
-                zIndex: 1000, // Higher z-index
+                left: 10,
+                zIndex: 1000,
                 opacity: contentOpacityAnim,
               },
             ]}
@@ -649,12 +660,36 @@ const PostCard = ({
                 )
               }
               style={{
-                backgroundColor: "rgba(0,0,0,0.5)", // Add background for better visibility
+                backgroundColor: "rgba(0,0,0,0.5)",
                 borderRadius: 20,
                 padding: 8,
               }}
             >
               <AntDesign name="close" size={24} color="white" />
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Download button */}
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                top: 40,
+                right: 10,
+                zIndex: 1000,
+                opacity: contentOpacityAnim,
+              },
+            ]}
+          >
+            <TouchableOpacity
+              onPress={handleDownload}
+              style={{
+                backgroundColor: "rgba(0,0,0,0.5)",
+                borderRadius: 20,
+                padding: 8,
+              }}
+            >
+              <Feather name="download" size={24} color="white" />
             </TouchableOpacity>
           </Animated.View>
 
@@ -814,6 +849,11 @@ const PostCard = ({
         isVisible={isReactionUsersModalVisible}
         onClose={() => setIsReactionUsersModalVisible(false)}
         reactions={post.reactions}
+      />
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onOk={() => setAlertVisible(false)}
       />
     </>
   );
