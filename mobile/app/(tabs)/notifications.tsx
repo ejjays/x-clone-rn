@@ -77,7 +77,7 @@ const NotificationsScreen = () => {
   }, []);
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <View className="flex-1" style={{ backgroundColor: colors.background, paddingTop: 50 }}>
       <View className="px-4 pt-4">
         <Text className="text-3xl font-bold mb-2" style={{ color: colors.text }}>Notifications</Text>
       </View>

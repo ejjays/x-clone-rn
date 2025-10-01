@@ -167,7 +167,10 @@ const SearchScreen = () => {
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <View
+      className="flex-1"
+      style={{ backgroundColor: colors.background, paddingTop: 50 }}
+    >
       {isLoading && !displayedUsers.length ? ( // Show loading indicator only when there are no users
         <View
           className="flex-1 items-center justify-center p-8"

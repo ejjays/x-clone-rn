@@ -147,7 +147,7 @@ export default function MenuScreen() {
   }
 
   return (
-    <View className="flex-1" style={{ backgroundColor: "#1e1f20" }}>
+    <View className="flex-1" style={{ backgroundColor: "#1e1f20", paddingTop: 50 }}>
       <ScrollView>
         <View
           className="px-4 py-4 flex-row justify-between items-center"
