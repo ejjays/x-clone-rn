@@ -19,9 +19,8 @@ export const getVideoThumbnailUrl = (url: string): string | null => {
 
     // Handle ImageKit URLs
     if (url.includes('imagekit.io')) {
-      // Appending /ik-thumbnail.jpg is the recommended way to get a basic thumbnail.
-      const baseUrl = url.split('?')[0]; // Remove any existing query params
-      return `${baseUrl}/ik-thumbnail.jpg`;
+      const sep = url.includes('?') ? '&' : '?';
+      return `${url}${sep}tr=n-ik_ml_thumbnail`;
     }
 
     // Handle Cloudinary URLs

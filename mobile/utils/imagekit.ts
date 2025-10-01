@@ -30,16 +30,21 @@ export const uploadMediaToImageKit = async (
     }
 
     const formData = new FormData()
+    const extension = media.type === 'image' ? 'jpg' : 'mp4';
+    const fileName = `upload_${Date.now()}.${extension}`;
     formData.append('file', {
       uri: media.uri,
       type: media.type === 'image' ? 'image/jpeg' : 'video/mp4',
-      name: `upload.${media.type === 'image' ? 'jpg' : 'mp4'}`,
+      name: fileName,
     } as any)
-    formData.append('fileName', `upload_${Date.now()}`)
+    formData.append('fileName', fileName)
     formData.append('publicKey', auth.publicKey)
     formData.append('signature', auth.signature)
     formData.append('expire', String(auth.expire))
     formData.append('token', auth.token)
+    formData.append('post', JSON.stringify([{
+      type: 'thumbnail'
+    }]));
     // Optional folder; can mirror Cloudinary folder
     formData.append('folder', 'app_uploads')
 
