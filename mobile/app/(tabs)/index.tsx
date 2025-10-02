@@ -34,7 +34,16 @@ const HomeScreen = () => {
   const { isDarkMode, colors } = useTheme();
   const [isReactionPickerVisible, setIsReactionPickerVisible] = useState(false);
   const insets = useSafeAreaInsets(); // Get safe area insets
-  const [ready, setReady] = useState(true);
+  const [ready, setReady] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const task = InteractionManager.runAfterInteractions(() => {
+        setReady(true);
+      });
+      return () => task.cancel();
+    }, [])
+  );
 
   const handleOpenComments = (postId: string) => {
     router.push(`/post/${postId}`);

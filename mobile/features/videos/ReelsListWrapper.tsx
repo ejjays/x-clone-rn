@@ -12,44 +12,39 @@ type Props = {
 	initialIndex?: number;
 };
 
+
+
 export default function ReelsListWrapper({ data, height, width, renderItem, onIndexChange, initialIndex = 0 }: Props) {
-	// Disabled dynamic import to avoid duplicate RNGestureHandler registrations.
-	// Library integration can be enabled once deduped and tested.
-	const ReelsList: any = null;
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const handleIndex = useCallback((index: number) => {
+    setActiveIndex(index);
+    onIndexChange?.(index);
+  }, [onIndexChange]);
 
-	const [activeIndex, setActiveIndex] = useState(initialIndex);
-	const handleIndex = useCallback((index: number) => {
-		setActiveIndex(index);
-		onIndexChange?.(index);
-	}, [onIndexChange]);
+  const pagerViewRef = useRef<PagerView>(null);
 
-	if (ReelsList) {
-		return (
-			<View style={{ flex: 1 }}>
-				<ReelsList
-					data={data}
-					onChangeIndex={handleIndex}
-					renderItem={({ item, index }: any) => renderItem({ item, index, isActive: index === activeIndex })}
-					containerHeight={height}
-				/>
-			</View>
-		);
-	}
+  // Ensure initialIndex is applied to PagerView
+  useRef(() => {
+    if (initialIndex !== 0) {
+      pagerViewRef.current?.setPageWithoutAnimation(initialIndex);
+    }
+  }, [initialIndex]);
 
-	// Fallback: robust pager implementation
-	return (
-		<PagerView
-			style={{ flex: 1, width }}
-			initialPage={initialIndex}
-			orientation="vertical"
-			onPageSelected={(e) => handleIndex(e.nativeEvent.position)}
-			overScrollMode="never"
-		>
-			{data.map((item, index) => (
-				<View key={item._id} style={{ width, height }}>
-					{renderItem({ item, index, isActive: index === activeIndex })}
-				</View>
-			))}
-		</PagerView>
-	);
+  return (
+    <View style={{ flex: 1, height, width }}>
+      <PagerView
+        ref={pagerViewRef}
+        style={{ flex: 1 }}
+        initialPage={initialIndex}
+        orientation="vertical"
+        onPageSelected={(e) => handleIndex(e.nativeEvent.position)}
+      >
+        {data.map((item, index) => (
+          <View key={item._id} style={{ height, width }}>
+            {renderItem({ item, index, isActive: index === activeIndex })}
+          </View>
+        ))}
+      </PagerView>
+    </View>
+  );
 }

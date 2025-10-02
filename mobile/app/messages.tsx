@@ -9,6 +9,7 @@ import {
   Image,
   InteractionManager,
   StatusBar as ReactNativeStatusBar,
+  FlatList,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
@@ -38,7 +39,7 @@ export default function MessagesScreen() {
   const { currentUser } = useCurrentUser();
   const { colors } = useTheme();
   const [isRefetching, setIsRefetching] = useState(false);
-  const [justReturnedFromChat, setJustReturnedFromChat] = useState(false);
+
 
   const isDarkMode = true;
 
@@ -72,14 +73,7 @@ export default function MessagesScreen() {
         NavigationBar.setBackgroundColorAsync("black");
         ReactNativeStatusBar.setBackgroundColor("black", false);
       }
-      // Quick check if we're returning from a chat
-      const returnedFromChat = router.canGoBack();
-
-      if (returnedFromChat) {
-        setJustReturnedFromChat(true);
-        // Clear the flag after a short delay
-        setTimeout(() => setJustReturnedFromChat(false), 300);
-      }
+      refreshChannels();
 
       return () => {
         if (Platform.OS === "android") {
@@ -87,7 +81,7 @@ export default function MessagesScreen() {
           ReactNativeStatusBar.setBackgroundColor(colors.background, false);
         }
       };
-    }, [colors.background])
+    }, [colors.background, refreshChannels])
   );
 
   const renderContent = useCallback(() => {
@@ -143,23 +137,21 @@ export default function MessagesScreen() {
               </Text>
             </View>
           ) : (
-            <ScrollView
+            <FlatList
+              data={realUsers}
               horizontal
               showsHorizontalScrollIndicator={false}
               className="px-4"
-              removeClippedSubviews={true}
-              scrollEventThrottle={32}
-            >
-              {realUsers.map((user: any) => (
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
                 <TouchableOpacity
-                  key={user._id}
                   className="items-center mr-4"
-                  onPress={() => handleUserPress(user)}
+                  onPress={() => handleUserPress(item)}
                   activeOpacity={0.7}
                 >
-                  {user.profilePicture ? (
+                  {item.profilePicture ? (
                     <Image
-                      source={{ uri: user.profilePicture }}
+                      source={{ uri: item.profilePicture }}
                       className="rounded-full border-2"
                       style={{
                         width: 68,
@@ -183,7 +175,7 @@ export default function MessagesScreen() {
                         className="font-semibold text-lg"
                         style={{ color: colors.textSecondary }}
                       >
-                        {getInitials(user.firstName, user.lastName)}
+                        {getInitials(item.firstName, item.lastName)}
                       </Text>
                     </View>
                   )}
@@ -192,32 +184,15 @@ export default function MessagesScreen() {
                     numberOfLines={1}
                     style={{ color: colors.textSecondary }}
                   >
-                    {user.firstName}
+                    {item.firstName}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
+              )}
+            />
           )}
         </View>
       </>
     );
-
-    if (justReturnedFromChat && channels.length > 0) {
-      return (
-        <CustomChannelList
-          onRefresh={() => {
-            InteractionManager.runAfterInteractions(() => {
-              refreshChannels();
-            });
-          }}
-          searchQuery={searchQuery}
-          isDarkMode={isDarkMode}
-          refreshControlColor={colors.refreshControlColor}
-          refreshControlBackgroundColor={colors.refreshControlBackgroundColor}
-          ListHeaderComponent={MessagesListHeader}
-        />
-      );
-    }
 
     if (isConnecting && !client) {
       return (
@@ -295,7 +270,6 @@ export default function MessagesScreen() {
     refreshChannels,
     searchQuery,
     isDarkMode,
-    justReturnedFromChat,
     channels.length,
     usersLoading,
     realUsers,

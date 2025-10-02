@@ -8,6 +8,7 @@ import {
   View,
   Platform,
   Dimensions,
+  InteractionManager,
 } from "react-native";
 import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
 import Animated, {
@@ -189,15 +190,12 @@ const TabsInner = () => {
           screenOptions={{
             tabBarPosition: "top",
             tabBarShowLabel: false,
-            lazy: false,
-            // Preload all tabs for instant switching
-            lazyPreloadDistance: 4,
+            lazy: true,
             animationEnabled: false,
             swipeEnabled: false,
             tabBarStyle: { elevation: 0 },
           }}
-          tabBar={(props) =>
-            pathname === "/videos" ? null : (
+          tabBar={(props) => (
               <Animated.View style={tabBarAnimatedStyle}>
                 <TopIconBar
                   navigation={props.navigation}
@@ -237,19 +235,8 @@ const TopIconBar = memo(function TopIconBar({
   screenWidth,
 }: any) {
   const ROUTES = ["/", "/search", "/videos", "/notifications", "/menu"];
-  const TAB_KEYS = ["index", "search", "videos", "notifications", "menu"];
   const activeIndex = ROUTES.indexOf(pathname);
-  const goIndex = useCallback(() => navigation.jumpTo("index"), [navigation]);
-  const goSearch = useCallback(() => navigation.jumpTo("search"), [navigation]);
-  const goVideos = useCallback(() => navigation.jumpTo("videos"), [navigation]);
-  const goNotifications = useCallback(
-    () => navigation.jumpTo("notifications"),
-    [navigation]
-  );
-  const goProfile = useCallback(
-    () => navigation.jumpTo("menu"),
-    [navigation]
-  );
+
   return (
     <View
       className="border-b"
@@ -261,17 +248,15 @@ const TopIconBar = memo(function TopIconBar({
       >
         <TouchableOpacity
           className="flex-1 items-center justify-center h-full"
-          onPressIn={() => navigation.jumpTo("index")}
+          onPress={() => navigation.jumpTo("index")}
           activeOpacity={1}
-          delayPressIn={0}
         >
           <Home size={26} color={pathname === "/" ? colors.blue : "white"} />
         </TouchableOpacity>
         <TouchableOpacity
           className="flex-1 items-center justify-center h-full"
-          onPressIn={() => navigation.jumpTo("search")}
+          onPress={() => navigation.jumpTo("search")}
           activeOpacity={1}
-          delayPressIn={0}
         >
           <PeopleIcon
             size={27}
@@ -280,9 +265,8 @@ const TopIconBar = memo(function TopIconBar({
         </TouchableOpacity>
         <TouchableOpacity
           className="flex-1 items-center justify-center h-full"
-          onPressIn={() => navigation.jumpTo("videos")}
+          onPress={() => navigation.jumpTo("videos")}
           activeOpacity={1}
-          delayPressIn={0}
         >
           <TvMinimalPlay
             size={26}
@@ -291,9 +275,8 @@ const TopIconBar = memo(function TopIconBar({
         </TouchableOpacity>
         <TouchableOpacity
           className="flex-1 items-center justify-center h-full"
-          onPressIn={() => navigation.jumpTo("notifications")}
+          onPress={() => navigation.jumpTo("notifications")}
           activeOpacity={1}
-          delayPressIn={0}
         >
           <Bell
             size={26}
@@ -302,9 +285,8 @@ const TopIconBar = memo(function TopIconBar({
         </TouchableOpacity>
         <TouchableOpacity
           className="flex-1 items-center justify-center h-full"
-          onPressIn={() => navigation.jumpTo("menu")}
+          onPress={() => navigation.jumpTo("menu")}
           activeOpacity={1}
-          delayPressIn={0}
         >
           <Menu
             size={26}

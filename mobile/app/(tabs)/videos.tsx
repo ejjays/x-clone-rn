@@ -17,6 +17,7 @@ import {
   RefreshControl,
   useWindowDimensions,
   Animated,
+  InteractionManager,
 } from "react-native";
 import {
   useIsFocused,
@@ -24,7 +25,7 @@ import {
   useFocusEffect,
 } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI from "expo-system-ui";
 import * as NavigationBar from "expo-navigation-bar";
@@ -125,49 +126,15 @@ export default function VideosScreen() {
   const [ready, setReady] = useState(false);
   useFocusEffect(
     useCallback(() => {
-      // Make screen ready immediately
-      setReady(true);
-      try {
-        RNStatusBar.setHidden(false);
-        if (Platform.OS === 'android') {
-          RNStatusBar.setBackgroundColor('#000000', true);
-          RNStatusBar.setBarStyle('light-content');
-          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
-          NavigationBar.setButtonStyleAsync('light').catch(() => {});
-          SystemUI.setBackgroundColorAsync('#000000');
-          NavigationBar.setVisibilityAsync('visible').catch(() => {});
-        }
-        // Set statusBarReady after status bar changes are applied
-        setTimeout(() => {
-          setStatusBarReady(true);
-          Animated.timing(headerOpacity, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }).start();
-        }, 50);
-      } catch {}   
+      const task = InteractionManager.runAfterInteractions(() => {
+        setReady(true);
+      });
+
       return () => {
+        task.cancel();
         setReady(false);
-        setStatusBarReady(false);
-        Animated.timing(headerOpacity, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-        try {
-          RNStatusBar.setHidden(false);
-          if (Platform.OS === 'android') {
-            // Revert to theme colors when leaving videos screen
-            RNStatusBar.setBackgroundColor(colors.background, true);
-            RNStatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
-            SystemUI.setBackgroundColorAsync(colors.background);
-            NavigationBar.setBackgroundColorAsync(colors.background).catch(() => {});
-            NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
-          }
-        } catch {}
       };
-    }, [colors.background, isDarkMode])
+    }, [])
   );
 
   const renderItem = useCallback(
@@ -233,7 +200,7 @@ export default function VideosScreen() {
           ]}
         >
             <TouchableOpacity
-              onPress={() => navigation.navigate("index")}
+              onPress={() => router.back()}
               style={{ marginRight: 8 }}
             >
               <Ionicons
@@ -268,7 +235,7 @@ export default function VideosScreen() {
         ]}
       >
         <TouchableOpacity
-          onPress={() => navigation.navigate("index")}
+          onPress={() => router.back()}
           style={{ marginRight: 0 }}
           delayPressIn={0}
           activeOpacity={1}

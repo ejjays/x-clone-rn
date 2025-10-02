@@ -3,11 +3,12 @@ import { useAllUsers } from "@/hooks/useAllUsers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { User } from "@/types";
 import { Search, Users, X } from "lucide-react-native";
-import React, { useState, memo } from "react";
-import { View, TextInput, FlatList, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform, StyleSheet, Dimensions } from "react-native";
+import React, { useState, memo, useCallback, useMemo } from "react";
+import { View, TextInput, FlatList, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Platform, StyleSheet, Dimensions, InteractionManager } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
 import LottieView from "lottie-react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get('window');
 
@@ -18,26 +19,39 @@ const SearchScreen = () => {
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const [ready, setReady] = useState(false);
 
-  // Filter users based on search text and exclude current user
-  const filteredUsers = users.filter((user: User) => {
-    if (currentUser && user._id === currentUser._id) return false;
-
-    if (!searchText.trim()) return true;
-
-    const searchLower = searchText.toLowerCase();
-    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-    const username = user.username.toLowerCase();
-
-    return fullName.includes(searchLower) || username.includes(searchLower);
-  });
-
-  const suggestionsUsers = filteredUsers.filter(
-    (user: User) => !currentUser?.following.includes(user._id)
+  useFocusEffect(
+    useCallback(() => {
+      const task = InteractionManager.runAfterInteractions(() => {
+        setReady(true);
+      });
+      return () => task.cancel();
+    }, [])
   );
-  const yourFriendsUsers = filteredUsers.filter((user: User) =>
-    currentUser?.following.includes(user._id)
-  );
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((user: User) => {
+      if (currentUser && user._id === currentUser._id) return false;
+      if (!searchText.trim()) return true;
+      const searchLower = searchText.toLowerCase();
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+      const username = user.username.toLowerCase();
+      return fullName.includes(searchLower) || username.includes(searchLower);
+    });
+  }, [users, searchText, currentUser]);
+
+  const suggestionsUsers = useMemo(() => {
+    return filteredUsers.filter(
+      (user: User) => !currentUser?.following.includes(user._id)
+    );
+  }, [filteredUsers, currentUser]);
+
+  const yourFriendsUsers = useMemo(() => {
+    return filteredUsers.filter((user: User) =>
+      currentUser?.following.includes(user._id)
+    );
+  }, [filteredUsers, currentUser]);
 
   const displayedUsers =
     activeTab === "suggestions" ? suggestionsUsers : yourFriendsUsers;
@@ -171,65 +185,74 @@ const SearchScreen = () => {
       className="flex-1"
       style={{ backgroundColor: colors.background, paddingTop: 50 }}
     >
-      {isLoading && !displayedUsers.length ? ( // Show loading indicator only when there are no users
-        <View
-          className="flex-1 items-center justify-center p-8"
-          style={{ backgroundColor: colors.background }}
-        >
-          <ActivityIndicator size="large" color={colors.blue} />
-          <Text className="mt-4" style={{ color: colors.textMuted }}>
-            Loading people...
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={displayedUsers}
-          keyExtractor={(u) => u._id}
-          renderItem={({ item }) => (
-            <UserCard user={item} onMessage={handleMessage} />
-          )}
-          ListHeaderComponent={renderHeader} // Use ListHeaderComponent
-          contentContainerStyle={{ paddingBottom: insets.bottom }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={refetch}
-              tintColor={colors.refreshControlColor}
-              colors={[colors.refreshControlColor]}
-              progressBackgroundColor={colors.refreshControlBackgroundColor}
-            />
-          }
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
+      {ready ? (
+        <>
+          {isLoading && !displayedUsers.length ? ( // Show loading indicator only when there are no users
             <View
               className="flex-1 items-center justify-center p-8"
-              style={{ minHeight: 400 }} 
+              style={{ backgroundColor: colors.background }}
             >
-              <View className="items-center">
-                <LottieView
-                  source={require("../../assets/animations/empty-follow.json")} 
-                  autoPlay
-                  loop
-                  style={{ width: width * 0.85, height: width * 0.85, marginBottom: -20 }}
-                />
-                <Text className="text-xl font-semibold mb-3" style={{ color: colors.text }}>
-                  {searchText
-                    ? "No people found"
-                    : activeTab === "suggestions"
-                    ? "No suggestions yet"
-                    : "You are not following anyone yet"}
-                </Text>
-                <Text className="text-center text-base leading-6 max-w-xs" style={{ color: colors.textMuted }}>
-                  {searchText
-                    ? `No results found for \'''${searchText}\'''`
-                    : activeTab === "suggestions"
-                    ? "Suggestions will appear here."
-                    : "People you follow will appear here."}
-                </Text>
-              </View>
+              <ActivityIndicator size="large" color={colors.blue} />
+              <Text className="mt-4" style={{ color: colors.textMuted }}>
+                Loading people...
+              </Text>
             </View>
-          }
-        />
+          ) : (
+            <FlatList
+              data={displayedUsers}
+              keyExtractor={(u) => u._id}
+              renderItem={({ item }) => (
+                <UserCard user={item} onMessage={handleMessage} />
+              )}
+              ListHeaderComponent={renderHeader} // Use ListHeaderComponent
+              contentContainerStyle={{ paddingBottom: insets.bottom }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isLoading}
+                  onRefresh={refetch}
+                  tintColor={colors.refreshControlColor}
+                  colors={[colors.refreshControlColor]}
+                  progressBackgroundColor={colors.refreshControlBackgroundColor}
+                />
+              }
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <View
+                  className="flex-1 items-center justify-center p-8"
+                  style={{ minHeight: 400 }}
+                >
+                  <View className="items-center">
+                    <LottieView
+                      source={require("../../assets/animations/empty-follow.json")}
+                      autoPlay
+                      loop
+                      style={{ width: width * 0.85, height: width * 0.85, marginBottom: -20 }}
+                    />
+                    <Text className="text-xl font-semibold mb-3" style={{ color: colors.text }}>
+                      {searchText
+                        ? "No people found"
+                        : activeTab === "suggestions"
+                        ? "No suggestions yet"
+                        : "You are not following anyone yet"}
+                    </Text>
+                    <Text className="text-center text-base leading-6 max-w-xs" style={{ color: colors.textMuted }}>
+                      {searchText
+                        ? `No results found for \'''${searchText}\'''`
+                        : activeTab === "suggestions"
+                        ? "Suggestions will appear here."
+                        : "People you follow will appear here."}
+                    </Text>
+                  </View>
+                </View>
+              }
+            />
+          )}
+        </>
+      ) : (
+        <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 50 }}>
+          {renderHeader()}
+          <ActivityIndicator size="large" color={colors.blue} />
+        </View>
       )}
     </View>
   );
