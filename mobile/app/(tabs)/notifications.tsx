@@ -85,43 +85,51 @@ const NotificationsScreen = () => {
     refetch().then(() => setRefreshing(false));
   }, []);
 
+  const isNotificationsEmpty = useMemo(() => {
+    return Object.values(groupedNotifications).every(group => group.length === 0);
+  }, [groupedNotifications]);
+
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background, paddingTop: 50 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 50 }}>
       <View className="px-4 pt-4">
         <Text className="text-3xl font-bold mb-2" style={{ color: colors.text }}>Notifications</Text>
       </View>
-      {/* Content (header removed per requirement) */}
-      {ready ? (
-        <SectionList
-          sections={[
-            { title: "New", data: groupedNotifications.new },
-            { title: "Today", data: groupedNotifications.today },
-            { title: "Yesterday", data: groupedNotifications.yesterday },
-            { title: "This Week", data: groupedNotifications.thisWeek },
-            { title: "Earlier", data: groupedNotifications.earlier },
-          ]}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <NotificationCard notification={item} onDelete={deleteNotification} />}
-          renderSectionHeader={({ section: { title, data } }) => (
-            data.length > 0 ? renderSectionHeader(title) : null
-          )}
-          contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={onRefresh} 
-              tintColor={colors.refreshControlColor} 
-              colors={[colors.refreshControlColor]} 
-              progressBackgroundColor={colors.refreshControlBackgroundColor} />
-          }
-          ListEmptyComponent={!isLoading ? <NoNotificationsFound /> : null}
-        />
-      ) : (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={colors.blue} />
-        </View>
-      )}
+      <View style={{ flex: 1, justifyContent: isNotificationsEmpty ? 'center' : 'flex-start' }}>
+        {ready ? (
+          isNotificationsEmpty && !isLoading ? (
+            <NoNotificationsFound />
+          ) : (
+            <SectionList
+              sections={[
+                { title: "New", data: groupedNotifications.new },
+                { title: "Today", data: groupedNotifications.today },
+                { title: "Yesterday", data: groupedNotifications.yesterday },
+                { title: "This Week", data: groupedNotifications.thisWeek },
+                { title: "Earlier", data: groupedNotifications.earlier },
+              ]}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => <NotificationCard notification={item} onDelete={deleteNotification} />}
+              renderSectionHeader={({ section: { title, data } }) => (
+                data.length > 0 ? renderSectionHeader(title) : null
+              )}
+              contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl 
+                  refreshing={refreshing} 
+                  onRefresh={onRefresh} 
+                  tintColor={colors.refreshControlColor} 
+                  colors={[colors.refreshControlColor]} 
+                  progressBackgroundColor={colors.refreshControlBackgroundColor} />
+              }
+            />
+          )
+        ) : (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={colors.blue} />
+          </View>
+        )}
+      </View>
     </View>
   )
 }

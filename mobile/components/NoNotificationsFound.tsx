@@ -26,7 +26,7 @@ const NoNotificationsFound = () => {
   return (
     <View
       className="flex-1 items-center justify-center px-12 mt-12"
-      style={{ minHeight: 400, backgroundColor: themeColors.background }}
+      style={{ minHeight: 200, backgroundColor: themeColors.background }}
     >
       <View className="items-center">
         {/* BIG Animated Lottie Bell - Main Highlight */}
