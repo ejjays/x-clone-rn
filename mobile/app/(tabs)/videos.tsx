@@ -148,8 +148,8 @@ export default function VideosScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.infoText}>Loading videos...</Text>
+      <View style={[styles.centered, { flex: 1, backgroundColor: "#242526" }]}>
+        <ActivityIndicator color="white" />
       </View>
     );
   }
@@ -167,7 +167,7 @@ export default function VideosScreen() {
 
   if (videoPosts.length === 0) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { flex: 1, backgroundColor: "#242526" }]}>
         <Animated.View
           style={[
             styles.header,
@@ -202,7 +202,7 @@ export default function VideosScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "black" }} onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}>
+    <View style={{ flex: 1, backgroundColor: "#242526" }} onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}>
       <Animated.View
         style={[
           styles.header,
@@ -245,12 +245,14 @@ export default function VideosScreen() {
         />
       )}
 
-      <CommentsBottomSheet
-        bottomSheetRef={commentsSheetRef}
-        onClose={handleCloseComments}
-        bottomOffset={tabBarHeight}
-        topOffset={50}
-      />
+      {ready && (
+        <CommentsBottomSheet
+          bottomSheetRef={commentsSheetRef}
+          onClose={handleCloseComments}
+          bottomOffset={tabBarHeight}
+          topOffset={50}
+        />
+      )}
     </View>
   );
 }

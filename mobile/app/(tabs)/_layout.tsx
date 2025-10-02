@@ -18,7 +18,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets, useSafeAreaFrame } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import * as NavigationBar from "expo-navigation-bar";
@@ -41,6 +41,7 @@ const TabsInner = () => {
   const [allowOfflineTabs, setAllowOfflineTabs] = useState<boolean>(false);
   const [checkedOffline, setCheckedOffline] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
+  const frame = useSafeAreaFrame();
   const pathname = usePathname();
   const screenWidth = Dimensions.get("window").width;
   const { colors, isDarkMode } = useTheme();
@@ -137,8 +138,8 @@ const TabsInner = () => {
     <View
       style={{
         flex: 1,
-        paddingTop: insets.top,
-        backgroundColor: isVideosScreen ? "black" : colors.background,
+        paddingTop: isVideosScreen ? frame.y : 0,
+        backgroundColor: isVideosScreen ? "#242526" : colors.background,
       }}
     >
       {isVideosScreen ? (
@@ -202,7 +203,25 @@ const TabsInner = () => {
             swipeEnabled: true,
             tabBarStyle: { elevation: 0 },
           }}
-          tabBar={(props) => (
+          tabBar={(props) => {
+            if (isVideosScreen) {
+              return (
+                <View
+                  style={{
+                    paddingTop: insets.top,
+                    backgroundColor: "#242526",
+                  }}
+                >
+                  <TopIconBar
+                    navigation={props.navigation}
+                    pathname={pathname}
+                    colors={colors}
+                    screenWidth={screenWidth}
+                  />
+                </View>
+              );
+            }
+            return (
               <Animated.View style={tabBarAnimatedStyle}>
                 <TopIconBar
                   navigation={props.navigation}
@@ -211,8 +230,8 @@ const TabsInner = () => {
                   screenWidth={screenWidth}
                 />
               </Animated.View>
-            )
-          }
+            );
+          }}
         >
           <MaterialTopTabs.Screen name="index" />
           <MaterialTopTabs.Screen name="search" />
@@ -247,7 +266,10 @@ const TopIconBar = memo(function TopIconBar({
   return (
     <View
       className="border-b"
-      style={{ backgroundColor: colors.background, borderColor: colors.border }}
+      style={{
+        backgroundColor: pathname === "/videos" ? "#242526" : colors.background,
+        borderColor: colors.border,
+      }}
     >
       <View
         className="flex-row justify-around items-center"

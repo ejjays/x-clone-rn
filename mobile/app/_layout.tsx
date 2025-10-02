@@ -186,9 +186,7 @@ const InitialLayout = () => {
                   headerShown: false,
                   animation: "slide_from_right",
                   contentStyle: {
-                    backgroundColor: pathname?.endsWith("/videos")
-                      ? "black"
-                      : colors.background,
+                    backgroundColor: colors.background,
                   },
                 }}
               >
@@ -247,9 +245,7 @@ const InitialLayout = () => {
               headerShown: false,
               animation: "slide_from_right",
               contentStyle: {
-                backgroundColor: pathname?.endsWith("/videos")
-                  ? "black"
-                  : colors.background,
+                backgroundColor: colors.background,
               },
             }}
           >
