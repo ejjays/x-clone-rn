@@ -17,7 +17,6 @@ import {
   RefreshControl,
   useWindowDimensions,
   Animated,
-  InteractionManager,
 } from "react-native";
 import {
   useIsFocused,
@@ -25,14 +24,17 @@ import {
   useFocusEffect,
 } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI from "expo-system-ui";
 import * as NavigationBar from "expo-navigation-bar";
+import BottomSheet from "@gorhom/bottom-sheet";
 
-
-
-
+import CommentsBottomSheet from "@/components/CommentsBottomSheet";
+import {
+  VideoCommentBar,
+  COMMENT_BAR_HEIGHT,
+} from "@/components/VideoCommentBar";
 import type { Post } from "@/types";
 // Remove expo-status-bar to use native StatusBar for precise Android control
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -64,7 +66,7 @@ export default function VideosScreen() {
   const initialVideoId = typeof params?.videoId === 'string' ? params.videoId : undefined;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isRefetching, setIsRefetching] = useState(false);
-
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
   const navigation = useNavigation();
@@ -91,11 +93,12 @@ export default function VideosScreen() {
     if (index >= 0) setActiveIndex(index);
   }, [initialVideoId, videoPosts.length]);
 
-
+  const handleOpenComments = () => bottomSheetRef.current?.snapToIndex(0);
+  const handleCloseComments = () => bottomSheetRef.current?.close();
 
   // Each item should be the screen height minus the comment bar area.
   // The header is absolutely positioned and should not reduce item height.
-  const itemHeight = height - (Math.max(0, insets.bottom));
+  const itemHeight = height - (COMMENT_BAR_HEIGHT + Math.max(0, insets.bottom));
 
   useEffect(() => {
     // Ensure the sheet is closed whenever this screen mounts or loses focus
@@ -122,15 +125,49 @@ export default function VideosScreen() {
   const [ready, setReady] = useState(false);
   useFocusEffect(
     useCallback(() => {
-      const task = InteractionManager.runAfterInteractions(() => {
-        setReady(true);
-      });
-
+      // Make screen ready immediately
+      setReady(true);
+      try {
+        RNStatusBar.setHidden(false);
+        if (Platform.OS === 'android') {
+          RNStatusBar.setBackgroundColor('#000000', true);
+          RNStatusBar.setBarStyle('light-content');
+          NavigationBar.setBackgroundColorAsync('#000000').catch(() => {});
+          NavigationBar.setButtonStyleAsync('light').catch(() => {});
+          SystemUI.setBackgroundColorAsync('#000000');
+          NavigationBar.setVisibilityAsync('visible').catch(() => {});
+        }
+        // Set statusBarReady after status bar changes are applied
+        setTimeout(() => {
+          setStatusBarReady(true);
+          Animated.timing(headerOpacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }, 50);
+      } catch {}   
       return () => {
-        task.cancel();
         setReady(false);
+        setStatusBarReady(false);
+        Animated.timing(headerOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+        try {
+          RNStatusBar.setHidden(false);
+          if (Platform.OS === 'android') {
+            // Revert to theme colors when leaving videos screen
+            RNStatusBar.setBackgroundColor(colors.background, true);
+            RNStatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
+            SystemUI.setBackgroundColorAsync(colors.background);
+            NavigationBar.setBackgroundColorAsync(colors.background).catch(() => {});
+            NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark').catch(() => {});
+          }
+        } catch {}
       };
-    }, [])
+    }, [colors.background, isDarkMode])
   );
 
   const renderItem = useCallback(
@@ -147,8 +184,10 @@ export default function VideosScreen() {
         item={item}
         isVisible={isActive && isFocused}
         isScreenFocused={isFocused}
+        onCommentPress={handleOpenComments}
         insets={insets}
         bottomSafeOffset={bottomSafeOffset}
+        commentBarHeight={COMMENT_BAR_HEIGHT}
         width={width}
         height={itemHeight}
       />
@@ -158,7 +197,8 @@ export default function VideosScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color="#FFF" />
         <Text style={styles.infoText}>Loading videos...</Text>
       </View>
     );
@@ -166,7 +206,7 @@ export default function VideosScreen() {
 
   if (error) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
         <Text style={styles.infoText}>Could not load videos.</Text>
         <TouchableOpacity onPress={refetch}>
           <Text style={[styles.infoText, { color: "#1877F2" }]}>Retry</Text>
@@ -183,7 +223,7 @@ export default function VideosScreen() {
             styles.header,
             {
               position: "absolute",
-              top: 0,
+              top: insets.top,
               flexDirection: "row",
               paddingHorizontal: 16,
               paddingVertical: 8,
@@ -193,7 +233,7 @@ export default function VideosScreen() {
           ]}
         >
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => navigation.navigate("index")}
               style={{ marginRight: 8 }}
             >
               <Ionicons
@@ -218,7 +258,7 @@ export default function VideosScreen() {
           styles.header,
           {
             position: "absolute",
-            top: 0,
+            top: insets.top,
             flexDirection: "row",
             paddingHorizontal: 16,
             paddingVertical: 8,
@@ -228,7 +268,7 @@ export default function VideosScreen() {
         ]}
       >
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => navigation.navigate("index")}
           style={{ marginRight: 0 }}
           delayPressIn={0}
           activeOpacity={1}
@@ -255,9 +295,15 @@ export default function VideosScreen() {
         />
       )}
 
-      {/* <VideoCommentBar onCommentPress={handleOpenComments} /> */}
+      <VideoCommentBar onCommentPress={handleOpenComments} />
 
-
+      {ready && (
+        <CommentsBottomSheet
+          bottomSheetRef={bottomSheetRef}
+          onClose={handleCloseComments}
+          bottomOffset={COMMENT_BAR_HEIGHT + tabBarHeight}
+        />
+      )}
     </View>
   );
 }

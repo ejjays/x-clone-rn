@@ -42,10 +42,8 @@ type VideoItemProps = {
   item: Post;
   isVisible: boolean;
   isScreenFocused: boolean;
-  onCommentPress: () => void;
   insets: EdgeInsets;
   bottomSafeOffset: number;
-  commentBarHeight: number;
   width: number;
   height: number;
 };
@@ -54,10 +52,8 @@ export default function VideoItem({
   item,
   isVisible,
   isScreenFocused,
-  onCommentPress,
   insets,
   bottomSafeOffset,
-  commentBarHeight,
   width,
   height,
 }: VideoItemProps) {
@@ -290,7 +286,7 @@ export default function VideoItem({
               top: 10,
               left: insets.left + 15,
               right: insets.right + 15,
-              bottom: commentBarHeight + Math.max(0, insets.bottom),
+              bottom: Math.max(0, insets.bottom),
               // paddingTop: 10,
               // paddingLeft: insets.left + 15,
               // paddingRight: insets.right + 15,
@@ -364,20 +360,7 @@ export default function VideoItem({
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.iconContainer}
-              onPress={onCommentPress}
-            >
-              <FontAwesome5
-                name="comment"
-                size={30}
-                color="white"
-                style={styles.iconShadow}
-              />
-              <Text style={styles.iconText}>
-                {formatNumber(item.comments.length)}
-              </Text>
-            </TouchableOpacity>
+
 
             <TouchableOpacity
               style={styles.iconContainer}

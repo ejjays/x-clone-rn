@@ -130,7 +130,7 @@ const TabsInner = () => {
     <View
       style={{
         flex: 1,
-        paddingTop: isVideosScreen ? 0 : insets.top,
+        paddingTop: insets.top,
         backgroundColor: isVideosScreen ? "black" : colors.background,
       }}
     >
