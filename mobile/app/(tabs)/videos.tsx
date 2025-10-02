@@ -29,12 +29,15 @@ import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI from "expo-system-ui";
 import * as NavigationBar from "expo-navigation-bar";
+import BottomSheet from "@gorhom/bottom-sheet";
+import CommentsBottomSheet from "@/components/CommentsBottomSheet";
 
 
 
 
 import type { Post } from "@/types";
 // Remove expo-status-bar to use native StatusBar for precise Android control
+import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useTheme } from "@/context/ThemeContext";
 import VideoItem from "@/features/videos/components/VideoItem";
@@ -64,60 +67,46 @@ export default function VideosScreen() {
   const initialVideoId = typeof params?.videoId === 'string' ? params.videoId : undefined;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isRefetching, setIsRefetching] = useState(false);
+  const [containerHeight, setContainerHeight] = useState(0);
+  const commentsSheetRef = useRef<BottomSheet>(null);
+
+  const handleOpenComments = () => {
+    commentsSheetRef.current?.expand();
+  };
+
+  const handleCloseComments = () => {
+    commentsSheetRef.current?.close();
+  };
 
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
   const navigation = useNavigation();
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const { colors, isDarkMode } = useTheme(); // Use useTheme hook
-  const [statusBarReady, setStatusBarReady] = useState(false);
   const headerOpacity = useRef(new Animated.Value(0)).current;
 
-  // Removed useVideosStatusBar to avoid overriding StatusBar with translucent/transparent
-
   const tabBarHeight = useOptionalTabBarHeight();
-  // This bottomSafeOffset is used for the FlatList content padding and VideoItem height adjustment.
-  // For the CommentsBottomSheet, we will only pass the tabBarHeight to avoid double counting insets.bottom.
   const bottomSafeOffset = Math.max(0, insets.bottom) + tabBarHeight;
-
-  // Using fixed COMMENT_BAR_HEIGHT for consistent sizing
 
   const videoPosts = useMemo(() => posts.filter((p) => p.video?.trim()), [posts]);
 
-  // Jump to tapped video when coming from ReelsStrip
+  useEffect(() => {
+    if (!isFocused) {
+      handleCloseComments();
+    }
+  }, [isFocused]);
+
   useEffect(() => {
     if (!initialVideoId || videoPosts.length === 0) return;
     const index = videoPosts.findIndex((p) => p._id === initialVideoId);
     if (index >= 0) setActiveIndex(index);
   }, [initialVideoId, videoPosts.length]);
 
-
-
-  // Each item should be the screen height minus the comment bar area.
-  // The header is absolutely positioned and should not reduce item height.
-  const itemHeight = height - (Math.max(0, insets.bottom));
-
-  useEffect(() => {
-    // Ensure the sheet is closed whenever this screen mounts or loses focus
-    if (!isFocused) {
-      handleCloseComments();
-    }
-  }, [isFocused]);
-
   const handlePullToRefresh = async () => {
     setIsRefetching(true);
     await refetch();
     setIsRefetching(false);
   };
-
-  const handleMomentumEnd = useCallback(
-    (e) => {
-      const y = e.nativeEvent.contentOffset?.y ?? 0;
-      const index = Math.max(0, Math.round(y / itemHeight));
-      setActiveIndex(index);
-    },
-    [itemHeight]
-  );
 
   const [ready, setReady] = useState(false);
   useFocusEffect(
@@ -150,10 +139,11 @@ export default function VideosScreen() {
         insets={insets}
         bottomSafeOffset={bottomSafeOffset}
         width={width}
-        height={itemHeight}
+        height={containerHeight}
+        onCommentPress={handleOpenComments}
       />
     ),
-    [isFocused, insets, bottomSafeOffset, width, itemHeight]
+    [isFocused, insets, bottomSafeOffset, width, containerHeight]
   );
 
   if (isLoading) {
@@ -212,7 +202,7 @@ export default function VideosScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "black" }}>
+    <View style={{ flex: 1, backgroundColor: "black" }} onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}>
       <Animated.View
         style={[
           styles.header,
@@ -244,10 +234,10 @@ export default function VideosScreen() {
         <Text style={styles.headerTitle}>Reels</Text>
       </Animated.View>
 
-      {ready && (
+      {ready && containerHeight > 0 && (
         <ReelsListWrapper
           data={videoPosts}
-          height={itemHeight}
+          height={containerHeight}
           width={width}
           onIndexChange={setActiveIndex}
           renderItem={renderItem as any}
@@ -255,9 +245,12 @@ export default function VideosScreen() {
         />
       )}
 
-      {/* <VideoCommentBar onCommentPress={handleOpenComments} /> */}
-
-
+      <CommentsBottomSheet
+        bottomSheetRef={commentsSheetRef}
+        onClose={handleCloseComments}
+        bottomOffset={tabBarHeight}
+        topOffset={50}
+      />
     </View>
   );
 }

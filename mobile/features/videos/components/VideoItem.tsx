@@ -46,6 +46,7 @@ type VideoItemProps = {
   bottomSafeOffset: number;
   width: number;
   height: number;
+  onCommentPress: () => void;
 };
 
 export default function VideoItem({
@@ -56,6 +57,7 @@ export default function VideoItem({
   bottomSafeOffset,
   width,
   height,
+  onCommentPress,
 }: VideoItemProps) {
   const videoRef = useRef<Video | null>(null);
   const likeButtonRef = useRef<TouchableOpacity>(null);
@@ -286,11 +288,11 @@ export default function VideoItem({
               top: 10,
               left: insets.left + 15,
               right: insets.right + 15,
-              bottom: Math.max(0, insets.bottom),
+              bottom: bottomSafeOffset,
               // paddingTop: 10,
               // paddingLeft: insets.left + 15,
               // paddingRight: insets.right + 15,
-              // paddingBottom: item.videoFit === 'cover' ? commentBarHeight + Math.max(0, insets.bottom) + insets.top : commentBarHeight + Math.max(0, insets.bottom),
+              // paddingBottom: item.videoFit === \'cover\' ? commentBarHeight + Math.max(0, insets.bottom) + insets.top : commentBarHeight + Math.max(0, insets.bottom),
             },
           ]}
         >
@@ -357,6 +359,21 @@ export default function VideoItem({
               </Animated.View>
               <Text style={styles.iconText}>
                 {formatNumber(item.reactions.length)}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.iconContainer}
+              onPress={onCommentPress}
+            >
+              <FontAwesome5
+                name="comment"
+                size={28}
+                color="white"
+                style={styles.iconShadow}
+              />
+              <Text style={styles.iconText}>
+                {formatNumber(item.commentCount || 0)}
               </Text>
             </TouchableOpacity>
 

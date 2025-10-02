@@ -53,19 +53,21 @@ interface CommentsBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheet>;
   onClose: () => void;
   bottomOffset: number;
+  topOffset: number;
 }
 
 const CommentsBottomSheet = ({
   bottomSheetRef,
   onClose,
   bottomOffset,
+  topOffset,
 }: CommentsBottomSheetProps) => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { height: screenHeight } = Dimensions.get("window");
 
   const totalBottomOffset = bottomOffset + insets.bottom;
-  const availableHeight = screenHeight - insets.top - totalBottomOffset;
+  const availableHeight = screenHeight - insets.top - totalBottomOffset - topOffset;
 
   const snapPoints = useMemo(() => [availableHeight * 0.9], [availableHeight]);
 

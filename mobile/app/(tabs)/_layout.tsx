@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
 import { Redirect, router, withLayoutContext, usePathname } from "expo-router";
-import React, { useEffect, memo, useMemo, useCallback, useState } from "react";
+import React, { useEffect, memo, useMemo, useCallback, useState, useRef } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -15,6 +15,7 @@ import Animated, {
   useAnimatedStyle,
   interpolate,
   Extrapolate,
+  useSharedValue,
 } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,6 +47,10 @@ const TabsInner = () => {
   const { scrollY, headerTranslateY } = useScroll();
 
   const isHomeScreen = pathname === "/";
+  const isHomeScreenSV = useSharedValue(isHomeScreen);
+  useEffect(() => {
+    isHomeScreenSV.value = isHomeScreen;
+  }, [isHomeScreen]);
   const isVideosScreen = pathname === "/videos";
   const isProfileScreen = pathname === "/menu";
   const isTabsRoute = [
@@ -73,9 +78,10 @@ const TabsInner = () => {
   );
 
   const headerAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = isHomeScreenSV.value ? headerTranslateY.value : 0;
     return {
-      transform: [{ translateY: headerTranslateY.value }],
-      height: isHomeScreen ? HEADER_HEIGHT : 0,
+      transform: [{ translateY }],
+      height: isHomeScreenSV.value ? HEADER_HEIGHT : 0,
       overflow: "hidden",
       position: "absolute",
       top: 0,
@@ -86,10 +92,11 @@ const TabsInner = () => {
   });
 
   const tabBarAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = isHomeScreenSV.value ? headerTranslateY.value : 0;
     return {
-      transform: [{ translateY: headerTranslateY.value }],
+      transform: [{ translateY }],
       position: "absolute",
-      top: isHomeScreen ? HEADER_HEIGHT : 0,
+      top: isHomeScreenSV.value ? HEADER_HEIGHT : 0,
       left: 0,
       right: 0,
       zIndex: 1,
