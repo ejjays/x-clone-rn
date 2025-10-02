@@ -191,8 +191,8 @@ const TabsInner = () => {
             tabBarPosition: "top",
             tabBarShowLabel: false,
             lazy: true,
-            animationEnabled: false,
-            swipeEnabled: false,
+            animationEnabled: true,
+            swipeEnabled: true,
             tabBarStyle: { elevation: 0 },
           }}
           tabBar={(props) => (
