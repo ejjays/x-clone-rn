@@ -151,7 +151,7 @@ export default function EmailLoginScreen() {
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter at least 6 characters"
+                  placeholder="Enter password"
                   placeholderTextColor="#828282"
                   secureTextEntry={!showPassword}
                   value={password}

@@ -10,7 +10,7 @@ import {
   Dimensions,
   InteractionManager,
 } from "react-native";
-import { useFonts, Lato_700Bold } from "@expo-google-fonts/lato";
+import { useFonts, Lato_700Bold, Poppins_600SemiBold } from "@expo-google-fonts/lato";
 import Animated, {
   useAnimatedStyle,
   interpolate,
@@ -169,7 +169,7 @@ const TabsInner = () => {
             className="text-4xl ml-1"
             style={{
               color: "white",
-              fontFamily: fontsLoaded ? "Lato_700Bold" : undefined,
+              fontFamily: fontsLoaded ? "Poppins_600SemiBold" : undefined,
               fontWeight: fontsLoaded ? "normal" : "bold",
             }}
           >
@@ -198,7 +198,7 @@ const TabsInner = () => {
           screenOptions={{
             tabBarPosition: "top",
             tabBarShowLabel: false,
-            lazy: true,
+            lazy: false,
             animationEnabled: true,
             swipeEnabled: true,
             tabBarStyle: { elevation: 0 },
