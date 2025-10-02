@@ -1,7 +1,14 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Bell, Home, Menu, Search, TvMinimalPlay } from "lucide-react-native";
 import { Redirect, router, withLayoutContext, usePathname } from "expo-router";
-import React, { useEffect, memo, useMemo, useCallback, useState, useRef } from "react";
+import React, {
+  useEffect,
+  memo,
+  useMemo,
+  useCallback,
+  useState,
+  useRef,
+} from "react";
 import {
   Text,
   TouchableOpacity,
@@ -10,7 +17,11 @@ import {
   Dimensions,
   InteractionManager,
 } from "react-native";
-import { useFonts, Lato_700Bold, Poppins_600SemiBold } from "@expo-google-fonts/lato";
+import {
+  useFonts,
+  Lato_700Bold,
+  Poppins_600SemiBold,
+} from "@expo-google-fonts/lato";
 import Animated, {
   useAnimatedStyle,
   interpolate,
@@ -18,7 +29,10 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import PeopleIcon from "@/assets/icons/PeopleIcon";
-import { useSafeAreaInsets, useSafeAreaFrame } from "react-native-safe-area-context";
+import {
+  useSafeAreaInsets,
+  useSafeAreaFrame,
+} from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import * as NavigationBar from "expo-navigation-bar";
