@@ -1,52 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
-  Image,
-  ScrollView,
   Platform,
   StyleSheet,
+  Image,
+  ScrollView,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as ImagePicker from "expo-image-picker";
 import { Stack, useRouter } from "expo-router";
 import { useTheme } from "@/context/ThemeContext";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import PressableScale from "@/constants/PressableScale"; // Import PressableScale
+import { useFonts, Poppins_600SemiBold, Poppins_400Regular } from '@expo-google-fonts/poppins';
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function EditProfile() {
   const { colors } = useTheme();
   const router = useRouter();
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const [username, setUsername] = useState("yANCHUI");
-  const [email, setEmail] = useState("yanchui@gmail.com");
-  const [phone, setPhone] = useState("+14987889999");
-  const [password, setPassword] = useState("evFTbyVVCd");
+  const { currentUser } = useCurrentUser();
 
-  async function pickImage() {
-    const permission =
-      Platform.OS === "ios"
-        ? await ImagePicker.requestMediaLibraryPermissionsAsync()
-        : { granted: true };
-    if (permission.granted) {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8,
-        allowsEditing: true,
-        aspect: [1, 1],
-      });
-      if (!result.canceled) {
-        setAvatar(result.assets[0].uri);
-      }
+  const [fontsLoaded] = useFonts({
+    Poppins_600SemiBold,
+    Poppins_400Regular,
+  });
+
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+
+  const [bio, setBio] = useState('');
+
+  useEffect(() => {
+    if (currentUser) {
+      setName(`${currentUser.firstName || ''} ${currentUser.lastName || ''}`);
+      setUsername(currentUser.username || '');
+      setBio(currentUser.bio || '');
     }
+  }, [currentUser]);
+
+  if (!fontsLoaded) {
+    return null; // Or a loading indicator
   }
 
-  function handleUpdate() {
-    console.log({ username, email, phone, password, avatar });
-    // Add your update logic here
-  }
+  const profilePictureUri = currentUser?.profilePicture ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      (currentUser?.firstName || "") +
+        " " +
+        (currentUser?.lastName || "")
+    )}&background=1877F2&color=fff&size=40`;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -56,143 +59,79 @@ export default function EditProfile() {
           animation: "fade",
         }}
       />
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        automaticallyAdjustKeyboardInsets
-      >
-        {/* Custom Header */}
-        <View style={[styles.headerBackground, { backgroundColor: "#ff897a" }]}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.headerIcon}
-            >
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Edit Profile</Text>
-            <TouchableOpacity
-              onPress={() => console.log("Share Profile")}
-              style={styles.headerIcon}
-            >
-              <Ionicons name="share-social" size={24} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <View
-            style={[styles.avatarContainer, { borderColor: colors.background }]}
+      {/* Custom Header */}
+      <View style={[styles.headerBackground, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.headerIcon}
           >
-            <PressableScale onPress={pickImage}>
-              {" "}
-              {/* Changed to PressableScale */}
-              <Image
-                source={
-                  avatar
-                    ? { uri: avatar }
-                    : require("../assets/images/default-avatar.png")
-                }
-                style={[
-                  styles.avatar,
-                  { borderColor: colors.background, borderWidth: 4 },
-                ]}
-              />
-            </PressableScale>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 16,
-                fontWeight: "500",
-                marginTop: 10,
-              }}
-              onPress={pickImage}
-            >
-              Change Picture
-            </Text>
-          </View>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Update Profile</Text>
+          <TouchableOpacity
+            onPress={() => {
+              // Handle update profile action here
+              console.log("Profile updated!");
+              router.back();
+            }}
+            style={styles.checkIcon}
+          >
+            <Ionicons name="checkmark" size={24} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollViewContent} keyboardShouldPersistTaps="handled">
+        {/* Profile Picture and Edit Icon */}
+        <View style={styles.profilePictureContainer}>
+          <Image
+            source={{ uri: profilePictureUri }}
+            style={styles.profilePicture}
+          />
+          <TouchableOpacity style={[styles.editIconContainer, { backgroundColor: colors.surface }]}>
+            <MaterialIcons name="edit" size={18} color={colors.text} />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.formContainer}>
-          <View style={{ marginBottom: 16 }}>
-            <Text style={{ color: colors.text, marginBottom: 4 }}>
-              Username
-            </Text>
-            <TextInput
-              value={username}
-              onChangeText={setUsername}
-              style={[
-                styles.input,
-                {
-                  borderColor: colors.border,
-                  color: colors.text,
-                  backgroundColor: colors.surface,
-                },
-              ]}
-            />
-          </View>
-
-          <View style={{ marginBottom: 16 }}>
-            <Text style={{ color: colors.text, marginBottom: 4 }}>
-              Email I’d
-            </Text>
-            <TextInput
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-              style={[
-                styles.input,
-                {
-                  borderColor: colors.border,
-                  color: colors.text,
-                  backgroundColor: colors.surface,
-                },
-              ]}
-            />
-          </View>
-
-          <View style={{ marginBottom: 16 }}>
-            <Text style={{ color: colors.text, marginBottom: 4 }}>
-              Phone Number
-            </Text>
-            <TextInput
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-              style={[
-                styles.input,
-                {
-                  borderColor: colors.border,
-                  color: colors.text,
-                  backgroundColor: colors.surface,
-                },
-              ]}
-            />
-          </View>
-
-          <View style={{ marginBottom: 16 }}>
-            <Text style={{ color: colors.text, marginBottom: 4 }}>
-              Password
-            </Text>
-            <TextInput
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              style={[
-                styles.input,
-                {
-                  borderColor: colors.border,
-                  color: colors.text,
-                  backgroundColor: colors.surface,
-                },
-              ]}
-            />
-          </View>
+        {/* Input Fields */}
+        <View style={styles.inputContainer}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Name</Text>
+          <TextInput
+            style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]} 
+            onChangeText={setName}
+            value={name}
+            placeholder={name}
+            placeholderTextColor={colors.textMuted}
+          />
         </View>
 
-        <PressableScale
-          onPress={handleUpdate}
-          style={[styles.updateButton, { backgroundColor: "#ff897a" }]}
-        >
-          <Text style={styles.updateButtonText}>Update</Text>
-        </PressableScale>
+        <View style={styles.inputContainer}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Username</Text>
+          <TextInput
+            style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]} 
+            onChangeText={setUsername}
+            value={username}
+            placeholder={username}
+            placeholderTextColor={colors.textMuted}
+          />
+        </View>
+
+
+
+        <View style={styles.inputContainer}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Bio</Text>
+          <TextInput
+            style={[styles.input, styles.multilineInput, { backgroundColor: colors.surface, color: colors.text }]} 
+            onChangeText={setBio}
+            value={bio}
+            placeholder={bio}
+            placeholderTextColor={colors.textMuted}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -200,62 +139,78 @@ export default function EditProfile() {
 
 const styles = StyleSheet.create({
   headerBackground: {
-    height: 180,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
     position: "relative",
     justifyContent: "flex-start",
     alignItems: "center",
-    paddingTop: 16,
+    paddingTop: 8,
   },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-between", 
     width: "100%",
     paddingHorizontal: 16,
-    marginTop: Platform.OS === "android" ? 16 : 0,
+    marginTop: Platform.OS === "android" ? 8 : 0,
   },
   headerIcon: {
     padding: 8,
   },
   headerTitle: {
-    color: "#fff",
     fontSize: 20,
-    fontWeight: "600",
+    fontFamily: "Poppins_600SemiBold",
   },
-  avatarContainer: {
-    position: "absolute",
-    bottom: -60,
+  checkIcon: {
+    padding: 8,
+  },
+  scrollViewContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  profilePictureContainer: {
     alignItems: "center",
+    marginTop: 20,
+    marginBottom: 30,
   },
-  avatar: {
+  profilePicture: {
     width: 120,
     height: 120,
     borderRadius: 60,
+    backgroundColor: "#cccccc",
   },
-  formContainer: {
-    marginTop: 80,
-    paddingHorizontal: 24,
-    flex: 1,
+  editIconContainer: {
+    position: "absolute",
+    bottom: 0,
+    right: "35%",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontFamily: "Poppins_600SemiBold",
+    marginBottom: 8,
   },
   input: {
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    height: 55,
-  },
-  updateButton: {
-    borderRadius: 9999,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginHorizontal: 24,
-    marginTop: 24,
-    marginBottom: 32,
-  },
-  updateButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600", // Changed back to semi-bold
+    height: 50,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+        fontFamily: "Poppins_400Regular",  },
+  multilineInput: {
+    height: 120, // Increased height for multiline input
+    paddingVertical: 10, // Add vertical padding for better multiline appearance
+    textAlignVertical: "top", // Ensures text starts from the top
   },
 });
