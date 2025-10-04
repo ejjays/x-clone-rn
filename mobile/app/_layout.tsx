@@ -36,6 +36,8 @@ import {
 import * as Notifications from "expo-notifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useOTAUpdates } from '@/hooks/useOTAUpdates';
+import { NotificationProvider, useNotification } from "@/context/NotificationContext";
+import CustomAlert from "@/components/CustomAlert";
 
 LogBox.ignoreLogs(["useInsertionEffect must not schedule updates"]);
 
@@ -51,6 +53,8 @@ const InitialLayout = () => {
   const pathname = usePathname();
   
   const { expoPushToken } = usePushNotifications();
+
+  const { message, okText, visible, hideNotification } = useNotification();
 
   const { isChecking, isDownloading, error } = useOTAUpdates();
   
@@ -297,7 +301,13 @@ const InitialLayout = () => {
             />
           </Stack>
         )}
-        <OfflineBanner queued={queued} />
+                <OfflineBanner queued={queued} />
+        <CustomAlert
+          visible={visible}
+          message={message}
+          okText={okText}
+          onOk={hideNotification}
+        />
       </View>
     </OverlayProvider>
   );
@@ -316,7 +326,9 @@ export default function RootLayout() {
         <ThemeProvider>
           <QueryClientProvider client={queryClient}>
             <StreamChatProvider>
-              <InitialLayout />
+              <NotificationProvider>
+                <InitialLayout />
+              </NotificationProvider>
             </StreamChatProvider>
           </QueryClientProvider>
         </ThemeProvider>

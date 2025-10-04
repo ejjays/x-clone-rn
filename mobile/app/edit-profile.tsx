@@ -8,9 +8,10 @@ import {
   Image,
   ScrollView,
   TextInput,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ConfirmationAlert from '@/components/ConfirmationAlert';
+import { useNotification } from '@/context/NotificationContext';
 import { Stack, useRouter } from "expo-router";
 import { useTheme } from "@/context/ThemeContext";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -27,6 +28,7 @@ export default function EditProfile() {
 
   const api = useApiClient();
   const queryClient = useQueryClient();
+  const { showNotification } = useNotification();
 
   const [fontsLoaded] = useFonts({
     Poppins_600SemiBold,
@@ -45,6 +47,11 @@ export default function EditProfile() {
     username: '',
     bio: ''
   });
+
+
+
+  // For ConfirmationAlert (back button confirmation)
+  const [confirmBackVisible, setConfirmBackVisible] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -77,6 +84,21 @@ export default function EditProfile() {
     setHasChanges(hasNameChange || hasUsernameChange || hasBioChange);
   };
 
+  const confirmDiscardChanges = () => {
+    setConfirmBackVisible(false);
+    router.back();
+  };
+
+  const handleBackPress = () => {
+    if (hasChanges) {
+      setConfirmBackVisible(true);
+    } else {
+      router.back();
+    }
+  };
+
+
+
   if (!fontsLoaded) {
     return null; // Or a loading indicator
   }
@@ -88,71 +110,82 @@ export default function EditProfile() {
         (currentUser?.lastName || "")
     )}&background=1877F2&color=fff&size=40`;
 
-  const saveProfile = async () => {
+  const saveProfile = () => {
     if (!hasChanges) {
-      Alert.alert('No Changes', 'You haven\'t made any changes to save.');
+      showNotification('You haven\'t made any changes to save.');
       return;
     }
 
     setIsLoading(true);
     
-    try {
-      // Parse name into first and last name
-      const nameParts = name.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      
-      // Prepare update data
-      const updateData = {
-        username: username.trim(),
-        bio: bio.trim(),
-        // Note: The backend expects these fields but may not update them
-        firstName,
-        lastName
-      };
-      
-      // Call the API
-      const response = await userApi.updateProfile(api, updateData);
-      
-      if (response.data) {
-        // Update the query cache with new data
-        queryClient.setQueryData(['authUser', currentUser?.clerkId], response.data);
+    // Parse name into first and last name
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
+    // Prepare update data
+    const updateData = {
+      username: username.trim(),
+      bio: bio.trim(),
+      firstName,
+      lastName
+    };
+
+    // OPTIMISTIC UPDATE - Update UI immediately
+    const optimisticUserData = {
+      ...currentUser,
+      username: updateData.username,
+      bio: updateData.bio,
+      firstName: updateData.firstName,
+      lastName: updateData.lastName
+    };
+
+    // Store current data for potential rollback
+    const rollbackData = { ...currentUser };
+
+    // Update the cache optimistically
+    queryClient.setQueryData(['authUser', currentUser?.clerkId], optimisticUserData);
+    
+    // Update original data to prevent "unsaved changes" state
+    const newOriginalData = {
+      name: name.trim(),
+      username: username.trim(),
+      bio: bio.trim()
+    };
+    setOriginalData(newOriginalData);
+    setHasChanges(false);
+
+    // Navigate immediately
+    router.back();
+
+    // Perform API call in the background
+    userApi.updateProfile(api, updateData)
+      .then(response => {
+        // Success
+        if (response.data) {
+          // Update with actual server response
+          queryClient.setQueryData(['authUser', currentUser?.clerkId], response.data);
+        }
+        // Show success notification on the previous screen
+        showNotification('Profile updated successfully!', 'Great!');
+      })
+      .catch(error => {
+        // Error
+        console.error('Error updating profile:', error);
         
-        // Update original data to new values
-        setOriginalData({
-          name: name.trim(),
-          username: username.trim(),
-          bio: bio.trim()
-        });
+        // REVERT OPTIMISTIC UPDATE
+        queryClient.setQueryData(['authUser', currentUser?.clerkId], rollbackData);
         
-        setHasChanges(false);
+        let errorMessage = 'Failed to update profile. Please try again.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
         
-        Alert.alert(
-          'Success',
-          'Profile updated successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.back()
-            }
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      
-      let errorMessage = 'Failed to update profile. Please try again.';
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      Alert.alert('Error', errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+        // Show error notification on the previous screen
+        showNotification(errorMessage, 'Try Again');
+      });
   };
 
   return (
@@ -167,20 +200,7 @@ export default function EditProfile() {
       <View style={[styles.headerBackground, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity
-            onPress={() => {
-              if (hasChanges) {
-                Alert.alert(
-                  'Unsaved Changes',
-                  'You have unsaved changes. Are you sure you want to go back?',
-                  [
-                    { text: 'Stay', style: 'cancel' },
-                    { text: 'Discard', onPress: () => router.back() }
-                  ]
-                );
-              } else {
-                router.back();
-              }
-            }}
+            onPress={handleBackPress}
             style={styles.headerIcon}
           >
             <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -266,6 +286,20 @@ export default function EditProfile() {
           />
         </View>
       </ScrollView>
+
+
+
+      {/* Confirmation Alert for Back Navigation */}
+      <ConfirmationAlert
+        visible={confirmBackVisible}
+        title="Unsaved Changes"
+        message="You have unsaved changes. Are you sure you want to go back?"
+        confirmText="Discard"
+        cancelText="Stay"
+        onConfirm={confirmDiscardChanges}
+        onCancel={() => setConfirmBackVisible(false)}
+        confirmTextColor="#FF3B30" // Red color for destructive action
+      />
     </SafeAreaView>
   );
 }
