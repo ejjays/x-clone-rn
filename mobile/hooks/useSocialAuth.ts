@@ -16,9 +16,10 @@ export const useSocialAuth = () => {
     // Configure Google Sign-In only for Android
     if (Platform.OS === 'android') {
       GoogleSignin.configure({
-        webClientId: 'YOUR_WEB_CLIENT_ID_HERE', // From Google Console Web Client
+        webClientId:
+          "1074160078106-si3mp85ntv0bq71jbrs54ha34nmspp2p.apps.googleusercontent.com",
         offlineAccess: true,
-        hostedDomain: '',
+        hostedDomain: "",
         forceCodeForRefreshToken: true,
       });
     }
