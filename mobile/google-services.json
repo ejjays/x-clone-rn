@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "622778462877",
-    "project_id": "pcmix-clone-rn",
-    "storage_bucket": "pcmix-clone-rn.firebasestorage.app"
+    "project_number": "1074160078106",
+    "project_id": "x-clone-rn-741e7",
+    "storage_bucket": "x-clone-rn-741e7.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:622778462877:android:6ba50b336541a61c481a74",
+        "mobilesdk_app_id": "1:1074160078106:android:9a757b1f52867be122b0a3",
         "android_client_info": {
           "package_name": "com.ejjays.mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1074160078106-82osfkct4geo15ebihvo6fqld538i99o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ejjays.mobile",
+            "certificate_hash": "9bac2e3283e7fc185126b46aaf8d69be25c54bd5"
+          }
+        },
+        {
+          "client_id": "1074160078106-bte6tsg529hv3sb0203d0h57hc6pim6h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyB3GCZqYMMusFv1F-ZskE3nqzl-dshTJcU"
+          "current_key": "AIzaSyCeIB30Bfoyn3R_rgwlBZowTxZJBfxlpss"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1074160078106-bte6tsg529hv3sb0203d0h57hc6pim6h.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1074160078106-0475tdjt0cd6ihb71p71jpigmov92mla.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ejjays.mobile"
+              }
+            }
+          ]
         }
       }
     }

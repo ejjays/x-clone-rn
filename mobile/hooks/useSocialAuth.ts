@@ -1,5 +1,8 @@
 import { useOAuth, useSignIn } from "@clerk/clerk-expo";
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { useState, useEffect } from "react";
 import { Alert, Platform } from "react-native";
 import * as WebBrowser from "expo-web-browser";
@@ -8,18 +11,23 @@ WebBrowser.maybeCompleteAuthSession();
 
 export const useSocialAuth = () => {
   const [isSocialAuthLoading, setIsSocialAuthLoading] = useState(false);
-  const { startOAuthFlow: googleOAuth } = useOAuth({ strategy: "oauth_google" });
-  const { startOAuthFlow: facebookOAuth } = useOAuth({ strategy: "oauth_facebook" });
+  const { startOAuthFlow: googleOAuth } = useOAuth({
+    strategy: "oauth_google",
+  });
+  const { startOAuthFlow: facebookOAuth } = useOAuth({
+    strategy: "oauth_facebook",
+  });
   const { startOAuthFlow: appleOAuth } = useOAuth({ strategy: "oauth_apple" });
   const { signIn, setActive } = useSignIn();
 
   useEffect(() => {
     // Configure Google Sign-In only for Android
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       GoogleSignin.configure({
-        webClientId: '1074160078106-si3mp85ntv0bq71jbrs54ha34nmspp2p.apps.googleusercontent.com',
+        webClientId:
+          "1074160078106-si3mp85ntv0bq71jbrs54ha34nmspp2p.apps.googleusercontent.com",
         offlineAccess: true,
-        hostedDomain: '',
+        hostedDomain: "",
         forceCodeForRefreshToken: true,
       });
     }
@@ -27,73 +35,55 @@ export const useSocialAuth = () => {
 
   const handleGoogleAuth = async () => {
     setIsSocialAuthLoading(true);
-    
+
     try {
-      // Use native Google Sign-In only on Android
-      if (Platform.OS === 'android') {
+      if (Platform.OS === "android") {
+        // Get native Google Sign-In for better UX
         await GoogleSignin.hasPlayServices();
         const userInfo = await GoogleSignin.signIn();
-        
-        console.log('Native Google Sign-In Success:', userInfo);
-        
-        // Use the Google ID token directly with Clerk
-        if (userInfo.data?.idToken) {
-          try {
-            const signInAttempt = await signIn!.create({
-              strategy: 'oauth_google',
-              redirectUrl: undefined,
-              actionCompleteRedirectUrl: undefined,
-              identifier: userInfo.data.idToken, // Fixed: userInfo.data.idToken instead of userInfo.idToken
-            });
 
-            if (signInAttempt.status === 'complete') {
-              await setActive!({ session: signInAttempt.createdSessionId });
-              return;
-            }
-          } catch (clerkError) {
-            console.log('Clerk direct token auth failed, trying OAuth flow:', clerkError);
-            // Fallback to OAuth flow if direct token doesn't work
-            const { createdSessionId, setActive: setActiveOAuth } = await googleOAuth();
-            if (createdSessionId) {
-              setActiveOAuth!({ session: createdSessionId });
-            }
-          }
-        } else {
-          throw new Error('No ID token received from Google');
+        console.log("Native Google Sign-In Success:", userInfo);
+
+        // Even though we got native sign-in, we still use Clerk's OAuth
+        // but the user already authenticated, so it should be faster
+        const { createdSessionId, setActive: setActiveOAuth } =
+          await googleOAuth();
+        if (createdSessionId) {
+          setActiveOAuth!({ session: createdSessionId });
         }
       } else {
-        // Fallback to web-based OAuth for iOS
-        console.log('Using web OAuth for iOS');
-        const { createdSessionId, setActive: setActiveOAuth } = await googleOAuth();
+        // iOS web OAuth
+        const { createdSessionId, setActive: setActiveOAuth } =
+          await googleOAuth();
         if (createdSessionId) {
           setActiveOAuth!({ session: createdSessionId });
         }
       }
     } catch (error: any) {
-      console.log('Google Sign-In Error:', error);
-      
-      if (Platform.OS === 'android' && error.code) {
+      console.log("Google Sign-In Error:", error);
+
+      if (Platform.OS === "android" && error.code) {
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-          console.log('User cancelled Google Sign-In');
-          return;
+          return; // User cancelled
         } else if (error.code === statusCodes.IN_PROGRESS) {
-          console.log('Google Sign-In already in progress');
-          return;
+          return; // Already in progress
         } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-          Alert.alert('Error', 'Google Play Services not available');
+          Alert.alert("Error", "Google Play Services not available");
           return;
         }
       }
-      
-      // For any other error, fallback to web OAuth
-      console.log('Falling back to web OAuth');
+
+      // Fallback to web OAuth
       try {
-        const { createdSessionId, setActive: setActiveOAuth } = await googleOAuth();
+        const { createdSessionId, setActive: setActiveOAuth } =
+          await googleOAuth();
         if (createdSessionId) {
           setActiveOAuth!({ session: createdSessionId });
         }
       } catch (fallbackError: any) {
-        const message = fallbackError.errors?.[0]?.message || 'Failed to sign in with Google. Please try again.';
+        const message =
+          fallbackError.errors?.[0]?.message ||
+          "Failed to sign in with Google. Please try again.";
         Alert.alert("Error", message);
       }
     } finally {
@@ -101,16 +91,18 @@ export const useSocialAuth = () => {
     }
   };
 
-  const handleSocialAuth = async (strategy: "oauth_google" | "oauth_apple" | "oauth_facebook") => {
+  const handleSocialAuth = async (
+    strategy: "oauth_google" | "oauth_apple" | "oauth_facebook"
+  ) => {
     if (strategy === "oauth_google") {
       return handleGoogleAuth();
     }
 
     setIsSocialAuthLoading(true);
-    
+
     try {
       let startOAuthFlow;
-      
+
       switch (strategy) {
         case "oauth_facebook":
           startOAuthFlow = facebookOAuth;
@@ -122,14 +114,17 @@ export const useSocialAuth = () => {
           throw new Error("Invalid strategy");
       }
 
-      const { createdSessionId, setActive: setActiveOAuth } = await startOAuthFlow();
+      const { createdSessionId, setActive: setActiveOAuth } =
+        await startOAuthFlow();
       if (createdSessionId) {
         setActiveOAuth!({ session: createdSessionId });
       }
     } catch (err: any) {
       console.log("Error in social auth", JSON.stringify(err, null, 2));
       const provider = strategy.replace("oauth_", "");
-      const message = err.errors?.[0]?.message || `Failed to sign in with ${provider}. Please try again.`;
+      const message =
+        err.errors?.[0]?.message ||
+        `Failed to sign in with ${provider}. Please try again.`;
       Alert.alert("Error", message);
     } finally {
       setIsSocialAuthLoading(false);
@@ -138,18 +133,18 @@ export const useSocialAuth = () => {
 
   const signOutGoogle = async () => {
     try {
-      if (Platform.OS === 'android') {
+      if (Platform.OS === "android") {
         await GoogleSignin.signOut();
       }
     } catch (error) {
-      console.error('Error signing out from Google:', error);
+      console.error("Error signing out from Google:", error);
     }
   };
 
-  return { 
-    isSocialAuthLoading, 
-    handleSocialAuth, 
+  return {
+    isSocialAuthLoading,
+    handleSocialAuth,
     signOutGoogle,
-    isNativeGoogleAvailable: Platform.OS === 'android'
+    isNativeGoogleAvailable: Platform.OS === "android",
   };
 };
