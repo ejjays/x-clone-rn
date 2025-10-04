@@ -37,13 +37,13 @@ export const useSocialAuth = () => {
         console.log('Native Google Sign-In Success:', userInfo);
         
         // Use the Google ID token directly with Clerk
-        if (userInfo.idToken) {
+        if (userInfo.data?.idToken) {
           try {
             const signInAttempt = await signIn!.create({
               strategy: 'oauth_google',
               redirectUrl: undefined,
               actionCompleteRedirectUrl: undefined,
-              identifier: userInfo.idToken,
+              identifier: userInfo.data.idToken, // Fixed: userInfo.data.idToken instead of userInfo.idToken
             });
 
             if (signInAttempt.status === 'complete') {
