@@ -13,7 +13,10 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app requires camera access for video calls.",
         "NSMicrophoneUsageDescription": "This app requires microphone access for calls.",
-        "UIBackgroundModes": ["audio", "voip"],
+        "UIBackgroundModes": [
+          "audio",
+          "voip"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.ejjays.mobile"
@@ -68,7 +71,15 @@
         {
           "icon": "./assets/images/notification-icon.png",
           "color": "#ffffff",
-          "sounds": ["./assets/sounds/notification.mp3"]
+          "sounds": [
+            "./assets/sounds/notification.mp3"
+          ]
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "androidClientId": "YOUR_ANDROID_CLIENT_ID_HERE"
         }
       ]
     ],

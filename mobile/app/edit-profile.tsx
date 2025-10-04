@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -62,6 +62,12 @@ export default function EditProfile() {
 
   useEffect(() => {
     if (currentUser) {
+      console.log('Current user data:', {
+        firstName: currentUser.firstName,
+        lastName: currentUser.lastName,
+        profileImage: currentUser.profileImage
+      });
+      
       const firstName = currentUser.firstName || '';
       const lastName = currentUser.lastName || '';
       const username = currentUser.username || '';
@@ -88,6 +94,14 @@ export default function EditProfile() {
   useEffect(() => {
     checkForChanges();
   }, [firstName, lastName, username, bio, profileImage, originalData]);
+
+  useEffect(() => {
+    console.log('State changed:', {
+      profileImage,
+      'originalData.profileImage': originalData.profileImage,
+      'currentUser.profileImage': currentUser?.profileImage
+    });
+  }, [profileImage, originalData.profileImage, currentUser?.profileImage]);
 
   const checkForChanges = () => {
     const hasFirstNameChange = firstName.trim() !== originalData.firstName.trim();
@@ -130,14 +144,23 @@ export default function EditProfile() {
       showNotification('Uploading image...', 'Please wait');
       
       const imageUrl = await uploadMediaToImageKit(media, api);
+      console.log('Uploaded image URL:', imageUrl); // Debug log
       
       if (imageUrl) {
+        console.log('Setting profileImage state to:', imageUrl);
         setProfileImage(imageUrl);
+        
+        // Verify the state was set
+        setTimeout(() => {
+          console.log('ProfileImage state after setting:', profileImage);
+        }, 100);
+        
         showNotification('Image uploaded successfully!');
         
         // Trigger change detection
         setTimeout(() => checkForChanges(), 0);
       } else {
+        console.log('ImageUrl is empty or falsy:', imageUrl);
         showNotification('Failed to upload image. Please try again.');
       }
     } catch (error) {
@@ -150,21 +173,31 @@ export default function EditProfile() {
 
 
 
+  const profilePictureUri = useMemo(() => {
+    // 1. If we have a newly uploaded image (local state), use it
+    if (profileImage && profileImage !== originalData.profileImage) {
+      console.log('Using newly uploaded image:', profileImage);
+      return profileImage;
+    }
+    
+    // 2. If user has an existing profile image, use it
+    if (currentUser?.profileImage) {
+      console.log('Using existing profile image:', currentUser.profileImage);
+      return currentUser.profileImage;
+    }
+    
+    // 3. Generate fallback avatar
+    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      `${currentUser?.firstName || firstName} ${currentUser?.lastName || lastName}`
+    )}&background=1877F2&color=fff&size=150`;
+    
+    console.log('Using fallback avatar for:', currentUser?.firstName, currentUser?.lastName);
+    return fallbackUrl;
+  }, [profileImage, originalData.profileImage, currentUser?.profileImage, currentUser?.firstName, currentUser?.lastName, firstName, lastName]);
+
   if (!fontsLoaded) {
     return null; // Or a loading indicator
   }
-
-  // A newly uploaded image is in the `profileImage` state.
-  // The original image is in `originalData.profileImage`.
-  // If they are different, it means a new image is staged for upload.
-  const isNewImageStaged = profileImage !== originalData.profileImage;
-
-  const profilePictureUri = 
-    isNewImageStaged ? profileImage : // 1. Use newly uploaded image if available
-    currentUser?.profileImage || // 2. Otherwise, use the image from the server
-    `https://ui-avatars.com/api/?name=${encodeURIComponent( // 3. Fallback
-      `${firstName} ${lastName}`
-    )}&background=1877F2&color=fff&size=40`;
 
   const saveProfile = () => {
     if (!hasChanges) {
@@ -174,14 +207,21 @@ export default function EditProfile() {
 
     setIsLoading(true);
     
-    // Prepare update data
-    const updateData = {
+    // Prepare update data - ALWAYS include profileImage if it exists
+    const updateData: any = {
       username: username.trim(),
       bio: bio.trim(),
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      profileImage: profileImage || undefined // Only include if it exists
     };
+
+    // Include profileImage if we have one (either new upload or existing)
+    if (profileImage) {
+      updateData.profileImage = profileImage;
+      console.log('Including profileImage in update:', profileImage);
+    }
+
+    console.log('Sending update data to API:', updateData);
 
     // OPTIMISTIC UPDATE - Update UI immediately
     const optimisticUserData = {
@@ -190,8 +230,10 @@ export default function EditProfile() {
       bio: updateData.bio,
       firstName: updateData.firstName,
       lastName: updateData.lastName,
-      profileImage: updateData.profileImage || currentUser?.profileImage
+      profileImage: profileImage || currentUser?.profileImage // Use the current profileImage state
     };
+
+    console.log('Optimistic update data:', optimisticUserData);
 
     // Store current data for potential rollback
     const rollbackData = { ...currentUser };
@@ -216,12 +258,26 @@ export default function EditProfile() {
     // Perform API call in the background
     userApi.updateProfile(api, updateData)
       .then(response => {
+        console.log('API Response:', response.data);
+        
         // Success
         if (response.data) {
           // Update with actual server response
           queryClient.setQueryData(['authUser', currentUser?.clerkId], response.data);
+          
+          // Update original data to include the new profile image
+          setOriginalData({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            username: username.trim(),
+            bio: bio.trim(),
+            profileImage: response.data.profileImage || profileImage
+          });
+          
+          // Also invalidate to trigger a refetch
+          queryClient.invalidateQueries({ queryKey: ['authUser', currentUser?.clerkId] });
         }
-        // Show success notification on the previous screen
+        
         showNotification('Profile updated successfully!', 'Great!');
       })
       .catch(error => {
