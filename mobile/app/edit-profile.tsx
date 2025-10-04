@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import ConfirmationAlert from '@/components/ConfirmationAlert';
 import { useNotification } from '@/context/NotificationContext';
+import { pickMedia } from '@/utils/mediaPicker';
+import { uploadMediaToImageKit } from '@/utils/imagekit';
 import { Stack, useRouter } from "expo-router";
 import { useTheme } from "@/context/ThemeContext";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -35,17 +37,22 @@ export default function EditProfile() {
     Poppins_400Regular,
   });
 
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
 
   const [bio, setBio] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [profileImage, setProfileImage] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [originalData, setOriginalData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     username: '',
-    bio: ''
+    bio: '',
+    profileImage: ''
   });
 
 
@@ -55,33 +62,41 @@ export default function EditProfile() {
 
   useEffect(() => {
     if (currentUser) {
-      const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`;
+      const firstName = currentUser.firstName || '';
+      const lastName = currentUser.lastName || '';
       const username = currentUser.username || '';
       const bio = currentUser.bio || '';
+      const profileImage = currentUser.profileImage || '';
       
-      setName(fullName);
+      setFirstName(firstName);
+      setLastName(lastName);
       setUsername(username);
       setBio(bio);
+      setProfileImage(profileImage);
       
       // Store original data for comparison
       setOriginalData({
-        name: fullName,
+        firstName,
+        lastName,
         username,
-        bio
+        bio,
+        profileImage
       });
     }
   }, [currentUser]);
 
   useEffect(() => {
     checkForChanges();
-  }, [name, username, bio, originalData]);
+  }, [firstName, lastName, username, bio, profileImage, originalData]);
 
   const checkForChanges = () => {
-    const hasNameChange = name.trim() !== originalData.name.trim();
+    const hasFirstNameChange = firstName.trim() !== originalData.firstName.trim();
+    const hasLastNameChange = lastName.trim() !== originalData.lastName.trim();
     const hasUsernameChange = username.trim() !== originalData.username.trim();
     const hasBioChange = bio.trim() !== originalData.bio.trim();
+    const hasProfileImageChange = profileImage !== originalData.profileImage;
     
-    setHasChanges(hasNameChange || hasUsernameChange || hasBioChange);
+    setHasChanges(hasFirstNameChange || hasLastNameChange || hasUsernameChange || hasBioChange || hasProfileImageChange);
   };
 
   const confirmDiscardChanges = () => {
@@ -99,15 +114,56 @@ export default function EditProfile() {
 
 
 
+  const handleImageUpload = async () => {
+    try {
+      setIsUploadingImage(true);
+      
+      const media = await pickMedia();
+      if (!media) return;
+      
+      // Only allow images for profile picture
+      if (media.type !== 'image') {
+        showNotification('Please select an image for your profile picture.');
+        return;
+      }
+      
+      showNotification('Uploading image...', 'Please wait');
+      
+      const imageUrl = await uploadMediaToImageKit(media, api);
+      
+      if (imageUrl) {
+        setProfileImage(imageUrl);
+        showNotification('Image uploaded successfully!');
+        
+        // Trigger change detection
+        setTimeout(() => checkForChanges(), 0);
+      } else {
+        showNotification('Failed to upload image. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      showNotification('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+
+
   if (!fontsLoaded) {
     return null; // Or a loading indicator
   }
 
-  const profilePictureUri = currentUser?.profilePicture ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      (currentUser?.firstName || "") +
-        " " +
-        (currentUser?.lastName || "")
+  // A newly uploaded image is in the `profileImage` state.
+  // The original image is in `originalData.profileImage`.
+  // If they are different, it means a new image is staged for upload.
+  const isNewImageStaged = profileImage !== originalData.profileImage;
+
+  const profilePictureUri = 
+    isNewImageStaged ? profileImage : // 1. Use newly uploaded image if available
+    currentUser?.profileImage || // 2. Otherwise, use the image from the server
+    `https://ui-avatars.com/api/?name=${encodeURIComponent( // 3. Fallback
+      `${firstName} ${lastName}`
     )}&background=1877F2&color=fff&size=40`;
 
   const saveProfile = () => {
@@ -118,17 +174,13 @@ export default function EditProfile() {
 
     setIsLoading(true);
     
-    // Parse name into first and last name
-    const nameParts = name.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-    
     // Prepare update data
     const updateData = {
       username: username.trim(),
       bio: bio.trim(),
-      firstName,
-      lastName
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      profileImage: profileImage || undefined // Only include if it exists
     };
 
     // OPTIMISTIC UPDATE - Update UI immediately
@@ -137,7 +189,8 @@ export default function EditProfile() {
       username: updateData.username,
       bio: updateData.bio,
       firstName: updateData.firstName,
-      lastName: updateData.lastName
+      lastName: updateData.lastName,
+      profileImage: updateData.profileImage || currentUser?.profileImage
     };
 
     // Store current data for potential rollback
@@ -148,9 +201,11 @@ export default function EditProfile() {
     
     // Update original data to prevent "unsaved changes" state
     const newOriginalData = {
-      name: name.trim(),
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       username: username.trim(),
-      bio: bio.trim()
+      bio: bio.trim(),
+      profileImage: profileImage
     };
     setOriginalData(newOriginalData);
     setHasChanges(false);
@@ -232,23 +287,48 @@ export default function EditProfile() {
             source={{ uri: profilePictureUri }}
             style={styles.profilePicture}
           />
-          <TouchableOpacity style={[styles.editIconContainer, { backgroundColor: colors.surface }]}>
-            <MaterialIcons name="edit" size={18} color={colors.text} />
+          <TouchableOpacity 
+            style={[styles.editIconContainer, { backgroundColor: colors.surface }]}
+            onPress={handleImageUpload}
+            disabled={isUploadingImage}
+          >
+            <MaterialIcons 
+              name={isUploadingImage ? "hourglass-empty" : "edit"} 
+              size={18} 
+              color={colors.text} 
+            />
           </TouchableOpacity>
         </View>
 
         {/* Input Fields */}
+        {/* First Name Field */}
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: colors.text }]}>Name</Text>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>First Name</Text>
           <TextInput
             style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]} 
             onChangeText={(text) => {
-              setName(text);
+              setFirstName(text);
               // Check for changes after state update
               setTimeout(() => checkForChanges(), 0);
             }}
-            value={name}
-            placeholder={name}
+            value={firstName}
+            placeholder="Enter your first name"
+            placeholderTextColor={colors.textMuted}
+          />
+        </View>
+
+        {/* Last Name Field */}
+        <View style={styles.inputContainer}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Last Name</Text>
+          <TextInput
+            style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]} 
+            onChangeText={(text) => {
+              setLastName(text);
+              // Check for changes after state update
+              setTimeout(() => checkForChanges(), 0);
+            }}
+            value={lastName}
+            placeholder="Enter your last name"
             placeholderTextColor={colors.textMuted}
           />
         </View>
