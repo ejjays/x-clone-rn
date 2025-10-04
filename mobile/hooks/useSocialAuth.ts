@@ -1,4 +1,4 @@
-import { useOAuth, useSignIn } from "@clerk/clerk-expo";
+import { useOAuth } from "@clerk/clerk-expo";
 import {
   GoogleSignin,
   statusCodes,
@@ -6,19 +6,17 @@ import {
 import { useState, useEffect } from "react";
 import { Alert, Platform } from "react-native";
 import * as WebBrowser from "expo-web-browser";
+import { useFirebaseAuth } from "./useFirebaseAuth";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export const useSocialAuth = () => {
   const [isSocialAuthLoading, setIsSocialAuthLoading] = useState(false);
-  const { startOAuthFlow: googleOAuth } = useOAuth({
-    strategy: "oauth_google",
-  });
   const { startOAuthFlow: facebookOAuth } = useOAuth({
     strategy: "oauth_facebook",
   });
   const { startOAuthFlow: appleOAuth } = useOAuth({ strategy: "oauth_apple" });
-  const { signIn, setActive } = useSignIn();
+  const { signInWithGoogle } = useFirebaseAuth();
 
   useEffect(() => {
     // Configure Google Sign-In only for Android
@@ -38,26 +36,11 @@ export const useSocialAuth = () => {
 
     try {
       if (Platform.OS === "android") {
-        // Get native Google Sign-In for better UX
-        await GoogleSignin.hasPlayServices();
-        const userInfo = await GoogleSignin.signIn();
-
-        console.log("Native Google Sign-In Success:", userInfo);
-
-        // Even though we got native sign-in, we still use Clerk's OAuth
-        // but the user already authenticated, so it should be faster
-        const { createdSessionId, setActive: setActiveOAuth } =
-          await googleOAuth();
-        if (createdSessionId) {
-          setActiveOAuth!({ session: createdSessionId });
-        }
+        await signInWithGoogle();
       } else {
-        // iOS web OAuth
-        const { createdSessionId, setActive: setActiveOAuth } =
-          await googleOAuth();
-        if (createdSessionId) {
-          setActiveOAuth!({ session: createdSessionId });
-        }
+        // For iOS, you might want to implement a different flow or use Clerk's web OAuth
+        // For now, we'll just log a message.
+        console.log("Google Sign-In on iOS is not implemented with Firebase in this example.");
       }
     } catch (error: any) {
       console.log("Google Sign-In Error:", error);
@@ -72,20 +55,9 @@ export const useSocialAuth = () => {
           return;
         }
       }
-
-      // Fallback to web OAuth
-      try {
-        const { createdSessionId, setActive: setActiveOAuth } =
-          await googleOAuth();
-        if (createdSessionId) {
-          setActiveOAuth!({ session: createdSessionId });
-        }
-      } catch (fallbackError: any) {
-        const message =
-          fallbackError.errors?.[0]?.message ||
-          "Failed to sign in with Google. Please try again.";
-        Alert.alert("Error", message);
-      }
+      
+      const message = "Failed to sign in with Google. Please try again.";
+      Alert.alert("Error", message);
     } finally {
       setIsSocialAuthLoading(false);
     }
