@@ -10,7 +10,7 @@ export const useUnifiedAuth = () => {
   const [isSocialAuthLoading, setIsSocialAuthLoading] = useState(false);
   
   // Firebase for Google (native)
-  const { signInWithGoogle: firebaseGoogleSignIn, user: firebaseUser, isLoading: firebaseLoading } = useFirebaseAuth();
+  const { signInWithGoogle: firebaseGoogleSignIn, user: firebaseUser, isLoading: firebaseLoading, signOut: firebaseSignOut } = useFirebaseAuth();
   
   // Clerk for Facebook and Apple (web-based)
   const { startOAuthFlow: facebookOAuth } = useOAuth({ strategy: "oauth_facebook" });
@@ -84,7 +84,6 @@ export const useUnifiedAuth = () => {
     try {
       // Sign out from Firebase (Google)
       if (firebaseUser) {
-        const { signOut: firebaseSignOut } = useFirebaseAuth();
         await firebaseSignOut();
       }
       
