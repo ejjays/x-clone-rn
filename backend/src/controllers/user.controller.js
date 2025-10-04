@@ -188,7 +188,7 @@ export const followUnfollowUser = async (req, res) => {
  * @route PUT /api/users/profile
  */
 export const updateUserProfile = async (req, res) => {
-	const { username, bio, profileImage: newProfileImage, coverImage: newCoverImage } = req.body;
+	const { username, bio, firstName, lastName, profileImage: newProfileImage, coverImage: newCoverImage } = req.body;
 
 	try {
 		const user = await User.findOne({ clerkId: req.auth.userId });
@@ -198,25 +198,29 @@ export const updateUserProfile = async (req, res) => {
 
 		user.username = username || user.username;
 		user.bio = bio || user.bio;
+		user.firstName = firstName || user.firstName;
+		user.lastName = lastName || user.lastName;
 		user.profileImage = newProfileImage || user.profileImage;
 		user.coverImage = newCoverImage || user.coverImage;
 
 		await user.save();
 
 		await clerkClient.users.updateUser(req.auth.userId, {
-			username: user.username,
-			publicMetadata: {
-				bio: user.bio,
-			},
+		  username: user.username,
+		  firstName: user.firstName,
+		  lastName: user.lastName,
+		  publicMetadata: {
+		    bio: user.bio,
+		  },
 		});
 
 		try {
-			await streamClient.partialUpdateUser({
-				id: req.auth.userId,
-				set: {
-					name: user.username,
-				},
-			});
+		  await streamClient.partialUpdateUser({
+		    id: req.auth.userId,
+		    set: {
+		      name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
+		    },
+		  });
 		} catch (streamErr) {
 			console.error("⚠️ Stream partialUpdateUser failed, continuing:", {
 				message: streamErr?.message,

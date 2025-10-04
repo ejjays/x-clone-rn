@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
   TextInput,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
@@ -16,11 +17,16 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFonts, Poppins_600SemiBold, Poppins_400Regular } from '@expo-google-fonts/poppins';
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useQueryClient } from "@tanstack/react-query";
+import { userApi, useApiClient } from "@/utils/api";
 
 export default function EditProfile() {
   const { colors } = useTheme();
   const router = useRouter();
   const { currentUser } = useCurrentUser();
+
+  const api = useApiClient();
+  const queryClient = useQueryClient();
 
   const [fontsLoaded] = useFonts({
     Poppins_600SemiBold,
@@ -32,13 +38,44 @@ export default function EditProfile() {
 
   const [bio, setBio] = useState('');
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [originalData, setOriginalData] = useState({
+    name: '',
+    username: '',
+    bio: ''
+  });
+
   useEffect(() => {
     if (currentUser) {
-      setName(`${currentUser.firstName || ''} ${currentUser.lastName || ''}`);
-      setUsername(currentUser.username || '');
-      setBio(currentUser.bio || '');
+      const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`;
+      const username = currentUser.username || '';
+      const bio = currentUser.bio || '';
+      
+      setName(fullName);
+      setUsername(username);
+      setBio(bio);
+      
+      // Store original data for comparison
+      setOriginalData({
+        name: fullName,
+        username,
+        bio
+      });
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    checkForChanges();
+  }, [name, username, bio, originalData]);
+
+  const checkForChanges = () => {
+    const hasNameChange = name.trim() !== originalData.name.trim();
+    const hasUsernameChange = username.trim() !== originalData.username.trim();
+    const hasBioChange = bio.trim() !== originalData.bio.trim();
+    
+    setHasChanges(hasNameChange || hasUsernameChange || hasBioChange);
+  };
 
   if (!fontsLoaded) {
     return null; // Or a loading indicator
@@ -50,6 +87,73 @@ export default function EditProfile() {
         " " +
         (currentUser?.lastName || "")
     )}&background=1877F2&color=fff&size=40`;
+
+  const saveProfile = async () => {
+    if (!hasChanges) {
+      Alert.alert('No Changes', 'You haven\'t made any changes to save.');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Parse name into first and last name
+      const nameParts = name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      // Prepare update data
+      const updateData = {
+        username: username.trim(),
+        bio: bio.trim(),
+        // Note: The backend expects these fields but may not update them
+        firstName,
+        lastName
+      };
+      
+      // Call the API
+      const response = await userApi.updateProfile(api, updateData);
+      
+      if (response.data) {
+        // Update the query cache with new data
+        queryClient.setQueryData(['authUser', currentUser?.clerkId], response.data);
+        
+        // Update original data to new values
+        setOriginalData({
+          name: name.trim(),
+          username: username.trim(),
+          bio: bio.trim()
+        });
+        
+        setHasChanges(false);
+        
+        Alert.alert(
+          'Success',
+          'Profile updated successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.back()
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      
+      let errorMessage = 'Failed to update profile. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -63,21 +167,40 @@ export default function EditProfile() {
       <View style={[styles.headerBackground, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => {
+              if (hasChanges) {
+                Alert.alert(
+                  'Unsaved Changes',
+                  'You have unsaved changes. Are you sure you want to go back?',
+                  [
+                    { text: 'Stay', style: 'cancel' },
+                    { text: 'Discard', onPress: () => router.back() }
+                  ]
+                );
+              } else {
+                router.back();
+              }
+            }}
             style={styles.headerIcon}
           >
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Update Profile</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            Update Profile{hasChanges ? ' •' : ''}
+          </Text>
           <TouchableOpacity
-            onPress={() => {
-              // Handle update profile action here
-              console.log("Profile updated!");
-              router.back();
-            }}
-            style={styles.checkIcon}
+            onPress={saveProfile}
+            style={[
+              styles.checkIcon,
+              { opacity: (!hasChanges || isLoading) ? 0.5 : 1 }
+            ]}
+            disabled={!hasChanges || isLoading}
           >
-            <Ionicons name="checkmark" size={24} color={colors.text} />
+            <Ionicons 
+              name={isLoading ? "hourglass" : "checkmark"} 
+              size={24} 
+              color={colors.text} 
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -99,7 +222,11 @@ export default function EditProfile() {
           <Text style={[styles.inputLabel, { color: colors.text }]}>Name</Text>
           <TextInput
             style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]} 
-            onChangeText={setName}
+            onChangeText={(text) => {
+              setName(text);
+              // Check for changes after state update
+              setTimeout(() => checkForChanges(), 0);
+            }}
             value={name}
             placeholder={name}
             placeholderTextColor={colors.textMuted}
@@ -110,7 +237,10 @@ export default function EditProfile() {
           <Text style={[styles.inputLabel, { color: colors.text }]}>Username</Text>
           <TextInput
             style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]} 
-            onChangeText={setUsername}
+            onChangeText={(text) => {
+              setUsername(text);
+              setTimeout(() => checkForChanges(), 0);
+            }}
             value={username}
             placeholder={username}
             placeholderTextColor={colors.textMuted}
@@ -123,7 +253,10 @@ export default function EditProfile() {
           <Text style={[styles.inputLabel, { color: colors.text }]}>Bio</Text>
           <TextInput
             style={[styles.input, styles.multilineInput, { backgroundColor: colors.surface, color: colors.text }]} 
-            onChangeText={setBio}
+            onChangeText={(text) => {
+              setBio(text);
+              setTimeout(() => checkForChanges(), 0);
+            }}
             value={bio}
             placeholder={bio}
             placeholderTextColor={colors.textMuted}
