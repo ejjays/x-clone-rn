@@ -1,4 +1,4 @@
-import { useOAuth } from "@clerk/clerk-expo";
+import { useOAuth, useSignIn } from "@clerk/clerk-expo";
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useState, useEffect } from "react";
 import { Alert, Platform } from "react-native";
@@ -11,15 +11,15 @@ export const useSocialAuth = () => {
   const { startOAuthFlow: googleOAuth } = useOAuth({ strategy: "oauth_google" });
   const { startOAuthFlow: facebookOAuth } = useOAuth({ strategy: "oauth_facebook" });
   const { startOAuthFlow: appleOAuth } = useOAuth({ strategy: "oauth_apple" });
+  const { signIn, setActive } = useSignIn();
 
   useEffect(() => {
     // Configure Google Sign-In only for Android
     if (Platform.OS === 'android') {
       GoogleSignin.configure({
-        webClientId:
-          "1074160078106-si3mp85ntv0bq71jbrs54ha34nmspp2p.apps.googleusercontent.com",
+        webClientId: '1074160078106-si3mp85ntv0bq71jbrs54ha34nmspp2p.apps.googleusercontent.com',
         offlineAccess: true,
-        hostedDomain: "",
+        hostedDomain: '',
         forceCodeForRefreshToken: true,
       });
     }
@@ -36,19 +36,37 @@ export const useSocialAuth = () => {
         
         console.log('Native Google Sign-In Success:', userInfo);
         
-        // Use the Google token with Clerk
-        const { createdSessionId, setActive } = await googleOAuth();
+        // Use the Google ID token directly with Clerk
+        if (userInfo.idToken) {
+          try {
+            const signInAttempt = await signIn!.create({
+              strategy: 'oauth_google',
+              redirectUrl: undefined,
+              actionCompleteRedirectUrl: undefined,
+              identifier: userInfo.idToken,
+            });
 
-        if (createdSessionId) {
-          setActive!({ session: createdSessionId });
+            if (signInAttempt.status === 'complete') {
+              await setActive!({ session: signInAttempt.createdSessionId });
+              return;
+            }
+          } catch (clerkError) {
+            console.log('Clerk direct token auth failed, trying OAuth flow:', clerkError);
+            // Fallback to OAuth flow if direct token doesn't work
+            const { createdSessionId, setActive: setActiveOAuth } = await googleOAuth();
+            if (createdSessionId) {
+              setActiveOAuth!({ session: createdSessionId });
+            }
+          }
+        } else {
+          throw new Error('No ID token received from Google');
         }
       } else {
-        // Fallback to web-based OAuth for iOS (or any other platform)
+        // Fallback to web-based OAuth for iOS
         console.log('Using web OAuth for iOS');
-        const { createdSessionId, setActive } = await googleOAuth();
-
+        const { createdSessionId, setActive: setActiveOAuth } = await googleOAuth();
         if (createdSessionId) {
-          setActive!({ session: createdSessionId });
+          setActiveOAuth!({ session: createdSessionId });
         }
       }
     } catch (error: any) {
@@ -57,7 +75,7 @@ export const useSocialAuth = () => {
       if (Platform.OS === 'android' && error.code) {
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
           console.log('User cancelled Google Sign-In');
-          return; // Don't show error for user cancellation
+          return;
         } else if (error.code === statusCodes.IN_PROGRESS) {
           console.log('Google Sign-In already in progress');
           return;
@@ -70,9 +88,9 @@ export const useSocialAuth = () => {
       // For any other error, fallback to web OAuth
       console.log('Falling back to web OAuth');
       try {
-        const { createdSessionId, setActive } = await googleOAuth();
+        const { createdSessionId, setActive: setActiveOAuth } = await googleOAuth();
         if (createdSessionId) {
-          setActive!({ session: createdSessionId });
+          setActiveOAuth!({ session: createdSessionId });
         }
       } catch (fallbackError: any) {
         const message = fallbackError.errors?.[0]?.message || 'Failed to sign in with Google. Please try again.';
@@ -85,7 +103,7 @@ export const useSocialAuth = () => {
 
   const handleSocialAuth = async (strategy: "oauth_google" | "oauth_apple" | "oauth_facebook") => {
     if (strategy === "oauth_google") {
-      return handleGoogleAuth(); // Use our enhanced Google auth
+      return handleGoogleAuth();
     }
 
     setIsSocialAuthLoading(true);
@@ -104,10 +122,9 @@ export const useSocialAuth = () => {
           throw new Error("Invalid strategy");
       }
 
-      const { createdSessionId, setActive } = await startOAuthFlow();
-
+      const { createdSessionId, setActive: setActiveOAuth } = await startOAuthFlow();
       if (createdSessionId) {
-        setActive!({ session: createdSessionId });
+        setActiveOAuth!({ session: createdSessionId });
       }
     } catch (err: any) {
       console.log("Error in social auth", JSON.stringify(err, null, 2));
