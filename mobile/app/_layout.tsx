@@ -313,6 +313,8 @@ const InitialLayout = () => {
   );
 };
 
+import { KeyboardProvider } from "react-native-keyboard-controller";
+
 export default function RootLayout() {
   const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -321,18 +323,20 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-        <ThemeProvider>
-          <QueryClientProvider client={queryClient}>
-            <StreamChatProvider>
-              <NotificationProvider>
-                <InitialLayout />
-              </NotificationProvider>
-            </StreamChatProvider>
-          </QueryClientProvider>
-        </ThemeProvider>
-      </ClerkProvider>
-    </GestureHandlerRootView>
+    <KeyboardProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+          <ThemeProvider>
+            <QueryClientProvider client={queryClient}>
+              <StreamChatProvider>
+                <NotificationProvider>
+                  <InitialLayout />
+                </NotificationProvider>
+              </StreamChatProvider>
+            </QueryClientProvider>
+          </ThemeProvider>
+        </ClerkProvider>
+      </GestureHandlerRootView>
+    </KeyboardProvider>
   );
 }

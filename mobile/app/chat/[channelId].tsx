@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  KeyboardAvoidingView,
+  KeyboardAvoidingView as RNKeyboardAvoidingView, // Renaming to avoid conflict
   Platform,
   Text,
   TextInput,
@@ -18,6 +18,7 @@ import {
   Keyboard,
   InteractionManager,
 } from "react-native";
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -37,6 +38,9 @@ import { Channel, MessageList, MessageInput } from "stream-chat-expo"; // Use bu
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { uploadMediaToCloudinary } from "@/utils/cloudinary";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { StatusBar } from "expo-status-bar";
+import * as NavigationBar from "expo-navigation-bar";
+import CustomMessageInput from "@/components/chat/CustomMessageInput";
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
 
@@ -82,24 +86,21 @@ export default function ChatScreen() {
   useFocusEffect(
     useCallback(() => {
       isActiveRef.current = true;
-      
+      if (Platform.OS === "android") {
+        NavigationBar.setBackgroundColorAsync("black");
+      }
+
       return () => {
-        // Immediate cleanup - mark as inactive first
         isActiveRef.current = false;
-        
-        // Defer heavy cleanup operations
-        requestAnimationFrame(() => {
+        InteractionManager.runAfterInteractions(() => {
           if (cleanupRef.current) {
-            try { cleanupRef.current(); } catch {}
+            try {
+              cleanupRef.current();
+            } catch (e) {
+              console.log('Cleanup failed', e);
+            }
             cleanupRef.current = null;
           }
-          
-          // Defer storage operations even more
-          setTimeout(() => {
-            try {
-              (AsyncStorage as any)?.flushGetRequests?.();
-            } catch {}
-          }, 100);
         });
       };
     }, [])
@@ -373,6 +374,7 @@ export default function ChatScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       edges={["top", "bottom"]}
     >
+      <StatusBar style={isDarkMode ? "light" : "dark"} backgroundColor={colors.background} />
 
       {/* Render header immediately; it reads channelId and otherUser snapshot */}
       <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} onBack={navigateBack} />
@@ -401,8 +403,12 @@ export default function ChatScreen() {
           }
           if (client && channel) {
             return (
-              <Channel channel={channel}>
-                <View style={{ flex: 1 }}>
+              <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={"padding"}
+                keyboardVerticalOffset={90}
+              >
+                <Channel channel={channel} disableKeyboardCompatibleView={true}>
                   <MessageList
                     contentInsetAdjustmentBehavior="never"
                     additionalFlatListProps={{
@@ -423,9 +429,9 @@ export default function ChatScreen() {
                       onEndReachedThreshold: 0.1,
                     }}
                   />
-                  <MessageInput hasImagePicker hasFilePicker={false} compressImageQuality={0.8} />
-                </View>
-              </Channel>
+                  <CustomMessageInput />
+                </Channel>
+              </KeyboardAvoidingView>
             );
           }
           return null;

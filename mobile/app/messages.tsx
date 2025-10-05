@@ -67,22 +67,17 @@ export default function MessagesScreen() {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   };
 
+
+
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS === "android") {
         NavigationBar.setBackgroundColorAsync("black");
-        ReactNativeStatusBar.setBackgroundColor("black", false);
       }
-      refreshChannels();
-
-      return () => {
-        if (Platform.OS === "android") {
-          NavigationBar.setBackgroundColorAsync(colors.background);
-          ReactNativeStatusBar.setBackgroundColor(colors.background, false);
-        }
-      };
-    }, [colors.background, refreshChannels])
+    }, [])
   );
+
+
 
   const renderContent = useCallback(() => {
     const MessagesListHeader = () => (
@@ -286,7 +281,7 @@ export default function MessagesScreen() {
         backgroundColor: colors.chatBackground,
       }}
     >
-      <StatusBar barStyle={"light-content"} />
+      <StatusBar style="light" backgroundColor="black" animated />
 
       {/* Header */}
       <View
