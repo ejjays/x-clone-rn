@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  KeyboardAvoidingView as RNKeyboardAvoidingView, // Renaming to avoid conflict
   Platform,
   Text,
   TextInput,
@@ -18,7 +17,8 @@ import {
   Keyboard,
   InteractionManager,
 } from "react-native";
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { useKeyboardAnimation } from '@/hooks/useKeyboardAnimation';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -41,6 +41,8 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import CustomMessageInput from "@/components/chat/CustomMessageInput";
+
+
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
 
@@ -403,35 +405,31 @@ export default function ChatScreen() {
           }
           if (client && channel) {
             return (
-              <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={"padding"}
-                keyboardVerticalOffset={90}
-              >
-                <Channel channel={channel} disableKeyboardCompatibleView={true}>
-                  <MessageList
-                    contentInsetAdjustmentBehavior="never"
-                    additionalFlatListProps={{
-                      contentContainerStyle: { paddingTop: 0 },
-                      onEndReached: async () => {
-                        try {
-                          const msgs: any[] = (channel?.state?.messages || []) as any[];
-                          const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
-                          if (!oldest || !(channel as any)?.query) return;
-                          const res = await (channel as any).query({
-                            messages: { limit: 30, id_lt: oldest.id },
-                          });
-                          if (res?.messages?.length) {
-                            (channel as any).state?.addMessagesSorted?.(res.messages);
-                          }
-                        } catch {}
-                      },
-                      onEndReachedThreshold: 0.1,
-                    }}
-                  />
+              <Channel channel={channel}>
+                <MessageList
+                  contentInsetAdjustmentBehavior="never"
+                  additionalFlatListProps={{
+                    contentContainerStyle: { paddingTop: 0 },
+                    onEndReached: async () => {
+                      try {
+                        const msgs: any[] = (channel?.state?.messages || []) as any[];
+                        const oldest = msgs && msgs.length > 0 ? msgs[0] : null;
+                        if (!oldest || !(channel as any)?.query) return;
+                        const res = await (channel as any).query({
+                          messages: { limit: 30, id_lt: oldest.id },
+                        });
+                        if (res?.messages?.length) {
+                          (channel as any).state?.addMessagesSorted?.(res.messages);
+                        }
+                      } catch {}
+                    },
+                    onEndReachedThreshold: 0.1,
+                  }}
+                />
+                <KeyboardStickyView>
                   <CustomMessageInput />
-                </Channel>
-              </KeyboardAvoidingView>
+                </KeyboardStickyView>
+              </Channel>
             );
           }
           return null;

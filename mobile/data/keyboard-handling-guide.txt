@@ -1,0 +1,36 @@
+
+00:00:00 - 00:01:00
+Hello everyone. Keyboard avoidance can be quite hard in React Native and I want to share the way I handle keyboard avoidance. Uh so I'm building this application for scheduling post to multiple platforms. And a couple days ago I was struggling trying to implement this UI where you can select this input and then you have your account at the bottom and then you can select them to make a post. So this is the way it works. So by default for example if I hide this but if I come back here by default it's going to focus the keyword
+
+
+00:00:30 - 00:01:18
+the first time that the users comes to the screen and you can select the account and then hide the keyword focus the input again and it actually took me a couple hours to kind of develop a decent implementation that I was happy with and I thought I need to share this with you guys. So this application is not open source yet but if you want to get access to the source code consider becoming a pro member at codetto.dev. I'm going to leave a link in the description in case you're interested.
+
+
+00:00:54 - 00:01:50
+But here's basically what I'm doing. Here's an example. And this is like the final test. So I always like to test on an iPhone SE and see if that works. That means that it's going to work everywhere else. So if I go back to the view avoiding the input is automatically focused, which is great. Um, and you know, I can, you know, do things type around and then close the keyboard and this is going to work just fine. And let me fix that alignment on Android by passing this text aligned to the top.
+
+
+00:01:22 - 00:02:22
+And it works great on Android as well. As you can see here, I can come here and close that. Focus the input again. Press this toggle button. Um, go back then go back to the view avoiding and the keyboard is going to be um the input is going to be automatically focused and everything works just great. If you want to move, for example, this view at the top, that's totally fine. it's going to keep working just fine because the way this this approach works is by having a fake view. And I actually took this
+
+
+00:01:51 - 00:02:49
+approach from the package that I want to recommend everyone to use which is React Native keyboard controller. This one right here. I'm using the latest version 1.1.7 at the time that I'm work I'm recording this quick video. But anyways, the way this works is just by having this animated view at the bottom of my screen. And this view what it's doing is just increasing its height based on the height of the keyboard. So I'm passing this keyboard padding which is just the height of the keyboard while the
+
+ 
+00:02:21 - 00:03:24
+keyboard is being presented. So when we focus the inputs if you notice the keyboard has this animation right the keyword is coming from the bottom meaning that the height is going to start at zero and then it's going to grow at the maximum of the current device. So we don't really know the current height but we can actually calculate that using um this hook that it's called use gradual animation which is a hook that I created here and it basically uses this hook use keyboard handler from react native keyboard
+
+
+00:02:52 - 00:03:53
+controller which returns the height of the keyboard at each frame. So using react native animated we can grab the value of the height and put that in a shared value and then return that. Now, because I'm using as well the keyboard toolbar, I'm adding this offset of 42. So that's like on top of the height of the keyboard, I'm increasing 42 pixels. And you can play around with it actually depending on what you're doing. So you can actually decrease the size a little bit or increase the size a little bit to
+
+
+00:03:23 - 00:04:17
+have more space depending on what you're trying to achieve. But anyways, this is all the magic. This is going to return from zero to the maximum height of the keyboard. And then with this value, we can simply increase the height of this animated view using reanimated. And that is going to push the entire content up. And this is actually a pretty simple view. Just a simple view with items. Uh nothing super fancy in the input and a flex of one for the container. And that's basically it. Just to finish, I
+
+
+00:03:50 - 00:04:21
+want to show you how this looks on the iPhone 16 Pro. Pretty similar to what we have in the other devices. That's basically all I wanted to show you guys. I'm going to leave the link to the source code down here. I hope this is helpful and if you have a better approach, please share with me as well.
+
