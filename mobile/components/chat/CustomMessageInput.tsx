@@ -6,12 +6,15 @@ import { useTheme } from '@/context/ThemeContext';
 import { DarkThemeColors } from '@/constants/Colors';
 
 const CustomMessageInput = () => {
-  const { sendMessage, text, setText } = useMessageInputContext();
-  const { colors } = useTheme(); // still needed for text and icon colors
+  const { sendMessage } = useMessageInputContext();
+  const { colors } = useTheme();
+
+  const [inputValue, setInputValue] = React.useState('');
 
   const handleSend = () => {
-    if (text.trim()) {
-      sendMessage();
+    if (inputValue.trim()) {
+      sendMessage({ text: inputValue });
+      setInputValue('');
     }
   };
 
@@ -22,23 +25,31 @@ const CustomMessageInput = () => {
       </TouchableOpacity>
       <TextInput
         style={[styles.textInput, { color: colors.text }]}
-        value={text}
-        onChangeText={setText}
+        value={inputValue}
+        onChangeText={setInputValue}
         placeholder="Message..."
         placeholderTextColor={colors.textSecondary}
       />
-      <TouchableOpacity style={styles.iconButton}>
-        <FontAwesome name="microphone" size={24} color={colors.textSecondary} />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.iconButton}>
-        <Ionicons name="image-outline" size={24} color={colors.textSecondary} />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.iconButton}>
-        <Feather name="smile" size={24} color={colors.textSecondary} />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.iconButton} onPress={handleSend}>
-        <Ionicons name="add-circle" size={24} color={colors.blue} />
-      </TouchableOpacity>
+      {inputValue ? (
+        <TouchableOpacity style={styles.iconButton} onPress={handleSend}>
+          <Ionicons name="send" size={24} color={colors.blue} />
+        </TouchableOpacity>
+      ) : (
+        <>
+          <TouchableOpacity style={styles.iconButton}>
+            <FontAwesome name="microphone" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="image-outline" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Feather name="smile" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={handleSend}>
+            <Ionicons name="add-circle" size={24} color={colors.blue} />
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 };
