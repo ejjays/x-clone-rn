@@ -167,6 +167,21 @@ export const StreamChatProvider = ({ children }: { children: React.ReactNode }) 
     }
   }, [isConnected, refreshChannels]);
 
+  // Listen for new messages and refresh channels
+  useEffect(() => {
+    if (!chatClient || !isConnected) return;
+
+    const handleNewMessage = () => {
+      refreshChannels();
+    };
+
+    chatClient.on("message.new", handleNewMessage);
+
+    return () => {
+      chatClient.off("message.new", handleNewMessage);
+    };
+  }, [isConnected, chatClient, refreshChannels]);
+
   const value = {
     client: STREAM_API_KEY ? chatClient : null,
     isConnected,

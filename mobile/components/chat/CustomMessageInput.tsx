@@ -1,20 +1,24 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { useMessageInputContext } from 'stream-chat-expo';
+import { useChannelContext, useMessageInputContext } from 'stream-chat-expo';
 import { Ionicons, Feather, FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { DarkThemeColors } from '@/constants/Colors';
 
 const CustomMessageInput = () => {
-  const { sendMessage } = useMessageInputContext();
+  const { toggleAttachmentPicker } = useMessageInputContext();
+  const { channel } = useChannelContext();
   const { colors } = useTheme();
+  const [localText, setLocalText] = React.useState('');
 
-  const [inputValue, setInputValue] = React.useState('');
+  const handleTextChange = (newText) => {
+    setLocalText(newText);
+  };
 
-  const handleSend = () => {
-    if (inputValue.trim()) {
-      sendMessage({ text: inputValue });
-      setInputValue('');
+  const handleSend = async () => {
+    if (localText && localText.trim()) {
+      await channel.sendMessage({ text: localText.trim() });
+      setLocalText('');
     }
   };
 
@@ -25,12 +29,12 @@ const CustomMessageInput = () => {
       </TouchableOpacity>
       <TextInput
         style={[styles.textInput, { color: colors.text }]}
-        value={inputValue}
-        onChangeText={setInputValue}
+        value={localText}
+        onChangeText={handleTextChange}
         placeholder="Message..."
         placeholderTextColor={colors.textSecondary}
       />
-      {inputValue ? (
+      {localText ? (
         <TouchableOpacity style={styles.iconButton} onPress={handleSend}>
           <Ionicons name="send" size={24} color={colors.blue} />
         </TouchableOpacity>
@@ -45,7 +49,7 @@ const CustomMessageInput = () => {
           <TouchableOpacity style={styles.iconButton}>
             <Feather name="smile" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={handleSend}>
+          <TouchableOpacity style={styles.iconButton} onPress={toggleAttachmentPicker}>
             <Ionicons name="add-circle" size={24} color={colors.blue} />
           </TouchableOpacity>
         </>
