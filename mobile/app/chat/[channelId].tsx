@@ -1,7 +1,7 @@
 // mobile/app/chat/[channelId].tsx
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useStreamChat } from "@/context/StreamChatContext";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, FontAwesome5, FontAwesome6, Entypo, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
@@ -11,32 +11,24 @@ import {
   Platform,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
   Image,
-  Keyboard,
   InteractionManager,
+  Pressable,
 } from "react-native";
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import { useKeyboardAnimation } from '@/hooks/useKeyboardAnimation';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StorageKeys } from "@/utils/offline/storageKeys";
-import { offlineQueue } from "@/utils/offline/OfflineQueue";
 import { useTheme } from "@/context/ThemeContext";
-import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; // Import both theme colors
-import * as SystemUI from "expo-system-ui";
+import { LightThemeColors, DarkThemeColors } from "@/constants/Colors"; 
 import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
-import MessageBubble from "@/components/chat/MessageBubble";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
-import { Channel, MessageList, MessageInput } from "stream-chat-expo"; // Use built-in MessageInput
-// import KeyboardAvoiderView from "@/components/KeyboardAvoiderView";
-import { createStreamChatTheme } from "@/utils/StreamChatTheme";
-import { uploadMediaToCloudinary } from "@/utils/cloudinary";
+import { Channel, MessageList } from "stream-chat-expo"; 
 import Animated, { FadeIn } from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
@@ -45,6 +37,74 @@ import CustomMessageInput from "@/components/chat/CustomMessageInput";
 
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
+
+const CustomDateHeader = ({ dateString }) => (
+  <Text style={{ color: 'white' }}>{dateString}</Text>
+);
+
+const CustomInlineDateSeparator = ({ dateString }) => (
+  <Text style={{ 
+    color: 'red', 
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '500'
+  }}>
+    {dateString}
+  </Text>
+);
+
+const getIconForActionType = (actionType) => {
+  switch (actionType) {
+    case 'deleteMessage':
+      return <Entypo name="trash" size={20} color="white" />;
+    case 'editMessage':
+      return <MaterialIcons name="edit" size={20} color="white" />;
+    case 'pinMessage':
+      return <FontAwesome5 name="map-pin" size={20} color="white" />;
+    case 'copyMessage':
+      return <Ionicons name="copy" size={20} color="white" />;
+    case 'flagMessage':
+      return <Ionicons name="flag-outline" size={20} color="white" />;
+    case 'muteUser':
+      return <Ionicons name="volume-mute-outline" size={20} color="white" />;
+    case 'blockUser':
+      return <Ionicons name="ban-outline" size={20} color="white" />;
+    case 'reply':
+      return <Ionicons name="arrow-undo-outline" size={20} color="white" />;
+    case 'quotedReply':
+      return <FontAwesome6 name="reply" size={20} color="white" />;
+    case 'threadReply':
+      return <FontAwesome6 name="threads" size={20} color="white" />;
+    default:
+      return <Ionicons name="mail-unread" size={20} color="white" />;
+  }
+};
+
+const CustomMessageActionsList = (props) => {
+  const { messageActions } = props;
+  return (
+    <View style={{ backgroundColor: 'black', padding: 16 }}>
+      {messageActions?.map((action) => (
+        <Pressable 
+          key={action.title}
+          onPress={action.action}
+          style={{ 
+            paddingVertical: 12,
+            flexDirection: 'row',
+            alignItems: 'center'
+          }}
+        >
+          <View style={{ marginRight: 12 }}>
+            {getIconForActionType(action.actionType)}
+          </View>
+          <Text style={{ color: 'white', fontSize: 16 }}>
+            {action.title}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+};
 
 export default function ChatScreen() {
   const params = useLocalSearchParams();
@@ -405,7 +465,12 @@ export default function ChatScreen() {
           }
           if (client && channel) {
             return (
-              <Channel channel={channel}>
+              <Channel 
+                channel={channel}
+                DateHeader={CustomDateHeader}
+                InlineDateSeparator={CustomInlineDateSeparator}
+                MessageActionList={CustomMessageActionsList}
+              >
                 <MessageList
                   contentInsetAdjustmentBehavior="never"
                   additionalFlatListProps={{
