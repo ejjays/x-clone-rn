@@ -35,8 +35,8 @@ const CustomMessageInput = () => {
         placeholderTextColor={colors.textSecondary}
       />
       {localText ? (
-        <TouchableOpacity style={styles.iconButton} onPress={handleSend}>
-          <Ionicons name="send" size={24} color={colors.blue} />
+        <TouchableOpacity style={[styles.iconButton, styles.sendButton]} onPress={handleSend}>
+          <Feather name="send" size={24} color="white" />
         </TouchableOpacity>
       ) : (
         <>
@@ -51,7 +51,7 @@ const CustomMessageInput = () => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={toggleAttachmentPicker}>
             <Ionicons name="add-circle" size={24} color={colors.blue} />
-          </TouchableOpacity>
+          </TouchableOpacity> 
         </>
       )}
     </View>
@@ -86,6 +86,11 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 8,
+  },
+  sendButton: {
+    backgroundColor: '#A020F0', // Same color as camera button
+    borderRadius: 25,
+    marginLeft: 8,
   },
 });
 

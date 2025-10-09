@@ -1,4 +1,4 @@
-import type { DeepPartial, Theme } from "stream-chat-react-native";
+import type { DeepPartial, Theme } from "stream-chat-expo";
 import { DarkThemeColors, LightThemeColors } from "@/constants/Colors";
 import { Platform } from "react-native";
 
