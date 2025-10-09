@@ -28,15 +28,45 @@ import { LightThemeColors, DarkThemeColors } from "@/constants/Colors";
 import { useFocusEffect } from "@react-navigation/native";
 import ChatHeader from "@/components/chat/ChatHeader";
 import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
-import { Channel, MessageList } from "stream-chat-expo"; 
+import { Channel, MessageList, ReactionList } from "stream-chat-expo"; 
+import { StyleSheet } from 'react-native';
+
+const reactionListStyles = StyleSheet.create({
+  container: {
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    borderRadius: 10,
+    padding: 5,
+  },
+});
+
+const CustomReactionList = props => (
+  <View style={reactionListStyles.container}>
+    <ReactionList {...props} supportedReactions={customReactions} />
+  </View>
+); 
 import Animated, { FadeIn } from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import CustomMessageInput from "@/components/chat/CustomMessageInput";
 
-
-
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
+
+const LikeIcon = () => <Text style={{ fontSize: 20 }}>👍</Text>;
+const LoveIcon = () => <Text style={{ fontSize: 20 }}>❤️</Text>;
+const FireIcon = () => <Text style={{ fontSize: 20 }}>🔥</Text>;
+const HahaIcon = () => <Text style={{ fontSize: 20 }}>🤣</Text>;
+const SmileTearIcon = () => <Text style={{ fontSize: 20 }}>🥲</Text>;
+const AngryIcon = () => <Text style={{ fontSize: 20 }}>😡</Text>;
+
+const customReactions = [
+  { type: 'like', Icon: LikeIcon, name: 'like' },
+  { type: 'love', Icon: LoveIcon, name: 'love' },
+  { type: 'fire', Icon: FireIcon, name: 'fire' },
+  { type: 'haha', Icon: HahaIcon, name: 'haha' },
+  { type: 'smile_tear', Icon: SmileTearIcon, name: 'smile_tear' },
+  { type: 'angry', Icon: AngryIcon, name: 'angry' }
+];
 
 const CustomDateHeader = ({ dateString }) => (
   <Text style={{ color: 'white' }}>{dateString}</Text>
@@ -470,6 +500,8 @@ export default function ChatScreen() {
                 DateHeader={CustomDateHeader}
                 InlineDateSeparator={CustomInlineDateSeparator}
                 MessageActionList={CustomMessageActionsList}
+                supportedReactions={customReactions}
+                ReactionList={CustomReactionList}
               >
                 <MessageList
                   contentInsetAdjustmentBehavior="never"
