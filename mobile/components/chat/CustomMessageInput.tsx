@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { useChannelContext, useMessageInputContext } from 'stream-chat-expo';
+import { useChannelContext } from 'stream-chat-expo';
 import { Ionicons, Feather, FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { DarkThemeColors } from '@/constants/Colors';
 
 const CustomMessageInput = () => {
-  const { toggleAttachmentPicker } = useMessageInputContext();
   const { channel } = useChannelContext();
   const { colors } = useTheme();
   const [localText, setLocalText] = React.useState('');
@@ -49,7 +48,7 @@ const CustomMessageInput = () => {
           <TouchableOpacity style={styles.iconButton}>
             <Feather name="smile" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={toggleAttachmentPicker}>
+          <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="add-circle" size={24} color={colors.blue} />
           </TouchableOpacity> 
         </>

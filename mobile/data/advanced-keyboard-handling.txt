@@ -1,0 +1,232 @@
+
+00:00:00 - 00:00:57
+ever try typing on your app only to have the keyboard rooly covering your input in today's video we are tackling that classic react native struggle making sure your keyboard behaves itself and your users can actually see what they're typing let's dive into the wild world of keyboard handling okay so let's see the demo as you can see here I have three screens one basic one Advanced with toolbar and the other one just Advanced we're going to be tackling the classic example of the
+
+
+00:00:32 - 00:01:36
+keyboard covering the input of a chat screen so in this case we're using the keyboard API that comes with react native by default and this is the result as you can see this works good and we're going to learn how to do this as well on Android uh we we also have some buttons here that are accessing the keyword events we are going to learn about about keyboard events as well and this is how it looks so as you can see this works fine but I still have to manually scroll every time that I focus the input and we
+
+
+00:01:04 - 00:02:13
+could like kind of work around this issue but this is like the basic example now let's see the advanced example in the advanced example we're going to be using react native keyword controller which is a very cool react native library that you can integrate in your application this Library provides lowlevel API and Native Behavior so that you can integrate this kind of very native like views so for example in this case we are still focusing the input and in this case you can see that this is
+
+
+00:01:39 - 00:02:46
+this is so much better because we are pushing the entire content up instead of having the user manually scrolling right and if you notice when I drag down this is this missing the keyword these are some properties that we can set in a flat list um and you're going to be surprised of how easy is to integrate this it's actually easy easier than using the keyboard API that comes with react native okay now let's see the final demo uh this is going to be the classic form example in many cases you
+
+
+00:02:11 - 00:03:18
+have like a form with many inputs and having this toolbar that you can see here that allows the user to navigate between inputs it's a great Improvement in user experience and you're going to be surprised how easy it's to integrate it with keyboard controller Library we also have the done dismiss button and yeah we can navigate and if you notice as soon as I go at the bottom it's going to disable this button without me doing anything this is going to be automatically handled by the library and
+
+
+00:02:46 - 00:03:46
+of course you can extend this as you want you can change the components you can change the UI so this is the demo if you're interested in learning how to fix this classic struggle of keyboard handling keep watching and now let's get started so here we have the application let's go to the basic usage which is going to contain just a basic UI of a chat application and this CH chat application as you can see here if I toggle the keyboard in the input that it's at the bottom of the screen uh by
+
+
+00:03:16 - 00:04:27
+pressing command K uh we can toggle the keyword and as you can see nothing is happening so let's see how we can handle the keyword avoiding View and by the way keyword avoiding view is a component that comes with react native by default and this component is going to adjust its height based on the keyboard of the device so this is really cool and the way we can use it is by wrapping our view so the way uh the UI is working right now it's just a container view that is a safe area View and then we
+
+
+00:03:52 - 00:05:03
+have a flat list that is rendering the messages and then we have a view uh with these two buttons that are not doing anything so far by just dismissing the keyword but I'm going to get into that in a moment and then we also have the text input so the way we can do that is by wrapping this view into the keyboard avoiding view component and let me just go down here and I'll put it just before the text input and let's hit save now if I do that um as you can see my input it's gone now let's go back here and
+
+
+00:04:27 - 00:05:32
+let's add a style Flex of one and and hit save just like that okay so now I'm closing my tag key avoiding View at the bottom and let's see what happens now I'm going to focus my input and nothing is happening yet the reason for that is because the keyword avoiding view component take some properties the property most important about keyboard avoiding view I would say it's going to be Behavior which defines the specific behavior or the kind of configuration that we want to apply based on the
+
+
+00:05:00 - 00:06:10
+platform this is going to be different on each platform IOS and Android so we can validate this like all like the follow example for example we can check the platform and if the platform it's equal to iOS in this case uh we would be using padding which is usually what works best for iOS and then for Android this actually going to work a bit different and I'm going to set set this to undefined for now because on Android this will be handled automatically so we don't have to do anything so I'll go
+
+
+00:05:35 - 00:06:52
+ahead and save and let's go back to the app and check how this is working so I don't know if you can see there but we have a uh some movement in the input but it's not working completely the reason for that is because we also need to add um kind of like an offset for iOS so we can have a offset keyboard vertical offset is the right property and at this point I know that if I set this to 100 this will work so let's go back to the device and as you can see now I'm able to push the input above the the keyboard
+
+
+00:06:13 - 00:07:21
+using this padding property now let's quickly see how this work with let's say um position for example now as you can see I don't see anymore the input the reason for that is because now it's changing its position I would say the recommended one is going to be padding now the tricky part about this is that the offset is going to be hardcoded to 100 so at this point you would have to check um you know if you are for example in an iPhone SE which is a smaller screen this will break another thing to
+
+
+00:06:47 - 00:07:54
+notice guys is that right now I'm using a development build which is basically building the native code and this is working as it will work once I publish my application but let's try to switch to expoo just to see if we have the same behavior okay and now I'm opening the app I will have some errors because I'm using keyword controller Library I have it installed already but if I dismiss just to show you this example that is only using the keyword avoiding view from react native um let's go to the
+
+
+00:07:20 - 00:08:24
+basic example and I'll be focusing the input again oops now let see what happens we have a completely different Behavior and the reason for that is because at this point I'm using Expo go which is a Sandbox application and it's going to work a bit different than the release version which is the development build so I would encourage you to use the development build when you are using keyword avoiding view um and also you are going to need as well a development build to use react native keyword
+
+
+00:07:52 - 00:09:00
+controller because that Library requires native code that does not come with expoo okay so now that being said uh keep in mind that the behavior is going to be different and if we change this to I don't know 80 and let's try again now it looks better but as soon as I switch back to the development build and let's go here in my device I'll go back to the application and reload just to make sure that everything is working fine if I go back to the basic example you can see that now the keyboard it's covering the
+
+
+00:08:27 - 00:09:29
+input because this is working differently on a development build so keep that in mind uh I would encourage you to use development build most of the time okay now I'm running this on Android and I want to show you the basic usage as well so let's go here and let's focus the input now as you can see it's a bit different as well and as I was saying before usually on theine it's going to work best for Android even if I uh disabled this two properties we are going to have the same behavior on
+
+
+00:08:57 - 00:10:02
+Android um and if I focus it kind of works right out of the box but still it's coding a little bit of the inext input uh which is not great and this is like the downside of using the keyboard avoiding view that comes with react native is that it kind of works for you know for basic examples and it can get you started very very quickly but you have to be configuring these kind of behaviors for specific platform and then playing around with values it would be nice if we can have something more um you know more standard
+
+
+00:09:30 - 00:10:37
+that works similarly on IOS and Android now one more thing that I want to mention about Android is that if you go to the app Json um on this example code you will find that I'm using the keyword layout mode equal to pan the reason for that is because you might notice that on Android if you have some tabs in the screen actually the keyword avoiding view might be pushing those bottom tabs above the keyword as well and that's like strange Behavior so if you set this property in the app Json and then
+
+
+00:10:04 - 00:11:09
+rebuild your application you should be good to you know don't take your bottom tabs and push them up as well unless you want to do that as well and this is how you can use keyboard avoiding view now let's move on to keyboard events all right so I'm back on the iOS simulator I'm going to set this again to 100 just so that it's working on my screen and let's see if I can focus the input and it's working fine now uh I want to touch a little bit on keyboard events react native comes with a keyword module as
+
+
+00:10:36 - 00:11:41
+you can see here that I'm importing it already um and this keyword can be used to do many things like for example this missing the keyword and you can check all the methods that you can access using the keyword just by pressing Dot and you can see that I I have this ad listener this m a meet is visible which is a um whether the keyboard is like last known to be visible and yeah so we have these methods and this m is going to be the the most popular I would say so I think I can just call it like this
+
+
+00:11:09 - 00:12:07
+this me when you press this button which is a Chevron down let's see if this works this is the icon that I have here so I'll press it and the keyboard is dismissed so this is cool but sometimes you may want to do something more complicated or applied some side effects when the user Focus the input or when the keyboard appears or when the keyboard Heights for example let's say that we want to have this button to dismiss the keyword only when the keyword is active so let's create a
+
+
+00:11:38 - 00:12:50
+variable I'll call this one is keyword visible and then say set is keyword visible I'm going to be using US state from react so let's say US state okay and I'm going to set this to be equal to false this is going to be a buan variable and I'm going to be setting this variable based on the keyword life cycle so to access these events from the keyboard we can add a listener by using the keyboard module let's create a use effect here and this use effect is going to have um you know
+
+
+00:12:14 - 00:13:22
+zero dependency so I'm passing an empty array and this use effect can be used to add these listeners to the keyword so let's subscribe to the show keyword event so I'm going to say show subscription equal to and then we can say keyword and then add listener which is a method that is going to take an event type if I open uh my quotes here you can see that I can access these events so the one that I H that I want it's the keyboard did show which is going to be trigger once the keer shows
+
+
+00:12:48 - 00:13:51
+so let's go ahead and use this one we need to pass a second parameter which is going to be a listener and this listener is a function that is going to handle the event once this event is triggered right so once the keyboard is show they are going to let me know and I can do I can call this function to do something so let's go down here and create this function so this function is called handle keyword show and it's going to get the event right now let's go ahead and copy the name of this function and
+
+
+00:13:20 - 00:14:29
+just put it here okay so now typescript is yelling at me because it's saying that this has any type so if I hover over the ad listener you can see that that the listener is going to return an it's going to be of type keyword event listener so let's go ahead and copy this type I'm going to type this function like this and it let's import this from react native okay so now this knows that it's going to take a type of event keyword event we could do that or we can just type this manually in the event but
+
+
+00:13:55 - 00:15:02
+if we type the entire function I think it's better cool so now we are setting the keyboard is visible variable once we trigger this also you can access some properties from the event let's put it in the console just to see what kind of properties we are getting now one more thing that I need to do here is add a return and inside this return what I want to do is remove the subscription that I'm generating once the component mounts right I want to remove this subscription in the case this component
+
+
+00:14:28 - 00:15:36
+is unmounted so we can do that inside this return by saying show description. remove this is good because if we don't do that the um listener is going to keep running in the background even if we are not using this screen so let's go ahead and hit save and let me open the terminal down here and I'll go ahead and focus the input and as you can see we get the event which contains the duration the animation and some other properties now let me actually as well every time that we instead of printing
+
+
+00:15:02 - 00:16:13
+the event maybe I can say now console log is keybord visible and let me clean the terminal I'll go ahead and dismiss and then show again and as you can see at this point this varable it's equal to true now to set this to equal to false when we dism the keyboard or when the user closes the keyboard somehow we can add another listener so let's go ahead and multip and duplicate this and change the event at this point it's going to be keyword did hide and then let's just change the name of this to be hide show
+
+
+00:15:37 - 00:16:39
+subscription hide subscription and it's going to be the same thing but at this point I need to create a new Handler so let's go ahead and copy the same one and say handle keyboard height okay so it's going to be the same thing instead of putting this in the console now that we know that this is working I'll just set the variable equal to false I'm not going to be using anything from the event but if you need to do so feel free to you know just access the event or even if you don't want it just remove
+
+
+00:16:08 - 00:17:20
+it from from the function but I'll just leave it I think it's good okay so we're setting this to false now let's add this candle keyboard hide to the keyboard hide subscription and also we need to remove this subscription once the component un mounts so let's call remove and hit save okay so let me close the Explorer let me close a terminal we are not using um those for now and now we can come down here and I have this Chevon down which is displaying um you know one every time but now I only want
+
+
+00:16:45 - 00:17:57
+to display it every time that the keyword is visible so we can say if the keyboard is visible then only then show this prible so I can save this and because the keyword is you know as you can see the there I can put it up with the uh reference that I'm using here by the way I have to explain that in a moment but once I press down uh the icon disappears because we are using this subscription which is great it's a use it's a good use case now let me as well explain a bit about this text input
+
+
+00:17:20 - 00:18:29
+reference that I have in the T text input down here basically it's very simple I'm creating a text input reference using the hook us ref from react and I'm passing the type of text input I'm initializing this to be null but if we attach this reference to this input then we can access some properties about the text input like for example focusing it so I'm using the text input reference on this pressable and when I press I access the current instance of this uh reference and then some of the
+
+
+00:17:54 - 00:19:07
+methods like Focus for example so we also have something like bler or clear clear time out and we have many things you can learn more about this if you just go to the documentation or read the descriptions that you can see here but for now the the most frequently one used is going to be Focus so once I press that churn up we are basically focusing the input and we could have a specific validation for example that I want to show this only when the keyboard is not visible so let's see how this works now it's
+
+
+00:18:31 - 00:19:28
+down and now it's up which is a cool functionality right we were using the same variable adding the event listeners all right and this is how you can use the keyword module that comes with react native as well as the keyword avoiding view without installing any external libraries as I mentioned before this is great for prototyping but if you're going to be building something more complicated and you really need something that feels native in both Android and iOS I would recommend using react native
+
+
+00:18:59 - 00:20:01
+uh keyboard controller so let's go ahead and see how we can use this Library the first thing to use react native keyboard controller is going to be installing it so you have to run MTX XO install react native keyboard controller keep in mind that you have to use a development build since Expo go won't work with this layer okay once you install this dependency by running this command I won't do that but once you do that you should be able to see that in the package Json so I have my rea Rea native keyword controller now
+
+
+00:19:31 - 00:20:32
+we're going to be using some Advanced features of this keyword controller Library so you also need react native reanimated for those reanimated is actually a pair dependency that you need to install when you're using keyboard controller so make sure that you have reanimated in your application now the next thing before we can actually start using this Library it's going to be adding um in the layout or in the entry point of your application in this case I'm using Expo router you need to add
+
+
+00:20:01 - 00:21:08
+the keyboard provider which is a provider that comes with react native keyboard controller this is the entire setup and of course if you were using Expo go at this point you would need to run npx Expo rebuild to build your application on an iOS simulator or Android emulator if you want to try this on a physical device you could use EAS uh to build your application so now that we have the library installed let's go ahead and I'm move move to my Advanced toolbar example so for the advanced
+
+
+00:20:34 - 00:21:38
+toolbar I think this is like the before we dive into the more complicated example I would say this is the easiest one because once we have the library installed we can use components like keyword aware scroll View and keyword toolbar so the keyword aware scroll view might be one of the most the components that you're going to be using the most with keyboard controller Library because it's basically like the keyword avoiding view that comes with react native but this keyword aware scroll
+
+
+00:21:06 - 00:22:14
+view it's going to work out of the box for Android and and IOS as well so it's going to work the same and you won't have to do anything like platform specific configurations so as you can see here I have a bunch of inputs this is a very simple screen and I have a bunch of inputs just to show you how this would look and I'm wrapping these inputs in the keybo aware scroll view now if I go ahead and just comment this for a second the keyboard uh scroll view you notice that um when I focus some of
+
+
+00:21:40 - 00:22:58
+the inputs I do have the tab bar but if I focus at the bottom nothing is happening so if we simply add this component from the library just like that we have um you know this nice animation that is moving above the keyboard every every time that we focus the input okay now we can also set some properties like for example bottom of set of 62 the reason why I'm setting this bottom offset is that if I dismiss the keyword um you can see that if I focus the last one I have like this I have to scroll a little bit the reason
+
+
+00:22:20 - 00:23:32
+for that is because I'm using the keyword uh controller the the keybord toolbar now here and this toolbar takes like 62 pixels that's why I set bottom offset of of 62 now if I set this to 62 again and then go back you can see that when I focus the last input it's working just great cool then I'm also passing you know some container styling this is like any other view I'm just passing a gap between the inputs and this style that is going to take the entire screen and a margin bottom of 62 other than
+
+
+00:22:56 - 00:24:04
+that there these are just simple inputs they they don't have anything special it's just a placeholder and a text input and because we we are using as well the keyword toolbar uh every time that I focus one of these inputs I will have by default these navigation controls this is great and we don't have to do anything um other than that and this will work as well on Android the exact same way but if you want to customize some of the things uh in here you can access the properties for example um if you if you want to change
+
+
+00:23:29 - 00:24:38
+the content this content is going to be a jsx element so if you want to have like a custom toolbar you can do so um then you can access like the done text if you want to change the D text for example this is a test and hit save you can see that now on the right we have this is a test and when I press it um yeah so we are going to dismiss it so this is very extendable very simple to use to get started as you can see here I didn't have to do anything else just add the keybo whereare scroll View and
+
+
+00:24:04 - 00:25:08
+that's it but for some more advanced use cases or more specific things if you need to access the events of the keyboard at each specific frame you can also do that with keyboard controller Library let's see how we can do that in the advanced screen so I'll go to the advanced screen all right so let's go to the advanc screen as you can see I have my input and we have the same problem right every time that I oops every time that I focus the input um we are covering the input and yeah that's not
+
+
+00:24:36 - 00:25:46
+great so at this point you might be wondering we can use the um if we go back to the advanced toar we can use the keyword aware scroll View and then fix this issue right so let's go ahead and try to do that I'll wrap this into the keyboard aware scroll view from react native keer controller let me put it all the way here now I have a warning the reason for that is because I'm using a flat list and this warning is telling me that you cannot have like a scroll View and then have a flat list which is like
+
+
+00:25:11 - 00:26:22
+a scroll view as well right inside of um a qware scroll view uh but let's ignore this warning for now I'll provide a style of flex of one and hit save and let's see if I can see my input at the bottom so I see my input let me go ahead and bring the keybo Keb our scroll view all the way out of the view um let's scroll down and focus on the input and now this works so if you wrap the keyword aware scroll view maybe what we can do at this point is maybe just add a let me focus on the input again and this
+
+
+00:25:46 - 00:26:57
+is working fine from here you can use the like the bottom offset let's say 30 for example and every time it's going to be working fine now this works great and maybe this is like the fastest solution but for some cases you might need to do something more complicated or more custom for your screen depending on the keyword for that we can use some more advanced hooks for example I have imported here use keyword Handler which is a hook that allows you to access properties of the keyboard at each frame
+
+
+00:26:22 - 00:27:37
+let's say that we want to access the height of the keyboard at each frame once the user focuses and input and the keyword starts animating up this hook can provide the height like starting at zero all the way at the max height of the keyword so if you want to do something more complicated or if you want to style uh depending on this uh keyword animation or keyword information you can do so by using the keyword Handler in companion with react native animated so let's see how we can do that
+
+
+00:26:59 - 00:28:18
+uh down here I have this function which is a hook called use gradual animation so the idea here is that I'm going to be accessing the height of the keyboard as soon as the user uh focuses the input okay and then I will be saving this height that is going to be changing over time from zero to the max height of the keyboard and I'm going to store this variable using a used shared value Hook from react native animated this is going to allow me to then use this value to animate something on the screen okay and
+
+
+00:27:39 - 00:29:04
+the use keyboard controller Handler um can take I mean can return events uh depending on the on move or end and by the way we have to use this keyword worklet so that we don't get errors when we are running this logic here so the only thing that this h book is doing is just saving the height at each frame of the keyword in this variable height and as you can see here I'm accessing the on move on end and we also have on start on interactive methods and these methods will return events so in the event I'm accessing the
+
+
+00:28:22 - 00:29:57
+height but for example you can also access the duration the progress or the target so the height it's very helpful in this case because then I can um save this height and use it in a style okay so down here I'm going to be um using this Hook by saying cont height equal to use gral animation which is this hook and then this height will help me to create an animated style that I will call Big View using uh use animated style from react native reanimated okay so what I'm doing here is just setting the height to be equal
+
+
+00:29:08 - 00:30:19
+to the maximum uh absolute value of the height of this uh hook okay and by the way when we are using ranimated we need to access the value when we are using a shared value we need to access the value directly by saying dot value cool and then I'm also adding a margin button based on the height if the height is greater than zero then I don't want to provide any margin btom and then otherwise I want to provide a pading bottom and the pading bottom is going to be 20 by the way now this is one of the
+
+
+00:29:44 - 00:30:55
+advantages that I was mentioning this margin bottom can be changing based on the uh you know based on the height of the keyboard which is really cool now let's go down here and add this F fake view to an animated View using reanimated as well I'm creating this View and just adding this style fake view so what I'm doing with this I'll go ahead and remove the keyboard aware scroll view because we don't need it anymore I will remove as well this um fragment and put the text input just
+
+
+00:30:19 - 00:31:30
+above the view the animated view so if I hit save uh and if I go ahead and focus on the input I don't know if you're notice but this feels more Snappy more native like and uh when I release the input is not being um you know is not set all the way down because I'm adding this padding bottom and I personally like this approach the most uh I think looks cleaner just having this view instead of wrapping everything inside the keyboard aware scroll view but I think it's it it works fine as
+
+
+00:30:55 - 00:31:57
+well so anything that you need if you in case you need some something more complicated this is how you can access uh this kind of events now before we go let's actually test this on the Android simulator so I'll go to the Advan usage and as you can see I don't know if you noticed but we do have the padding on um on Android so if I change this to be zero and let me reload this screen hopefully we can see it let's go to the advanced usage now we don't have a pading but if I change this to be 20 we
+
+
+00:31:26 - 00:32:43
+do have a pading maybe you want to add this only for iOS so we can use platform OS and if this is equal to um iOS then we can add the 20 otherwise maybe we can just leave zero for Android devices and this is going to work great as soon as I focus this input you can see that this works great and the same exact Behavior which is something that I really like the the same exact behavior in both Android and iOS and and of course I'm not using this I think on N we can just leave it like that and this
+
+
+00:32:05 - 00:33:04
+is going to work just fine this is just an example of how you can use the on end but at this point I think just having the on move is going to trigger the event and it's going to return zero or the max height of the keyboard and this keyboard is going to be specific for each platform where works great on Android and iOS and from here you can extend based on the platform based on the style that you want to apply and yeah this works great on Android and iOS so I'm super happy with this result and
+
+
+00:32:35 - 00:33:09
+I think we're going to wrap up the video here guys I hope you like it I hope you learn something new if you want to learn more about this Library we will leave some links in the guide uh in the documentation of this guide and yeah don't forget to subscribe like this video and I'll see you in the next one thanks for watching
+

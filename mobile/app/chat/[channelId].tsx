@@ -3,7 +3,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useStreamChat } from "@/context/StreamChatContext";
 import { Ionicons, FontAwesome5, FontAwesome6, Entypo, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,7 +16,7 @@ import {
   InteractionManager,
   Pressable,
 } from "react-native";
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { useKeyboardHandler } from 'react-native-keyboard-controller';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -45,7 +45,7 @@ const CustomReactionList = props => (
     <ReactionList {...props} supportedReactions={customReactions} />
   </View>
 ); 
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import CustomMessageInput from "@/components/chat/CustomMessageInput";
@@ -146,6 +146,26 @@ export default function ChatScreen() {
   const { currentUser } = useCurrentUser();
   const insets = useSafeAreaInsets();
   const { isDarkMode } = useTheme();
+
+  const bottomInset = useSharedValue(insets.bottom);
+  useEffect(() => {
+    bottomInset.value = insets.bottom;
+  }, [insets.bottom]);
+
+  const keyboardHeight = useSharedValue(0);
+  useKeyboardHandler({
+    onMove: (e) => {
+      'worklet';
+      keyboardHeight.value = Math.max(0, e.height);
+    },
+  });
+
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    const padding = keyboardHeight.value > 0 ? keyboardHeight.value : bottomInset.value;
+    return {
+      paddingBottom: withTiming(padding, { duration: 100 }),
+    };
+  });
 
   const colors = {
     background: isDarkMode
@@ -464,14 +484,14 @@ export default function ChatScreen() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["top", "bottom"]}
+      edges={["top"]}
     >
       <StatusBar style={isDarkMode ? "light" : "dark"} backgroundColor={colors.background} />
 
       {/* Render header immediately; it reads channelId and otherUser snapshot */}
       <ChatHeader colors={colors} otherUser={otherUser} channelId={channelId} onBack={navigateBack} />
 
-      <Animated.View style={{ flex: 1 }} entering={FadeIn.duration(120)}>
+      <Animated.View style={[{ flex: 1 }, animatedContainerStyle]} entering={FadeIn.duration(120)}>
         {(() => {
           const channelHasMessages = Boolean((channel as any)?.state?.messages?.length);
           const hasCached = Array.isArray(messages) && messages.length > 0;
@@ -497,6 +517,13 @@ export default function ChatScreen() {
             return (
               <Channel 
                 channel={channel}
+                hasImagePicker={false}
+                hasFilePicker={false}
+                hasCameraPicker={false}
+                // Add these additional props to completely disable attachments
+                AttachButton={() => null}
+                InputButtons={() => null}
+                maxNumberOfFiles={0}
                 DateHeader={CustomDateHeader}
                 InlineDateSeparator={CustomInlineDateSeparator}
                 MessageActionList={CustomMessageActionsList}
@@ -523,9 +550,7 @@ export default function ChatScreen() {
                     onEndReachedThreshold: 0.1,
                   }}
                 />
-                <KeyboardStickyView>
-                  <CustomMessageInput />
-                </KeyboardStickyView>
+                <CustomMessageInput />
               </Channel>
             );
           }
