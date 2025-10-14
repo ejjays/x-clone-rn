@@ -31,6 +31,7 @@ import ReactionPickerModal from "@/components/chat/ReactionPickerModal";
 import { Channel, MessageList, ReactionList } from "stream-chat-expo"; 
 import { StyleSheet } from 'react-native';
 
+
 const reactionListStyles = StyleSheet.create({
   container: {
     backgroundColor: 'transparent',
@@ -69,19 +70,62 @@ const customReactions = [
   { type: 'angry', Icon: AngryIcon, name: 'angry' }
 ];
 
-const CustomDateHeader = ({ dateString }) => (
-  <Text style={{ color: 'white' }}>{dateString}</Text>
-);
+const CustomDateHeader = ({ dateString }) => {
+  try {
+    const parts = dateString.split('/');
+    // Ensure parts has 3 elements before creating a date
+    if (parts.length === 3) {
+      const date = new Date(parts[2], parts[0] - 1, parts[1]);
+      const formattedDate = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+      return (
+        <View style={{
+          backgroundColor: '#767680', // A neutral background color
+          borderRadius: 12, // For rounded corners
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          alignSelf: 'center', // To center the header
+          marginVertical: 10,
+        }}>
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>{formattedDate}</Text>
+        </View>
+      );
+    }
+    // Fallback for unexpected dateString format
+    return (
+      <View style={{
+        backgroundColor: '#767680',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        alignSelf: 'center',
+        marginVertical: 10,
+      }}>
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>{dateString}</Text>
+      </View>
+    );
+  } catch (e) {
+    // Fallback for any other error
+    return (
+      <View style={{
+        backgroundColor: '#767680',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        alignSelf: 'center',
+        marginVertical: 10,
+      }}>
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>{dateString}</Text>
+      </View>
+    );
+  }
+};
 
 const CustomInlineDateSeparator = ({ dateString }) => (
-  <Text style={{ 
-    color: 'red', 
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500'
-  }}>
-    {dateString}
-  </Text>
+  <Text>{dateString}</Text>
 );
 
 const getIconForActionType = (actionType) => {
@@ -572,9 +616,7 @@ export default function ChatScreen() {
                 channel={channel}
                 disableKeyboardCompatibleView={true}
                 DateHeader={CustomDateHeader}
-                hideStickyDateHeader={true}
-                hideDateSeparators={true}
-                InlineDateSeparator={CustomInlineDateSeparator}
+                InlineDateSeparator={({ dateString }) => <Text>{dateString}</Text>}
                 MessageActionList={CustomMessageActionsList}
                 supportedReactions={customReactions}
                 ReactionList={CustomReactionList}

@@ -11,7 +11,14 @@ import "../global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, Text, InteractionManager } from "react-native";
-import { OverlayProvider, Chat } from "stream-chat-expo";
+import { OverlayProvider, Chat, Streami18n } from "stream-chat-expo";
+
+const i18n = new Streami18n({
+  language: 'en',
+  formatters: {
+    timestampFormatter: () => 'TEST',
+  },
+});
 import { createStreamChatTheme } from "@/utils/StreamChatTheme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StreamChatProvider, useStreamChat } from "@/context/StreamChatContext";
@@ -183,7 +190,7 @@ const InitialLayout = () => {
         /> */}
         {/* Only wrap in Chat if client exists, otherwise render screens without Chat wrapper */}
         {client ? (
-          <Chat client={client}>
+          <Chat client={client} i18n={i18n}>
             <StreamVideoProvider>
               <Stack
                 screenOptions={{
