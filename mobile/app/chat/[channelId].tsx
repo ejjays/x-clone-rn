@@ -509,12 +509,15 @@ export default function ChatScreen() {
                 channel={channel}
                 disableKeyboardCompatibleView={true}
                 DateHeader={CustomDateHeader}
+                hideStickyDateHeader={true}
+                hideDateSeparators={true}
                 InlineDateSeparator={CustomInlineDateSeparator}
                 MessageActionList={CustomMessageActionsList}
                 supportedReactions={customReactions}
                 ReactionList={CustomReactionList}
               >
                 <MessageList
+                  enableMessageGroupingByUser={false}
                   contentInsetAdjustmentBehavior="never"
                   additionalFlatListProps={{
                     contentContainerStyle: { paddingTop: 0 },
