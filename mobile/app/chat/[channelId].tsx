@@ -578,6 +578,7 @@ export default function ChatScreen() {
                 MessageActionList={CustomMessageActionsList}
                 supportedReactions={customReactions}
                 ReactionList={CustomReactionList}
+                NetworkDownIndicator={() => null}
               >
                 <MessageList
                   EmptyStateIndicator={CustomEmptyState}
