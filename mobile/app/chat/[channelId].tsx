@@ -187,7 +187,6 @@ const CustomEmptyState = () => {
           Be the first one to send a message!
         </Text>
       </View>
-      <Animated.View style={animatedSpacerStyle} />
     </View>
   );
 };
@@ -598,8 +597,7 @@ export default function ChatScreen() {
                 <View>
                   <CustomMessageInput />
                 </View>
-                {/* Only render the spacer if there are messages to display */}
-                {(channel?.state?.messages?.length ?? 0) > 0 && <Animated.View style={animatedSpacerStyle} />}
+                <Animated.View style={animatedSpacerStyle} />
               </Channel>
             );
           }
