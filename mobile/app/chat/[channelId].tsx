@@ -49,6 +49,7 @@ import Animated, { FadeIn, useAnimatedStyle, useSharedValue, interpolate, Extrap
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import CustomMessageInput from "@/components/chat/CustomMessageInput";
+import CustomAttachmentPicker from "@/components/chat/CustomAttachmentPicker";
 
 const MOCK_EMOJIS = ["👍", "❤️", "🔥", "🤣", "🥲", "😡"];
 
@@ -278,6 +279,12 @@ export default function ChatScreen() {
   } | null>(null);
   const messageRefs = useRef<{ [key: string]: View | null }>({});
   const inputRef = useRef<TextInput | null>(null);
+  const [isAttachmentPickerVisible, setAttachmentPickerVisible] = useState(false);
+
+  const handleSelect = async (asset) => {
+    await channel.sendImage(asset.uri);
+    setAttachmentPickerVisible(false);
+  };
 
   // Add this right after your state declarations
   const keyboardHeight = useSharedValue(0);
@@ -595,7 +602,7 @@ export default function ChatScreen() {
                   }}
                 />
                 <View>
-                  <CustomMessageInput />
+                  <CustomMessageInput onAttachmentPress={() => setAttachmentPickerVisible(true)} />
                 </View>
                 <Animated.View style={animatedSpacerStyle} />
               </Channel>
@@ -613,6 +620,12 @@ export default function ChatScreen() {
         onPick={handleReaction}
         onClose={() => setSelectedMessage(null)}
       />
+      {isAttachmentPickerVisible && (
+        <CustomAttachmentPicker
+          onSelect={handleSelect}
+          closePicker={() => setAttachmentPickerVisible(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
