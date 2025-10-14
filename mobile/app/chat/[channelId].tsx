@@ -1,3 +1,4 @@
+import LottieView from 'lottie-react-native';
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useStreamChat } from "@/context/StreamChatContext";
 import { Ionicons, FontAwesome5, FontAwesome6, Entypo, MaterialIcons } from "@expo/vector-icons";
@@ -44,7 +45,7 @@ const CustomReactionList = props => (
     <ReactionList {...props} supportedReactions={customReactions} />
   </View>
 ); 
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, interpolate, Extrapolate } from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import CustomMessageInput from "@/components/chat/CustomMessageInput";
@@ -131,6 +132,62 @@ const CustomMessageActionsList = (props) => {
           </Text>
         </Pressable>
       ))}
+    </View>
+  );
+};
+
+const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
+
+const CustomEmptyState = () => {
+  const { colors } = useTheme();
+  const keyboardHeight = useSharedValue(0);
+
+  useKeyboardHandler({
+    onMove: (e) => {
+      'worklet';
+      keyboardHeight.value = e.height;
+    },
+  });
+
+  const animatedLottieStyle = useAnimatedStyle(() => {
+    'worklet';
+    const size = interpolate(
+      keyboardHeight.value,
+      [0, 300], // Input range (keyboard height)
+      [200, 120], // Output range (Lottie size)
+      Extrapolate.CLAMP
+    );
+
+    return {
+      width: size,
+      height: size,
+    };
+  });
+
+  const animatedSpacerStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      height: keyboardHeight.value,
+    };
+  });
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <AnimatedLottieView
+          source={require('../../assets/animations/connect.json')}
+          autoPlay
+          loop
+          style={animatedLottieStyle}
+        />
+        <Text style={{ color: colors.text, marginTop: 20, fontSize: 16, fontWeight: '600' }}>
+          No messages here yet
+        </Text>
+        <Text style={{ color: colors.textSecondary, marginTop: 8, textAlign: 'center' }}>
+          Be the first one to send a message!
+        </Text>
+      </View>
+      <Animated.View style={animatedSpacerStyle} />
     </View>
   );
 };
@@ -517,6 +574,7 @@ export default function ChatScreen() {
                 ReactionList={CustomReactionList}
               >
                 <MessageList
+                  EmptyStateIndicator={CustomEmptyState}
                   enableMessageGroupingByUser={false}
                   contentInsetAdjustmentBehavior="never"
                   additionalFlatListProps={{
@@ -540,7 +598,8 @@ export default function ChatScreen() {
                 <View>
                   <CustomMessageInput />
                 </View>
-                <Animated.View style={animatedSpacerStyle} />
+                {/* Only render the spacer if there are messages to display */}
+                {(channel?.state?.messages?.length ?? 0) > 0 && <Animated.View style={animatedSpacerStyle} />}
               </Channel>
             );
           }
